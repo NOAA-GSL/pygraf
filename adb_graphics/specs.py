@@ -16,7 +16,15 @@ class VarSpec():
     @lru_cache()
     def ps_colors(self):
         ''' Default color map for Surface Pressure '''
-        grays = cm.get_cmap('Greys', 13)(range(13)), cm.get_cmap('gist_ncar')
+        grays = cm.get_cmap('Greys', 13)(range(13))
         segments = [[16, 53], [86, 105], [110, 151, 2], [172, 202, 2]]
         ncar = cm.get_cmap('gist_ncar', 200)(list(chain(*[range(*i) for i in segments])))
         return np.concatenate((grays[0], ncar))
+
+    @property
+    @lru_cache()
+    def t_colors(self):
+        ncolors = len(self.clevs)
+        return cm.get_cmap('jet', ncolors)(range(ncolors))
+
+

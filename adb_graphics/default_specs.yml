@@ -46,5 +46,24 @@ sp: # Surface Pressure
   clevs: range [650, 1051, 4]
   cmap: gist_ncar
   colors: ps_colors
+  ticks: 20
   transform: conversions.pa_to_hpa
   unit: hPa
+t: # Temperature
+  clevs:
+    warm: range [-50, 5, 2.5]
+    cold: range [-70, -10, 2.5]
+  cmap: jet
+  colors: t_colors
+  ticks: 5
+  transform: conversions.k_to_c
+  unit: C
+gh: # Geopotential height
+  500:
+    clevs: range [502, 601, 4]
+    colors: w
+    ticks: 4
+    transform: conversions.m_to_dm
+    unit: dm
+
+

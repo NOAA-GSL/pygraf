@@ -43,14 +43,16 @@ class GribFile():
 
 class UPPData(GribFile, specs.VarSpec):
 
-    def __init__(self, filename, level, lev_type, short_name, config='adb_graphics/default_specs.yml'):
+    def __init__(self, filename, level, lev_type, season, short_name,
+                 config='adb_graphics/default_specs.yml'):
         GribFile.__init__(self, filename)
         specs.VarSpec.__init__(self, config)
 
         self.level = level
         self.lev_type = lev_type
+        self.season = season
         self.short_name = short_name
-        self.spec = self._load_spec(short_name)
+        self.spec = self._load_spec(level, short_name)
 
     @property
     def anl_dt(self):
@@ -59,6 +61,7 @@ class UPPData(GribFile, specs.VarSpec):
     @property
     def clevs(self):
         clev = self.spec['clevs']
+        clev = clev.get(self.season, clev) if isinstance(clev, dict) else clev
 
         # Is clevs a list?
         if isinstance(clev, list):
@@ -66,7 +69,7 @@ class UPPData(GribFile, specs.VarSpec):
 
         # Does clev have a range call?
         if 'range' in clev.split('[')[0]:
-            nums = [int(i) for i in clev.split(' ', 1)[1].strip('[').strip(']').split(',')]
+            nums = [float(i) for i in clev.split(' ', 1)[1].strip('[').strip(']').split(',')]
             return np.arange(*nums)
 
         # Is clev a call to another function?
@@ -82,7 +85,10 @@ class UPPData(GribFile, specs.VarSpec):
 
     @property
     def colors(self):
-        return self.__getattribute__(self.spec['colors'])
+        try:
+            return self.__getattribute__(self.spec['colors'])
+        except AttributeError as e:
+            return self.spec.get('colors')
 
     @property
     def corners(self):
@@ -115,8 +121,9 @@ class UPPData(GribFile, specs.VarSpec):
     def lev_unit(self):
         return LEV_DESCRIPT.get(self.lev_type, '')
 
-    def _load_spec(self, varname):
+    def _load_spec(self, lev, varname):
         spec = self.yml.get(varname)
+        spec = spec.get(lev, spec)
         sub_s = {}
         if 'subst' in spec.keys():
             sub_s = self._load_spec(spec['subst'])
@@ -133,6 +140,10 @@ class UPPData(GribFile, specs.VarSpec):
         for k in sorted(self.data.keys()):
             val = self.data[k] if self.data.valid_key(k) else None
             print(f'{k}: {val}')
+
+    @property
+    def ticks(self):
+        return self.spec.get('ticks', 10)
 
     @property
     def units(self):
