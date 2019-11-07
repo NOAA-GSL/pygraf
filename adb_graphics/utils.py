@@ -16,14 +16,9 @@ def get_func(val):
         module_name = '__main__'
         fun_name = val
 
-    print(f'Trying to load module: {module_name}')
-
-
     mod_spec = il.util.find_spec(module_name, package='adb_graphics')
     if mod_spec is None:
         mod_spec = il.util.find_spec('.' + module_name, package='adb_graphics')
-
-    print(mod_spec)
 
     try:
         __import__(mod_spec.name)
