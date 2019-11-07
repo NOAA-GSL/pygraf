@@ -8,7 +8,7 @@ import numpy as np
 
 REGIONS = {
     'hrrr': [21.1381, 47.8422, 360-122.72, 360-60.9172],
-    'fv3': [21, 47, 360-125, 360-62],
+    'fv3': [22.4140, 47.1024, -122.2141,-62.6567],
 }
 
 class Map():
@@ -55,7 +55,8 @@ class Map():
         lons = 360 + self.airports[:, 1] # Convert to positive longitude
         x, y = self.m(lons, lats)
         self.boundaries # pylint: disable=pointless-statement
-        self.m.plot(x, y, 'ko', markersize=2, fillstyle='none', markeredgewidth=1, ax=self.ax)
+        self.m.plot(x, y, 'ko', markersize=4, fillstyle='full', color='w',
+                markeredgecolor='k', markeredgewidth=0.5, ax=self.ax)
 
     def _get_basemap(self, center_lat=39.0, center_lon=262.5, lat_1=38.5, lat_2=38.5):
         return Basemap(projection='lcc',
@@ -67,7 +68,7 @@ class Map():
                        lat_1=lat_1,
                        lat_2=lat_2,
                        lon_0=center_lon,
-                       resolution='c',
+                       resolution='l',
                        ax=self.ax,
                        )
 
@@ -86,32 +87,42 @@ class DataMap():
         self.draw_barbs = draw_barbs
 
     def _colorbar(self, cc, ax):
+        ticks = range(int(min(self.field.clevs)),
+                      int(max(self.field.clevs))+1, self.field.ticks)
         cbar = plt.colorbar(cc,
                             orientation='horizontal',
                             shrink=1.0,
                             ax=ax,
-                            ticks=range(min(self.field.clevs), max(self.field.clevs)+1, 20),
+                            ticks=ticks,
                             pad=0.02,
                            )
-        cbar.ax.set_xticklabels(range(min(self.field.clevs), max(self.field.clevs)+1, 20))
+        cbar.ax.set_xticklabels(ticks)
 
-    def draw(self):
+    def draw(self, show=False):
         ax = self.map.ax
         self.map.draw()
         cf = self._draw_field(field=self.field, func=self.map.m.contourf, ax=ax)
         if self.contour_field is not None:
-            self._draw_field(field=self.contour_field, func=self.map.m.contour, ax=ax)
+            cc = self._draw_field(field=self.contour_field, func=self.map.m.contour,
+                    ax=ax)
+            clab = plt.clabel(cc, self.contour_field.clevs[::4], fontsize=18, inline=1, fmt= '%4.0f')
+            [txt.set_bbox(dict(facecolor='k', edgecolor='none', pad=0)) for txt in clab]
+
         self._colorbar(cc=cf, ax=ax)
         if self.draw_barbs:
             self._wind_barbs()
         self._title()
+        if show:
+            plt.show()
 
-    def _draw_field(self, ax, field, func):
+
+    def _draw_field(self, ax, field, func, **kwargs):
         x, y = self._xy_mesh(field)
         return func(x, y, field.values,
                     field.clevs,
                     colors=field.colors,
                     ax=ax,
+                    **kwargs,
                     )
 
     def _filled(self):
@@ -125,16 +136,25 @@ class DataMap():
         contoured = ''
         if self.contour_field is not None:
             cf = self.contour_field
-            contoured = f'{cf.short_name} ({cf.units}, contoured)'
+            contoured = f'{cf.data.name} ({cf.units}, contoured)'
 
-        plt.title(f"Analysis: {atime}\nFcst Hr: : {f.fhr}", loc='left')
+        plt.title(f"Analysis: {atime}\nFcst Hr: : {f.fhr}", loc='left',
+                fontsize=16)
         plt.title(f"{f.level} {f.lev_unit}", position=(0.5, 1.04), fontsize=18)
-        plt.title(f"{f.data.name} ({f.units}, shaded)\n {contoured}", loc='right')
+        plt.title(f"{f.data.name} ({f.units}, shaded)\n {contoured}",
+                loc='right', fontsize=16)
 
-        plt.xlabel(f"Valid time: {vtime}", fontsize=18, labelpad=80)
+        plt.xlabel(f"Valid time: {vtime}", fontsize=18, labelpad=100)
 
     def _wind_barbs(self):
-        pass
+        u, v = self.field.wind
+        mask = np.ones_like(u.values)
+        mask[::30, ::35] = 0
+
+        mu, mv = [np.ma.masked_array(c.values, mask=mask) for c in [u, v]]
+        x, y = self._xy_mesh(self.field)
+        self.map.m.barbs(x, y, mu, mv, barbcolor='k', flagcolor='k', length=6,
+                linewidth=0.3, sizes={'spacing': 0.25} )
 
     def _xy_mesh(self, field):
         lat, lon = field.data.latlons()
