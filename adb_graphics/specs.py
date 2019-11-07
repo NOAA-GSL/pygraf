@@ -13,6 +13,10 @@ class VarSpec():
             self.yml = yaml.load(cfg, Loader=yaml.SafeLoader)
 
     @property
+    def clevs():
+        pass
+
+    @property
     @lru_cache()
     def ps_colors(self):
         ''' Default color map for Surface Pressure '''
@@ -26,5 +30,3 @@ class VarSpec():
     def t_colors(self):
         ncolors = len(self.clevs)
         return cm.get_cmap('jet', ncolors)(range(ncolors))
-
-

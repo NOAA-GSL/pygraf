@@ -87,7 +87,7 @@ class UPPData(GribFile, specs.VarSpec):
     def colors(self):
         try:
             return self.__getattribute__(self.spec['colors'])
-        except AttributeError as e:
+        except AttributeError:
             return self.spec.get('colors')
 
     @property
@@ -126,7 +126,7 @@ class UPPData(GribFile, specs.VarSpec):
         spec = spec.get(lev, spec)
         sub_s = {}
         if 'subst' in spec.keys():
-            sub_s = self._load_spec(spec['subst'])
+            sub_s = self._load_spec(lev, spec['subst'])
         for k, val in spec.items():
             if k != 'subst':
                 sub_s[k] = val

@@ -1,4 +1,4 @@
-# pylint: disable=invalid-name,
+# pylint: disable=invalid-name,too-few-public-methods
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import numpy as np
@@ -8,7 +8,7 @@ import numpy as np
 
 REGIONS = {
     'hrrr': [21.1381, 47.8422, 360-122.72, 360-60.9172],
-    'fv3': [22.4140, 47.1024, -122.2141,-62.6567],
+    'fv3': [22.4140, 47.1024, -122.2141, -62.6567],
 }
 
 class Map():
@@ -56,7 +56,7 @@ class Map():
         x, y = self.m(lons, lats)
         self.boundaries # pylint: disable=pointless-statement
         self.m.plot(x, y, 'ko', markersize=4, fillstyle='full', color='w',
-                markeredgecolor='k', markeredgewidth=0.5, ax=self.ax)
+                    markeredgecolor='k', markeredgewidth=0.5, ax=self.ax)
 
     def _get_basemap(self, center_lat=39.0, center_lon=262.5, lat_1=38.5, lat_2=38.5):
         return Basemap(projection='lcc',
@@ -103,10 +103,10 @@ class DataMap():
         self.map.draw()
         cf = self._draw_field(field=self.field, func=self.map.m.contourf, ax=ax)
         if self.contour_field is not None:
-            cc = self._draw_field(field=self.contour_field, func=self.map.m.contour,
-                    ax=ax)
-            clab = plt.clabel(cc, self.contour_field.clevs[::4], fontsize=18, inline=1, fmt= '%4.0f')
-            [txt.set_bbox(dict(facecolor='k', edgecolor='none', pad=0)) for txt in clab]
+            cc = self._draw_field(field=self.contour_field, func=self.map.m.contour, ax=ax)
+            clab = plt.clabel(cc, self.contour_field.clevs[::4], fontsize=18, inline=1, fmt='%4.0f')
+            _ = [txt.set_bbox(dict(facecolor='k', edgecolor='none', pad=0)) for txt
+                 in clab]
 
         self._colorbar(cc=cf, ax=ax)
         if self.draw_barbs:
@@ -138,11 +138,9 @@ class DataMap():
             cf = self.contour_field
             contoured = f'{cf.data.name} ({cf.units}, contoured)'
 
-        plt.title(f"Analysis: {atime}\nFcst Hr: : {f.fhr}", loc='left',
-                fontsize=16)
+        plt.title(f"Analysis: {atime}\nFcst Hr: : {f.fhr}", loc='left', fontsize=16)
         plt.title(f"{f.level} {f.lev_unit}", position=(0.5, 1.04), fontsize=18)
-        plt.title(f"{f.data.name} ({f.units}, shaded)\n {contoured}",
-                loc='right', fontsize=16)
+        plt.title(f"{f.data.name} ({f.units}, shaded)\n {contoured}", loc='right', fontsize=16)
 
         plt.xlabel(f"Valid time: {vtime}", fontsize=18, labelpad=100)
 
@@ -154,7 +152,7 @@ class DataMap():
         mu, mv = [np.ma.masked_array(c.values, mask=mask) for c in [u, v]]
         x, y = self._xy_mesh(self.field)
         self.map.m.barbs(x, y, mu, mv, barbcolor='k', flagcolor='k', length=6,
-                linewidth=0.3, sizes={'spacing': 0.25} )
+                         linewidth=0.3, sizes={'spacing': 0.25})
 
     def _xy_mesh(self, field):
         lat, lon = field.data.latlons()
