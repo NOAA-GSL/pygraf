@@ -1,12 +1,16 @@
+'''
+A set of generic utilities available to all the adb_graphics components.
+'''
+
 import importlib as il
 import sys
 
 
-def get_func(val):
+def get_func(val: str):
 
     '''
     Given an input string, val, returns the corresponding callable function.
-    This functino is borrowed from stackoverflow.com response to "Python: YAML
+    This function is borrowed from stackoverflow.com response to "Python: YAML
     dictionary of functions: how to load without converting to strings."
     '''
 

@@ -10,24 +10,31 @@ real-time pages (https://rapidrefresh.noaa.gov/hrrr/).
 The ADB_Grapics Python package contains all the necessary modules for generating
 the graphics.
 
-# Python environment
+# Getting Started
+
+## Python environment
 
 The Python environment required to generate the graphics is defined by the
 environment.yml file. This requires access to an implementation of conda. To
-install this environment named ADBGraphics, do the following:
+install this conda environment named adb_graphics, do the following:
 
 ```
 conda env create -f environment.yml
-conda activate ADBGraphics
+conda activate adb_graphics
 ```
 
-# Run the package
+## Run the package
 
-TBD
+An example script has been included for generating a single figure, and serves
+as an example for how to call the package for an upper air map. To run the
+example script in the top-level repo directory, type: 
+
+```
+python plot_example.py
+```
 
 # Contact
 
-Christina Holt
-Brian Jamison
-Craig Hartsough
-
+Christina Holt, christina.holt@noaa.gov
+Brian Jamison, brian.jamison@noaa.gov
+Craig Hartsough, craig.hartsough@hoaa.gov

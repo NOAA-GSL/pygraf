@@ -1,5 +1,5 @@
 '''
-Errors specific to the ADB Graphcis package.
+Errors specific to the ADB Graphics package.
 '''
 
 class Error(Exception):
