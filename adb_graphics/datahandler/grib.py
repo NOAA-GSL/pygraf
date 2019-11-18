@@ -124,13 +124,14 @@ class UPPData(GribFile, specs.VarSpec):
     @property
     def cmap(self):
 
-        ''' Returns the LinearSegnentedColormap specified by the config key
+        ''' Returns the LinearSegmentedColormap specified by the config key
         "cmap" '''
 
         return cm.get_cmap(self.spec['cmap'])
 
     @property
     def colors(self) -> list:
+
         '''
         Returns a list of colors, specified by the config key "colors".
 
@@ -145,17 +146,21 @@ class UPPData(GribFile, specs.VarSpec):
 
     @property
     def corners(self):
+
         '''
         Returns lat and lon of lower left (ll) and upper right(ur) corners:
                ll_lat, ur_lat, ll_lon, ur_lon
         '''
+
         lat, lon = self.data.latlons()
         return [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
 
     @property
     @lru_cache()
     def data(self):
+
         ''' Wrapper that calls get_fields method for the current variable. '''
+
         try:
             field = self.get_fields(
                 level=self.level,
@@ -211,16 +216,14 @@ class UPPData(GribFile, specs.VarSpec):
 
     def short_summary(self):
 
-        '''
-        Helper that prints out the keys describing the variable requested.
-        '''
+        ''' Helper that prints out the keys describing the variable requested. '''
 
         for k in sorted(self.data.keys()):
             val = self.data[k] if self.data.valid_key(k) else None
             print(f'{k}: {val}')
 
     @property
-    def ticks(self):
+    def ticks(self) -> int:
 
         ''' Returns the number of color bar tick marks from the yaml config
         settings. '''
@@ -228,7 +231,7 @@ class UPPData(GribFile, specs.VarSpec):
         return self.spec.get('ticks', 10)
 
     @property
-    def units(self):
+    def units(self) -> str:
 
         ''' Returns the variable unit from the yaml config, if available. If not
         specified in the yaml file, returns the value set in the Grib file. '''
