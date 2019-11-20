@@ -4,7 +4,7 @@ import adb_graphics.datahandler.grib as grib
 import adb_graphics.figures.maps as maps
 
 filename = 'HRRR.t12z.bgdawp06.tm12'
-airports = 'Airports_locs.txt'
+airports = 'static/Airports_locs.txt'
 
 temp = grib.UPPData(filename=filename, short_name='t', level=500, lev_type='isobaricInhPa', season='warm')
 height = grib.UPPData(filename=filename, short_name='gh', level=500, lev_type='isobaricInhPa', season='warm')
