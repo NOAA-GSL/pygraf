@@ -139,10 +139,17 @@ class UPPData(GribFile, specs.VarSpec):
         called.
         '''
 
+        color_spec = self.spec.get('colors')
+
+        if isinstance(color_spec, list) or isinstance(color_spec, np.ndarray):
+            return color_spec
         try:
-            return self.__getattribute__(self.spec['colors'])()
+            ret = self.__getattribute__(color_spec)
+            if callable(ret):
+                return ret()
+            return ret
         except AttributeError:
-            return self.spec.get('colors')
+            return color_spec
 
     @property
     def corners(self):
