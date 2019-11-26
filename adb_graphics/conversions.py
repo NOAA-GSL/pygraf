@@ -10,16 +10,16 @@ def k_to_c(field: np.ndarray) -> np.ndarray:
 
     ''' Conversion from Kelvin to Celsius '''
 
-    return field - 273.15
+    return np.asarray(field) - 273.15
 
 def m_to_dm(field: np.ndarray) -> np.ndarray:
 
     ''' Conversion from meters to decameters '''
 
-    return field / 10.
+    return np.asarray(field) / 10.
 
 def pa_to_hpa(field: np.ndarray) -> np.ndarray:
 
     ''' Conversion from Pascals to hectopascals '''
 
-    return field / 100.
+    return np.asarray(field) / 100.
