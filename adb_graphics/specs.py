@@ -41,7 +41,7 @@ class VarSpec(abc.ABC):
         grays = cm.get_cmap('Greys', 13)(range(13))
         segments = [[16, 53], [86, 105], [110, 151, 2], [172, 202, 2]]
         ncar = cm.get_cmap('gist_ncar', 200)(list(chain(*[range(*i) for i in segments])))
-        return np.concatenate((grays[0], ncar))
+        return np.concatenate((grays, ncar))
 
     @property
     @lru_cache()
