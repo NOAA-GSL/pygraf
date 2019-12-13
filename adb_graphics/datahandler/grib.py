@@ -131,7 +131,7 @@ class UPPData(GribFile, specs.VarSpec):
         return cm.get_cmap(self.spec['cmap'])
 
     @property
-    def colors(self) -> list:
+    def colors(self) -> np.ndarray:
 
         '''
         Returns a list of colors, specified by the config key "colors".
@@ -142,8 +142,8 @@ class UPPData(GribFile, specs.VarSpec):
 
         color_spec = self.spec.get('colors')
 
-        if isinstance(color_spec, list) or isinstance(color_spec, np.ndarray):
-            return color_spec
+        if isinstance(color_spec, (list, np.ndarray)):
+            return np.asarray(color_spec)
         try:
             ret = self.__getattribute__(color_spec)
             if callable(ret):
@@ -189,6 +189,13 @@ class UPPData(GribFile, specs.VarSpec):
         return date.strftime('%Y%m%d %H UTC')
 
     @property
+    def fhr(self) -> str:
+
+        ''' Returns the forecast hour from the grib file. '''
+
+        return str(self.data['forecastTime'])
+
+    @property
     def lev_unit(self):
 
         ''' Returns the unit for the variable's lev_type. '''
@@ -214,13 +221,6 @@ class UPPData(GribFile, specs.VarSpec):
             if k != 'subst':
                 sub_s[k] = val
         return sub_s
-
-    @property
-    def fhr(self) -> str:
-
-        ''' Returns the forecast hour from the grib file. '''
-
-        return self.data['forecastTime']
 
     def short_summary(self):
 
@@ -261,7 +261,7 @@ class UPPData(GribFile, specs.VarSpec):
         unit conversion to the original data. '''
 
         transform = self.spec.get('transform')
-        if transform:
+        if transform and transform != 'None':
             return utils.get_func(transform)(self.data.values)
         return self.data.values
 
@@ -271,4 +271,5 @@ class UPPData(GribFile, specs.VarSpec):
 
         ''' Returns the u, v wind components as a list (length 2) of arrays. '''
 
-        return [self.get_fields(self.level, self.lev_type, component) for component in ['u', 'v']]
+        comps = ['u', 'v']
+        return [self.get_fields(self.level, self.lev_type, comp).values for comp in comps]
