@@ -3,9 +3,9 @@
 '''
 Module contains classes relevant to plotting maps. The Map class handles all the
 functionality related to a Basemap, and adding airports to a blank map. The
-DataMap class takes as input a Map object and a data object (e.g., UPPData
-object) and creates a standard plot with shaded fields, contours, wind barbs,
-and descriptive annotation.
+DataMap class takes as input a Map object and a DataHandler object (e.g.,
+UPPData object) and creates a standard plot with shaded fields, contours, wind
+barbs, and descriptive annotation.
 '''
 
 from functools import lru_cache
@@ -21,6 +21,7 @@ REGIONS = {
     'hrrr': [21.1381, 47.8422, 360-122.72, 360-60.9172],
     'fv3': [22.4140, 47.1024, -122.2141, -62.6567],
 }
+
 
 class Map():
 
@@ -73,14 +74,13 @@ class Map():
         lats = self.airports[:, 0]
         lons = 360 + self.airports[:, 1] # Convert to positive longitude
         x, y = self.m(lons, lats)
-        self.boundaries()
         self.m.plot(x, y, 'ko',
                     ax=self.ax,
                     color='w',
                     fillstyle='full',
-                    markersize=4,
                     markeredgecolor='k',
                     markeredgewidth=0.5,
+                    markersize=4,
                     )
 
     def _get_basemap(self, center_lat=39.0, center_lon=262.5, lat_1=38.5, lat_2=38.5):
@@ -109,6 +109,7 @@ class Map():
             data = f.readlines()
         return np.array([l.strip().split(',') for l in data], dtype=float)
 
+
 class DataMap():
 
     '''
@@ -128,11 +129,11 @@ class DataMap():
         ticks = range(int(min(self.field.clevs)),
                       int(max(self.field.clevs))+1, self.field.ticks)
         cbar = plt.colorbar(cc,
-                            orientation='horizontal',
-                            shrink=1.0,
                             ax=ax,
-                            ticks=ticks,
+                            orientation='horizontal',
                             pad=0.02,
+                            shrink=1.0,
+                            ticks=ticks,
                            )
         cbar.ax.set_xticklabels(ticks)
 
@@ -140,6 +141,7 @@ class DataMap():
 
         ''' Main method for creating the plot. Set show=True to display the
         figure from the command line. '''
+
         ax = self.map.ax
 
         # Draw a map and add the shaded field

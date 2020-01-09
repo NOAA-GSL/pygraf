@@ -7,10 +7,12 @@ real-time pages (https://rapidrefresh.noaa.gov/hrrr/).
 
 # Overview
 
-The ADB_Grapics Python package contains all the necessary modules for generating
+The adb_grapics Python package contains all the necessary modules for generating
 the graphics.
 
 # Getting Started
+
+In addition to the information below, checkout the the ADB Python Graphics [Google Doc](https://docs.google.com/document/d/1mlLSmFZ-gkNXuF7HmD58WEwJgJVHNcKsicrWXpryFEU/edit#) for more information.
 
 ## Python environment
 
@@ -23,6 +25,10 @@ conda env create -f environment.yml
 conda activate adb_graphics
 ```
 
+You only need to create the environment once (or when it's updated in the repo).
+You will need to activate it each time you'd like to run any of the adb_graphics
+package.
+
 ## Run the package
 
 An example script has been included for generating a single figure, and serves
@@ -30,6 +36,7 @@ as an example for how to call the package for an upper air map. To run the
 example script in the top-level repo directory, type: 
 
 ```
+conda activate adb_graphics
 python plot_example.py
 ```
 
@@ -54,6 +61,8 @@ versions with v[major].[minor].[update].
 
 # Contact
 
-Christina Holt, christina.holt@noaa.gov
-Brian Jamison, brian.jamison@noaa.gov
-Craig Hartsough, craig.hartsough@hoaa.gov
+| Name | Email |
+| ---- | :---- |
+| Christina Holt  | christina.holt@noaa.gov   |
+| Brian Jamison   | brian.d.jamison@noaa.gov  |
+| Craig Hartsough | craig.hartsough@noaa.gov  |

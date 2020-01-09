@@ -1,7 +1,7 @@
 '''
-This module sets the specifications for certain variables. Typically this is
-related to a spec that needs some level of computation, i.e. a set of colors
-from a color map.
+This module sets the specifications for certain atmospheric variables. Typically
+this is related to a spec that needs some level of computation, i.e. a set of
+colors from a color map.
 '''
 
 import abc
@@ -9,8 +9,8 @@ from itertools import chain
 from functools import lru_cache
 from matplotlib import cm
 import numpy as np
-
 import yaml
+
 
 class VarSpec(abc.ABC):
 
