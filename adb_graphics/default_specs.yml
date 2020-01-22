@@ -1,0 +1,69 @@
+# This file contains the defaults for the graphics for each variable. 
+#
+# Acceptable keys for a variable:
+#
+#   clevs: one of the following
+#      - a list with no quotes
+#      - a range specified as "range [list]" with quotes. Specify "list" as with
+#      numpy.arange() like this -- [[start, ]stop[, increment]]]. start and
+#      increment are options.
+#      - the name of a function to be called that will return a list.
+#
+#   cmap: name of Python colormap
+#
+#   colors: name of function that defines a list of colors
+#
+#   subst: name of a section to copy settings from
+#
+#   transform: name of a function that will perform a given transformation of
+#      the variable
+#
+#   unit: the resulting unit of the variable
+#
+#
+# A few conventions must be followed for adding variables to this file.
+#
+#   Substitution:
+#      To substitute parts of another section, use the "subst" key with a value
+#      for the intended section to be substituted. This key is recognized by the
+#      Python script that loads this file, and will substitute any fields that
+#      do not already have a key, value pair for that section, but will not
+#      override any that are currently set.
+#
+#   Naming:
+#      The variable name chosen here is the short_name in the NetCDF file. This
+#      is imposed by the Python class loading this file. Please add a comment to
+#      describe the variable when adding it here.
+#
+#   Order:
+#      Each set of items should be in alphabetical order for ease of code
+#      maintenance.
+#
+
+pres: # Pressure
+  subst: sp
+sp: # Surface Pressure
+  clevs: range [650, 1051, 4]
+  cmap: gist_ncar
+  colors: ps_colors
+  ticks: 20
+  transform: conversions.pa_to_hpa
+  unit: hPa
+t: # Temperature
+  clevs:
+    warm: range [-50, 5, 2.5]
+    cold: range [-70, -10, 2.5]
+  cmap: jet
+  colors: t_colors
+  ticks: 5
+  transform: conversions.k_to_c
+  unit: C
+gh: # Geopotential height
+  500:
+    clevs: range [502, 601, 4]
+    colors: w
+    ticks: 4
+    transform: conversions.m_to_dm
+    unit: dm
+
+
