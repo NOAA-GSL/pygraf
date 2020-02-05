@@ -41,12 +41,6 @@ def test_conversion():
     assert np.array_equal(conversions.m_to_dm(c), a[0, 0] / 10)
     assert np.array_equal(conversions.pa_to_hpa(c), a[0, 0] / 100)
 
-def test_utils():
-
-    ''' Test that utils works appropriately. '''
-
-    assert callable(utils.get_func('conversions.k_to_c'))
-
 
 class MockSpecs(specs.VarSpec):
 
@@ -72,6 +66,13 @@ def test_specs():
     # Ensure the appropriate number of colors is returned
     assert np.shape(varspec.t_colors) == (len(varspec.clevs), 4)
     assert np.shape(varspec.ps_colors) == (105, 4)
+
+
+def test_utils():
+
+    ''' Test that utils works appropriately. '''
+
+    assert callable(utils.get_func('conversions.k_to_c'))
 
 
 class TestDefaultSpecs():
