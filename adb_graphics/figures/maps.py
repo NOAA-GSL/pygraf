@@ -134,7 +134,7 @@ class DataMap():
                             pad=0.02,
                             shrink=1.0,
                             ticks=ticks,
-                           )
+                            )
         cbar.ax.set_xticklabels(ticks)
 
     def draw(self, show=False):
@@ -226,10 +226,10 @@ class DataMap():
         u, v = self.field.wind
 
         # Set the stride of the barbs to be plotted with a masked array.
-        mask = np.ones_like(u.values)
+        mask = np.ones_like(u)
         mask[::30, ::35] = 0
 
-        mu, mv = [np.ma.masked_array(c.values, mask=mask) for c in [u, v]]
+        mu, mv = [np.ma.masked_array(c, mask=mask) for c in [u, v]]
         x, y = self._xy_mesh(self.field)
         self.map.m.barbs(x, y, mu, mv,
                          barbcolor='k',

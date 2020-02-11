@@ -40,6 +40,13 @@
 #      maintenance.
 #
 
+gh: # Geopotential height
+  500:
+    clevs: range [502, 601, 4]
+    colors: w
+    ticks: 4
+    transform: conversions.m_to_dm
+    unit: dm
 pres: # Pressure
   subst: sp
 sp: # Surface Pressure
@@ -58,12 +65,3 @@ t: # Temperature
   ticks: 5
   transform: conversions.k_to_c
   unit: C
-gh: # Geopotential height
-  500:
-    clevs: range [502, 601, 4]
-    colors: w
-    ticks: 4
-    transform: conversions.m_to_dm
-    unit: dm
-
-
