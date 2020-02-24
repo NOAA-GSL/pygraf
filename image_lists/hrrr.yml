@@ -1,0 +1,228 @@
+hourly:
+  max_synop: 34
+  max_offsynop: 16
+  input_files:
+    hrrrfile: postprd/wrfprs_hrconus_{FCST_TIME}.grib2
+    hrrrnatfile: postprd/wrfnat_hrconus_{FCST_TIME}.grib2
+  tiles: dum t1 t2 t3 t4 t5 t6 t7 t8 z0 z1 z2 z3 z4 z5 z6 z7 z8 z9
+  variables:
+    rh:
+      - 2m
+      - 850mb
+      - ua
+    temp:
+      - 2ds
+      - 2m
+      - 500mb
+      - 700mb
+      - 850mb
+      - 925mb
+      - sfc
+    wind:
+      - 10m
+      - 80m
+      - 850mb
+      - 250mb
+      - max
+      - mdn
+      - mup
+    vort:
+      - 500mb
+    vvel:
+      - 700mb
+    hlcy:
+      - esbl
+      - in16
+      - in25
+      - mn02
+      - mn03
+      - mn16
+      - mnsfc
+      - mx02
+      - mx03
+      - mx16
+      - sfc
+    hlcytot:
+      - mn02
+      - mn03
+      - mn16
+      - mn25
+      - mx02
+      - mx03
+      - mx16
+      - mx25
+    dewp:
+      - 2m
+    gust:
+      - 10m
+    ptemp:
+      - 2m
+    wchg:
+      - 80m
+      - esbl
+    wpwr:
+      - 80m
+    pwtr:
+      - sfc
+    acp:
+      - esbl
+      - esblmn
+      - sfc
+    acsnw:
+      - esbl
+      - esblmn
+      - sfc
+    hvyacp:
+      - esbl
+    hvy1snw:
+      - esbl
+    cref:
+      - esbl
+      - sfc
+    totp:
+      - esbl
+      - esblmn
+      - sfc
+    vvort:
+      - mx01
+      - mx02
+    1hsm:
+      - sfc
+    1hsnw:
+      - sfc
+    1ref:
+      - sfc
+    3hsm:
+      - sfc
+    6kshr:
+      - sfc
+    acsnod:
+      - sfc
+    acpcp:
+      - sfc
+    acfrzr:
+      - sfc
+    acfrozr:
+      - sfc
+    blcc:
+      - sfc
+    bli:
+      - sfc
+    cape:
+      - sfc
+    cin:
+      - sfc
+    cpofp:
+      - sfc
+    ectp:
+      - sfc
+    flru:
+      - sfc
+    hail:
+      - maxsfc
+    hailcast:
+      - maxsfc
+    hail:
+      - max
+    hcc:
+      - sfc
+    hpbl:
+      - sfc
+    lcl:
+      - sfc
+    lhtfl:
+      - sfc
+    ltg1:
+      - sfc
+    ltg2:
+      - sfc
+    ltg3:
+      - sfc
+    lcc:
+      - sfc
+    mcc:
+      - sfc
+    mnvv:
+      - sfc
+    mref:
+      - sfc
+    mucp:
+      - sfc
+    mulcp:
+      - sfc
+    mxcp:
+      - sfc
+    pchg:
+      - sfc
+    ptyp:
+      - sfc
+    rhpw:
+      - sfc
+    rvil:
+      - sfc
+    s1shr:
+      - sfc
+    sfcp:
+      - sfc
+    shtfl:
+      - sfc
+    slw:
+      - sfc
+    snod:
+      - sfc
+    soilm:
+      - sfc
+    solar:
+      - sfc
+    ssrun:
+      - sfc
+    tcc:
+      - sfc
+    ulwrf:
+      - sfc
+      - nta
+    uswrf:
+      - sfc
+      - nta
+    vbdsf:
+      - sfc
+    vddsf:
+      - sfc
+    vig:
+      - sfc
+    vis:
+      - sfc
+    vil:
+      - sfc
+    weasd:
+      - sfc
+    soilt: &soilt_levs
+      - sfc
+      - 1cm
+      - 4cm
+      - 10cm
+      - 30cm
+      - 60cm
+      - 100cm
+      - 160cm
+      - 300cm
+    soilw: *soilt_levs
+    ref:
+      - m10
+      - maxm10
+    G113bt:
+      - sat
+    G114bt:
+      - sat
+    G123bt:
+      - sat
+    G124bt:
+      - sat
+    ceil:
+      - ua
+    ceilexp:
+      - ua
+    ceilexp2:
+      - ua
+    ctop:
+      - ua
