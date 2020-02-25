@@ -1,8 +1,38 @@
 import argparse
 import yaml
 
-def main():
-    pass
+def main(cla):
+
+    # Load image list
+    images = yaml.load(cla.image_list, loader=SafeLoader)[cla.image_set]
+
+
+    # Locate grib file
+    str_start_time = from_datetime(cla.start_time)
+    grb_file = images[input_files][hrrr].format(FCST_TIME=cla.fcst_hour)
+    grb_file = os.path.join(cla.data_root, str_start_time, grib_file)
+
+    if not os.path.exists(grb_file):
+        raise IOError(f"{grb_file} not found!")
+
+    # Create working directory
+    work_dir = os.path.join(cla.data_root, str_start_time + f"{cla.fcst_hour:02d}")
+    os.makedirs(work_dir, exist_ok=True)
+
+    
+
+def to_datetime(string):
+    return dt.strptime(string, '%Y%m%d%H')
+
+
+def from_datetime(date):
+    return dt.strftime(date, '%Y%m%d%H')
+
+def webname(prefix, tile='', suffix=''):
+    name = f"{prefix}{'_' + tile}{'_' + suffix}"
+    return name
+
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Script to drive the creation of graphics.')
@@ -19,6 +49,11 @@ def parse_args():
                         help='Path to YAML config file specifying which graphics to create.',
                         required=True,
                         )
+    parser.add_argument('-m', '--image_set',
+                        choices=['hourly'],
+                        help='Name of top level key in image_list',
+                        required=True,
+                        )
     parser.add_argument('-o', '--output_path',
                         help='Directory location desired for the output graphics files.',
                         required=True,
@@ -26,8 +61,10 @@ def parse_args():
     parser.add_argument('-s', '--start_time',
                         help='Start time in YYYYMMDDHH format',
                         required=True,
+                        type=to_datetime,
                         )
     parser.add_argument('--subh_freq',
+                        default=60,
                         help='Sub-hourly frequency in minutes.',
                         )
     parser.add_argument('-t', '--num_threads',

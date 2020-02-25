@@ -41,27 +41,84 @@
 #
 
 gh: # Geopotential height
-  500:
-    clevs: range [502, 601, 4]
+  500mb: &ua_gh
+    clevs: range [6, 990, 6]
     colors: w
     ticks: 4
     transform: conversions.m_to_dm
     unit: dm
+  700mb:
+    <<: *ua_gh
+    clevs: range [201, 373, 3]
+  850mb:
+    <<: *ua_gh
+    clevs: range [3, 600, 3]
+  925mb:
+    <<: *ua_gh
+    clevs: range [3, 600, 3]
 pres: # Pressure
   subst: sp
-sp: # Surface Pressure
-  clevs: range [650, 1051, 4]
-  cmap: gist_ncar
-  colors: ps_colors
-  ticks: 20
-  transform: conversions.pa_to_hpa
-  unit: hPa
-t: # Temperature
-  clevs:
-    warm: range [-50, 5, 2.5]
-    cold: range [-70, -10, 2.5]
-  cmap: jet
-  colors: t_colors
-  ticks: 5
-  transform: conversions.k_to_c
-  unit: C
+pres:
+  sfc:
+    clevs: range [650, 1051, 4]
+    cmap: gist_ncar
+    colors: ps_colors
+    ticks: 20
+    transform: conversions.pa_to_hpa
+    unit: hPa
+ptemp: # Potential Temperature
+  short_name: pt
+  2m:
+    level: 10
+    lev_type: heightAboveGround
+
+temp: # Temperature
+  short_name: t
+  2ds:
+    clevs: tds_colors
+    cmap: jet
+    ticks: 2
+    transform: 2m_minus_skin_F
+    unit: F
+    wind: False
+  2m:
+    short_name: 2t
+    clevs: range [-60, 120, 10]
+    cmap: jet
+    colors: t2_colors
+    lev_type: heightAboveGround
+    ticks: 10
+    transform: conversions.k_to_F
+    unit: F
+    wind: True
+  500mb: &ua_temp
+    clevs: range [-70, 10, 2.5]
+    cmap: jet
+    colors: t_colors
+    contour: gh
+    lev_type: isobaricInhPa
+    ticks: 5
+    transform: conversions.k_to_c
+    unit: C
+    wind: True
+  700mb:
+    <<: *ua_temp
+    clevs: range [-40, 40, 2.5]
+    mask: underground
+  850mb:
+    <<: *ua_temp
+    clevs: range [-40, 40, 2.5]
+    mask: underground
+  925mb:
+    <<: *ua_temp
+    clevs: range [-40, 40, 2.5]
+    mask: underground
+  sfc:
+    clevs: range [-60, 120, 10]
+    cmap: jet
+    colors: sfct_colors
+    ticks: 20
+    lev_type: surface
+    transform: conversions.k_to_f
+    unit: F
+    wind: False
