@@ -1,11 +1,11 @@
 import argparse
+from string import digits
 import yaml
 
 def main(cla):
 
     # Load image list
     images = yaml.load(cla.image_list, loader=SafeLoader)[cla.image_set]
-
 
     # Locate grib file
     str_start_time = from_datetime(cla.start_time)
@@ -16,10 +16,27 @@ def main(cla):
         raise IOError(f"{grb_file} not found!")
 
     # Create working directory
-    work_dir = os.path.join(cla.data_root, str_start_time + f"{cla.fcst_hour:02d}")
-    os.makedirs(work_dir, exist_ok=True)
+    workdir = os.path.join(cla.data_root, str_start_time + f"{cla.fcst_hour:02d}")
+    os.makedirs(workdir, exist_ok=True)
 
-    
+    # Load default specs configuration
+    specs = yaml.load('adb_graphics.default_specs.yml', loader=SafeLoader)
+
+    # Create plot for each figure in image list
+    for variable, levels in images.get(variables).items():
+        for level in levels:
+            spec = specs.get(variable).get(level)
+
+            # Strip all non-numbers from the level
+            lev_num = 0 if level == 'sfc' else ''.join(c for c in level if c in digits)
+            field = grib.UPPData(
+                        filename=grb_file,
+                        lev_type=specs.get('lev_type'),
+                        short_name=specs.get('short_name'),
+                        )
+
+
+
 
 def to_datetime(string):
     return dt.strptime(string, '%Y%m%d%H')
@@ -31,8 +48,6 @@ def from_datetime(date):
 def webname(prefix, tile='', suffix=''):
     name = f"{prefix}{'_' + tile}{'_' + suffix}"
     return name
-
-
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Script to drive the creation of graphics.')

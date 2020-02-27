@@ -44,6 +44,7 @@ gh: # Geopotential height
   500mb: &ua_gh
     clevs: range [6, 990, 6]
     colors: w
+    ncl_name: HGT_P0_L100_GLC0
     ticks: 4
     transform: conversions.m_to_dm
     unit: dm
@@ -56,13 +57,12 @@ gh: # Geopotential height
   925mb:
     <<: *ua_gh
     clevs: range [3, 600, 3]
-pres: # Pressure
-  subst: sp
 pres:
   sfc:
     clevs: range [650, 1051, 4]
     cmap: gist_ncar
     colors: ps_colors
+    ncl_name: PRES_P0_L1_GLC0
     ticks: 20
     transform: conversions.pa_to_hpa
     unit: hPa
@@ -70,23 +70,20 @@ ptemp: # Potential Temperature
   short_name: pt
   2m:
     level: 10
-    lev_type: heightAboveGround
-
 temp: # Temperature
-  short_name: t
   2ds:
-    clevs: tds_colors
-    cmap: jet
+    clevs: range [-50, 50, 2]
+    cmap: rwb
+    colors: tds_colors
     ticks: 2
     transform: 2m_minus_skin_F
     unit: F
     wind: False
   2m:
-    short_name: 2t
     clevs: range [-60, 120, 10]
     cmap: jet
     colors: t2_colors
-    lev_type: heightAboveGround
+    ncl_name: TMP_P0_L103_GLC0
     ticks: 10
     transform: conversions.k_to_F
     unit: F
@@ -96,7 +93,7 @@ temp: # Temperature
     cmap: jet
     colors: t_colors
     contour: gh
-    lev_type: isobaricInhPa
+    ncl_name: TMP_P0_L100_GLC0
     ticks: 5
     transform: conversions.k_to_c
     unit: C
@@ -114,11 +111,19 @@ temp: # Temperature
     clevs: range [-40, 40, 2.5]
     mask: underground
   sfc:
-    clevs: range [-60, 120, 10]
+    search: 
+      hrrr: [paramNumber, shortName]
+    clevs: !range [-60, 120, 10]
     cmap: jet
     colors: sfct_colors
+    ncl_name: TMP_P0_L1_GLC0
     ticks: 20
-    lev_type: surface
     transform: conversions.k_to_f
     unit: F
     wind: False
+u:
+  500mb:
+    ncl_name: UGRD_P0_L100_GLC0
+v:
+  500mb:
+    ncl_name: VGRD_P0_L100_GLC0
