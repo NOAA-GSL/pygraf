@@ -5,6 +5,7 @@ specifics of grib files from UPP.
 
 import datetime
 from functools import lru_cache
+from string import digits, ascii_letters
 
 from matplotlib import cm
 import numpy as np
@@ -32,12 +33,14 @@ class GribFile():
 
     def get_field(self, ncl_name):
 
-        ''' Given a numeric level and an ncl_name, return the entire grib field. '''
+        ''' Given a numeric level and an ncl_name, return the NioVariable object. '''
 
         try:
             field = self.contents.variables[ncl_name]
         except KeyError:
             raise errors.GribReadError(f'{ncl_name}')
+
+        return field
 
 
 class UPPData(GribFile, specs.VarSpec):
@@ -77,7 +80,7 @@ class UPPData(GribFile, specs.VarSpec):
         ''' Returns the initial time of the grib file as a datetime object from
         the grib file.'''
 
-        return datetime.datetime.strptime(self.data.initial_time, '%m/%d/%Y (%H:%M)') self.data.analDate
+        return datetime.datetime.strptime(self.data.initial_time, '%m/%d/%Y (%H:%M)')
 
     @property
     def clevs(self) -> list:
@@ -141,16 +144,8 @@ class UPPData(GribFile, specs.VarSpec):
                ll_lat, ur_lat, ll_lon, ur_lon
         '''
 
-        lat, lon = [self.field[var][::] for var in ['gridlat_0', 'gridlat_1']]
+        lat, lon = self.latlons()
         return [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
-
-    @property
-    @lru_cache()
-    def field(self):
-
-        ''' Wrapper that calls get_field method for the current variable. '''
-
-        return self.get_field(self.vspec.get(ncl_name))
 
     @staticmethod
     def date_to_str(date: datetime) -> str:
@@ -168,11 +163,38 @@ class UPPData(GribFile, specs.VarSpec):
         return self.field.forecast_time
 
     @property
+    @lru_cache()
+    def field(self):
+
+        ''' Wrapper that calls get_field method for the current variable.
+        Returns the NioVariable object '''
+
+        return self.get_field(self.vspec.get('ncl_name'))
+
+    def latlons(self):
+
+        ''' Returns the set of latituteds and longitudes '''
+
+        return [self.contents.variables[var][::] for var in ['gridlat_0', 'gridlon_0']]
+
+    @property
     def lev_descriptor(self):
 
         ''' Returns the descriptor for the variable's level type. '''
 
         return self.data.level_type
+
+    @property
+    def numeric_level(self):
+        ''' Return tuple of numeric level and unit '''
+
+        numeric_level = int(''.join([c for c in self.level if c in digits]))
+        lev_type = ''.join([c for c in self.level if c in ascii_letters])
+
+        numeric_level = numeric_level * 100. if lev_type == 'mb' else numeric_level
+
+        return numeric_level, lev_type
+
 
     @property
     def ticks(self) -> int:
@@ -199,33 +221,28 @@ class UPPData(GribFile, specs.VarSpec):
         fh = datetime.timedelta(hours=self.forecastTime)
         return self.anl_dt + fh
 
-    @property
     @lru_cache()
-    def values(self) -> np.ndarray:
+    def values(self, field=None) -> np.ndarray:
 
         ''' Returns the numpy array of values for the variable after applying any
         unit conversion to the original data. '''
 
-        transform = self.vspec.get('transform')
+        field = self.field if field is None else field
 
-        # Retrieve appropriate level
-        # --------------------------
+        transform = self.vspec.get('transform')
 
         if len(self.field.shape) == 2:
             fld = self.field[::]
         elif len(self.field.shape) == 3:
-            levs = f.variables[tmp.dimensions[0]][::]
-            lev = int(np.argwhere(levs == self.level))
-
-
-
-
-
-
+            levs = self.contents.variables[self.field.dimensions[0]][::]
+            print(self.numeric_level)
+            lev = int(np.argwhere(levs == self.numeric_level[0]))
+            fld = self.field[lev, :, :]
 
         if transform and transform != 'None':
-            return utils.get_func(transform)(self.field[::])
-        return self.field[::]
+            return utils.get_func(transform)(fld)
+
+        return fld
 
     @property
     @lru_cache()
@@ -233,12 +250,10 @@ class UPPData(GribFile, specs.VarSpec):
 
         ''' Returns the u, v wind components as a list (length 2) of arrays. '''
 
-        comps = ['u', 'v']
-
         # Get u, v ncl_names
-        u, v = [self.spec.get(var, {}).get(self.level, {}).get('ncl_name') in ['u', 'v']]
+        u, v = [self.spec.get(var, {}).get(self.level, {}).get('ncl_name') for var in ['u', 'v']]
 
         if u is None or v is None:
             raise errors.NoGraphicsDefinitionForVariable(short_name, level)
 
-        return [self.get_fields(self.level, self.lev_type, comp).values for comp in comps]
+        return [self.values(field=self.get_field(component)) for component in [u, v]]
