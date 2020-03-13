@@ -4,16 +4,14 @@
 #
 #   clevs: one of the following
 #      - a list with no quotes
-#      - a range specified as "range [list]" with quotes. Specify "list" as with
-#      numpy.arange() like this -- [[start, ]stop[, increment]]]. start and
+#      - a numpy.arange specified as "!!python/object/apply:numpy.arange [list]" with quotes. Specify "list" as with
+#      numpy.anumpy.arange() like this -- [[start, ]stop[, increment]]]. start and
 #      increment are options.
 #      - the name of a function to be called that will return a list.
 #
 #   cmap: name of Python colormap
 #
 #   colors: name of function that defines a list of colors
-#
-#   subst: name of a section to copy settings from
 #
 #   transform: name of a function that will perform a given transformation of
 #      the variable
@@ -23,13 +21,6 @@
 #
 # A few conventions must be followed for adding variables to this file.
 #
-#   Substitution:
-#      To substitute parts of another section, use the "subst" key with a value
-#      for the intended section to be substituted. This key is recognized by the
-#      Python script that loads this file, and will substitute any fields that
-#      do not already have a key, value pair for that section, but will not
-#      override any that are currently set.
-#
 #   Naming:
 #      The variable name chosen here is the short_name in the NetCDF file. This
 #      is imposed by the Python class loading this file. Please add a comment to
@@ -37,12 +28,13 @@
 #
 #   Order:
 #      Each set of items should be in alphabetical order for ease of code
-#      maintenance.
+#      maintenance, unless some other order makes more sense, i.e. a section
+#      anchor needs to be applied before another section.
 #
 
 gh: # Geopotential height
   500mb: &ua_gh
-    clevs: range [6, 990, 6]
+    clevs: !!python/object/apply:numpy.arange [6, 990, 6]
     colors: w
     ncl_name: HGT_P0_L100_GLC0
     ticks: 4
@@ -50,16 +42,16 @@ gh: # Geopotential height
     unit: dm
   700mb:
     <<: *ua_gh
-    clevs: range [201, 373, 3]
+    clevs: !!python/object/apply:numpy.arange [201, 373, 3]
   850mb:
     <<: *ua_gh
-    clevs: range [3, 600, 3]
+    clevs: !!python/object/apply:numpy.arange [3, 600, 3]
   925mb:
     <<: *ua_gh
-    clevs: range [3, 600, 3]
+    clevs: !!python/object/apply:numpy.arange [3, 600, 3]
 pres:
   sfc:
-    clevs: range [650, 1051, 4]
+    clevs: !!python/object/apply:numpy.arange [650, 1051, 4]
     cmap: gist_ncar
     colors: ps_colors
     ncl_name: PRES_P0_L1_GLC0
@@ -72,7 +64,7 @@ ptemp: # Potential Temperature
     level: 10
 temp: # Temperature
   2ds:
-    clevs: range [-50, 50, 2]
+    clevs: !!python/object/apply:numpy.arange [-50, 50, 2]
     cmap: rwb
     colors: tds_colors
     ticks: 2
@@ -80,7 +72,7 @@ temp: # Temperature
     unit: F
     wind: False
   2m:
-    clevs: range [-60, 120, 10]
+    clevs: !!python/object/apply:numpy.arange [-60, 120, 10]
     cmap: jet
     colors: t2_colors
     ncl_name: TMP_P0_L103_GLC0
@@ -89,7 +81,7 @@ temp: # Temperature
     unit: F
     wind: True
   500mb: &ua_temp
-    clevs: range [-70, 10, 2.5]
+    clevs: !!python/object/apply:numpy.arange [-70, 10, 2.5]
     cmap: jet
     colors: t_colors
     contour: gh
@@ -100,20 +92,18 @@ temp: # Temperature
     wind: True
   700mb:
     <<: *ua_temp
-    clevs: range [-40, 40, 2.5]
+    clevs: !!python/object/apply:numpy.arange [-40, 40, 2.5]
     mask: underground
   850mb:
     <<: *ua_temp
-    clevs: range [-40, 40, 2.5]
+    clevs: !!python/object/apply:numpy.arange [-40, 40, 2.5]
     mask: underground
   925mb:
     <<: *ua_temp
-    clevs: range [-40, 40, 2.5]
+    clevs: !!python/object/apply:numpy.arange [-40, 40, 2.5]
     mask: underground
   sfc:
-    search: 
-      hrrr: [paramNumber, shortName]
-    clevs: !range [-60, 120, 10]
+    clevs: !!python/object/apply:numpy.arange [-60, 120, 10]
     cmap: jet
     colors: sfct_colors
     ncl_name: TMP_P0_L1_GLC0

@@ -9,6 +9,7 @@ from itertools import chain
 from functools import lru_cache
 from matplotlib import cm
 import numpy as np
+from numpy import arange
 import yaml
 
 
@@ -22,7 +23,6 @@ class VarSpec(abc.ABC):
 
     def __init__(self, config):
 
-        yaml.add_constructor('!range', np.arange)
         with open(config, 'r') as cfg:
             self.yml = yaml.load(cfg, Loader=yaml.Loader)
 
