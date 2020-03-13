@@ -22,8 +22,9 @@ class VarSpec(abc.ABC):
 
     def __init__(self, config):
 
+        yaml.add_constructor('!range', np.arange)
         with open(config, 'r') as cfg:
-            self.yml = yaml.load(cfg, Loader=yaml.SafeLoader)
+            self.yml = yaml.load(cfg, Loader=yaml.Loader)
 
     @property
     @abc.abstractmethod
