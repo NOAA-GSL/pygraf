@@ -1,49 +1,118 @@
+# pylint: disable=too-many-locals,invalid-name
+''' Driver for creating all the graphics needed for a specific input dataset. '''
+
 import argparse
-from string import digits
+import datetime as dt
+import os
+import warnings
+
+import matplotlib.pyplot as plt
 import yaml
+
+from adb_graphics.datahandler import grib
+from adb_graphics.figures import maps
+
+warnings.simplefilter('ignore')
+
+AIRPORTS = 'static/Airports_locs.txt'
+
 
 def main(cla):
 
+    '''
+    Loads a set of images to be plotted, then creates them from grib input files.
+    '''
+
     # Load image list
-    images = yaml.load(cla.image_list, loader=SafeLoader)[cla.image_set]
+    with open(cla.image_list, 'r') as fn:
+        images = yaml.load(fn, Loader=yaml.Loader)[cla.image_set]
 
-    # Locate grib file
+    # Locate input grib file
     str_start_time = from_datetime(cla.start_time)
-    grb_file = images[input_files][hrrr].format(FCST_TIME=cla.fcst_hour)
-    grb_file = os.path.join(cla.data_root, str_start_time, grib_file)
+    grib_file = images['input_files']['hrrr'].format(FCST_TIME=cla.fcst_hour)
+    grib_path = os.path.join(cla.data_root, str_start_time, grib_file)
 
-    if not os.path.exists(grb_file):
-        raise IOError(f"{grb_file} not found!")
+
+    if not os.path.exists(grib_path):
+        raise IOError(f"{grib_path} not found!")
 
     # Create working directory
-    workdir = os.path.join(cla.data_root, str_start_time + f"{cla.fcst_hour:02d}")
+    workdir = os.path.join(cla.output_path, str_start_time + f"{cla.fcst_hour:02d}")
     os.makedirs(workdir, exist_ok=True)
 
     # Load default specs configuration
-    specs = yaml.load('adb_graphics.default_specs.yml', loader=SafeLoader)
+    spec_file = 'adb_graphics/default_specs.yml'
+    with open(spec_file, 'r') as fn:
+        specs = yaml.load(fn, Loader=yaml.Loader)
 
+    print((('-' * 120)+'\n') * 2)
+    print(f'Creating graphics for input file: {grib_path}')
+    print(f'Output graphics directory: {workdir}')
+    print(f'Graphics specification follows: {spec_file}')
+    print()
+    print((('-' * 120)+'\n') * 2)
+
+    tile = ''
     # Create plot for each figure in image list
-    for variable, levels in images.get(variables).items():
+    for variable, levels in images.get('variables').items():
         for level in levels:
+
+            # Load the spec for the current variable
             spec = specs.get(variable).get(level)
 
-            # Strip all non-numbers from the level
-            lev_num = 0 if level == 'sfc' else ''.join(c for c in level if c in digits)
             field = grib.UPPData(
-                        filename=grb_file,
-                        lev_type=specs.get('lev_type'),
-                        short_name=specs.get('short_name'),
-                        )
+                filename=grib_path,
+                level=level,
+                short_name=variable,
+                )
 
+            contour_field = spec.get('contour')
+            if contour_field is not None:
+                contour_field = grib.UPPData(
+                    filename=grib_path,
+                    level=level,
+                    short_name=contour_field,
+                    )
 
+            fig, ax = plt.subplots(1, 1, figsize=(18, 18))
+
+            m = maps.Map(
+                airport_fn=AIRPORTS,
+                ax=ax,
+                corners=field.corners,
+                )
+
+            dm = maps.DataMap(
+                field=field,
+                contour_field=contour_field,
+                map_=m,
+                )
+
+            dm.draw()
+
+            png_suffix = level if level != 'ua' else ''
+            png_file = f'{variable}{"_" + tile}{png_suffix}'
+            png_path = os.path.join(workdir, png_file)
+
+            print('*' * 120)
+            print(f"Creating image file: {png_path}")
+            print('*' * 120)
+
+            plt.savefig(
+                png_path,
+                bbox_inches='tight',
+                dpi='figure',
+                format='png',
+                orientation='landscape',
+                )
 
 
 def to_datetime(string):
-    return dt.strptime(string, '%Y%m%d%H')
+    return dt.datetime.strptime(string, '%Y%m%d%H')
 
 
 def from_datetime(date):
-    return dt.strftime(date, '%Y%m%d%H')
+    return dt.datetime.strftime(date, '%Y%m%d%H')
 
 def webname(prefix, tile='', suffix=''):
     name = f"{prefix}{'_' + tile}{'_' + suffix}"
@@ -59,6 +128,7 @@ def parse_args():
     parser.add_argument('-f', '--fcst_hour',
                         help='Forecast hour',
                         required=True,
+                        type=int,
                         )
     parser.add_argument('--image_list',
                         help='Path to YAML config file specifying which graphics to create.',
@@ -89,7 +159,5 @@ def parse_args():
     return parser.parse_args()
 
 if __name__ == '__main__':
-    clargs = parse_args()
-    main(clargs)
-
-
+    CLARGS = parse_args()
+    main(CLARGS)
