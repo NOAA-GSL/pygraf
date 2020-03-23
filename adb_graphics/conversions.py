@@ -12,11 +12,23 @@ def k_to_c(field: np.ndarray) -> np.ndarray:
 
     return np.asarray(field) - 273.15
 
+def k_to_f(field: np.ndarray) -> np.ndarray:
+
+    ''' Conversion from Kelvin to Farenheit '''
+
+    return (np.asarray(field) - 273.15) * 9/5 + 32
+
 def m_to_dm(field: np.ndarray) -> np.ndarray:
 
     ''' Conversion from meters to decameters '''
 
     return np.asarray(field) / 10.
+
+def ms_to_kt(field: np.ndarray) -> np.ndarray:
+
+    ''' Conversion from m s-1 to knots '''
+
+    return np.asarray(field) * 1.9438
 
 def pa_to_hpa(field: np.ndarray) -> np.ndarray:
 
