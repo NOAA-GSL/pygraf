@@ -114,20 +114,26 @@ class DataMap():
 
     '''
     Class that combines the input data and the chosen map to plot both together.
+
+    Input:
+
+        field             datahandler data object for data field to shade
+        contour_field     dandhandler data object for data field to contour
+        map               maps object
+
     '''
 
-    def __init__(self, field, map_, contour_field=None, draw_barbs=True):
+    def __init__(self, field, map_, contour_field=None):
         self.field = field
         self.contour_field = contour_field
         self.map = map_
-        self.draw_barbs = draw_barbs
 
     def _colorbar(self, cc, ax):
 
         ''' Internal method that plots the color bar for a contourf field. '''
 
-        ticks = range(int(min(self.field.clevs)),
-                      int(max(self.field.clevs))+1, self.field.ticks)
+        ticks = np.arange(np.amin(self.field.clevs),
+                          np.amax(self.field.clevs+1), self.field.ticks)
         cbar = plt.colorbar(cc,
                             ax=ax,
                             orientation='horizontal',
@@ -153,11 +159,10 @@ class DataMap():
         if self.contour_field is not None:
             cc = self._draw_field(field=self.contour_field, func=self.map.m.contour, ax=ax)
             clab = plt.clabel(cc, self.contour_field.clevs[::4], fontsize=18, inline=1, fmt='%4.0f')
-            _ = [txt.set_bbox(dict(facecolor='k', edgecolor='none', pad=0)) for txt
-                 in clab]
+            _ = [txt.set_bbox(dict(facecolor='k', edgecolor='none', pad=0)) for txt in clab]
 
         # Add wind barbs, if requested
-        if self.draw_barbs:
+        if self.field.vspec.get('wind', False):
             self._wind_barbs()
 
         # Finish with the title
@@ -165,6 +170,7 @@ class DataMap():
 
         # Create a pop-up to display the figure, if show=True
         if show:
+            plt.tight_layout()
             plt.show()
 
     def _draw_field(self, ax, field, func, **kwargs):
@@ -186,7 +192,7 @@ class DataMap():
         '''
 
         x, y = self._xy_mesh(field)
-        return func(x, y, field.values,
+        return func(x, y, field.values(),
                     field.clevs,
                     ax=ax,
                     colors=field.colors,
@@ -205,16 +211,17 @@ class DataMap():
         contoured = ''
         if self.contour_field is not None:
             cf = self.contour_field
-            contoured = f'{cf.data.name} ({cf.units}, contoured)'
+            contoured = f'{cf.field.long_name} ({cf.units}, contoured)'
 
         # Analysis time (top) and forecast hour (bottom) on the left
         plt.title(f"Analysis: {atime}\nFcst Hr: : {f.fhr}", loc='left', fontsize=16)
 
         # Atmospheric level and unit in the high center
-        plt.title(f"{f.level} {f.lev_unit}", position=(0.5, 1.04), fontsize=18)
+        level, lev_unit = f.numeric_level
+        plt.title(f"{level} {lev_unit}", position=(0.5, 1.04), fontsize=18)
 
         # Two lines for shaded data (top), and contoured data (bottom)
-        plt.title(f"{f.data.name} ({f.units}, shaded)\n {contoured}", loc='right', fontsize=16)
+        plt.title(f"{f.field.long_name} ({f.units}, shaded)\n {contoured}", loc='right', fontsize=16)
 
         # X label shows forecast valid time.
         plt.xlabel(f"Valid time: {vtime}", fontsize=18, labelpad=100)
@@ -244,5 +251,5 @@ class DataMap():
 
         ''' Helper function to create mesh for various plot. '''
 
-        lat, lon = field.data.latlons()
+        lat, lon = field.latlons()
         return self.map.m(360+lon, lat)
