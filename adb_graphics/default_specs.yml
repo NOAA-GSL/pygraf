@@ -60,24 +60,19 @@ pres:
     unit: hPa
 ptemp: # Potential Temperature
   short_name: pt
-  2m:
-    level: 10
 temp: # Temperature
-  2ds:
+  2ds: # Not yet supported.
     clevs: !!python/object/apply:numpy.arange [-50, 50, 2]
-    cmap: rwb
-    colors: tds_colors
+    cmap: bwr
     ticks: 2
-    transform: 2m_minus_skin_F
     unit: F
     wind: False
   2m:
     clevs: !!python/object/apply:numpy.arange [-60, 120, 10]
     cmap: jet
-    colors: t2_colors
     ncl_name: TMP_P0_L103_GLC0
     ticks: 10
-    transform: conversions.k_to_F
+    transform: conversions.k_to_f
     unit: F
     wind: True
   500mb: &ua_temp
@@ -93,19 +88,16 @@ temp: # Temperature
   700mb:
     <<: *ua_temp
     clevs: !!python/object/apply:numpy.arange [-40, 40, 2.5]
-    mask: underground
   850mb:
     <<: *ua_temp
     clevs: !!python/object/apply:numpy.arange [-40, 40, 2.5]
-    mask: underground
   925mb:
     <<: *ua_temp
     clevs: !!python/object/apply:numpy.arange [-40, 40, 2.5]
-    mask: underground
   sfc:
     clevs: !!python/object/apply:numpy.arange [-60, 120, 10]
     cmap: jet
-    colors: sfct_colors
+    colors: t_colors
     ncl_name: TMP_P0_L1_GLC0
     ticks: 20
     transform: conversions.k_to_f
@@ -114,6 +106,14 @@ temp: # Temperature
 u:
   500mb:
     ncl_name: UGRD_P0_L100_GLC0
+  850mb:
+    ncl_name: UGRD_P0_L100_GLC0
+  925mb:
+    ncl_name: UGRD_P0_L100_GLC0
 v:
   500mb:
+    ncl_name: VGRD_P0_L100_GLC0
+  850mb:
+    ncl_name: VGRD_P0_L100_GLC0
+  925mb:
     ncl_name: VGRD_P0_L100_GLC0
