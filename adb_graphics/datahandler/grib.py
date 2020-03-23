@@ -183,7 +183,13 @@ class UPPData(GribFile, specs.VarSpec):
 
     @property
     def numeric_level(self):
-        ''' Return numeric level associated with the string. '''
+
+        '''
+        Split the numeric level and unit associated with the level key.
+
+        A blank string is returned for lev_val for levels that do not contain a
+        numeric, e.g., 'sfc' or 'ua'.
+        '''
 
         lev_val = ''.join([c for c in self.level if c in digits])
         lev_val = int(lev_val) if lev_val else lev_val

@@ -2,29 +2,40 @@
 #
 # Acceptable keys for a variable:
 #
-#   clevs: one of the following
+#   clevs: specifies the contour levels by one of the following methods
 #      - a list with no quotes
-#      - a numpy.arange specified as "!!python/object/apply:numpy.arange [list]" with quotes. Specify "list" as with
-#      numpy.anumpy.arange() like this -- [[start, ]stop[, increment]]]. start and
-#      increment are options.
+#      - a numpy.arange specified as "!!python/object/apply:numpy.arange [list]"
+#        with quotes. Specify "list" as with numpy.anumpy.arange() like this --
+#        [[start, ]stop[, increment]]]. start and increment are options.
 #      - the name of a function to be called that will return a list.
 #
 #   cmap: name of Python colormap
 #
 #   colors: name of function that defines a list of colors
 #
+#   contour: specifies a field to be contoured, and must come from same level
+#
+#   ncl_name: the name of the variable as expected by NCL
+#
+#   ticks: the number of tick marks on the colorbar
+#
 #   transform: name of a function that will perform a given transformation of
-#      the variable
+#              the variable
 #
 #   unit: the resulting unit of the variable
+#
+#   wind: a boolean variable that switches on/off the wind barbs drawn from the
+#         wind at the same level, OR a string specifying the key for the desired
+#         wind level
 #
 #
 # A few conventions must be followed for adding variables to this file.
 #
 #   Naming:
-#      The variable name chosen here is the short_name in the NetCDF file. This
-#      is imposed by the Python class loading this file. Please add a comment to
-#      describe the variable when adding it here.
+#      The variable name chosen here is the short name as specified by the
+#      graphics file naming convention. This is imposed by the Python class
+#      loading this file. Please add a comment to describe the variable when
+#      adding it here.
 #
 #   Order:
 #      Each set of items should be in alphabetical order for ease of code
@@ -58,8 +69,6 @@ pres:
     ticks: 20
     transform: conversions.pa_to_hpa
     unit: hPa
-ptemp: # Potential Temperature
-  short_name: pt
 temp: # Temperature
   2ds: # Not yet supported.
     clevs: !!python/object/apply:numpy.arange [-50, 50, 2]
