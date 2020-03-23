@@ -11,6 +11,7 @@ from matplotlib import cm
 import numpy as np
 import Nio
 
+from .. import conversions
 from .. import errors
 from .. import specs
 from .. import utils
@@ -80,10 +81,10 @@ class UPPData(GribFile, specs.VarSpec):
         ''' Returns the initial time of the grib file as a datetime object from
         the grib file.'''
 
-        return datetime.datetime.strptime(self.data.initial_time, '%m/%d/%Y (%H:%M)')
+        return datetime.datetime.strptime(self.field.initial_time, '%m/%d/%Y (%H:%M)')
 
     @property
-    def clevs(self) -> list:
+    def clevs(self) -> np.ndarray:
 
         '''
         Uses the information contained in the yaml config file to determine
@@ -93,11 +94,11 @@ class UPPData(GribFile, specs.VarSpec):
         function. The logic to parse those options is included here.
         '''
 
-        clev = self.vspec['clevs']
+        clev = np.asarray(self.vspec['clevs'])
 
         # Is clevs a list?
         if isinstance(clev, (list, np.ndarray)):
-            return clev
+            return np.asarray(clev)
 
         # Is clev a call to another function?
         try:
@@ -160,7 +161,7 @@ class UPPData(GribFile, specs.VarSpec):
 
         ''' Returns the forecast hour from the grib file. '''
 
-        return self.field.forecast_time
+        return str(self.field.forecast_time[0])
 
     @property
     @lru_cache()
@@ -182,19 +183,17 @@ class UPPData(GribFile, specs.VarSpec):
 
         ''' Returns the descriptor for the variable's level type. '''
 
-        return self.data.level_type
+        return self.field.level_type
 
     @property
     def numeric_level(self):
-        ''' Return tuple of numeric level and unit '''
+        ''' Return numeric level associated with the string. '''
 
-        numeric_level = int(''.join([c for c in self.level if c in digits]))
-        lev_type = ''.join([c for c in self.level if c in ascii_letters])
+        lev_val = ''.join([c for c in self.level if c in digits])
+        lev_val = int(lev_val) if lev_val else lev_val
+        lev_unit = ''.join([c for c in self.level if c in ascii_letters])
 
-        numeric_level = numeric_level * 100. if lev_type == 'mb' else numeric_level
-
-        return numeric_level, lev_type
-
+        return lev_val, lev_unit
 
     @property
     def ticks(self) -> int:
@@ -210,7 +209,7 @@ class UPPData(GribFile, specs.VarSpec):
         ''' Returns the variable unit from the yaml config, if available. If not
         specified in the yaml file, returns the value set in the Grib file. '''
 
-        return self.vspec.get('unit', self.field['units'])
+        return self.vspec.get('unit', self.field.units)
 
     @property
     def valid_dt(self) -> datetime.datetime:
@@ -218,14 +217,19 @@ class UPPData(GribFile, specs.VarSpec):
         ''' Returns a datetime object corresponding to the forecast hour's valid
         time as set in the Grib file. '''
 
-        fh = datetime.timedelta(hours=self.forecastTime)
+        fh = datetime.timedelta(hours=int(self.fhr))
         return self.anl_dt + fh
 
     @lru_cache()
     def values(self, field=None) -> np.ndarray:
 
-        ''' Returns the numpy array of values for the variable after applying any
-        unit conversion to the original data. '''
+        '''
+        Returns the numpy array of values at the requested level for the variable after applying any
+        unit conversion to the original data.
+
+        Optional Input:
+            field      a field other than self.field such as wind. If not provided, self.field is used
+        '''
 
         field = self.field if field is None else field
 
@@ -234,9 +238,16 @@ class UPPData(GribFile, specs.VarSpec):
         if len(self.field.shape) == 2:
             fld = self.field[::]
         elif len(self.field.shape) == 3:
+
+            # Available variable levels
             levs = self.contents.variables[self.field.dimensions[0]][::]
-            print(self.numeric_level)
-            lev = int(np.argwhere(levs == self.numeric_level[0]))
+
+            # Requested level
+            lev_val, lev_unit = self.numeric_level
+            lev_val = lev_val * 100. if lev_unit == 'mb' else lev_val
+
+            # The index of the reqested level
+            lev = int(np.argwhere(levs == lev_val))
             fld = self.field[lev, :, :]
 
         if transform and transform != 'None':
@@ -254,6 +265,6 @@ class UPPData(GribFile, specs.VarSpec):
         u, v = [self.spec.get(var, {}).get(self.level, {}).get('ncl_name') for var in ['u', 'v']]
 
         if u is None or v is None:
-            raise errors.NoGraphicsDefinitionForVariable(short_name, level)
+            raise errors.NoGraphicsDefinitionForVariable((u, v), self.level)
 
-        return [self.values(field=self.get_field(component)) for component in [u, v]]
+        return [conversions.ms_to_kt(self.values(field=self.get_field(component))) for component in [u, v]]
