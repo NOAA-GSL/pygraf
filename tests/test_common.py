@@ -31,17 +31,28 @@ def test_conversion():
     a = np.ones([3, 2]) * 300
     b = list(a)
     c = a[0, 0]
+
+    # Check for the right answer
     assert np.array_equal(conversions.k_to_c(a), a - 273.15)
+    assert np.array_equal(conversions.k_to_f(a), (a - 273.15) * 9/5 + 32)
     assert np.array_equal(conversions.m_to_dm(a), a / 10)
+    assert np.array_equal(conversions.ms_to_kt(a), a * 1.9438)
     assert np.array_equal(conversions.pa_to_hpa(a), a / 100)
 
-    assert np.array_equal(conversions.k_to_c(b), a - 273.15)
-    assert np.array_equal(conversions.m_to_dm(b), a / 10)
-    assert np.array_equal(conversions.pa_to_hpa(b), a / 100)
+    functions = [
+        conversions.k_to_c,
+        conversions.k_to_f,
+        conversions.m_to_dm,
+        conversions.ms_to_kt,
+        conversions.pa_to_hpa,
+        ]
 
-    assert np.array_equal(conversions.k_to_c(c), a[0, 0] - 273.15)
-    assert np.array_equal(conversions.m_to_dm(c), a[0, 0] / 10)
-    assert np.array_equal(conversions.pa_to_hpa(c), a[0, 0] / 100)
+    # Check that all functions return a np.ndarray given a collection, or same type given a number
+    for f in functions:
+
+        # Collections
+        for collection in [b, c]:
+            assert isinstance(f(collection), (float, np.ndarray))
 
 
 class MockSpecs(specs.VarSpec):
@@ -50,7 +61,11 @@ class MockSpecs(specs.VarSpec):
 
     @property
     def clevs(self):
-        return list(range(15))
+        return np.asarray(range(15))
+
+    @property
+    def vspec(self):
+        return {}
 
 
 def test_specs():
@@ -96,10 +111,14 @@ class TestDefaultSpecs():
             'clevs': self.is_a_clev,
             'cmap': self.is_a_cmap,
             'colors': self.is_a_color,
+            'contour': self.is_a_key,
+            'ncl_name': True,
+            'short_name': True,
             'subst': self.is_a_key,
             'ticks': self.is_int,
             'transform': self.is_callable,
             'unit': self.is_string,
+            'wind': self.is_bool,
             }
 
     @staticmethod
@@ -107,7 +126,7 @@ class TestDefaultSpecs():
 
         ''' Returns true for a clev that is a list, a range, or a callable function. '''
 
-        if isinstance(clev, list):
+        if isinstance(clev, np.ndarray):
             return True
 
         if 'range' in clev.split('[')[0]:
@@ -180,7 +199,7 @@ class TestDefaultSpecs():
         for lev in allowed_lev_type:
             ks = key.split(lev)
 
-            # If the lev didn't appear in the key, lenght of list is 1.
+            # If the lev didn't appear in the key, length of list is 1.
             # If the lev didn't match exactly, the second element will the remainder of the string
             if len(ks) == 2 and len(ks[1]) == 0:
                 numeric = ks[0].isnumeric()
@@ -207,6 +226,12 @@ class TestDefaultSpecs():
         ''' Returns true if key exists as a key in the config file. '''
 
         return self.cfg.get(key) is not None
+
+    def is_bool(self, k):
+
+        ''' Returns true if k is a boolean variable. '''
+
+        return isinstance(k, bool)
 
     def is_callable(self, func):
 
@@ -238,12 +263,15 @@ class TestDefaultSpecs():
         if not isinstance(d, dict):
             return
         for k, v in d.items():
-            assert (k in self.allowable.keys()) or self.is_int(k)
+            assert (k in self.allowable.keys()) or self.is_a_level(k)
             if isinstance(v, dict):
                 self.check_keys(v)
             else:
                 checker = self.allowable.get(k)
-                assert checker(v)
+                if isinstance(checker, bool):
+                    assert checker
+                else:
+                    assert checker(v)
 
     def test_keys(self):
 

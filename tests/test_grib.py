@@ -12,15 +12,6 @@ import yaml
 
 import adb_graphics.datahandler.grib as grib
 
-def test_get_fields(gribfile):
-
-    ''' Ensure that get_fields returns a NioVariable instance '''
-
-    grib_file = grib.GribFile(gribfile)
-    field = grib_file.get_fields(level='500mb', short_name='temp')
-    assert isinstance(field, Nio.NioVariable) # pylint: disable=c-extension-no-member
-
-
 def test_UPPData(gribfile):
 
     ''' Test the UPPData class methods. '''
@@ -29,7 +20,7 @@ def test_UPPData(gribfile):
 
     # Ensure appropriate typing and size (where applicable)
     assert isinstance(upp.anl_dt, datetime.datetime)
-    assert isinstance(upp.clevs, list)
+    assert isinstance(upp.clevs, np.ndarray)
     assert isinstance(upp.cmap, mcolors.Colormap)
     assert isinstance(upp.colors, np.ndarray)
     assert isinstance(upp.corners, list)
@@ -37,17 +28,13 @@ def test_UPPData(gribfile):
     assert isinstance(upp.fhr, str)
     assert isinstance(upp.field, Nio.NioVariable)
     assert isinstance(upp.lev_descriptor, str)
-    assert isinstance(upp.numeric_level, list)
-    assert isnumeric(upp.numeric_level[0])
-    assert isinstance(upp.numeric_level[1], str)
     assert isinstance(upp.spec, dict)
     assert isinstance(upp.ticks, int)
     assert isinstance(upp.units, str)
     assert isinstance(upp.valid_dt, datetime.datetime)
-    assert isinstance(upp.values, np.ndarray)
+    assert isinstance(upp.values(), np.ndarray)
     assert isinstance(upp.wind, list)
     assert len(upp.corners) == 4
-    assert len(upp.numeric_level) == 2
     assert len(upp.wind) == 2
     for component in upp.wind:
         assert isinstance(component, np.ndarray)
