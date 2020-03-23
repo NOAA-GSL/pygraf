@@ -108,17 +108,23 @@ def main(cla):
 
 
 def to_datetime(string):
+    ''' Return a datetime object give a string like YYYYMMDDHH. '''
     return dt.datetime.strptime(string, '%Y%m%d%H')
 
 
 def from_datetime(date):
+    ''' Return a string like YYYYMMDDHH given a datetime object. '''
     return dt.datetime.strftime(date, '%Y%m%d%H')
 
 def webname(prefix, tile='', suffix=''):
-    name = f"{prefix}{'_' + tile}{'_' + suffix}"
-    return name
+    ''' Return the filename expected for the web graphic. '''
+    return f"{prefix}{'_' + tile}{'_' + suffix}"
 
 def parse_args():
+
+    ''' Set up argparse command line arguments, and return the Namespace
+    containing the settings. '''
+
     parser = argparse.ArgumentParser(description='Script to drive the creation of graphics.')
 
     parser.add_argument('-d', '--data_root',

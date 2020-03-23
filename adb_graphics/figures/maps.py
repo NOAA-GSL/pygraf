@@ -222,7 +222,10 @@ class DataMap():
         plt.title(f"{level} {lev_unit}", position=(0.5, 1.04), fontsize=18)
 
         # Two lines for shaded data (top), and contoured data (bottom)
-        plt.title(f"{f.field.long_name} ({f.units}, shaded)\n {contoured}", loc='right', fontsize=16)
+        plt.title(f"{f.field.long_name} ({f.units}, shaded)\n {contoured}",
+                  loc='right',
+                  fontsize=16,
+                  )
 
         # X label shows forecast valid time.
         plt.xlabel(f"Valid time: {vtime}", fontsize=18, labelpad=100)

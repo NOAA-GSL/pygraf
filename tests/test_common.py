@@ -118,7 +118,7 @@ class TestDefaultSpecs():
             'ticks': self.is_int,
             'transform': self.is_callable,
             'unit': self.is_string,
-            'wind': self.is_bool,
+            'wind': self.is_wind,
             }
 
     @staticmethod
@@ -254,6 +254,12 @@ class TestDefaultSpecs():
         ''' Returns true if s is a string. '''
 
         return isinstance(s, str)
+
+    def is_wind(self, wind):
+
+        ''' Returns true if wind is a bool or is_a_level. '''
+
+        return isinstance(wind, bool) or self.is_a_level(wind)
 
     def check_keys(self, d):
 

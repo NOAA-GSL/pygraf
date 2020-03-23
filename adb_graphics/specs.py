@@ -33,6 +33,13 @@ class VarSpec(abc.ABC):
         levels for a given field. Numpy arange supports non-integer values. '''
 
     @property
+    @abc.abstractproperty
+    def vspec(self):
+
+        ''' The variable plotting specification. The level-specific subgroup
+        from a config file like default_specs.yml. '''
+
+    @property
     @lru_cache()
     def ps_colors(self) -> np.ndarray:
 

@@ -1,3 +1,5 @@
+# pylint: disable=invalid-name,too-few-public-methods
+
 '''
 Classes that handle generic grib file handling, and those that handle the
 specifics of grib files from UPP.
@@ -11,7 +13,6 @@ from matplotlib import cm
 import numpy as np
 import Nio
 
-from .. import conversions
 from .. import errors
 from .. import specs
 from .. import utils
@@ -43,7 +44,6 @@ class GribFile():
 
         return field
 
-
 class UPPData(GribFile, specs.VarSpec):
 
     '''
@@ -70,10 +70,6 @@ class UPPData(GribFile, specs.VarSpec):
         self.level = level
         self.short_name = short_name
         self.spec = self.yml
-        self.vspec = self.spec.get(short_name, {}).get(level)
-
-        if not self.vspec:
-            raise errors.NoGraphicsDefinitionForVariable(short_name, level)
 
     @property
     def anl_dt(self) -> datetime.datetime:
@@ -224,11 +220,12 @@ class UPPData(GribFile, specs.VarSpec):
     def values(self, field=None) -> np.ndarray:
 
         '''
-        Returns the numpy array of values at the requested level for the variable after applying any
-        unit conversion to the original data.
+        Returns the numpy array of values at the requested level for the
+        variable after applying any unit conversion to the original data.
 
         Optional Input:
-            field      a field other than self.field such as wind. If not provided, self.field is used
+            field      a field other than self.field such as wind.  If not
+                       provided, self.field is used.
         '''
 
         field = self.field if field is None else field
@@ -255,6 +252,16 @@ class UPPData(GribFile, specs.VarSpec):
 
         return fld
 
+    @property
+    def vspec(self):
+
+        ''' Return the graphics specification for a given level. '''
+
+        vspec = self.spec.get(self.short_name, {}).get(self.level)
+        if not vspec:
+            raise errors.NoGraphicsDefinitionForVariable(self.short_name, self.level)
+        return vspec
+
     @lru_cache()
     def wind(self, level) -> [np.ndarray, np.ndarray]:
 
@@ -262,8 +269,9 @@ class UPPData(GribFile, specs.VarSpec):
         Returns the u, v wind components as a list (length 2) of arrays.
 
             Input:
-                level      bool or level key. If True, use same level as self, if a string level key is provided, use
-                           wind at that level.
+                level      bool or level key. If True, use same level as self,
+                           if a string level key is provided, use wind at that
+                           level.
         '''
 
         level = self.level if level and isinstance(level, bool) else level

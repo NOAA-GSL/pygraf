@@ -33,10 +33,10 @@ def test_UPPData(gribfile):
     assert isinstance(upp.units, str)
     assert isinstance(upp.valid_dt, datetime.datetime)
     assert isinstance(upp.values(), np.ndarray)
-    assert isinstance(upp.wind, list)
+    assert isinstance(upp.wind(True), list)
     assert len(upp.corners) == 4
-    assert len(upp.wind) == 2
-    for component in upp.wind:
+    assert len(upp.wind(True)) == 2
+    for component in upp.wind(True):
         assert isinstance(component, np.ndarray)
 
     # Test for appropriate date formatting
