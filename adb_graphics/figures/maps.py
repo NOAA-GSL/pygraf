@@ -162,8 +162,9 @@ class DataMap():
             _ = [txt.set_bbox(dict(facecolor='k', edgecolor='none', pad=0)) for txt in clab]
 
         # Add wind barbs, if requested
-        if self.field.vspec.get('wind', False):
-            self._wind_barbs()
+        add_wind = self.field.vspec.get('wind', False)
+        if add_wind:
+            self._wind_barbs(add_wind)
 
         # Finish with the title
         self._title()
@@ -226,11 +227,11 @@ class DataMap():
         # X label shows forecast valid time.
         plt.xlabel(f"Valid time: {vtime}", fontsize=18, labelpad=100)
 
-    def _wind_barbs(self):
+    def _wind_barbs(self, level):
 
         ''' Draws the wind barbs. '''
 
-        u, v = self.field.wind
+        u, v = self.field.wind(level)
 
         # Set the stride of the barbs to be plotted with a masked array.
         mask = np.ones_like(u)

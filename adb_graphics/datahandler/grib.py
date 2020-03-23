@@ -255,16 +255,24 @@ class UPPData(GribFile, specs.VarSpec):
 
         return fld
 
-    @property
     @lru_cache()
-    def wind(self) -> [np.ndarray, np.ndarray]:
+    def wind(self, level) -> [np.ndarray, np.ndarray]:
 
-        ''' Returns the u, v wind components as a list (length 2) of arrays. '''
+        '''
+        Returns the u, v wind components as a list (length 2) of arrays.
 
-        # Get u, v ncl_names
-        u, v = [self.spec.get(var, {}).get(self.level, {}).get('ncl_name') for var in ['u', 'v']]
+            Input:
+                level      bool or level key. If True, use same level as self, if a string level key is provided, use
+                           wind at that level.
+        '''
 
-        if u is None or v is None:
-            raise errors.NoGraphicsDefinitionForVariable((u, v), self.level)
+        level = self.level if level and isinstance(level, bool) else level
 
-        return [conversions.ms_to_kt(self.values(field=self.get_field(component))) for component in [u, v]]
+        # Just in case wind gets called with level=False
+        if not level:
+            return False
+
+        # Create UPPData objects for u, v components
+        u, v = [UPPData(filename=self.filename, level=level, short_name=var) for var in ['u', 'v']]
+
+        return [component.values() for component in [u, v]]
