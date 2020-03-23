@@ -9,7 +9,6 @@ from itertools import chain
 from functools import lru_cache
 from matplotlib import cm
 import numpy as np
-from numpy import arange
 import yaml
 
 
@@ -28,10 +27,10 @@ class VarSpec(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def clevs(self) -> list:
+    def clevs(self) -> np.ndarray:
 
-        ''' An abstract method responsible for returning the list of contour
-        levels for a given field. '''
+        ''' An abstract method responsible for returning the np.ndarray of contour
+        levels for a given field. Numpy arange supports non-integer values. '''
 
     @property
     @lru_cache()
@@ -51,4 +50,4 @@ class VarSpec(abc.ABC):
         ''' Default color map for Temperature '''
 
         ncolors = len(self.clevs)
-        return cm.get_cmap('jet', ncolors)(range(ncolors))
+        return cm.get_cmap(self.vspec.get('cmap', 'jet'), ncolors)(range(ncolors))
