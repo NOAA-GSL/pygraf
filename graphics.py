@@ -4,7 +4,6 @@
 import argparse
 import datetime as dt
 import os
-import warnings
 
 import matplotlib.pyplot as plt
 import yaml
@@ -12,7 +11,6 @@ import yaml
 from adb_graphics.datahandler import grib
 from adb_graphics.figures import maps
 
-warnings.simplefilter('ignore')
 
 AIRPORTS = 'static/Airports_locs.txt'
 

@@ -13,7 +13,7 @@ To run the tests, type the following in the top level repo directory:
 
 '''
 
-from string import digits, ascii_letters
+from string import ascii_letters
 
 from matplotlib import cm
 from matplotlib import colors as mcolors
@@ -47,10 +47,8 @@ def test_conversion():
         conversions.pa_to_hpa,
         ]
 
-    # Check that all functions return a np.ndarray given a collection, or same type given a number
+    # Check that all functions return a np.ndarray given a collection, or single float
     for f in functions:
-
-        # Collections
         for collection in [b, c]:
             assert isinstance(f(collection), (float, np.ndarray))
 
@@ -113,8 +111,6 @@ class TestDefaultSpecs():
             'colors': self.is_a_color,
             'contour': self.is_a_key,
             'ncl_name': True,
-            'short_name': True,
-            'subst': self.is_a_key,
             'ticks': self.is_int,
             'transform': self.is_callable,
             'unit': self.is_string,
@@ -151,7 +147,8 @@ class TestDefaultSpecs():
         colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS)
         return color in colors.keys() or self.is_callable(color)
 
-    def is_a_level(self, key):
+    @staticmethod
+    def is_a_level(key):
 
         '''
         Returns true if the key fits one of the level descriptor formats.
@@ -165,31 +162,31 @@ class TestDefaultSpecs():
         '''
 
         allowed_levels = [
-                'esbl',    # ???
-                'esblmn',  # ???
-                'max',     # maximum in column
-                'maxsfc',  # max surface value
-                'mdn',     # maximum downward
-                'mnsfc',   # min surface value
-                'mup',     # maximum upward
-                'sfc',     # surface
-                'ua',      # upper air
-                ]
+            'esbl',    # ???
+            'esblmn',  # ???
+            'max',     # maximum in column
+            'maxsfc',  # max surface value
+            'mdn',     # maximum downward
+            'mnsfc',   # min surface value
+            'mup',     # maximum upward
+            'sfc',     # surface
+            'ua',      # upper air
+            ]
 
         allowed_lev_type = [
-                'cm',      # centimeters
-                'ds',      # difference
-                'm',       # meters
-                'mb',      # milibars
-                ]
+            'cm',      # centimeters
+            'ds',      # difference
+            'm',       # meters
+            'mb',      # milibars
+            ]
 
         allowed_stat = [
-                'in',      # ???
-                'm',       # ???
-                'maxm',    # ???
-                'mn',      # minimum
-                'mx',      # maximum
-                ]
+            'in',      # ???
+            'm',       # ???
+            'maxm',    # ???
+            'mn',      # minimum
+            'mx',      # maximum
+            ]
 
         # Easy check first -- it is in the allowed_levels list
         if key in allowed_levels:
@@ -227,7 +224,8 @@ class TestDefaultSpecs():
 
         return self.cfg.get(key) is not None
 
-    def is_bool(self, k):
+    @staticmethod
+    def is_bool(k):
 
         ''' Returns true if k is a boolean variable. '''
 

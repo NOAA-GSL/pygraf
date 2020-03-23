@@ -2,13 +2,10 @@
 ''' Test suite for grib datahandler. '''
 
 import datetime
-import tempfile
 
 import numpy as np
 from matplotlib import colors as mcolors
-import pygrib
 import Nio
-import yaml
 
 import adb_graphics.datahandler.grib as grib
 
@@ -42,4 +39,3 @@ def test_UPPData(gribfile):
     # Test for appropriate date formatting
     test_date = datetime.datetime(2020, 12, 5, 12)
     assert upp.date_to_str(test_date) == '20201205 12 UTC'
-
