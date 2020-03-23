@@ -70,11 +70,12 @@ temp: # Temperature
   2m:
     clevs: !!python/object/apply:numpy.arange [-60, 120, 10]
     cmap: jet
+    colors: t_colors
     ncl_name: TMP_P0_L103_GLC0
     ticks: 10
     transform: conversions.k_to_f
     unit: F
-    wind: True
+    wind: 10m
   500mb: &ua_temp
     clevs: !!python/object/apply:numpy.arange [-70, 10, 2.5]
     cmap: jet
@@ -104,16 +105,21 @@ temp: # Temperature
     unit: F
     wind: False
 u:
-  500mb:
+  10m:
+    ncl_name: UGRD_P0_L103_GLC0
+    transform: conversions.ms_to_kt
+  500mb: &ua_uwind
     ncl_name: UGRD_P0_L100_GLC0
-  850mb:
-    ncl_name: UGRD_P0_L100_GLC0
-  925mb:
-    ncl_name: UGRD_P0_L100_GLC0
+  700mb: *ua_uwind
+  850mb: *ua_uwind
+  925mb: *ua_uwind
 v:
-  500mb:
+  10m:
+    ncl_name: VGRD_P0_L103_GLC0
+    transform: conversions.ms_to_kt
+  500mb: &ua_vwind
     ncl_name: VGRD_P0_L100_GLC0
-  850mb:
-    ncl_name: VGRD_P0_L100_GLC0
-  925mb:
-    ncl_name: VGRD_P0_L100_GLC0
+    transform: conversions.ms_to_kt
+  700mb: *ua_vwind
+  850mb: *ua_vwind
+  925mb: *ua_vwind
