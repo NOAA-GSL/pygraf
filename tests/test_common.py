@@ -13,6 +13,8 @@ To run the tests, type the following in the top level repo directory:
 
 '''
 
+from string import ascii_letters
+
 from matplotlib import cm
 from matplotlib import colors as mcolors
 import numpy as np
@@ -29,17 +31,26 @@ def test_conversion():
     a = np.ones([3, 2]) * 300
     b = list(a)
     c = a[0, 0]
+
+    # Check for the right answer
     assert np.array_equal(conversions.k_to_c(a), a - 273.15)
+    assert np.array_equal(conversions.k_to_f(a), (a - 273.15) * 9/5 + 32)
     assert np.array_equal(conversions.m_to_dm(a), a / 10)
+    assert np.array_equal(conversions.ms_to_kt(a), a * 1.9438)
     assert np.array_equal(conversions.pa_to_hpa(a), a / 100)
 
-    assert np.array_equal(conversions.k_to_c(b), a - 273.15)
-    assert np.array_equal(conversions.m_to_dm(b), a / 10)
-    assert np.array_equal(conversions.pa_to_hpa(b), a / 100)
+    functions = [
+        conversions.k_to_c,
+        conversions.k_to_f,
+        conversions.m_to_dm,
+        conversions.ms_to_kt,
+        conversions.pa_to_hpa,
+        ]
 
-    assert np.array_equal(conversions.k_to_c(c), a[0, 0] - 273.15)
-    assert np.array_equal(conversions.m_to_dm(c), a[0, 0] / 10)
-    assert np.array_equal(conversions.pa_to_hpa(c), a[0, 0] / 100)
+    # Check that all functions return a np.ndarray given a collection, or single float
+    for f in functions:
+        for collection in [b, c]:
+            assert isinstance(f(collection), (float, np.ndarray))
 
 
 class MockSpecs(specs.VarSpec):
@@ -48,7 +59,11 @@ class MockSpecs(specs.VarSpec):
 
     @property
     def clevs(self):
-        return list(range(15))
+        return np.asarray(range(15))
+
+    @property
+    def vspec(self):
+        return {}
 
 
 def test_specs():
@@ -94,12 +109,12 @@ class TestDefaultSpecs():
             'clevs': self.is_a_clev,
             'cmap': self.is_a_cmap,
             'colors': self.is_a_color,
-            'subst': self.is_a_key,
+            'contour': self.is_a_key,
+            'ncl_name': True,
             'ticks': self.is_int,
             'transform': self.is_callable,
             'unit': self.is_string,
-            'warm': self.is_a_clev,
-            'cold': self.is_a_clev,
+            'wind': self.is_wind,
             }
 
     @staticmethod
@@ -107,7 +122,7 @@ class TestDefaultSpecs():
 
         ''' Returns true for a clev that is a list, a range, or a callable function. '''
 
-        if isinstance(clev, list):
+        if isinstance(clev, np.ndarray):
             return True
 
         if 'range' in clev.split('[')[0]:
@@ -132,11 +147,89 @@ class TestDefaultSpecs():
         colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS)
         return color in colors.keys() or self.is_callable(color)
 
+    @staticmethod
+    def is_a_level(key):
+
+        '''
+        Returns true if the key fits one of the level descriptor formats.
+
+        Allowable formats include:
+
+            [str_descriptor]     e.g. sfc, max, mup
+            [numeric][lev_type]  e.g. 500mb, or 2m
+            [stat][numeric]      e.g. mn02, mx25
+
+        '''
+
+        allowed_levels = [
+            'esbl',    # ???
+            'esblmn',  # ???
+            'max',     # maximum in column
+            'maxsfc',  # max surface value
+            'mdn',     # maximum downward
+            'mnsfc',   # min surface value
+            'mup',     # maximum upward
+            'sfc',     # surface
+            'ua',      # upper air
+            ]
+
+        allowed_lev_type = [
+            'cm',      # centimeters
+            'ds',      # difference
+            'm',       # meters
+            'mb',      # milibars
+            ]
+
+        allowed_stat = [
+            'in',      # ???
+            'm',       # ???
+            'maxm',    # ???
+            'mn',      # minimum
+            'mx',      # maximum
+            ]
+
+        # Easy check first -- it is in the allowed_levels list
+        if key in allowed_levels:
+            return True
+
+        # Check for [numeric][lev_type] pattern
+        for lev in allowed_lev_type:
+            ks = key.split(lev)
+
+            # If the lev didn't appear in the key, length of list is 1.
+            # If the lev didn't match exactly, the second element will the remainder of the string
+            if len(ks) == 2 and len(ks[1]) == 0:
+                numeric = ks[0].isnumeric()
+                allowed = ''.join([c for c in key if c in ascii_letters]) in allowed_lev_type
+
+                if numeric and allowed:
+                    return True
+
+        # Check for [stat][numeric]
+        for stat in allowed_stat:
+            ks = key.split(stat)
+            if len(ks) == 2 and len(ks[0]) == 0:
+
+                numeric = ks[1].isnumeric()
+                allowed = ''.join([c for c in key if c in ascii_letters]) in allowed_stat
+
+                if numeric and allowed:
+                    return True
+
+        return False
+
     def is_a_key(self, key):
 
         ''' Returns true if key exists as a key in the config file. '''
 
         return self.cfg.get(key) is not None
+
+    @staticmethod
+    def is_bool(k):
+
+        ''' Returns true if k is a boolean variable. '''
+
+        return isinstance(k, bool)
 
     def is_callable(self, func):
 
@@ -160,6 +253,12 @@ class TestDefaultSpecs():
 
         return isinstance(s, str)
 
+    def is_wind(self, wind):
+
+        ''' Returns true if wind is a bool or is_a_level. '''
+
+        return isinstance(wind, bool) or self.is_a_level(wind)
+
     def check_keys(self, d):
 
         ''' Helper function that recursively checks the keys in the dictionary by calling the
@@ -168,12 +267,15 @@ class TestDefaultSpecs():
         if not isinstance(d, dict):
             return
         for k, v in d.items():
-            assert (k in self.allowable.keys()) or self.is_int(k)
+            assert (k in self.allowable.keys()) or self.is_a_level(k)
             if isinstance(v, dict):
                 self.check_keys(v)
             else:
                 checker = self.allowable.get(k)
-                assert checker(v)
+                if isinstance(checker, bool):
+                    assert checker
+                else:
+                    assert checker(v)
 
     def test_keys(self):
 

@@ -23,14 +23,21 @@ class VarSpec(abc.ABC):
     def __init__(self, config):
 
         with open(config, 'r') as cfg:
-            self.yml = yaml.load(cfg, Loader=yaml.SafeLoader)
+            self.yml = yaml.load(cfg, Loader=yaml.Loader)
 
     @property
     @abc.abstractmethod
-    def clevs(self) -> list:
+    def clevs(self) -> np.ndarray:
 
-        ''' An abstract method responsible for returning the list of contour
-        levels for a given field. '''
+        ''' An abstract method responsible for returning the np.ndarray of contour
+        levels for a given field. Numpy arange supports non-integer values. '''
+
+    @property
+    @abc.abstractproperty
+    def vspec(self):
+
+        ''' The variable plotting specification. The level-specific subgroup
+        from a config file like default_specs.yml. '''
 
     @property
     @lru_cache()
@@ -50,4 +57,4 @@ class VarSpec(abc.ABC):
         ''' Default color map for Temperature '''
 
         ncolors = len(self.clevs)
-        return cm.get_cmap('jet', ncolors)(range(ncolors))
+        return cm.get_cmap(self.vspec.get('cmap', 'jet'), ncolors)(range(ncolors))

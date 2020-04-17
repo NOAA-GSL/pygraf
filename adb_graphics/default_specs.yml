@@ -2,66 +2,133 @@
 #
 # Acceptable keys for a variable:
 #
-#   clevs: one of the following
+#   clevs: specifies the contour levels by one of the following methods
 #      - a list with no quotes
-#      - a range specified as "range [list]" with quotes. Specify "list" as with
-#      numpy.arange() like this -- [[start, ]stop[, increment]]]. start and
-#      increment are options.
+#      - a numpy.arange specified as "!!python/object/apply:numpy.arange [list]"
+#        with quotes. Specify "list" as with numpy.anumpy.arange() like this --
+#        [[start, ]stop[, increment]]]. start and increment are options.
 #      - the name of a function to be called that will return a list.
 #
 #   cmap: name of Python colormap
 #
 #   colors: name of function that defines a list of colors
 #
-#   subst: name of a section to copy settings from
+#   contour: specifies a field to be contoured, and must come from same level
+#
+#   ncl_name: the name of the variable as expected by NCL
+#
+#   ticks: the number of tick marks on the colorbar
 #
 #   transform: name of a function that will perform a given transformation of
-#      the variable
+#              the variable
 #
 #   unit: the resulting unit of the variable
+#
+#   wind: a boolean variable that switches on/off the wind barbs drawn from the
+#         wind at the same level, OR a string specifying the key for the desired
+#         wind level
 #
 #
 # A few conventions must be followed for adding variables to this file.
 #
-#   Substitution:
-#      To substitute parts of another section, use the "subst" key with a value
-#      for the intended section to be substituted. This key is recognized by the
-#      Python script that loads this file, and will substitute any fields that
-#      do not already have a key, value pair for that section, but will not
-#      override any that are currently set.
-#
 #   Naming:
-#      The variable name chosen here is the short_name in the NetCDF file. This
-#      is imposed by the Python class loading this file. Please add a comment to
-#      describe the variable when adding it here.
+#      The variable name chosen here is the short name as specified by the
+#      graphics file naming convention. This is imposed by the Python class
+#      loading this file. Please add a comment to describe the variable when
+#      adding it here.
 #
 #   Order:
 #      Each set of items should be in alphabetical order for ease of code
-#      maintenance.
+#      maintenance, unless some other order makes more sense, i.e. a section
+#      anchor needs to be applied before another section.
 #
 
 gh: # Geopotential height
-  500:
-    clevs: range [502, 601, 4]
+  500mb: &ua_gh
+    clevs: !!python/object/apply:numpy.arange [6, 990, 6]
     colors: w
+    ncl_name: HGT_P0_L100_GLC0
     ticks: 4
     transform: conversions.m_to_dm
     unit: dm
-pres: # Pressure
-  subst: sp
-sp: # Surface Pressure
-  clevs: range [650, 1051, 4]
-  cmap: gist_ncar
-  colors: ps_colors
-  ticks: 20
-  transform: conversions.pa_to_hpa
-  unit: hPa
-t: # Temperature
-  clevs:
-    warm: range [-50, 5, 2.5]
-    cold: range [-70, -10, 2.5]
-  cmap: jet
-  colors: t_colors
-  ticks: 5
-  transform: conversions.k_to_c
-  unit: C
+  700mb:
+    <<: *ua_gh
+    clevs: !!python/object/apply:numpy.arange [201, 373, 3]
+  850mb:
+    <<: *ua_gh
+    clevs: !!python/object/apply:numpy.arange [3, 600, 3]
+  925mb:
+    <<: *ua_gh
+    clevs: !!python/object/apply:numpy.arange [3, 600, 3]
+pres:
+  sfc:
+    clevs: !!python/object/apply:numpy.arange [650, 1051, 4]
+    cmap: gist_ncar
+    colors: ps_colors
+    ncl_name: PRES_P0_L1_GLC0
+    ticks: 20
+    transform: conversions.pa_to_hpa
+    unit: hPa
+temp: # Temperature
+  2ds: # Not yet supported.
+    clevs: !!python/object/apply:numpy.arange [-50, 50, 2]
+    cmap: bwr
+    ticks: 2
+    unit: F
+    wind: False
+  2m:
+    clevs: !!python/object/apply:numpy.arange [-60, 120, 10]
+    cmap: jet
+    colors: t_colors
+    ncl_name: TMP_P0_L103_GLC0
+    ticks: 10
+    transform: conversions.k_to_f
+    unit: F
+    wind: 10m
+  500mb: &ua_temp
+    clevs: !!python/object/apply:numpy.arange [-70, 10, 2.5]
+    cmap: jet
+    colors: t_colors
+    contour: gh
+    ncl_name: TMP_P0_L100_GLC0
+    ticks: 5
+    transform: conversions.k_to_c
+    unit: C
+    wind: True
+  700mb:
+    <<: *ua_temp
+    clevs: !!python/object/apply:numpy.arange [-40, 40, 2.5]
+  850mb:
+    <<: *ua_temp
+    clevs: !!python/object/apply:numpy.arange [-40, 40, 2.5]
+  925mb:
+    <<: *ua_temp
+    clevs: !!python/object/apply:numpy.arange [-40, 40, 2.5]
+  sfc:
+    clevs: !!python/object/apply:numpy.arange [-60, 120, 10]
+    cmap: jet
+    colors: t_colors
+    ncl_name: TMP_P0_L1_GLC0
+    ticks: 20
+    transform: conversions.k_to_f
+    unit: F
+    wind: False
+u:
+  10m:
+    ncl_name: UGRD_P0_L103_GLC0
+    transform: conversions.ms_to_kt
+  500mb: &ua_uwind
+    ncl_name: UGRD_P0_L100_GLC0
+  700mb: *ua_uwind
+  850mb: *ua_uwind
+  925mb: *ua_uwind
+v:
+  10m:
+    ncl_name: VGRD_P0_L103_GLC0
+    transform: conversions.ms_to_kt
+  500mb: &ua_vwind
+    ncl_name: VGRD_P0_L100_GLC0
+    transform: conversions.ms_to_kt
+  700mb: *ua_vwind
+  850mb: *ua_vwind
+  925mb: *ua_vwind

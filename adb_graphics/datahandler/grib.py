@@ -1,3 +1,5 @@
+# pylint: disable=invalid-name,too-few-public-methods
+
 '''
 Classes that handle generic grib file handling, and those that handle the
 specifics of grib files from UPP.
@@ -5,26 +7,20 @@ specifics of grib files from UPP.
 
 import datetime
 from functools import lru_cache
+from string import digits, ascii_letters
 
 from matplotlib import cm
 import numpy as np
-import pygrib
+import Nio
 
 from .. import errors
 from .. import specs
 from .. import utils
 
-# Define the unit of the various vertical level types. Used for figure titles.
-LEV_DESCRIPT = {
-    'surface': 'm',
-    'heightAboveGround': 'm',
-    'isobaricInhPa': 'hPa',
-}
-
 
 class GribFile():
 
-    ''' Wrappers and helper functions for interfacing with pygrib '''
+    ''' Wrappers and helper functions for interfacing with pyNIO.'''
 
     def __init__(self, filename):
         self.filename = filename
@@ -35,54 +31,45 @@ class GribFile():
         ''' Internal method that opens the grib file. Returns a grib message
         iterator. '''
 
-        return pygrib.open(self.filename) # pylint: disable=c-extension-no-member
+        return Nio.open_file(self.filename) # pylint: disable=c-extension-no-member
 
-    def get_fields(self, level, lev_type, short_name):
+    def get_field(self, ncl_name):
 
-        ''' Given three parameters (level, level type, and the short name of the
-        variable), this method queries the grib file for the requested field and
-        returns a single field. Pygrib generates an error if no matching fields
-        are found. This method raises an exception if multiple fields are found
-        matching the search criteria. '''
+        ''' Given a numeric level and an ncl_name, return the NioVariable object. '''
 
-        fields = self.contents.select(
-            shortName=short_name,
-            typeOfLevel=lev_type,
-            level=level,
-        )
-        if len(fields) > 1:
-            msg = f'{len(fields)} fields were found for {short_name} at {level} {lev_type}'
-            raise errors.FieldNotUnique(msg)
-        return fields[0]
+        try:
+            field = self.contents.variables[ncl_name]
+        except KeyError:
+            raise errors.GribReadError(f'{ncl_name}')
 
-    @property
-    def list_vars(self):
-
-        ''' Helper functions that lists all variables, giving their short name,
-        level type, and level values. '''
-
-        for grb in self.contents:
-            print(grb.shortName, grb.typeOfLevel, grb.level)
-
+        return field
 
 class UPPData(GribFile, specs.VarSpec):
 
-    ''' Class handles grib file manipulation for a given variable in a UPP output
-    file. '''
+    '''
+    Class handles grib file manipulation for a given variable in a UPP output
+    file.
 
-    def __init__(self, filename, level, lev_type, short_name, **kwargs):
+    Input:
+        filename:    Path to grib file.
+        level:       level corresponding to entry in specs configuration
+        short_name:  name of variable corresponding to entry in specs configuration
+
+    Key Word Arguments:
+        config:      path to a user-specified configuration file
+    '''
+
+    def __init__(self, filename, level, short_name, **kwargs):
 
         # Parse kwargs first
-        self.season = kwargs.get('season', 'warm')
         config = kwargs.get('config', 'adb_graphics/default_specs.yml')
 
         GribFile.__init__(self, filename)
         specs.VarSpec.__init__(self, config)
 
         self.level = level
-        self.lev_type = lev_type
         self.short_name = short_name
-        self.spec = self._load_spec(level, short_name)
+        self.spec = self.yml
 
     @property
     def anl_dt(self) -> datetime.datetime:
@@ -90,10 +77,10 @@ class UPPData(GribFile, specs.VarSpec):
         ''' Returns the initial time of the grib file as a datetime object from
         the grib file.'''
 
-        return self.data.analDate
+        return datetime.datetime.strptime(self.field.initial_time, '%m/%d/%Y (%H:%M)')
 
     @property
-    def clevs(self) -> list:
+    def clevs(self) -> np.ndarray:
 
         '''
         Uses the information contained in the yaml config file to determine
@@ -103,17 +90,11 @@ class UPPData(GribFile, specs.VarSpec):
         function. The logic to parse those options is included here.
         '''
 
-        clev = self.spec['clevs']
-        clev = clev.get(self.season, clev) if isinstance(clev, dict) else clev
+        clev = np.asarray(self.vspec['clevs'])
 
         # Is clevs a list?
-        if isinstance(clev, list):
-            return clev
-
-        # Does clev have a range call?
-        if 'range' in clev.split('[')[0]:
-            nums = [float(i) for i in clev.split(' ', 1)[1].strip('[').strip(']').split(',')]
-            return list(np.arange(*nums))
+        if isinstance(clev, (list, np.ndarray)):
+            return np.asarray(clev)
 
         # Is clev a call to another function?
         try:
@@ -128,7 +109,7 @@ class UPPData(GribFile, specs.VarSpec):
         ''' Returns the LinearSegmentedColormap specified by the config key
         "cmap" '''
 
-        return cm.get_cmap(self.spec['cmap'])
+        return cm.get_cmap(self.vspec['cmap'])
 
     @property
     def colors(self) -> np.ndarray:
@@ -140,7 +121,7 @@ class UPPData(GribFile, specs.VarSpec):
         called.
         '''
 
-        color_spec = self.spec.get('colors')
+        color_spec = self.vspec.get('colors')
 
         if isinstance(color_spec, (list, np.ndarray)):
             return np.asarray(color_spec)
@@ -160,25 +141,8 @@ class UPPData(GribFile, specs.VarSpec):
                ll_lat, ur_lat, ll_lon, ur_lon
         '''
 
-        lat, lon = self.data.latlons()
+        lat, lon = self.latlons()
         return [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
-
-    @property
-    @lru_cache()
-    def data(self):
-
-        ''' Wrapper that calls get_fields method for the current variable. '''
-
-        try:
-            field = self.get_fields(
-                level=self.level,
-                lev_type=self.lev_type,
-                short_name=self.short_name,
-            )
-        except errors.FieldNotUnique:
-            print('NetCDF field not unique!')
-            raise
-        return field
 
     @staticmethod
     def date_to_str(date: datetime) -> str:
@@ -193,42 +157,45 @@ class UPPData(GribFile, specs.VarSpec):
 
         ''' Returns the forecast hour from the grib file. '''
 
-        return str(self.data['forecastTime'])
+        return str(self.field.forecast_time[0])
 
     @property
-    def lev_unit(self):
+    @lru_cache()
+    def field(self):
 
-        ''' Returns the unit for the variable's lev_type. '''
+        ''' Wrapper that calls get_field method for the current variable.
+        Returns the NioVariable object '''
 
-        return LEV_DESCRIPT.get(self.lev_type, '')
+        return self.get_field(self.vspec.get('ncl_name'))
 
-    def _load_spec(self, lev, varname) -> dict:
+    def latlons(self):
+
+        ''' Returns the set of latituteds and longitudes '''
+
+        return [self.contents.variables[var][::] for var in ['gridlat_0', 'gridlon_0']]
+
+    @property
+    def lev_descriptor(self):
+
+        ''' Returns the descriptor for the variable's level type. '''
+
+        return self.field.level_type
+
+    @property
+    def numeric_level(self):
 
         '''
-        Loads the configuration for the current variable from the yaml
-        config. Returns only a single section.
+        Split the numeric level and unit associated with the level key.
 
-        Handles parsing the special key "subst" to fill in unset key, value
-        pairs from other yaml sections.
+        A blank string is returned for lev_val for levels that do not contain a
+        numeric, e.g., 'sfc' or 'ua'.
         '''
 
-        spec = self.yml.get(varname)
-        spec = spec.get(lev, spec)
-        sub_s = {}
-        if 'subst' in spec.keys():
-            sub_s = self._load_spec(lev, spec['subst'])
-        for k, val in spec.items():
-            if k != 'subst':
-                sub_s[k] = val
-        return sub_s
+        lev_val = ''.join([c for c in self.level if c in digits])
+        lev_val = int(lev_val) if lev_val else lev_val
+        lev_unit = ''.join([c for c in self.level if c in ascii_letters])
 
-    def short_summary(self):
-
-        ''' Helper that prints out the keys describing the variable requested. '''
-
-        for k in sorted(self.data.keys()):
-            val = self.data[k] if self.data.valid_key(k) else None
-            print(f'{k}: {val}')
+        return lev_val, lev_unit
 
     @property
     def ticks(self) -> int:
@@ -236,7 +203,7 @@ class UPPData(GribFile, specs.VarSpec):
         ''' Returns the number of color bar tick marks from the yaml config
         settings. '''
 
-        return self.spec.get('ticks', 10)
+        return self.vspec.get('ticks', 10)
 
     @property
     def units(self) -> str:
@@ -244,7 +211,7 @@ class UPPData(GribFile, specs.VarSpec):
         ''' Returns the variable unit from the yaml config, if available. If not
         specified in the yaml file, returns the value set in the Grib file. '''
 
-        return self.spec.get('unit', self.data.parameterUnits)
+        return self.vspec.get('unit', self.field.units)
 
     @property
     def valid_dt(self) -> datetime.datetime:
@@ -252,24 +219,74 @@ class UPPData(GribFile, specs.VarSpec):
         ''' Returns a datetime object corresponding to the forecast hour's valid
         time as set in the Grib file. '''
 
-        return self.data.validDate
+        fh = datetime.timedelta(hours=int(self.fhr))
+        return self.anl_dt + fh
 
-    @property
-    def values(self) -> np.ndarray:
-
-        ''' Returns the numpy array of values for the variable after applying any
-        unit conversion to the original data. '''
-
-        transform = self.spec.get('transform')
-        if transform and transform != 'None':
-            return utils.get_func(transform)(self.data.values)
-        return self.data.values
-
-    @property
     @lru_cache()
-    def wind(self) -> [np.ndarray, np.ndarray]:
+    def values(self, field=None) -> np.ndarray:
 
-        ''' Returns the u, v wind components as a list (length 2) of arrays. '''
+        '''
+        Returns the numpy array of values at the requested level for the
+        variable after applying any unit conversion to the original data.
 
-        comps = ['u', 'v']
-        return [self.get_fields(self.level, self.lev_type, comp).values for comp in comps]
+        Optional Input:
+            field      a field other than self.field such as wind.  If not
+                       provided, self.field is used.
+        '''
+
+        field = self.field if field is None else field
+
+        transform = self.vspec.get('transform')
+
+        if len(self.field.shape) == 2:
+            fld = self.field[::]
+        elif len(self.field.shape) == 3:
+
+            # Available variable levels
+            levs = self.contents.variables[self.field.dimensions[0]][::]
+
+            # Requested level
+            lev_val, lev_unit = self.numeric_level
+            lev_val = lev_val * 100. if lev_unit == 'mb' else lev_val
+
+            # The index of the reqested level
+            lev = int(np.argwhere(levs == lev_val))
+            fld = self.field[lev, :, :]
+
+        if transform and transform != 'None':
+            return utils.get_func(transform)(fld)
+
+        return fld
+
+    @property
+    def vspec(self):
+
+        ''' Return the graphics specification for a given level. '''
+
+        vspec = self.spec.get(self.short_name, {}).get(self.level)
+        if not vspec:
+            raise errors.NoGraphicsDefinitionForVariable(self.short_name, self.level)
+        return vspec
+
+    @lru_cache()
+    def wind(self, level) -> [np.ndarray, np.ndarray]:
+
+        '''
+        Returns the u, v wind components as a list (length 2) of arrays.
+
+            Input:
+                level      bool or level key. If True, use same level as self,
+                           if a string level key is provided, use wind at that
+                           level.
+        '''
+
+        level = self.level if level and isinstance(level, bool) else level
+
+        # Just in case wind gets called with level=False
+        if not level:
+            return False
+
+        # Create UPPData objects for u, v components
+        u, v = [UPPData(filename=self.filename, level=level, short_name=var) for var in ['u', 'v']]
+
+        return [component.values() for component in [u, v]]
