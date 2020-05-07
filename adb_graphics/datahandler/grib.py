@@ -44,6 +44,7 @@ class GribFile():
 
         return field
 
+
 class UPPData(GribFile, specs.VarSpec):
 
     '''
@@ -170,9 +171,10 @@ class UPPData(GribFile, specs.VarSpec):
 
     def latlons(self):
 
-        ''' Returns the set of latituteds and longitudes '''
+        ''' Returns the set of latitudes and longitudes '''
 
-        return [self.contents.variables[var][::] for var in ['gridlat_0', 'gridlon_0']]
+        return [self.contents.variables[var][::] for var in \
+                self.field.coordinates.split()]
 
     @property
     def lev_descriptor(self):
