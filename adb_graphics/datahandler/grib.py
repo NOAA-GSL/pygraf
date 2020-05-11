@@ -46,6 +46,75 @@ class GribFile():
 
 class UPPData(GribFile, specs.VarSpec):
 
+    def __init__(self, filename, short_name, **kwargs):
+
+        # Parse kwargs first
+        config = kwargs.get('config', 'adb_graphics/default_specs.yml')
+
+        UPPData.__init__(self, filename)
+        specs.VarSpec.__init__(self, config)
+
+        self.spec = self.yml
+
+        self.short_name = short_name
+
+    @property
+    def anl_dt(self) -> datetime.datetime:
+
+        ''' Returns the initial time of the grib file as a datetime object from
+        the grib file.'''
+
+        return datetime.datetime.strptime(self.field.initial_time, '%m/%d/%Y (%H:%M)')
+
+    @property
+    def valid_dt(self) -> datetime.datetime:
+
+        ''' Returns a datetime object corresponding to the forecast hour's valid
+        time as set in the Grib file. '''
+
+        fh = datetime.timedelta(hours=int(self.fhr))
+        return self.anl_dt + fh
+
+    @staticmethod
+    def date_to_str(date: datetime) -> str:
+
+        ''' Returns a formatted string (for graphic title) from a datetime
+        object'''
+
+        return date.strftime('%Y%m%d %H UTC')
+
+    @property
+    def fhr(self) -> str:
+
+        ''' Returns the forecast hour from the grib file. '''
+
+        return str(self.field.forecast_time[0])
+
+    @property
+    @lru_cache()
+    def field(self):
+
+        ''' Wrapper that calls get_field method for the current variable.
+        Returns the NioVariable object '''
+
+        return self.get_field(self.vspec.get('ncl_name'))
+
+    @property
+    def lev_descriptor(self):
+
+        ''' Returns the descriptor for the variable's level type. '''
+
+        return self.field.level_type
+
+    def latlons(self):
+
+        ''' Returns the set of latituteds and longitudes '''
+
+        return [self.contents.variables[var][::] for var in ['gridlat_0', 'gridlon_0']]
+
+
+class fieldData(UPPData):
+
     '''
     Class handles grib file manipulation for a given variable in a UPP output
     file.
@@ -61,23 +130,9 @@ class UPPData(GribFile, specs.VarSpec):
 
     def __init__(self, filename, level, short_name, **kwargs):
 
-        # Parse kwargs first
-        config = kwargs.get('config', 'adb_graphics/default_specs.yml')
-
-        GribFile.__init__(self, filename)
-        specs.VarSpec.__init__(self, config)
+        super().__init__(filename, short_name, **kwargs)
 
         self.level = level
-        self.short_name = short_name
-        self.spec = self.yml
-
-    @property
-    def anl_dt(self) -> datetime.datetime:
-
-        ''' Returns the initial time of the grib file as a datetime object from
-        the grib file.'''
-
-        return datetime.datetime.strptime(self.field.initial_time, '%m/%d/%Y (%H:%M)')
 
     @property
     def clevs(self) -> np.ndarray:
@@ -144,43 +199,6 @@ class UPPData(GribFile, specs.VarSpec):
         lat, lon = self.latlons()
         return [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
 
-    @staticmethod
-    def date_to_str(date: datetime) -> str:
-
-        ''' Returns a formatted string (for graphic title) from a datetime
-        object'''
-
-        return date.strftime('%Y%m%d %H UTC')
-
-    @property
-    def fhr(self) -> str:
-
-        ''' Returns the forecast hour from the grib file. '''
-
-        return str(self.field.forecast_time[0])
-
-    @property
-    @lru_cache()
-    def field(self):
-
-        ''' Wrapper that calls get_field method for the current variable.
-        Returns the NioVariable object '''
-
-        return self.get_field(self.vspec.get('ncl_name'))
-
-    def latlons(self):
-
-        ''' Returns the set of latituteds and longitudes '''
-
-        return [self.contents.variables[var][::] for var in ['gridlat_0', 'gridlon_0']]
-
-    @property
-    def lev_descriptor(self):
-
-        ''' Returns the descriptor for the variable's level type. '''
-
-        return self.field.level_type
-
     @property
     def numeric_level(self):
 
@@ -213,14 +231,6 @@ class UPPData(GribFile, specs.VarSpec):
 
         return self.vspec.get('unit', self.field.units)
 
-    @property
-    def valid_dt(self) -> datetime.datetime:
-
-        ''' Returns a datetime object corresponding to the forecast hour's valid
-        time as set in the Grib file. '''
-
-        fh = datetime.timedelta(hours=int(self.fhr))
-        return self.anl_dt + fh
 
     @lru_cache()
     def values(self, field=None) -> np.ndarray:
@@ -290,3 +300,49 @@ class UPPData(GribFile, specs.VarSpec):
         u, v = [UPPData(filename=self.filename, level=level, short_name=var) for var in ['u', 'v']]
 
         return [component.values() for component in [u, v]]
+
+class profileData(UPPData):
+
+    '''
+    Class provides methods for getting profiles from a specific lat/lon location
+    from a grib file.
+    '''
+
+    def __init__(self, filename, loc_name, profile_loc, short_name, **kwargs):
+
+        super().__init__(filename, short_name, **kwargs)
+
+        self.profile_loc = profile_loc
+        self.loc_name = loc_name
+
+    def get_xypoint(self):
+
+        lats, lons = self.latlons()
+
+        max_x, max_y = np.shape(lats)
+
+        x, y = np.unravel_index((np.abs(lats - float(site_lat)) \
+               + np.abs(lons - -float(site_lon))).argmin(), lats.shape)
+
+        if x == 0 or y == 0 or x == max_x or y == max_y:
+            msg = f"{self.loc_name} is outside your domain!"
+            raise errors.OutsideDomain(msg)
+
+        return (x, y)
+
+    def values(self):
+        x, y = self.get_xypoint()
+        ncl_name = self.spec.get(self.short_name, {}).get('500mb', \
+        {}).get('ncl_name')
+
+        if not ncl_name:
+            raise errors.NoGraphicsDefinitionForVariable(self.short_name, \
+            '500mb')
+
+        profile = self.content.variables[ncl_name][::]
+        if len(profile.shape) == 2:
+            profile = profile[x, y]
+        elif len(profile.shape) == 3:
+            profile = profile[:, x, y]
+
+ 
