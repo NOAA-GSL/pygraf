@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import adb_graphics.datahandler.grib as grib
 import adb_graphics.figures.maps as maps
 
-filename = '../data/wrfprs_hrconus_06.grib2'
+filename = '../data/HRRR.t12z.bgdawp06.tm12'
 airports = 'static/Airports_locs.txt'
 
 temp = grib.UPPData(filename=filename,

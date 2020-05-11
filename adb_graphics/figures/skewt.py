@@ -18,13 +18,18 @@ from metpy.future import precipitable_water
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 
-class skewT():
+class skewT(grib.profileData):
 
-    def __init__(filename, loc_name, point):
+    def __init__(figure, filename, loc, **kwargs):
 
-        self.filename = filename
-        self.point = point
-        self.loc_name = loc_name
+        super().__init__(self,
+                         filename,
+                         loc=loc,
+                         short_name='temp',
+                         **kwargs
+                         )
+
+        self.figure = figure
 
     def atmo_profiles(self):
 
@@ -41,45 +46,99 @@ class skewT():
         ret = {}
 
         if var in atmo_vars:
+            ret[var] = self.values(short_name=var)
 
-            ret[var] = grib.profileData(
-                    filename=self.filename,
-                    loc_name=self.loc_name,
-                    profile_loc=self.point,
-                    short_name=var,
-                    )
         return ret
 
     def thermo_variables(self):
 
         thermo = 
-'cape': {
-  'format': '10.0f',
-  'units': 'J/kg',
-'cin':   {:10.0f} J/kg
-'mucape':{:10.0f} J/kg
-'mucin': {:10.0f} J/kg
-'li':    {:10.1f} K
-'bli':   {:10.1f} K
-'lcl':   {:10.0f} m
-'lpl':   {:10.0f} hPa
-'srh03': {:10.0f} m2/s2
-'srh01': {:10.0f} m2/s2
-'shr06': {:10.0f} kt
-'shr01': {:10.0f} kt
-'cell':  {:10.0f} kt
-'pw':    {:10.1f} mm
+            'cape': {
+              'format': '10.0f',
+              'units': 'J/kg',
+              },
+            'cin': {
+              'format': '10.0f',
+              'units': 'J/kg',
+              },
+            'mucape': {
+              'format': '10.0f',
+              'units': 'J/kg',
+              'vertical_lev': 2,
+              },
+            'mucin': {
+              'format': '10.0f',
+              'units': 'J/kg',
+              'vertical_lev': 2,
+              },
+            'li': {
+              'format': '10.1f',
+              'units': 'K',
+              },
+            'bli': {
+              'format': '10.1f',
+              'units': 'K',
+              },
+            'lcl': {
+              'format': '10.0f',
+              'units': 'm',
+              },
+            'lpl': {
+              'format': '10.0f',
+              'units': 'hPa',
+              'transform': conversions.pa_to_hpa,
+              },
+            'storm_rel_hlcy': {
+              'format': '10.0f',
+              'units': 'm2/s2',
+              'vertical_lev': [0, 1],
+              },
+            'vshear': {
+              'format': '10.0f',
+              'units': 'kt',
+              'vertical_lev': [0, 1],
+              },
+            'ushear': {
+              'format': '10.0f',
+              'units': 'kt',
+              'vertical_lev': [0, 1],
+              },
+            'pw': {
+              'format': '10.1f',
+              'units': 'mm',
+              },
+            'u_storm_motion': {
+              'format': '10.0f',
+              'units': 'kt',
+              'transform': conversions.ms_to_kt,
+              },
+            'v_storm_motion': {
+              'format': '10.0f',
+              'units': 'kt',
+              'transform': conversions.ms_to_kt,
+              },
+            }
 
-       for var in thermo.keys():
+       for var, items in thermo.items():
+            tmp = self.values(lev=items.get('vertical_lev'), name=var)
 
-            ret[var]['data'] = grib.profileData(
-                    filename=self.filename,
-                    loc_name=self.loc_name,
-                    profile_loc=self.point,
-                    short_name=var,
-                    )
+            tranform = items.get('transform'):
+            if transform:
+                tmp = utils.get_func(transform)(tmp)
 
+            ret[var]['data'] = tmp
 
-    def 
-           
+       return ret
 
+   def create_skewT(self, **kwargs):
+
+       skew = SkewT(self.fig, rotation=45, **kwargs)
+
+   def create_title(self):
+       init_date = self.date_to_str(self.anl_dt)
+       fhr = self.fhr
+       valid = self.date_to_str(self.valid_dt)
+       site_code = 
+       title = f"{init_data} {fhr} hr fcst      Valid {valid}\n"\
+        "{self.site_code} {self.site_num} {self.site_name} at nearest HRRR grid
+        pt over land {self.site_lat} {self.site_lon}"

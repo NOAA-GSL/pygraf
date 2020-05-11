@@ -308,21 +308,30 @@ class profileData(UPPData):
     from a grib file.
     '''
 
-    def __init__(self, filename, loc_name, profile_loc, short_name, **kwargs):
+    def __init__(self, filename, loc, short_name, **kwargs):
 
         super().__init__(filename, short_name, **kwargs)
 
         self.profile_loc = profile_loc
-        self.loc_name = loc_name
 
+        self.site_code, _, self.site_num, lat, lon = \
+                loc[:31].split()
+
+        self.loc_name = loc[37:].rstrip()
+
+        self.site_lat = float(lat)
+        self.site_lon = -float(lon)
+
+
+    @lru_cache()
     def get_xypoint(self):
 
         lats, lons = self.latlons()
 
         max_x, max_y = np.shape(lats)
 
-        x, y = np.unravel_index((np.abs(lats - float(site_lat)) \
-               + np.abs(lons - -float(site_lon))).argmin(), lats.shape)
+        x, y = np.unravel_index((np.abs(lats - site.site_lat) \
+               + np.abs(lons - site_lon)).argmin(), lats.shape)
 
         if x == 0 or y == 0 or x == max_x or y == max_y:
             msg = f"{self.loc_name} is outside your domain!"
@@ -330,19 +339,27 @@ class profileData(UPPData):
 
         return (x, y)
 
-    def values(self):
+    def values(self, lev=None, short_name=None):
+
+        if not short_name:
+            short_name = self.short_name
+
         x, y = self.get_xypoint()
-        ncl_name = self.spec.get(self.short_name, {}).get('500mb', \
+        ncl_name = self.spec.get(short_name, {}).get('ua', \
         {}).get('ncl_name')
 
         if not ncl_name:
-            raise errors.NoGraphicsDefinitionForVariable(self.short_name, \
-            '500mb')
+            raise errors.NoGraphicsDefinitionForVariable(short_name, \
+            'ua')
 
         profile = self.content.variables[ncl_name][::]
         if len(profile.shape) == 2:
             profile = profile[x, y]
         elif len(profile.shape) == 3:
-            profile = profile[:, x, y]
+
+            if lev:
+                profile = profile[lev, x, y]
+            else:
+                profile = profile[:, x, y]
 
  
