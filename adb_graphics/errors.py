@@ -13,3 +13,6 @@ class GribReadError(Error):
 
 class NoGraphicsDefinitionForVariable(Error):
     '''Exception raised when there is no configuration for the variable.'''
+
+class OutsideDomain(Error):
+    '''Exception raised when there is no configuration for the variable.'''

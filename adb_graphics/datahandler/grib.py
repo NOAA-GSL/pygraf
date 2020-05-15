@@ -44,6 +44,14 @@ class GribFile():
 
         return field
 
+    @staticmethod
+    def vector_magnitude(field1, field2):
+
+        ''' Returns the vector magnitude of two component vecctor fields. '''
+
+        return np.sqrt(field1**2 + field2**2)
+
+
 class UPPData(GribFile, specs.VarSpec):
 
     def __init__(self, filename, short_name, **kwargs):
@@ -51,12 +59,14 @@ class UPPData(GribFile, specs.VarSpec):
         # Parse kwargs first
         config = kwargs.get('config', 'adb_graphics/default_specs.yml')
 
-        UPPData.__init__(self, filename)
+        GribFile.__init__(self, filename)
         specs.VarSpec.__init__(self, config)
 
         self.spec = self.yml
 
         self.short_name = short_name
+
+        self.level = 'ua'
 
     @property
     def anl_dt(self) -> datetime.datetime:
@@ -74,6 +84,30 @@ class UPPData(GribFile, specs.VarSpec):
 
         fh = datetime.timedelta(hours=int(self.fhr))
         return self.anl_dt + fh
+
+    @property
+    def clevs(self) -> np.ndarray:
+
+        '''
+        Uses the information contained in the yaml config file to determine
+        the set of levels to be contoured. Returns the list of levels.
+
+        The yaml file "clevs" key may contain a list, a range, or a call to a
+        function. The logic to parse those options is included here.
+        '''
+
+        clev = np.asarray(self.vspec['clevs'])
+
+        # Is clevs a list?
+        if isinstance(clev, (list, np.ndarray)):
+            return np.asarray(clev)
+
+        # Is clev a call to another function?
+        try:
+            return utils.get_func(clev)()
+        except ImportError:
+            print(f'Check yaml file definition of CLEVS for {self.short_name}.',
+                  f'Must be a list, range, or function call!')
 
     @staticmethod
     def date_to_str(date: datetime) -> str:
@@ -112,6 +146,16 @@ class UPPData(GribFile, specs.VarSpec):
 
         return [self.contents.variables[var][::] for var in ['gridlat_0', 'gridlon_0']]
 
+    @property
+    def vspec(self):
+
+        ''' Return the graphics specification for a given level. '''
+
+        vspec = self.spec.get(self.short_name, {}).get(self.level)
+        if not vspec:
+            raise errors.NoGraphicsDefinitionForVariable(self.short_name, self.level)
+        return vspec
+
 
 class fieldData(UPPData):
 
@@ -133,30 +177,6 @@ class fieldData(UPPData):
         super().__init__(filename, short_name, **kwargs)
 
         self.level = level
-
-    @property
-    def clevs(self) -> np.ndarray:
-
-        '''
-        Uses the information contained in the yaml config file to determine
-        the set of levels to be contoured. Returns the list of levels.
-
-        The yaml file "clevs" key may contain a list, a range, or a call to a
-        function. The logic to parse those options is included here.
-        '''
-
-        clev = np.asarray(self.vspec['clevs'])
-
-        # Is clevs a list?
-        if isinstance(clev, (list, np.ndarray)):
-            return np.asarray(clev)
-
-        # Is clev a call to another function?
-        try:
-            return utils.get_func(clev)()
-        except ImportError:
-            print(f'Check yaml file definition of CLEVS for {self.short_name}.',
-                  f'Must be a list, range, or function call!')
 
     @property
     def cmap(self):
@@ -268,16 +288,6 @@ class fieldData(UPPData):
 
         return fld
 
-    @property
-    def vspec(self):
-
-        ''' Return the graphics specification for a given level. '''
-
-        vspec = self.spec.get(self.short_name, {}).get(self.level)
-        if not vspec:
-            raise errors.NoGraphicsDefinitionForVariable(self.short_name, self.level)
-        return vspec
-
     @lru_cache()
     def wind(self, level) -> [np.ndarray, np.ndarray]:
 
@@ -312,8 +322,6 @@ class profileData(UPPData):
 
         super().__init__(filename, short_name, **kwargs)
 
-        self.profile_loc = profile_loc
-
         self.site_code, _, self.site_num, lat, lon = \
                 loc[:31].split()
 
@@ -330,8 +338,8 @@ class profileData(UPPData):
 
         max_x, max_y = np.shape(lats)
 
-        x, y = np.unravel_index((np.abs(lats - site.site_lat) \
-               + np.abs(lons - site_lon)).argmin(), lats.shape)
+        x, y = np.unravel_index((np.abs(lats - self.site_lat) \
+               + np.abs(lons - self.site_lon)).argmin(), lats.shape)
 
         if x == 0 or y == 0 or x == max_x or y == max_y:
             msg = f"{self.loc_name} is outside your domain!"
@@ -352,7 +360,7 @@ class profileData(UPPData):
             raise errors.NoGraphicsDefinitionForVariable(short_name, \
             'ua')
 
-        profile = self.content.variables[ncl_name][::]
+        profile = self.contents.variables[ncl_name][::]
         if len(profile.shape) == 2:
             profile = profile[x, y]
         elif len(profile.shape) == 3:
@@ -361,5 +369,3 @@ class profileData(UPPData):
                 profile = profile[lev, x, y]
             else:
                 profile = profile[:, x, y]
-
- 
