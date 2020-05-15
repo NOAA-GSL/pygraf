@@ -6,6 +6,7 @@ import pandas as pd
 
 import adb_graphics.datahandler.grib as grib
 import adb_graphics.figures.maps as maps
+import adb_graphics.conversions as conversions
 import matplotlib.pyplot as plt
 from matplotlib.offsetbox import AnchoredText
 import matplotlib.font_manager as fm
@@ -21,7 +22,7 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 class skewT(grib.profileData):
 
-    def __init__(filename, loc, **kwargs):
+    def __init__(self, filename, loc, **kwargs):
 
         super().__init__(self,
                          filename,
@@ -69,11 +70,11 @@ class skewT(grib.profileData):
 
         top = None
         ret = {}
-        if var, items in atmo_vars.items():
+        for var, items in atmo_vars.items():
 
             tmp = self.values(short_name=var) * items['units']
 
-            tranform = items.get('transform'):
+            transform = items.get('transform')
             if transform:
                 tmp = tmp.to(transform)
 
@@ -86,7 +87,7 @@ class skewT(grib.profileData):
 
     def thermo_variables(self):
 
-        thermo = 
+        thermo = {
             'cape': {
               'format': '10.0f',
               'units': 'J/kg',
@@ -153,16 +154,16 @@ class skewT(grib.profileData):
               },
             }
 
-       for var, items in thermo.items():
-            tmp = self.values(lev=items.get('vertical_lev'), name=var)
+        for var, items in thermo.items():
+             tmp = self.values(lev=items.get('vertical_lev'), name=var)
 
-            tranform = items.get('transform'):
-            if transform:
-                tmp = utils.get_func(transform)(tmp)
+             transform = items.get('transform')
+             if transform:
+                 tmp = utils.get_func(transform)(tmp)
 
-            ret[var]['data'] = tmp
+             ret[var]['data'] = tmp
 
-       return ret
+        return ret
 
     def create_skewT(self, **kwargs):
 
@@ -272,22 +273,22 @@ class skewT(grib.profileData):
                 )
 
 
-   def _title(self):
+    def _title(self):
 
-        ''' Creates standard annotation for a skew-T. '''
+         ''' Creates standard annotation for a skew-T. '''
 
-        atime = self.date_to_str(self.anl_dt)
-        vtime = self.date_to_str(self.valid_dt)
+         atime = self.date_to_str(self.anl_dt)
+         vtime = self.date_to_str(self.valid_dt)
 
-        # Top Left
-        plt.title(f"Analysis: {atime}\nFcst Hr: : {self.fhr}", pos=(0, 1.04), fontsize=16)
+         # Top Left
+         plt.title(f"Analysis: {atime}\nFcst Hr: : {self.fhr}", pos=(0, 1.04), fontsize=16)
 
-        # Top Right
-        plt.title(f"Valid: {vtime}", pos=(1, 1.04), horizontal_alignment='right', fontsize=16)
+         # Top Right
+         plt.title(f"Valid: {vtime}", pos=(1, 1.04), horizontal_alignment='right', fontsize=16)
 
-        # Center
-        site = f"{self.site_code} {self.site_num} {self.site_name}"
-        site_loc = f"{self.site_lat} {self.site_lon}"
-        site_title = f"{site} at nearest grid pt over land {site_loc}"
-        plt.title(site_title, loc='center', fontsize=12)
+         # Center
+         site = f"{self.site_code} {self.site_num} {self.site_name}"
+         site_loc = f"{self.site_lat} {self.site_lon}"
+         site_title = f"{site} at nearest grid pt over land {site_loc}"
+         plt.title(site_title, loc='center', fontsize=12)
 
