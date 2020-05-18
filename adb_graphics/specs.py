@@ -41,6 +41,18 @@ class VarSpec(abc.ABC):
 
     @property
     @lru_cache()
+    def pw_colors(self) -> np.ndarray:
+
+        ''' Default color map for Precipitable Water '''
+
+        grays = cm.get_cmap('Greys', 5)([1,3])
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128)([120,100,95,85,80,70,65,50,25,22,20,17])
+        bupu = cm.get_cmap('BuPu', 15)([13,14])
+        cool = cm.get_cmap('cool', 15)([10,9,12,7,5])
+        return np.concatenate((grays, ncar, bupu, cool))
+
+    @property
+    @lru_cache()
     def ps_colors(self) -> np.ndarray:
 
         ''' Default color map for Surface Pressure '''
@@ -58,3 +70,24 @@ class VarSpec(abc.ABC):
 
         ncolors = len(self.clevs)
         return cm.get_cmap(self.vspec.get('cmap', 'jet'), ncolors)(range(ncolors))
+
+    @property
+    @lru_cache()
+    def vvel_colors(self) -> np.ndarray:
+
+        ''' Default color map for Vertical Velocity '''
+
+        ncar1 = cm.get_cmap(self.vspec.get('cmap'), 128)([15,18,20,25])
+        grays = cm.get_cmap('Greys', 2)([0])
+        ncar2 = cm.get_cmap(self.vspec.get('cmap'), 128)([60,70,80,85,90,100,120])
+        return np.concatenate((ncar1, grays, ncar2))
+
+    @property
+    @lru_cache()
+    def vort_colors(self) -> np.ndarray:
+
+        ''' Default color map for Absolute Vorticity '''
+
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128)([15,18,20,25,50,60,70,80,85,90,100,120])
+        return ncar
+
