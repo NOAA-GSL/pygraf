@@ -40,7 +40,7 @@ def vvel_scale(field: np.ndarray) -> np.ndarray:
 
     ''' Scale vertical velocity for plotting  '''
 
-    return np.asarray(field) * 10
+    return np.asarray(field) * -10
 
 def vort_scale(field: np.ndarray) -> np.ndarray:
 

@@ -45,10 +45,11 @@ class VarSpec(abc.ABC):
 
         ''' Default color map for Precipitable Water '''
 
-        grays = cm.get_cmap('Greys', 5)([1,3])
-        ncar = cm.get_cmap(self.vspec.get('cmap'), 128)([120,100,95,85,80,70,65,50,25,22,20,17])
-        bupu = cm.get_cmap('BuPu', 15)([13,14])
-        cool = cm.get_cmap('cool', 15)([10,9,12,7,5])
+        grays = cm.get_cmap('Greys', 5)([1, 3])
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          ([120, 100, 95, 85, 80, 70, 65, 50, 25, 22, 20, 17])
+        bupu = cm.get_cmap('BuPu', 15)([13, 14])
+        cool = cm.get_cmap('cool', 15)([10, 9, 12, 7, 5])
         return np.concatenate((grays, ncar, bupu, cool))
 
     @property
@@ -77,9 +78,9 @@ class VarSpec(abc.ABC):
 
         ''' Default color map for Vertical Velocity '''
 
-        ncar1 = cm.get_cmap(self.vspec.get('cmap'), 128)([15,18,20,25])
+        ncar1 = cm.get_cmap(self.vspec.get('cmap'), 128)([15, 18, 20, 25])
         grays = cm.get_cmap('Greys', 2)([0])
-        ncar2 = cm.get_cmap(self.vspec.get('cmap'), 128)([60,70,80,85,90,100,120])
+        ncar2 = cm.get_cmap(self.vspec.get('cmap'), 128)([60, 70, 80, 85, 90, 100, 120])
         return np.concatenate((ncar1, grays, ncar2))
 
     @property
@@ -88,6 +89,7 @@ class VarSpec(abc.ABC):
 
         ''' Default color map for Absolute Vorticity '''
 
-        ncar = cm.get_cmap(self.vspec.get('cmap'), 128)([15,18,20,25,50,60,70,80,85,90,100,120])
-        return ncar
-
+        grays = cm.get_cmap('Greys', 2)([0])
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          ([15, 18, 20, 25, 50, 60, 70, 80, 85, 90, 100, 120])
+        return np.concatenate((grays, ncar))
