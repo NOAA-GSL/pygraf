@@ -35,3 +35,15 @@ def pa_to_hpa(field: np.ndarray) -> np.ndarray:
     ''' Conversion from Pascals to hectopascals '''
 
     return np.asarray(field) / 100.
+
+def vvel_scale(field: np.ndarray) -> np.ndarray:
+
+    ''' Scale vertical velocity for plotting  '''
+
+    return np.asarray(field) * -10
+
+def vort_scale(field: np.ndarray) -> np.ndarray:
+
+    ''' Scale vorticity for plotting  '''
+
+    return np.asarray(field) / 1E-05

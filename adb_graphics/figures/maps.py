@@ -141,7 +141,7 @@ class DataMap():
                             shrink=1.0,
                             ticks=ticks,
                             )
-        cbar.ax.set_xticklabels(ticks)
+        cbar.ax.set_xticklabels(ticks, fontsize=18)
 
     def draw(self, show=False):
 
@@ -152,12 +152,14 @@ class DataMap():
 
         # Draw a map and add the shaded field
         self.map.draw()
-        cf = self._draw_field(field=self.field, func=self.map.m.contourf, ax=ax)
+        cf = self._draw_field(field=self.field, func=self.map.m.contourf, \
+                              colors=self.field.colors, extend='both', ax=ax)
         self._colorbar(cc=cf, ax=ax)
 
         # Contour a secondary field, if requested
         if self.contour_field is not None:
-            cc = self._draw_field(field=self.contour_field, func=self.map.m.contour, ax=ax)
+            cc = self._draw_field(field=self.contour_field, func=self.map.m.contour, ax=ax, \
+                       colors=self.field.vspec.get('contour_colors', self.contour_field.colors))
             clab = plt.clabel(cc, self.contour_field.clevs[::4], fontsize=18, inline=1, fmt='%4.0f')
             _ = [txt.set_bbox(dict(facecolor='k', edgecolor='none', pad=0)) for txt in clab]
 
@@ -196,7 +198,6 @@ class DataMap():
         return func(x, y, field.values(),
                     field.clevs,
                     ax=ax,
-                    colors=field.colors,
                     **kwargs,
                     )
 

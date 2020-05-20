@@ -38,6 +38,8 @@ def test_conversion():
     assert np.array_equal(conversions.m_to_dm(a), a / 10)
     assert np.array_equal(conversions.ms_to_kt(a), a * 1.9438)
     assert np.array_equal(conversions.pa_to_hpa(a), a / 100)
+    assert np.array_equal(conversions.vvel_scale(a), a * -10)
+    assert np.array_equal(conversions.vort_scale(a), a / 1E-05)
 
     functions = [
         conversions.k_to_c,
@@ -45,6 +47,8 @@ def test_conversion():
         conversions.m_to_dm,
         conversions.ms_to_kt,
         conversions.pa_to_hpa,
+        conversions.vvel_scale,
+        conversions.vort_scale,
         ]
 
     # Check that all functions return a np.ndarray given a collection, or single float
@@ -110,6 +114,7 @@ class TestDefaultSpecs():
             'cmap': self.is_a_cmap,
             'colors': self.is_a_color,
             'contour': self.is_a_key,
+            'contour_colors': self.is_a_color,
             'ncl_name': True,
             'ticks': self.is_int,
             'transform': self.is_callable,
