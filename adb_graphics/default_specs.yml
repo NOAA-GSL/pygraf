@@ -62,7 +62,7 @@ gh: # Geopotential height
     clevs: !!python/object/apply:numpy.arange [3, 600, 3]
 pwtr:
   sfc:
-    clevs: !!python/object/apply:numpy.arange [0, 85, 4]
+    clevs: !!python/object/apply:numpy.arange [4, 81, 4]
     cmap: gist_ncar
     colors: pw_colors
     ncl_name: PWAT_P0_L200_GLC0
@@ -142,7 +142,7 @@ v:
   925mb: *ua_vwind
 vvel:
   700mb:
-    clevs: !!python/object/apply:numpy.arange [-22, 39, 5]
+    clevs: !!python/object/apply:numpy.arange [-17, 34, 5]
     cmap: gist_ncar
     colors: vvel_colors
     contour_colors: grey
@@ -152,7 +152,7 @@ vvel:
     unit: '-Pa/s * 10'
 vort:
   500mb:
-    clevs: !!python/object/apply:numpy.arange [4, 31, 2]
+    clevs: !!python/object/apply:numpy.arange [6, 29, 2]
     cmap: gist_ncar
     colors: vort_colors
     contour_colors: grey
