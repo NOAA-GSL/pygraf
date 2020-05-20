@@ -141,7 +141,7 @@ class DataMap():
                             shrink=1.0,
                             ticks=ticks,
                             )
-        cbar.ax.set_xticklabels(ticks)
+        cbar.ax.set_xticklabels(ticks, fontsize=18)
 
     def draw(self, show=False):
 
