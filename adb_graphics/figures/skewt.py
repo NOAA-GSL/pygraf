@@ -177,6 +177,9 @@ class skewT(grib.profileData):
 
         self._add_thermo_inset(skew)
 
+        #TODO: add parcel
+        #TODO: add save method
+
     def _add_thermo_inset(self, skew):
 
 
@@ -245,7 +248,7 @@ class skewT(grib.profileData):
         fig = plt.figure(figsize=(9, 9))
         skew = SkewT(fig, rotation=45)
 
-        skew.ax.set_ylim(1050, 100)
+        skew.ax.set_ylim(1050, self.max_plev)
         skew.ax.set_xlim(-35, 50)
 
         # Add the relevant special lines

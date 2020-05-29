@@ -15,7 +15,7 @@ from adb_graphics.figures import maps
 AIRPORTS = 'static/Airports_locs.txt'
 
 
-def main(cla):
+def maps(cla):
 
     '''
     Loads a set of images to be plotted, then creates them from grib input files.
@@ -104,10 +104,33 @@ def main(cla):
                 orientation='landscape',
                 )
 
+def skewT(cla):
+
+    with open(cla.sites, 'r') as sites_file:
+        sites = readlines()
+
+
+    # Locate input grib file
+    str_start_time = from_datetime(cla.start_time)
+    grib_file = images['input_files']['hrrr'].format(FCST_TIME=cla.fcst_hour)
+    grib_path = os.path.join(cla.data_root, str_start_time, grib_file)
+
+
+    #TODO: define png_path
+
+    for site in sites:
+
+        skew = SkewT(filename=grib_path, loc=site, max_plev=cla.max_plev)
+        skew.create_skewT()
+        skew.save(outfile)
+
+
+
+
 
 def to_datetime(string):
     ''' Return a datetime object give a string like YYYYMMDDHH. '''
-    return dt.datetime.strptime(string, '%Y%m%d%H')
+    return dt.datetime.stptime(string, '%Y%m%d%H')
 
 
 def from_datetime(date):
@@ -125,6 +148,9 @@ def parse_args():
 
     parser = argparse.ArgumentParser(description='Script to drive the creation of graphics.')
 
+    parser.add_argument(dest='plot_type',
+                        choices=['map', 'skewT'],
+                        )
     parser.add_argument('-d', '--data_root',
                         help='Cycle-independant data directory location.',
                         required=True,
@@ -138,6 +164,14 @@ def parse_args():
                         help='Path to YAML config file specifying which graphics to create.',
                         required=True,
                         )
+    parser.add_argument('--sites',
+                        help='Path to a sites file.',
+                        type=file_ok,
+                        )
+    parser.add_argument('--max_plev',
+                        help='Maximum pressure level to plot for profiles.',
+                        type=int,
+                       )
     parser.add_argument('-m', '--image_set',
                         choices=['hourly'],
                         help='Name of top level key in image_list',
@@ -164,4 +198,7 @@ def parse_args():
 
 if __name__ == '__main__':
     CLARGS = parse_args()
-    main(CLARGS)
+    if CLARGS.plot_type == 'skewT':
+        skewT(CLARGS)
+    elif CLARGS.plot_type == 'map':
+        maps(CLARGS)
