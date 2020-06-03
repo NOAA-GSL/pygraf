@@ -79,9 +79,15 @@ pres:
     unit: hPa
 temp: # Temperature
   2ds: # Not yet supported.
-    clevs: !!python/object/apply:numpy.arange [-50, 50, 2]
-    cmap: bwr
+    clevs: !!python/object/apply:numpy.arange [-16, 17, 2]
+    cmap: seismic
+    colors: centered_diff
+    ncl_name: TMP_P0_L103_GLC0 # 2m Temp
     ticks: 2
+    transform: [conversions.k_to_f, field_diff]
+    transform_kwargs:
+      variable2: temp
+      level2: sfc
     unit: F
     wind: False
   2m:
