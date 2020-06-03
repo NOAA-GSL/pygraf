@@ -13,6 +13,7 @@ from matplotlib import cm
 import numpy as np
 import Nio
 
+from .. import conversions
 from .. import errors
 from .. import specs
 from .. import utils
@@ -35,7 +36,7 @@ class GribFile():
 
     def get_field(self, ncl_name):
 
-        ''' Given a numeric level and an ncl_name, return the NioVariable object. '''
+        ''' Given an ncl_name, return the NioVariable object. '''
 
         try:
             field = self.contents.variables[ncl_name]
@@ -160,6 +161,12 @@ class UPPData(GribFile, specs.VarSpec):
 
         return str(self.field.forecast_time[0])
 
+    def field_diff(self, values, variable2, level2):
+
+        ''' Subtracts the values from variable2 from self.field. '''
+
+        return values - self.values(variable2, level2)
+
     @property
     @lru_cache()
     def field(self):
@@ -225,27 +232,34 @@ class UPPData(GribFile, specs.VarSpec):
         return self.anl_dt + fh
 
     @lru_cache()
-    def values(self, field=None) -> np.ndarray:
+    def values(self, name=None, level=None) -> np.ndarray:
 
         '''
         Returns the numpy array of values at the requested level for the
         variable after applying any unit conversion to the original data.
 
         Optional Input:
-            field      a field other than self.field such as wind.  If not
-                       provided, self.field is used.
+            name       the name of a field other than defined in self
+            level      the level of the alternate field to use
         '''
 
-        field = self.field if field is None else field
+        if name is None:
+            field = self.field
+            spec = self.vspec
+        else:
+            spec = self.spec.get(name, {}).get(level)
+            if not spec:
+                raise errors.NoGraphicsDefinitionForVariable(name, level)
+            field = self.get_field(spec.get('ncl_name'))
 
-        transform = self.vspec.get('transform')
+        transforms = spec.get('transform')
 
-        if len(self.field.shape) == 2:
-            fld = self.field[::]
-        elif len(self.field.shape) == 3:
+        if len(field.shape) == 2:
+            vals = field[::]
+        elif len(field.shape) == 3:
 
             # Available variable levels
-            levs = self.contents.variables[self.field.dimensions[0]][::]
+            levs = self.contents.variables[field.dimensions[0]][::]
 
             # Requested level
             lev_val, lev_unit = self.numeric_level
@@ -253,12 +267,25 @@ class UPPData(GribFile, specs.VarSpec):
 
             # The index of the reqested level
             lev = int(np.argwhere(levs == lev_val))
-            fld = self.field[lev, :, :]
+            vals = field[lev, :, :]
 
-        if transform and transform != 'None':
-            return utils.get_func(transform)(fld)
+        if transforms:
+            transform_kwargs = spec.get('transform_kwargs', {})
 
-        return fld
+            # Treat any transforms as a list
+            transforms = transforms if isinstance(transforms, list) else [transforms]
+
+            for transform in transforms:
+
+                print(f'Transform: {transform}')
+
+                if len(transform.split('.')) == 1:
+                    print(transform_kwargs)
+                    vals = self.__getattribute__(transform)(vals, **transform_kwargs)
+                else:
+                    vals = utils.get_func(transform)(vals, **transform_kwargs)
+
+        return vals
 
     @property
     def vspec(self):
@@ -292,3 +319,10 @@ class UPPData(GribFile, specs.VarSpec):
         u, v = [UPPData(filename=self.filename, level=level, short_name=var) for var in ['u', 'v']]
 
         return [component.values() for component in [u, v]]
+
+    def windspeed(self):
+
+        ''' Compute the wind speed from the components. '''
+
+        u, v = self.wind()
+        return conversions.magnitude(u, v)
