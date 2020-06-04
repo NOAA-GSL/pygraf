@@ -102,8 +102,8 @@ class UPPData(GribFile, specs.VarSpec):
         try:
             return utils.get_func(clev)()
         except ImportError:
-            print(f'Check yaml file definition of CLEVS for {self.short_name}.',
-                  f'Must be a list, range, or function call!')
+            print(f'Check yaml file definition of CLEVS for {self.short_name}. ',
+                  'Must be a list, range, or function call!')
 
     @property
     def cmap(self):
@@ -324,5 +324,5 @@ class UPPData(GribFile, specs.VarSpec):
 
         ''' Compute the wind speed from the components. '''
 
-        u, v = self.wind()
+        u, v = self.wind(level=True)
         return conversions.magnitude(u, v)

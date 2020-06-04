@@ -19,8 +19,16 @@
 #
 #   ticks: the number of tick marks on the colorbar
 #
+#   title: a string representing a title to override the standard variable name
+#          and level
+#
 #   transform: name of a function that will perform a given transformation of
-#              the variable
+#              the variable. To access the UPPData methods, provid only the name
+#              of the method. To call a function from a module, use the syntax
+#              "module.function"
+#
+#   transform_kwargs: a new level of yaml heirarchy with keys corresponding to
+#                     transform function arguments, and their values.
 #
 #   unit: the resulting unit of the variable
 #
@@ -78,12 +86,13 @@ pres:
     transform: conversions.pa_to_hpa
     unit: hPa
 temp: # Temperature
-  2ds: # Not yet supported.
+  2ds: # 2m - Sfc
     clevs: !!python/object/apply:numpy.arange [-16, 17, 2]
     cmap: seismic
     colors: centered_diff
     ncl_name: TMP_P0_L103_GLC0 # 2m Temp
     ticks: 2
+    title: '2m Temp - Skin Temp'
     transform: [conversions.k_to_f, field_diff]
     transform_kwargs:
       variable2: temp

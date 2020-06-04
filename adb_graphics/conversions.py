@@ -1,3 +1,4 @@
+# pylint: disable=unused-argument,invalid-name
 '''
 This module contains functions for converting the units of a field. The
 interface requires a single atmospheric field in a Numpy array, and returns the
