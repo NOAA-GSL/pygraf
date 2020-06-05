@@ -23,12 +23,13 @@
 #          and level
 #
 #   transform: name of a function that will perform a given transformation of
-#              the variable. To access the UPPData methods, provid only the name
+#              the variable. To access the UPPData methods, provide only the name
 #              of the method. To call a function from a module, use the syntax
 #              "module.function"
 #
-#   transform_kwargs: a new level of yaml heirarchy with keys corresponding to
-#                     transform function arguments, and their values.
+#   transform_kwargs: the contents form a quaternary level of yaml heirarchy
+#                     with keys corresponding to transform function arguments,
+#                     and their values.
 #
 #   unit: the resulting unit of the variable
 #
