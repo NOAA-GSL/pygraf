@@ -36,6 +36,12 @@ def pa_to_hpa(field: np.ndarray) -> np.ndarray:
 
     return np.asarray(field) / 100.
 
+def percent(field: np.ndarray) -> np.ndarray:
+
+    ''' Conversion from values between 0 - 1 to percent '''
+
+    return np.asarray(field) * 100.
+
 def vvel_scale(field: np.ndarray) -> np.ndarray:
 
     ''' Scale vertical velocity for plotting  '''

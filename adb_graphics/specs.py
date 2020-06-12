@@ -11,7 +11,6 @@ from matplotlib import cm
 import numpy as np
 import yaml
 
-
 class VarSpec(abc.ABC):
 
     '''
@@ -65,6 +64,15 @@ class VarSpec(abc.ABC):
 
     @property
     @lru_cache()
+    def rh_colors(self) -> np.ndarray:
+
+        ''' Default color map for Relative Humidity '''
+
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          ([122, 114, 96, 85, 79, 69, 60, 49, 31, 21, 17, 109, 113])
+        return ncar
+    @property
+    @lru_cache()
     def t_colors(self) -> np.ndarray:
 
         ''' Default color map for Temperature '''
@@ -93,3 +101,13 @@ class VarSpec(abc.ABC):
         ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
                           ([15, 18, 20, 25, 50, 60, 70, 80, 85, 90, 100, 120])
         return np.concatenate((grays, ncar))
+    @property
+    @lru_cache()
+    def wind_colors(self) -> np.ndarray:
+
+        ''' Default color map for Wind Speed '''
+
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          ([21, 27, 46, 62, 69, 77, 83, 95, 102, \
+                          119, 129, 17, 19, 21, 27, 46, 62, 69, 77])
+        return ncar
