@@ -71,6 +71,7 @@ class VarSpec(abc.ABC):
         ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
                           ([122, 114, 96, 85, 79, 69, 60, 49, 31, 21, 17, 109, 113])
         return ncar
+    
     @property
     @lru_cache()
     def t_colors(self) -> np.ndarray:
