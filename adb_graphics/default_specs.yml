@@ -87,24 +87,22 @@ pres:
     transform: conversions.pa_to_hpa
     unit: hPa
 rh: # Relative Humidity
-  2m:
+  2m: &rh
     clevs: [10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 100, 105]
     cmap: gist_ncar
     colors: rh_colors
     ncl_name: RH_P0_L103_GLC0
     ticks: 10
     unit: '%'
-  850mb: &850mb_rh
-    clevs: [10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 100, 105]
-    cmap: gist_ncar
-    colors: rh_colors
-    ncl_name: RH_P0_L100_GLC0
-    ticks: 10
-    unit: '%'
-  700mb:
-    <<: *850mb_rh
   500mb:
-    <<: *850mb_rh
+    <<: *rh
+    ncl_name: RH_P0_L100_GLC0
+  700mb:
+    <<: *rh
+    ncl_name: RH_P0_L100_GLC0
+  850mb:
+    <<: *rh
+    ncl_name: RH_P0_L100_GLC0
 temp: # Temperature
   2ds: # Not yet supported.
     clevs: !!python/object/apply:numpy.arange [-50, 50, 2]
