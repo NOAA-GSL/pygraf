@@ -259,14 +259,17 @@ class UPPData(GribFile, specs.VarSpec):
         elif len(field.shape) == 3:
 
             # Available variable levels
-            levs = self.contents.variables[field.dimensions[0]][::]
+            try:
+                levs = self.contents.variables[field.dimensions[0]][::]
 
-            # Requested level
-            lev_val, lev_unit = self.numeric_level
-            lev_val = lev_val * 100. if lev_unit == 'mb' else lev_val
+                # Requested level
+                lev_val, lev_unit = self.numeric_level
+                lev_val = lev_val * 100. if lev_unit == 'mb' else lev_val
 
-            # The index of the reqested level
-            lev = int(np.argwhere(levs == lev_val))
+                # The index of the reqested level
+                lev = int(np.argwhere(levs == lev_val))
+            except KeyError:
+                lev = self.vspec.get('layer')
             vals = field[lev, :, :]
 
         if transforms:

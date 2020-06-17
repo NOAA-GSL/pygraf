@@ -52,6 +52,35 @@
 #      anchor needs to be applied before another section.
 #
 
+acpcp: # Accumulated precipitation
+  sfc:
+    clevs: [0.01, 0.1, 0.25, 0.5, 1, 2, 3, 5, 10, 15, 20, 40]
+    cmap: gist_ncar
+    colors: acpcp_colors
+    contour_colors: grey
+    ncl_name: APCP_P8_L1_GLC0_acc{fhr}h
+    ticks: 0
+    transform: conversions.kgm2_to_in
+    unit: 'in'
+cref: # Composite reflectivity
+  sfc: &refl
+    clevs: !!python/object/apply:numpy.arange [0, 76, 5]
+    cmap: NWSReflectivity
+    colors: cref_colors
+    ncl_name: REFC_P0_L10_GLC0
+    ticks: 5
+    unit: 'dB'
+dewp: # Dew point temperature
+  2m:
+    clevs: !!python/object/apply:numpy.arange [-60, 121, 10]
+    cmap: gist_ncar
+    colors: dewp_colors
+    contour_colors: grey
+    ncl_name: DPT_P0_L103_GLC0
+    ticks: 20
+    transform: conversions.k_to_f
+    unit: 'F'
+    wind: 10m
 gh: # Geopotential height
   500mb: &ua_gh
     clevs: !!python/object/apply:numpy.arange [6, 990, 6]
@@ -69,6 +98,49 @@ gh: # Geopotential height
   925mb:
     <<: *ua_gh
     clevs: !!python/object/apply:numpy.arange [3, 600, 3]
+hlcy: # Helicity
+  in16: &hlcy # Hourly updraft helicity over 1-6 km layer
+    clevs: !!python/object/apply:numpy.arange [25, 301, 25]
+    cmap: gist_ncar
+    colors: hlcy_colors
+    layer: 1
+    ncl_name: UPHL_P0_2L103_GLC0
+    ticks: 25
+    title: '1-6km Updraft Helicity'
+    unit: 'm2/s2'
+  in25: # Hourly updraft helicity over 2-5 km layer
+    <<: *hlcy 
+    layer: 0
+    ncl_name: UPHL_P0_2L103_GLC0
+    title: '2-5km Updraft Helicity'
+  mx02: # Hourly maximum of updraft helicity over 0-2 km layer
+    <<: *hlcy 
+    clevs: !!python/object/apply:numpy.arange [12.5, 150.5, 12.5]
+    layer: 0
+    ncl_name: MXUPHL_P8_2L103_GLC0_max1h
+    ticks: 12.5
+    title: '0-2km Max Updraft Helicity (over prv hr)'
+  mx03: # Hourly maximum of updraft helicity over 0-3 km layer
+    <<: *hlcy 
+    clevs: !!python/object/apply:numpy.arange [12.5, 150.5, 12.5]
+    layer: 1
+    ncl_name: MXUPHL_P8_2L103_GLC0_max1h
+    ticks: 12.5
+    title: '0-3km Max Updraft Helicity (over prv hr)'
+  mx16: # Hourly maximum of updraft helicity over 1-6 km layer
+    <<: *hlcy
+    layer: 3
+    title: '1-6km Max Updraft Helicity (over prv hr)'
+    ncl_name: MXUPHL_P8_2L103_GLC0_max1h
+  mx25: # Hourly maximum of updraft helicity over 2-5 km layer
+    <<: *hlcy
+    layer: 2
+    ncl_name: MXUPHL_P8_2L103_GLC0_max1h
+    title: '2-5km Max Updraft Helicity (over prv hr)'
+mref: # Maximum reflectivity for past hour at 1 km AGL
+  sfc:
+    <<: *refl
+    ncl_name: MAXREF_P8_L103_GLC0_max1h
 pwtr:
   sfc:
     clevs: !!python/object/apply:numpy.arange [4, 81, 4]
@@ -86,6 +158,23 @@ pres:
     ticks: 20
     transform: conversions.pa_to_hpa
     unit: hPa
+  msl:
+    clevs: !!python/object/apply:numpy.arange [650, 1051, 4]
+    cmap: gist_ncar
+    colors: ps_colors
+    ncl_name: MSLMA_P0_L101_GLC0
+    ticks: 20
+    transform: conversions.pa_to_hpa
+    unit: hPa
+ref: # Maximum reflectivity for past hour at 1 km AGL
+  m10:
+    <<: *refl
+    ncl_name: REFD_P0_L20_GLC0
+    title: '-10C Isothermal Reflectivity'
+  maxm10:
+    <<: *refl
+    ncl_name: REFD_P8_L20_GLC0_max1h
+    title: 'Max 1h -10C Isothermal Reflectivity'
 temp: # Temperature
   2ds: # 2m - Sfc
     clevs: !!python/object/apply:numpy.arange [-16, 17, 2]
@@ -137,6 +226,16 @@ temp: # Temperature
     transform: conversions.k_to_f
     unit: F
     wind: False
+totp: # Hourly total precipitation
+  sfc:
+    clevs: [0.002, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 1.0, 2.0]
+    cmap: gist_ncar
+    colors: pcp_colors
+    contour_colors: red
+    ncl_name: APCP_P8_L1_GLC0_acc1h
+    ticks: 0
+    transform: conversions.kgm2_to_in
+    unit: 'in'
 u:
   10m:
     ncl_name: UGRD_P0_L103_GLC0

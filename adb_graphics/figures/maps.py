@@ -132,8 +132,11 @@ class DataMap():
 
         ''' Internal method that plots the color bar for a contourf field. '''
 
-        ticks = np.arange(np.amin(self.field.clevs),
-                          np.amax(self.field.clevs+1), self.field.ticks)
+        if self.field.ticks > 0:
+            ticks = np.arange(np.amin(self.field.clevs),
+                              np.amax(self.field.clevs+1), self.field.ticks)
+        else:
+            ticks = self.field.clevs
         cbar = plt.colorbar(cc,
                             ax=ax,
                             orientation='horizontal',

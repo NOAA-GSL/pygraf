@@ -17,6 +17,7 @@ from string import ascii_letters
 
 from matplotlib import cm
 from matplotlib import colors as mcolors
+from metpy.plots import ctables
 import numpy as np
 
 import adb_graphics.conversions as conversions
@@ -116,8 +117,9 @@ class TestDefaultSpecs():
             'colors': self.is_a_color,
             'contour': self.is_a_key,
             'contour_colors': self.is_a_color,
+            'layer':self.is_int,
             'ncl_name': True,
-            'ticks': self.is_int,
+            'ticks': self.is_number,
             'title': self.is_string,
             'transform': self.is_callable,
             'transform_kwargs': self.is_dict,
@@ -130,7 +132,7 @@ class TestDefaultSpecs():
 
         ''' Returns true for a clev that is a list, a range, or a callable function. '''
 
-        if isinstance(clev, np.ndarray):
+        if isinstance(clev, (list, np.ndarray)):
             return True
 
         if 'range' in clev.split('[')[0]:
@@ -145,8 +147,7 @@ class TestDefaultSpecs():
     def is_a_cmap(cmap):
 
         ''' Returns true for a cmap that is a Colormap object. '''
-
-        return isinstance(cm.get_cmap(cmap), mcolors.Colormap)
+        return cmap in dir(cm) + list(ctables.colortables.keys())
 
     def is_a_color(self, color):
 
@@ -176,6 +177,7 @@ class TestDefaultSpecs():
             'maxsfc',  # max surface value
             'mdn',     # maximum downward
             'mnsfc',   # min surface value
+            'msl',     # mean sea level
             'mup',     # maximum upward
             'sfc',     # surface
             'ua',      # upper air
@@ -278,6 +280,15 @@ class TestDefaultSpecs():
         ''' Returns true if i is an integer. '''
 
         if isinstance(i, int):
+            return True
+        return i.isnumeric() and len(i.split('.')) == 1
+
+    @staticmethod
+    def is_number(i):
+
+        ''' Returns true if i is a number. '''
+
+        if isinstance(i, (int, float)):
             return True
         return i.isnumeric() and len(i.split('.')) == 1
 
