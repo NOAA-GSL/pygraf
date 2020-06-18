@@ -130,7 +130,7 @@ class TestDefaultSpecs():
 
         ''' Returns true for a clev that is a list, a range, or a callable function. '''
 
-        if isinstance(clev, np.ndarray):
+        if isinstance(clev, (list, np.ndarray)):
             return True
 
         if 'range' in clev.split('[')[0]:
