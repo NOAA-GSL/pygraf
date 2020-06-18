@@ -24,6 +24,22 @@ class VarSpec(abc.ABC):
         with open(config, 'r') as cfg:
             self.yml = yaml.load(cfg, Loader=yaml.Loader)
 
+    def centered_diff(self):
+
+        ''' Returns the colors specified by levels and cmap in default spec, but
+        with white center. '''
+
+        clevs = self.vspec.get('clevs')
+        nlev = len(clevs) + 1
+
+        colors = cm.get_cmap(self.vspec.get('cmap'), nlev)(range(nlev))
+        mid = nlev // 2
+
+        colors[mid] = [1, 1, 1, 1]
+        colors[mid-1] = [1, 1, 1, 1]
+
+        return colors
+
     @property
     @abc.abstractmethod
     def clevs(self) -> np.ndarray:

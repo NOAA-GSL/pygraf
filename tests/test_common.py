@@ -22,6 +22,7 @@ import numpy as np
 import adb_graphics.conversions as conversions
 import adb_graphics.specs as specs
 import adb_graphics.utils as utils
+import adb_graphics.datahandler.grib as grib
 
 def test_conversion():
 
@@ -117,7 +118,9 @@ class TestDefaultSpecs():
             'contour_colors': self.is_a_color,
             'ncl_name': True,
             'ticks': self.is_int,
+            'title': self.is_string,
             'transform': self.is_callable,
+            'transform_kwargs': self.is_dict,
             'unit': self.is_string,
             'wind': self.is_wind,
             }
@@ -236,14 +239,41 @@ class TestDefaultSpecs():
 
         return isinstance(k, bool)
 
-    def is_callable(self, func):
+    def is_callable(self, funcs):
 
-        ''' Returns true if func is the name of a callable function. '''
+        ''' Returns true if func in funcs list is the name of a callable function. '''
 
-        return hasattr(self.varspec, func) or callable(utils.get_func(func))
+        in_varspec = False
+        in_grib = False
+        in_package = False
+
+        funcs = funcs if isinstance(funcs, list) else [funcs]
+        callables = []
+
+        for func in funcs:
+            # Check datahandler.grib objects if a single word is provided
+            if len(func.split('.')) == 1:
+                for attr in dir(grib):
+                    if func in dir(grib.__getattribute__(attr)):
+                        callables.append(True)
+
+            else:
+
+                in_package = callable(utils.get_func(func))
+                in_varspec = hasattr(self.varspec, func)
+                callables.append(in_package or in_varspec)
+
+        return all(callables)
 
     @staticmethod
-    def  is_int(i):
+    def is_dict(d):
+
+        ''' Returns true if d is a dictionary '''
+
+        return is_instance(d, dict)
+
+    @staticmethod
+    def is_int(i):
 
         ''' Returns true if i is an integer. '''
 
@@ -264,17 +294,27 @@ class TestDefaultSpecs():
 
         return isinstance(wind, bool) or self.is_a_level(wind)
 
-    def check_keys(self, d):
+    def check_keys(self, d, depth=0):
 
         ''' Helper function that recursively checks the keys in the dictionary by calling the
         function defined in allowable. '''
 
+        max_depth = 2
+
+        # Only proceed if d is a dictionary
         if not isinstance(d, dict):
             return
+
+        # Proceed only up to max depth.
+        if depth >= max_depth:
+            return
+        else:
+            level = depth+1
+
         for k, v in d.items():
             assert (k in self.allowable.keys()) or self.is_a_level(k)
             if isinstance(v, dict):
-                self.check_keys(v)
+                self.check_keys(v, depth=level)
             else:
                 checker = self.allowable.get(k)
                 if isinstance(checker, bool):

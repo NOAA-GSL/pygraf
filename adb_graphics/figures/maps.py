@@ -216,14 +216,16 @@ class DataMap():
             contoured = f'{cf.field.long_name} ({cf.units}, contoured)'
 
         # Analysis time (top) and forecast hour (bottom) on the left
-        plt.title(f"Analysis: {atime}\nFcst Hr: : {f.fhr}", loc='left', fontsize=16)
+        plt.title(f"Analysis: {atime}\nFcst Hr: {f.fhr}", loc='left', fontsize=16)
 
         # Atmospheric level and unit in the high center
         level, lev_unit = f.numeric_level
-        plt.title(f"{level} {lev_unit}", position=(0.5, 1.04), fontsize=18)
+        if not f.vspec.get('title'):
+            plt.title(f"{level} {lev_unit}", position=(0.5, 1.04), fontsize=18)
 
         # Two lines for shaded data (top), and contoured data (bottom)
-        plt.title(f"{f.field.long_name} ({f.units}, shaded)\n {contoured}",
+        title = f.vspec.get('title', f.field.long_name)
+        plt.title(f"{title} ({f.units}, shaded)\n {contoured}",
                   loc='right',
                   fontsize=16,
                   )
