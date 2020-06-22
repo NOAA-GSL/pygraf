@@ -28,7 +28,7 @@ class VarSpec(abc.ABC):
 
     @property
     @lru_cache()
-    def acpcp_colors(self) -> np.ndarray:
+    def accumulated_precip_colors(self) -> np.ndarray:
 
         ''' Default color map for Accumulated Precipitation '''
 
@@ -73,8 +73,8 @@ class VarSpec(abc.ABC):
 
         ''' Default color map for Reflectivity '''
 
-        ncolors = len(self.clevs)-2
-        grays = cm.get_cmap('Greys', 5)([0, 0])
+        ncolors = len(self.clevs)-1
+        grays = cm.get_cmap('Greys', 5)([0])
         nws = ctables.colortables.get_colortable(self.vspec.get('cmap'))(range(ncolors))
         white = cm.get_cmap('Greys', 5)([0])
         return np.concatenate((grays, nws, white))
@@ -85,11 +85,9 @@ class VarSpec(abc.ABC):
 
         ''' Default color map for Dew point temperature '''
 
-        ncar1 = cm.get_cmap(self.vspec.get('cmap'), 128)([70, 75, 80])
-        grays = cm.get_cmap('Greys', 5)([3])
-        ncar2 = cm.get_cmap(self.vspec.get('cmap'), 128) \
-                ([95, 100, 120, 16, 19, 21, 25, 50, 60, 70, 80, 85, 95, 100, 120])
-        return np.concatenate((ncar1, grays, ncar2, grays))
+        ctable = ctables.colortables.get_colortable(self.vspec.get('cmap')) \
+                    (range(0, 42, 1)) # Carbone42_r
+        return ctable
 
     @property
     @lru_cache()

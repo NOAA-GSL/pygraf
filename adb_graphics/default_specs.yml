@@ -53,10 +53,10 @@
 #
 
 acpcp: # Accumulated precipitation
-  sfc:
+  sfc: # Not yet supported
     clevs: [0.01, 0.1, 0.25, 0.5, 1, 2, 3, 5, 10, 15, 20, 40]
     cmap: gist_ncar
-    colors: acpcp_colors
+    colors: accumulated_precip_colors
     contour_colors: grey
     ncl_name: APCP_P8_L1_GLC0_acc{fhr}h
     ticks: 0
@@ -64,7 +64,7 @@ acpcp: # Accumulated precipitation
     unit: 'in'
 cref: # Composite reflectivity
   sfc: &refl
-    clevs: !!python/object/apply:numpy.arange [0, 76, 5]
+    clevs: !!python/object/apply:numpy.arange [5, 76, 5]
     cmap: NWSReflectivity
     colors: cref_colors
     ncl_name: REFC_P0_L10_GLC0
@@ -72,12 +72,12 @@ cref: # Composite reflectivity
     unit: 'dB'
 dewp: # Dew point temperature
   2m:
-    clevs: !!python/object/apply:numpy.arange [-60, 121, 10]
-    cmap: gist_ncar
+    clevs: [-60, -50, -40, -30, -20, -10, 0, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 66, 68, 70, 80, 90, 100, 110, 120]
+    cmap: Carbone42_r
     colors: dewp_colors
     contour_colors: grey
     ncl_name: DPT_P0_L103_GLC0
-    ticks: 20
+    ticks: -4
     transform: conversions.k_to_f
     unit: 'F'
     wind: 10m
@@ -141,6 +141,7 @@ mref: # Maximum reflectivity for past hour at 1 km AGL
   sfc:
     <<: *refl
     ncl_name: MAXREF_P8_L103_GLC0_max1h
+    title: 'Max 1km agl Reflectivity (over prev hr)'
 pwtr:
   sfc:
     clevs: !!python/object/apply:numpy.arange [4, 81, 4]
@@ -234,6 +235,7 @@ totp: # Hourly total precipitation
     contour_colors: red
     ncl_name: APCP_P8_L1_GLC0_acc1h
     ticks: 0
+    title: '1 hr Total Precip (in)'
     transform: conversions.kgm2_to_in
     unit: 'in'
 u:

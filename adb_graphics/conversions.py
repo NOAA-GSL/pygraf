@@ -19,11 +19,11 @@ def k_to_f(field: np.ndarray, **kwargs) -> np.ndarray:
 
     return (np.asarray(field) - 273.15) * 9/5 + 32
 
-def kgm2_to_in(field: np.ndarray) -> np.ndarray:
+def kgm2_to_in(field: np.ndarray, **kwargs) -> np.ndarray:
 
     ''' Conversion from kg per m^2 to inches '''
 
-    return np.asarray(field) * 0.04
+    return np.asarray(field) * 0.03937
 
 def magnitude(a: np.ndarray, b: np.ndarray, **kwargs) -> np.ndarray:
 
@@ -37,7 +37,7 @@ def m_to_dm(field: np.ndarray, **kwargs) -> np.ndarray:
 
     return np.asarray(field) / 10.
 
-def m_to_kft(field: np.ndarray) -> np.ndarray:
+def m_to_kft(field: np.ndarray, **kwargs) -> np.ndarray:
 
     ''' Conversion from meters to kilofeet '''
 

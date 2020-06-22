@@ -37,7 +37,7 @@ def test_conversion():
     # Check for the right answer
     assert np.array_equal(conversions.k_to_c(a), a - 273.15)
     assert np.array_equal(conversions.k_to_f(a), (a - 273.15) * 9/5 + 32)
-    assert np.array_equal(conversions.kgm2_to_in(a), a * 0.04)
+    assert np.array_equal(conversions.kgm2_to_in(a), a * 0.03937)
     assert np.array_equal(conversions.m_to_dm(a), a / 10)
     assert np.array_equal(conversions.m_to_kft(a), a / 304.8)
     assert np.array_equal(conversions.ms_to_kt(a), a * 1.9438)
@@ -121,7 +121,7 @@ class TestDefaultSpecs():
             'colors': self.is_a_color,
             'contour': self.is_a_key,
             'contour_colors': self.is_a_color,
-            'layer':self.is_int,
+            'layer': self.is_int,
             'ncl_name': True,
             'ticks': self.is_number,
             'title': self.is_string,
@@ -294,7 +294,7 @@ class TestDefaultSpecs():
 
         if isinstance(i, (int, float)):
             return True
-        return i.isnumeric() and len(i.split('.')) == 1
+        return i.isnumeric() and len(i.split('.')) <= 2
 
     @staticmethod
     def is_string(s):
