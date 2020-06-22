@@ -131,7 +131,8 @@ class DataMap():
     def _colorbar(self, cc, ax):
 
         ''' Internal method that plots the color bar for a contourf field.
-         If ticks is set to zero, use a user-defined list of clevs from default_specs '''
+         If ticks is set to zero, use a user-defined list of clevs from default_specs
+	 If ticks is less than zero, use abs(ticks) as the step for labeling clevs '''
 
         if self.field.ticks > 0:
             ticks = np.arange(np.amin(self.field.clevs),
