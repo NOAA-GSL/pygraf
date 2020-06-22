@@ -17,6 +17,7 @@ from string import ascii_letters
 
 from matplotlib import cm
 from matplotlib import colors as mcolors
+from metpy.plots import ctables
 import numpy as np
 
 import adb_graphics.conversions as conversions
@@ -36,7 +37,9 @@ def test_conversion():
     # Check for the right answer
     assert np.array_equal(conversions.k_to_c(a), a - 273.15)
     assert np.array_equal(conversions.k_to_f(a), (a - 273.15) * 9/5 + 32)
+    assert np.array_equal(conversions.kgm2_to_in(a), a * 0.03937)
     assert np.array_equal(conversions.m_to_dm(a), a / 10)
+    assert np.array_equal(conversions.m_to_kft(a), a / 304.8)
     assert np.array_equal(conversions.ms_to_kt(a), a * 1.9438)
     assert np.array_equal(conversions.pa_to_hpa(a), a / 100)
     assert np.array_equal(conversions.vvel_scale(a), a * -10)
@@ -45,7 +48,9 @@ def test_conversion():
     functions = [
         conversions.k_to_c,
         conversions.k_to_f,
+        conversions.kgm2_to_in,
         conversions.m_to_dm,
+        conversions.m_to_kft,
         conversions.ms_to_kt,
         conversions.pa_to_hpa,
         conversions.vvel_scale,
@@ -116,8 +121,9 @@ class TestDefaultSpecs():
             'colors': self.is_a_color,
             'contour': self.is_a_key,
             'contour_colors': self.is_a_color,
+            'layer': self.is_int,
             'ncl_name': True,
-            'ticks': self.is_int,
+            'ticks': self.is_number,
             'title': self.is_string,
             'transform': self.is_callable,
             'transform_kwargs': self.is_dict,
@@ -145,8 +151,7 @@ class TestDefaultSpecs():
     def is_a_cmap(cmap):
 
         ''' Returns true for a cmap that is a Colormap object. '''
-
-        return isinstance(cm.get_cmap(cmap), mcolors.Colormap)
+        return cmap in dir(cm) + list(ctables.colortables.keys())
 
     def is_a_color(self, color):
 
@@ -176,6 +181,7 @@ class TestDefaultSpecs():
             'maxsfc',  # max surface value
             'mdn',     # maximum downward
             'mnsfc',   # min surface value
+            'msl',     # mean sea level
             'mup',     # maximum upward
             'sfc',     # surface
             'ua',      # upper air
@@ -280,6 +286,15 @@ class TestDefaultSpecs():
         if isinstance(i, int):
             return True
         return i.isnumeric() and len(i.split('.')) == 1
+
+    @staticmethod
+    def is_number(i):
+
+        ''' Returns true if i is a number. '''
+
+        if isinstance(i, (int, float)):
+            return True
+        return i.isnumeric() and len(i.split('.')) <= 2
 
     @staticmethod
     def is_string(s):

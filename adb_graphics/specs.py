@@ -10,6 +10,7 @@ from functools import lru_cache
 from matplotlib import cm
 import numpy as np
 import yaml
+from metpy.plots import ctables
 
 class VarSpec(abc.ABC):
 
@@ -23,6 +24,17 @@ class VarSpec(abc.ABC):
 
         with open(config, 'r') as cfg:
             self.yml = yaml.load(cfg, Loader=yaml.Loader)
+
+    @property
+    @lru_cache()
+    def accumulated_precip_colors(self) -> np.ndarray:
+
+        ''' Default color map for Accumulated Precipitation '''
+
+        grays = cm.get_cmap('Greys', 6)([0, 3])
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          ([18, 20, 25, 50, 60, 70, 80, 85, 90, 100, 120])
+        return np.concatenate((grays, ncar))
 
     def centered_diff(self):
 
@@ -53,6 +65,50 @@ class VarSpec(abc.ABC):
 
         ''' The variable plotting specification. The level-specific subgroup
         from a config file like default_specs.yml. '''
+
+    @property
+    @lru_cache()
+    def cref_colors(self) -> np.ndarray:
+
+        ''' Default color map for Reflectivity '''
+
+        ncolors = len(self.clevs)-1
+        grays = cm.get_cmap('Greys', 5)([0])
+        nws = ctables.colortables.get_colortable(self.vspec.get('cmap'))(range(ncolors))
+        white = cm.get_cmap('Greys', 5)([0])
+        return np.concatenate((grays, nws, white))
+
+    @property
+    @lru_cache()
+    def dewp_colors(self) -> np.ndarray:
+
+        ''' Default color map for Dew point temperature '''
+
+        ctable = ctables.colortables.get_colortable(self.vspec.get('cmap')) \
+                    (range(0, 42, 1)) # Carbone42_r
+        return ctable
+
+    @property
+    @lru_cache()
+    def hlcy_colors(self) -> np.ndarray:
+
+        ''' Default color map for Helicity '''
+
+        grays = cm.get_cmap('Greys', 5)([0])
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          ([15, 18, 20, 25, 50, 60, 70, 80, 85, 90, 100, 120])
+        return np.concatenate((grays, ncar))
+
+    @property
+    @lru_cache()
+    def pcp_colors(self) -> np.ndarray:
+
+        ''' Default color map for Hourly Precipitation '''
+
+        grays = cm.get_cmap('Greys', 6)([0, 3])
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          ([25, 50, 60, 70, 80, 85, 90, 115])
+        return np.concatenate((grays, ncar))
 
     @property
     @lru_cache()
