@@ -142,6 +142,15 @@ mref: # Maximum reflectivity for past hour at 1 km AGL
     <<: *refl
     ncl_name: MAXREF_P8_L103_GLC0_max1h
     title: 'Max 1km agl Reflectivity (over prev hr)'
+gust:
+  10m:
+    clevs: !!python/object/apply:numpy.arange [5, 95, 5]
+    cmap: gist_ncar
+    colors: wind_colors
+    ncl_name: GUST_P0_L1_GLC0
+    ticks: 5
+    transform: conversions.ms_to_kt
+    unit: kt
 pwtr:
   sfc:
     clevs: !!python/object/apply:numpy.arange [4, 81, 4]
@@ -176,6 +185,23 @@ ref: # Maximum reflectivity for past hour at 1 km AGL
     <<: *refl
     ncl_name: REFD_P8_L20_GLC0_max1h
     title: 'Max 1h -10C Isothermal Reflectivity'
+rh: # Relative Humidity
+  2m: &rh
+    clevs: [10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 100, 105]
+    cmap: gist_ncar
+    colors: rh_colors
+    ncl_name: RH_P0_L103_GLC0
+    ticks: 10
+    unit: '%'
+  500mb:
+    <<: *rh
+    ncl_name: RH_P0_L100_GLC0
+  700mb:
+    <<: *rh
+    ncl_name: RH_P0_L100_GLC0
+  850mb:
+    <<: *rh
+    ncl_name: RH_P0_L100_GLC0
 temp: # Temperature
   2ds: # 2m - Sfc
     clevs: !!python/object/apply:numpy.arange [-16, 17, 2]
