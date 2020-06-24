@@ -68,6 +68,28 @@ class VarSpec(abc.ABC):
 
     @property
     @lru_cache()
+    def ceil_colors(self) -> np.ndarray:
+
+        ''' Default color map for Ceiling '''
+
+        grays = cm.get_cmap('Greys', 2)([0])
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          ([15, 18, 20, 25, 50, 60, 70, 80, 85, 90, 100, 120])
+        return np.concatenate((grays, ncar, grays))
+
+    @property
+    @lru_cache()
+    def cldcov_colors(self) -> np.ndarray:
+
+        ''' Default color map for Cloud Cover '''
+
+        grays = cm.get_cmap('Greys', 7)([0, 1, 3])
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          ([120, 100, 90, 85, 80, 70, 60, 50, 25, 20])
+        return np.concatenate((grays, ncar))
+
+    @property
+    @lru_cache()
     def cref_colors(self) -> np.ndarray:
 
         ''' Default color map for Reflectivity '''
@@ -101,6 +123,16 @@ class VarSpec(abc.ABC):
 
     @property
     @lru_cache()
+    def lcl_colors(self) -> np.ndarray:
+
+        ''' Default color map for Lifted Condensation Level '''
+
+        ctable = ctables.colortables.get_colortable(self.vspec.get('cmap')) \
+                    (range(60, 180, 6)) # rainbow
+        return ctable
+
+    @property
+    @lru_cache()
     def pcp_colors(self) -> np.ndarray:
 
         ''' Default color map for Hourly Precipitation '''
@@ -108,6 +140,17 @@ class VarSpec(abc.ABC):
         grays = cm.get_cmap('Greys', 6)([0, 3])
         ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
                           ([25, 50, 60, 70, 80, 85, 90, 115])
+        return np.concatenate((grays, ncar))
+
+    @property
+    @lru_cache()
+    def ps_colors(self) -> np.ndarray:
+
+        ''' Default color map for Surface Pressure '''
+
+        grays = cm.get_cmap('Greys', 13)(range(13))
+        segments = [[16, 53], [86, 105], [110, 151, 2], [172, 202, 2]]
+        ncar = cm.get_cmap('gist_ncar', 200)(list(chain(*[range(*i) for i in segments])))
         return np.concatenate((grays, ncar))
 
     @property
@@ -125,17 +168,6 @@ class VarSpec(abc.ABC):
 
     @property
     @lru_cache()
-    def ps_colors(self) -> np.ndarray:
-
-        ''' Default color map for Surface Pressure '''
-
-        grays = cm.get_cmap('Greys', 13)(range(13))
-        segments = [[16, 53], [86, 105], [110, 151, 2], [172, 202, 2]]
-        ncar = cm.get_cmap('gist_ncar', 200)(list(chain(*[range(*i) for i in segments])))
-        return np.concatenate((grays, ncar))
-
-    @property
-    @lru_cache()
     def rh_colors(self) -> np.ndarray:
 
         ''' Default color map for Relative Humidity '''
@@ -143,7 +175,7 @@ class VarSpec(abc.ABC):
         ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
                           ([122, 114, 96, 85, 79, 69, 60, 49, 31, 21, 17, 109, 113])
         return ncar
-    
+
     @property
     @lru_cache()
     def t_colors(self) -> np.ndarray:
@@ -153,11 +185,22 @@ class VarSpec(abc.ABC):
         ncolors = len(self.clevs)
         return cm.get_cmap(self.vspec.get('cmap', 'jet'), ncolors)(range(ncolors))
 
+
+    @property
+    @lru_cache()
+    def terrain_colors(self) -> np.ndarray:
+
+        ''' Default color map for Terrain '''
+
+        ctable = ctables.colortables.get_colortable(self.vspec.get('cmap')) \
+                    (range(0, 21, 1))
+        return ctable
+
     @property
     @lru_cache()
     def vvel_colors(self) -> np.ndarray:
 
-        ''' Default color map for Vertical Velocity '''
+        ''' Default color map for Vetical Velocity '''
 
         ncar1 = cm.get_cmap(self.vspec.get('cmap'), 128)([15, 18, 20, 25])
         grays = cm.get_cmap('Greys', 2)([0])
@@ -174,6 +217,7 @@ class VarSpec(abc.ABC):
         ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
                           ([15, 18, 20, 25, 50, 60, 70, 80, 85, 90, 100, 120])
         return np.concatenate((grays, ncar))
+
     @property
     @lru_cache()
     def wind_colors(self) -> np.ndarray:
