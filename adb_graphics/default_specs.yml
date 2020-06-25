@@ -15,6 +15,9 @@
 #
 #   contour: specifies a field to be contoured, and must come from same level
 #
+#   layer: for arrays with multiple fields stacked in the vertical,
+#          provide the desired level
+#
 #   ncl_name: the name of the variable as expected by NCL
 #
 #   ticks: the number of tick marks on the colorbar
@@ -61,7 +64,30 @@ acpcp: # Accumulated precipitation
     ncl_name: APCP_P8_L1_GLC0_acc{fhr}h
     ticks: 0
     transform: conversions.kgm2_to_in
-    unit: 'in'
+    unit: in
+ceil: # Ceiling
+  ua: &ceil
+    clevs: [0, 0.1, 0.3, 0.5, 1, 2, 3, 5, 10, 15, 20, 30, 60]
+    cmap: gist_ncar
+    colors: ceil_colors
+    ncl_name: HGT_P0_L215_GLC0
+    ticks: 0
+    title: Ceiling
+    transform: [field_diff, conversions.m_to_kft]
+    transform_kwargs:
+      variable2: gh
+      level2: sfc
+    unit: kft agl
+ceilexp: # Ceiling - experimental
+  ua:
+    <<: *ceil
+    ncl_name: CEIL_P0_GLC0
+    title: Ceiling (exp)
+ceilexp2: # Ceiling - experimental no.2
+  ua:
+    <<: *ceil
+    ncl_name: CEIL_P0_L2_GLC0
+    title: Ceiling (exp-2)
 cref: # Composite reflectivity
   sfc: &refl
     clevs: !!python/object/apply:numpy.arange [5, 76, 5]
@@ -69,7 +95,17 @@ cref: # Composite reflectivity
     colors: cref_colors
     ncl_name: REFC_P0_L10_GLC0
     ticks: 5
-    unit: 'dB'
+    unit: dB
+ctop: # Cloud top height
+  ua:
+    clevs: !!python/object/apply:numpy.arange [0, 61, 5]
+    cmap: gist_ncar
+    colors: ceil_colors
+    ncl_name: HGT_P0_L3_GLC0
+    ticks: 0
+    title: Cloud Top Height
+    transform: [conversions.m_to_kft]
+    unit: kft asl
 dewp: # Dew point temperature
   2m:
     clevs: [-60, -50, -40, -30, -20, -10, 0, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 66, 68, 70, 80, 90, 100, 110, 120]
@@ -79,12 +115,13 @@ dewp: # Dew point temperature
     ncl_name: DPT_P0_L103_GLC0
     ticks: -4
     transform: conversions.k_to_f
-    unit: 'F'
+    unit: F
     wind: 10m
 gh: # Geopotential height
   500mb: &ua_gh
     clevs: !!python/object/apply:numpy.arange [6, 990, 6]
-    colors: w
+    cmap: precipitation
+    colors: terrain_colors
     ncl_name: HGT_P0_L100_GLC0
     ticks: 4
     transform: conversions.m_to_dm
@@ -98,6 +135,13 @@ gh: # Geopotential height
   925mb:
     <<: *ua_gh
     clevs: !!python/object/apply:numpy.arange [3, 600, 3]
+  sfc:
+    <<: *ua_gh
+    clevs: !!python/object/apply:numpy.arange [0, 5000, 250]
+    ncl_name: HGT_P0_L1_GLC0
+    ticks: 0
+    transform: []
+    unit: gpm
 hlcy: # Helicity
   in16: &hlcy # Hourly updraft helicity over 1-6 km layer
     clevs: !!python/object/apply:numpy.arange [25, 301, 25]
@@ -106,42 +150,51 @@ hlcy: # Helicity
     layer: 1
     ncl_name: UPHL_P0_2L103_GLC0
     ticks: 25
-    title: '1-6km Updraft Helicity'
-    unit: 'm2/s2'
+    title: 1-6km Updraft Helicity
+    unit: m2/s2
   in25: # Hourly updraft helicity over 2-5 km layer
     <<: *hlcy 
     layer: 0
     ncl_name: UPHL_P0_2L103_GLC0
-    title: '2-5km Updraft Helicity'
+    title: 2-5km Updraft Helicity
   mx02: # Hourly maximum of updraft helicity over 0-2 km layer
     <<: *hlcy 
     clevs: !!python/object/apply:numpy.arange [12.5, 150.5, 12.5]
     layer: 0
     ncl_name: MXUPHL_P8_2L103_GLC0_max1h
     ticks: 12.5
-    title: '0-2km Max Updraft Helicity (over prv hr)'
+    title: 0-2km Max Updraft Helicity (over prv hr)
   mx03: # Hourly maximum of updraft helicity over 0-3 km layer
     <<: *hlcy 
     clevs: !!python/object/apply:numpy.arange [12.5, 150.5, 12.5]
     layer: 1
     ncl_name: MXUPHL_P8_2L103_GLC0_max1h
     ticks: 12.5
-    title: '0-3km Max Updraft Helicity (over prv hr)'
+    title: 0-3km Max Updraft Helicity (over prv hr)
   mx16: # Hourly maximum of updraft helicity over 1-6 km layer
     <<: *hlcy
     layer: 3
-    title: '1-6km Max Updraft Helicity (over prv hr)'
+    title: 1-6km Max Updraft Helicity (over prv hr)
     ncl_name: MXUPHL_P8_2L103_GLC0_max1h
   mx25: # Hourly maximum of updraft helicity over 2-5 km layer
     <<: *hlcy
     layer: 2
     ncl_name: MXUPHL_P8_2L103_GLC0_max1h
-    title: '2-5km Max Updraft Helicity (over prv hr)'
-mref: # Maximum reflectivity for past hour at 1 km AGL
+    title: 2-5km Max Updraft Helicity (over prv hr)
+lcl: # Lifted condensation level
   sfc:
-    <<: *refl
-    ncl_name: MAXREF_P8_L103_GLC0_max1h
-    title: 'Max 1km agl Reflectivity (over prev hr)'
+    clevs: !!python/object/apply:numpy.arange [0, 5000, 250]
+    cmap: rainbow
+    colors: lcl_colors
+    contour_colors: white
+    ncl_name: HGT_P0_L5_GLC0
+    ticks: -2
+    title: Lifted Condensation Level Height
+    transform: field_diff
+    transform_kwargs:
+      variable2: gh
+      level2: sfc
+    unit: m agl
 gust:
   10m:
     clevs: !!python/object/apply:numpy.arange [5, 95, 5]
@@ -151,14 +204,30 @@ gust:
     ticks: 5
     transform: conversions.ms_to_kt
     unit: kt
-pwtr:
-  sfc:
-    clevs: !!python/object/apply:numpy.arange [4, 81, 4]
+hcc: # High-level cloud cover
+  sfc: &cld_cover
+    clevs: [2, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95]
     cmap: gist_ncar
-    colors: pw_colors
-    ncl_name: PWAT_P0_L200_GLC0
-    ticks: 4
-    unit: mm
+    colors: cldcov_colors
+    ncl_name: HCDC_P0_L234_GLC0
+    ticks: 0
+    title: High-Level Cloud Cover
+    unit: '%'
+lcc: # Low-level cloud cover
+  sfc:
+    <<: *cld_cover
+    ncl_name: LCDC_P0_L214_GLC0
+    title: Low-Level Cloud Cover
+mcc: # Mid-level cloud cover
+  sfc:
+    <<: *cld_cover
+    ncl_name: MCDC_P0_L224_GLC0
+    title: Mid-Level Cloud Cover
+mref: # Maximum reflectivity for past hour at 1 km AGL
+  sfc:
+    <<: *refl
+    ncl_name: MAXREF_P8_L103_GLC0_max1h
+    title: Max 1km agl Reflectivity (over prev hr)
 pres:
   sfc:
     clevs: !!python/object/apply:numpy.arange [650, 1051, 4]
@@ -176,15 +245,32 @@ pres:
     ticks: 20
     transform: conversions.pa_to_hpa
     unit: hPa
+ptmp: # Potential temperature
+  2m:
+    clevs: !!python/object/apply:numpy.arange [210, 350, 5]
+    cmap: jet
+    colors: t_colors
+    ncl_name: POT_P0_L103_GLC0
+    ticks: 10
+    unit: K
+    wind: 10m
+pwtr: # Precipitable water
+  sfc:
+    clevs: !!python/object/apply:numpy.arange [4, 81, 4]
+    cmap: gist_ncar
+    colors: pw_colors
+    ncl_name: PWAT_P0_L200_GLC0
+    ticks: 4
+    unit: mm
 ref: # Maximum reflectivity for past hour at 1 km AGL
   m10:
     <<: *refl
     ncl_name: REFD_P0_L20_GLC0
-    title: '-10C Isothermal Reflectivity'
+    title: -10C Isothermal Reflectivity
   maxm10:
     <<: *refl
     ncl_name: REFD_P8_L20_GLC0_max1h
-    title: 'Max 1h -10C Isothermal Reflectivity'
+    title: Max 1h -10C Isothermal Reflectivity
 rh: # Relative Humidity
   2m: &rh
     clevs: [10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 100, 105]
@@ -202,6 +288,11 @@ rh: # Relative Humidity
   850mb:
     <<: *rh
     ncl_name: RH_P0_L100_GLC0
+tcc: # Total cloud cover
+  sfc:
+    <<: *cld_cover
+    ncl_name: TCDC_P0_L10_GLC0
+    title: Total Cloud Cover
 temp: # Temperature
   2ds: # 2m - Sfc
     clevs: !!python/object/apply:numpy.arange [-16, 17, 2]
@@ -209,7 +300,7 @@ temp: # Temperature
     colors: centered_diff
     ncl_name: TMP_P0_L103_GLC0 # 2m Temp
     ticks: 2
-    title: '2m Temp - Skin Temp'
+    title: 2m Temp - Skin Temp
     transform: [conversions.k_to_f, field_diff]
     transform_kwargs:
       variable2: temp
@@ -261,9 +352,9 @@ totp: # Hourly total precipitation
     contour_colors: red
     ncl_name: APCP_P8_L1_GLC0_acc1h
     ticks: 0
-    title: '1 hr Total Precip (in)'
+    title: 1 hr Total Precip
     transform: conversions.kgm2_to_in
-    unit: 'in'
+    unit: in
 u:
   10m:
     ncl_name: UGRD_P0_L103_GLC0
@@ -283,17 +374,7 @@ v:
   700mb: *ua_vwind
   850mb: *ua_vwind
   925mb: *ua_vwind
-vvel:
-  700mb:
-    clevs: !!python/object/apply:numpy.arange [-17, 34, 5]
-    cmap: gist_ncar
-    colors: vvel_colors
-    contour_colors: grey
-    ncl_name: VVEL_P0_L100_GLC0
-    ticks: 5
-    transform: conversions.vvel_scale
-    unit: '-Pa/s * 10'
-vort:
+vort: # Absolute vorticity
   500mb:
     clevs: !!python/object/apply:numpy.arange [6, 29, 2]
     cmap: gist_ncar
@@ -302,4 +383,28 @@ vort:
     ncl_name: ABSV_P0_L100_GLC0
     ticks: 2
     transform: conversions.vort_scale
-    unit: '1E-5/s'
+    unit: 1E-5/s
+vvel: # Vertical velocity
+  700mb:
+    clevs: !!python/object/apply:numpy.arange [-17, 34, 5]
+    cmap: gist_ncar
+    colors: vvel_colors
+    contour_colors: grey
+    ncl_name: VVEL_P0_L100_GLC0
+    ticks: 5
+    transform: conversions.vvel_scale
+    unit: -Pa/s * 10
+vvort: # Vertical vorticity
+  mx01: &vvort # Hourly maximum of vertical vorticity over 0-2 km layer
+    clevs: !!python/object/apply:numpy.arange [0.0025, 0.0301, 0.0025]
+    cmap: gist_ncar
+    colors: vort_colors
+    layer: 0
+    ncl_name: RELV_P8_2L103_GLC0_max1h
+    ticks: 0
+    title: 0-1km Max Vertical Velocity (over prev hour)
+    unit: 1/s
+  mx02: # Hourly maximum of vertical vorticity over 0-2 km layer
+    <<: *vvort 
+    layer: 1
+    title: 0-2km Max Vertical Velocity (over prev hour)
