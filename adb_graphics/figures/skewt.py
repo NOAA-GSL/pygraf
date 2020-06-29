@@ -24,6 +24,8 @@ class skewT(grib.profileData):
 
     def __init__(self, filename, loc, **kwargs):
 
+        # Initialize on the temperature field since we need to gather
+        # field-specific data from this object, e.g. dates, lat, lon, etc.
         super().__init__(self,
                          filename,
                          loc=loc,
@@ -39,6 +41,10 @@ class skewT(grib.profileData):
 
     def atmo_profiles(self):
 
+        ''' Return a dictionary of atmospheric data profiles for each variable
+        needed by the skewT. '''
+
+        # OrderedDict because we need to get pressure profile first.
         atmo_vars = OrderedDict({
                 'pres': {
                     'transform': 'hecto-Pa',
@@ -69,85 +75,91 @@ class skewT(grib.profileData):
            })
 
         top = None
-        ret = {}
         for var, items in atmo_vars.items():
 
+            # Get the profile values and attach MetPy units
             tmp = self.values(short_name=var) * items['units']
 
+            # Apply any needed transformation
             transform = items.get('transform')
             if transform:
                 tmp = tmp.to(transform)
 
+            # Only return values up to the maximum pressure level requested
             if var == 'pres' and not top:
                 top = np.sum(np.where(tmp >= self.max_plev)) - 1
 
-            ret[var]['data'] = tmp[:top]
+            atmo_vars[var]['data'] = tmp[:top]
 
-        return ret
+        return atmo_vars
 
     def thermo_variables(self):
 
+        ''' 
+        Return a dictionary of thermodynamic variables needed for the skewT.
+        '''
+
         thermo = {
-            'cape': {
+            'cape': { # Convective available potential energy
               'format': '10.0f',
               'units': 'J/kg',
               },
-            'cin': {
+            'cin': { # Convective inhibition
               'format': '10.0f',
               'units': 'J/kg',
               },
-            'mucape': {
-              'format': '10.0f',
-              'units': 'J/kg',
-              'vertical_lev': 2,
-              },
-            'mucin': {
+            'mucape': { # Most Unstable CAPE
               'format': '10.0f',
               'units': 'J/kg',
               'vertical_lev': 2,
               },
-            'li': {
+            'mucin': { # CIN from MUCAPE level
+              'format': '10.0f',
+              'units': 'J/kg',
+              'vertical_lev': 2,
+              },
+            'li': { # Lifted Index
               'format': '10.1f',
               'units': 'K',
               },
-            'bli': {
+            'bli': { # Best Lifted Index
               'format': '10.1f',
               'units': 'K',
               },
-            'lcl': {
+            'lcl': { # Lifted Condensation Level
               'format': '10.0f',
               'units': 'm',
               },
-            'lpl': {
+            'lpl': { # Lifted Parcel Level
               'format': '10.0f',
               'units': 'hPa',
               'transform': conversions.pa_to_hpa,
               },
-            'storm_rel_hlcy': {
+            'srh03': { # 0-3 km Storm relative helicity
               'format': '10.0f',
               'units': 'm2/s2',
-              'vertical_lev': [0, 1],
+              'vertical_lev': '0-3km',
               },
-            'vshear': {
+            'srh01': { # 0-1 km Storm relative helicity
+              'format': '10.0f',
+              'units': 'm2/s2',
+              'vertical_lev': '0-1km',
+              },
+            'shr06': { # 0-6 km Storm relative shear
               'format': '10.0f',
               'units': 'kt',
-              'vertical_lev': [0, 1],
+              'vertical_lev': '0-6km',
               },
-            'ushear': {
+            'shr01': { # 0-1 km Storm relative shear
               'format': '10.0f',
               'units': 'kt',
-              'vertical_lev': [0, 1],
+              'vertical_lev': '0-1km',
               },
-            'pw': {
+            'pw': { # Precipitable water
               'format': '10.1f',
               'units': 'mm',
               },
-            'u_storm_motion': {
-              'format': '10.0f',
-              'units': 'kt',
-              'transform': conversions.ms_to_kt,
-              },
-            'v_storm_motion': {
+            'cell': { # Cell motion
               'format': '10.0f',
               'units': 'kt',
               'transform': conversions.ms_to_kt,
@@ -155,15 +167,17 @@ class skewT(grib.profileData):
             }
 
         for var, items in thermo.items():
-             tmp = self.values(lev=items.get('vertical_lev'), name=var)
 
-             transform = items.get('transform')
-             if transform:
-                 tmp = utils.get_func(transform)(tmp)
+            varname = items.get('shortname', var)
+            tmp = self.values(lev=items.get('vertical_lev'), short_name=varname)
 
-             ret[var]['data'] = tmp
+            transform = items.get('transform')
+            if transform:
+                tmp = utils.get_func(transform)(tmp)
 
-        return ret
+            thermo[var]['data'] = tmp
+
+        return thermo
 
     def create_skewT(self, **kwargs):
 

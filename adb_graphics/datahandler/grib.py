@@ -63,9 +63,7 @@ class UPPData(GribFile, specs.VarSpec):
         specs.VarSpec.__init__(self, config)
 
         self.spec = self.yml
-
         self.short_name = short_name
-
         self.level = 'ua'
 
     @property
@@ -146,6 +144,26 @@ class UPPData(GribFile, specs.VarSpec):
 
         return [self.contents.variables[var][::] for var in ['gridlat_0', 'gridlon_0']]
 
+    def numeric_level(self, level=None):
+
+        '''
+        Split the numeric level and unit associated with the level key.
+
+        A blank string is returned for lev_val for levels that do not contain a
+        numeric, e.g., 'sfc' or 'ua'.
+        '''
+
+        level = level if level else self.level
+
+        # Gather all the numbers and convert to integer
+        lev_val = ''.join([c for c in level if c in digits])
+        lev_val = int(lev_val) if lev_val else lev_val
+
+        # Gather all the letters
+        lev_unit = ''.join([c for c in level if c in ascii_letters])
+
+        return lev_val, lev_unit
+
     @property
     def vspec(self):
 
@@ -160,15 +178,15 @@ class UPPData(GribFile, specs.VarSpec):
 class fieldData(UPPData):
 
     '''
-    Class handles grib file manipulation for a given variable in a UPP output
-    file.
+    Class provides interface for accessing field (2D plan view) data from UPP in
+    Grib2 format. 
 
     Input:
         filename:    Path to grib file.
         level:       level corresponding to entry in specs configuration
         short_name:  name of variable corresponding to entry in specs configuration
 
-    Key Word Arguments:
+    Keyword Arguments:
         config:      path to a user-specified configuration file
     '''
 
@@ -220,22 +238,6 @@ class fieldData(UPPData):
         return [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
 
     @property
-    def numeric_level(self):
-
-        '''
-        Split the numeric level and unit associated with the level key.
-
-        A blank string is returned for lev_val for levels that do not contain a
-        numeric, e.g., 'sfc' or 'ua'.
-        '''
-
-        lev_val = ''.join([c for c in self.level if c in digits])
-        lev_val = int(lev_val) if lev_val else lev_val
-        lev_unit = ''.join([c for c in self.level if c in ascii_letters])
-
-        return lev_val, lev_unit
-
-    @property
     def ticks(self) -> int:
 
         ''' Returns the number of color bar tick marks from the yaml config
@@ -265,22 +267,36 @@ class fieldData(UPPData):
         '''
 
         field = self.field if field is None else field
-
         transform = self.vspec.get('transform')
 
         if len(self.field.shape) == 2:
             fld = self.field[::]
+
         elif len(self.field.shape) == 3:
 
-            # Available variable levels
-            levs = self.contents.variables[self.field.dimensions[0]][::]
-
-            # Requested level
-            lev_val, lev_unit = self.numeric_level
+            # Parse requested level
+            lev_val, lev_unit = self.numeric_level()
             lev_val = lev_val * 100. if lev_unit == 'mb' else lev_val
 
-            # The index of the reqested level
-            lev = int(np.argwhere(levs == lev_val))
+            # Some levels require specific indexes. Check to see if one is
+            # specified in the specs
+            lev = self.vspec.get('level_index')
+
+            if not lev:
+                try:
+                    # Most dimensions are variables in the file, but not all
+                    levs = self.contents.variables[self.field.dimensions[0]][::]
+
+                    # The index of the reqested level
+                    lev = int(np.argwhere(levs == lev_val))
+
+                except KeyError:
+
+                    # The dimension couldn't be found as a variable
+                    msg = f"Cannot find level index for {self.short_name} at {self.level}"
+                    raise errors.LevelNotFound(msg)
+
+
             fld = self.field[lev, :, :]
 
         if transform and transform != 'None':
@@ -306,8 +322,8 @@ class fieldData(UPPData):
         if not level:
             return False
 
-        # Create UPPData objects for u, v components
-        u, v = [UPPData(filename=self.filename, level=level, short_name=var) for var in ['u', 'v']]
+        # Create fieldData objects for u, v components
+        u, v = [fieldData(filename=self.filename, level=level, short_name=var) for var in ['u', 'v']]
 
         return [component.values() for component in [u, v]]
 
@@ -334,10 +350,15 @@ class profileData(UPPData):
     @lru_cache()
     def get_xypoint(self):
 
-        lats, lons = self.latlons()
+        '''
+        Return the X, Y grid point corresponding to the site location. No
+        interpolation is used.
+        '''
 
+        lats, lons = self.latlons()
         max_x, max_y = np.shape(lats)
 
+        # Numpy magic to grab the X, Y grid point nearest the profile site
         x, y = np.unravel_index((np.abs(lats - self.site_lat) \
                + np.abs(lons - self.site_lon)).argmin(), lats.shape)
 
@@ -347,18 +368,23 @@ class profileData(UPPData):
 
         return (x, y)
 
-    def values(self, lev=None, short_name=None):
+    def values(self, lev='ua', short_name=None):
 
         if not short_name:
             short_name = self.short_name
 
         x, y = self.get_xypoint()
-        ncl_name = self.spec.get(short_name, {}).get('ua', \
-        {}).get('ncl_name')
+
+        # Retrieve the default_specs section for the specified level
+        var_spec = self.spec.get(short_name, {}).get(lev, {})
+        ncl_name = var_spec.get('ncl_name')
+
 
         if not ncl_name:
-            raise errors.NoGraphicsDefinitionForVariable(short_name, \
-            'ua')
+            raise errors.NoGraphicsDefinitionForVariable(
+                    short_name,
+                   'ua',
+                   )
 
         profile = self.contents.variables[ncl_name][::]
         if len(profile.shape) == 2:
