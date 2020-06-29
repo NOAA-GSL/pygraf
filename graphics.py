@@ -72,7 +72,7 @@ def maps(cla):
                     short_name=contour_field,
                     )
 
-            fig, ax = plt.subplots(1, 1, figsize=(18, 18))
+            _, ax = plt.subplots(1, 1, figsize=(18, 18))
 
             m = maps.Map(
                 airport_fn=AIRPORTS,

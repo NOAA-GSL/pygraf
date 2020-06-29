@@ -13,6 +13,7 @@ from matplotlib import cm
 import numpy as np
 import Nio
 
+from .. import conversions
 from .. import errors
 from .. import specs
 from .. import utils
@@ -35,7 +36,7 @@ class GribFile():
 
     def get_field(self, ncl_name):
 
-        ''' Given a numeric level and an ncl_name, return the NioVariable object. '''
+        ''' Given an ncl_name, return the NioVariable object. '''
 
         try:
             field = self.contents.variables[ncl_name]
@@ -104,8 +105,8 @@ class UPPData(GribFile, specs.VarSpec):
         try:
             return utils.get_func(clev)()
         except ImportError:
-            print(f'Check yaml file definition of CLEVS for {self.short_name}.',
-                  f'Must be a list, range, or function call!')
+            print(f'Check yaml file definition of CLEVS for {self.short_name}. ',
+                  'Must be a list, range, or function call!')
 
     @staticmethod
     def date_to_str(date: datetime) -> str:
@@ -122,6 +123,12 @@ class UPPData(GribFile, specs.VarSpec):
 
         return str(self.field.forecast_time[0])
 
+    def field_diff(self, values, variable2, level2):
+
+        ''' Subtracts the values from variable2 from self.field. '''
+
+        return values - self.values(variable2, level2)
+
     @property
     @lru_cache()
     def field(self):
@@ -131,18 +138,19 @@ class UPPData(GribFile, specs.VarSpec):
 
         return self.get_field(self.vspec.get('ncl_name'))
 
+    def latlons(self):
+
+        ''' Returns the set of latitudes and longitudes '''
+
+        return [self.contents.variables[var][::] for var in \
+                self.field.coordinates.split()]
+
     @property
     def lev_descriptor(self):
 
         ''' Returns the descriptor for the variable's level type. '''
 
         return self.field.level_type
-
-    def latlons(self):
-
-        ''' Returns the set of latituteds and longitudes '''
-
-        return [self.contents.variables[var][::] for var in ['gridlat_0', 'gridlon_0']]
 
     def numeric_level(self, level=None):
 
@@ -255,54 +263,63 @@ class fieldData(UPPData):
 
 
     @lru_cache()
-    def values(self, field=None) -> np.ndarray:
+    def values(self, name=None, level=None) -> np.ndarray:
 
         '''
         Returns the numpy array of values at the requested level for the
         variable after applying any unit conversion to the original data.
 
         Optional Input:
-            field      a field other than self.field such as wind.  If not
-                       provided, self.field is used.
+            name       the name of a field other than defined in self
+            level      the level of the alternate field to use
         '''
 
-        field = self.field if field is None else field
-        transform = self.vspec.get('transform')
+        if name is None:
+            field = self.field
+            spec = self.vspec
+        else:
+            spec = self.spec.get(name, {}).get(level)
+            if not spec:
+                raise errors.NoGraphicsDefinitionForVariable(name, level)
+            field = self.get_field(spec.get('ncl_name'))
 
-        if len(self.field.shape) == 2:
-            fld = self.field[::]
+        transforms = spec.get('transform')
 
-        elif len(self.field.shape) == 3:
+        if len(field.shape) == 2:
+            vals = field[::]
+        elif len(field.shape) == 3:
 
-            # Parse requested level
-            lev_val, lev_unit = self.numeric_level()
-            lev_val = lev_val * 100. if lev_unit == 'mb' else lev_val
+            # Available variable levels
+            try:
+                levs = self.contents.variables[field.dimensions[0]][::]
 
-            # Some levels require specific indexes. Check to see if one is
-            # specified in the specs
-            lev = self.vspec.get('level_index')
+                # Requested level
+                lev_val, lev_unit = self.numeric_level
+                lev_val = lev_val * 100. if lev_unit == 'mb' else lev_val
 
-            if not lev:
-                try:
-                    # Most dimensions are variables in the file, but not all
-                    levs = self.contents.variables[self.field.dimensions[0]][::]
+                # The index of the reqested level
+                lev = int(np.argwhere(levs == lev_val))
+            except KeyError:
+                lev = self.vspec.get('layer')
+            vals = field[lev, :, :]
 
-                    # The index of the reqested level
-                    lev = int(np.argwhere(levs == lev_val))
+        if transforms:
+            transform_kwargs = spec.get('transform_kwargs', {})
 
-                except KeyError:
+            # Treat any transforms as a list
+            transforms = transforms if isinstance(transforms, list) else [transforms]
 
-                    # The dimension couldn't be found as a variable
-                    msg = f"Cannot find level index for {self.short_name} at {self.level}"
-                    raise errors.LevelNotFound(msg)
+            for transform in transforms:
 
+                print(f'Transform: {transform}')
 
-            fld = self.field[lev, :, :]
+                if len(transform.split('.')) == 1:
+                    print(transform_kwargs)
+                    vals = self.__getattribute__(transform)(vals, **transform_kwargs)
+                else:
+                    vals = utils.get_func(transform)(vals, **transform_kwargs)
 
-        if transform and transform != 'None':
-            return utils.get_func(transform)(fld)
-
-        return fld
+        return vals
 
     @lru_cache()
     def wind(self, level) -> [np.ndarray, np.ndarray]:
@@ -326,6 +343,14 @@ class fieldData(UPPData):
         u, v = [fieldData(filename=self.filename, level=level, short_name=var) for var in ['u', 'v']]
 
         return [component.values() for component in [u, v]]
+
+    def windspeed(self):
+
+        ''' Compute the wind speed from the components. '''
+
+        u, v = self.wind(level=True)
+        return conversions.magnitude(u, v)
+
 
 class profileData(UPPData):
 

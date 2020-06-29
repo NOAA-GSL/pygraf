@@ -17,11 +17,13 @@ from string import ascii_letters
 
 from matplotlib import cm
 from matplotlib import colors as mcolors
+from metpy.plots import ctables
 import numpy as np
 
 import adb_graphics.conversions as conversions
 import adb_graphics.specs as specs
 import adb_graphics.utils as utils
+import adb_graphics.datahandler.grib as grib
 
 def test_conversion():
 
@@ -35,16 +37,24 @@ def test_conversion():
     # Check for the right answer
     assert np.array_equal(conversions.k_to_c(a), a - 273.15)
     assert np.array_equal(conversions.k_to_f(a), (a - 273.15) * 9/5 + 32)
+    assert np.array_equal(conversions.kgm2_to_in(a), a * 0.03937)
     assert np.array_equal(conversions.m_to_dm(a), a / 10)
+    assert np.array_equal(conversions.m_to_kft(a), a / 304.8)
     assert np.array_equal(conversions.ms_to_kt(a), a * 1.9438)
     assert np.array_equal(conversions.pa_to_hpa(a), a / 100)
+    assert np.array_equal(conversions.vvel_scale(a), a * -10)
+    assert np.array_equal(conversions.vort_scale(a), a / 1E-05)
 
     functions = [
         conversions.k_to_c,
         conversions.k_to_f,
+        conversions.kgm2_to_in,
         conversions.m_to_dm,
+        conversions.m_to_kft,
         conversions.ms_to_kt,
         conversions.pa_to_hpa,
+        conversions.vvel_scale,
+        conversions.vort_scale,
         ]
 
     # Check that all functions return a np.ndarray given a collection, or single float
@@ -110,9 +120,13 @@ class TestDefaultSpecs():
             'cmap': self.is_a_cmap,
             'colors': self.is_a_color,
             'contour': self.is_a_key,
+            'contour_colors': self.is_a_color,
+            'layer': self.is_int,
             'ncl_name': True,
-            'ticks': self.is_int,
+            'ticks': self.is_number,
+            'title': self.is_string,
             'transform': self.is_callable,
+            'transform_kwargs': self.is_dict,
             'unit': self.is_string,
             'wind': self.is_wind,
             }
@@ -122,7 +136,7 @@ class TestDefaultSpecs():
 
         ''' Returns true for a clev that is a list, a range, or a callable function. '''
 
-        if isinstance(clev, np.ndarray):
+        if isinstance(clev, (list, np.ndarray)):
             return True
 
         if 'range' in clev.split('[')[0]:
@@ -137,8 +151,7 @@ class TestDefaultSpecs():
     def is_a_cmap(cmap):
 
         ''' Returns true for a cmap that is a Colormap object. '''
-
-        return isinstance(cm.get_cmap(cmap), mcolors.Colormap)
+        return cmap in dir(cm) + list(ctables.colortables.keys())
 
     def is_a_color(self, color):
 
@@ -168,6 +181,7 @@ class TestDefaultSpecs():
             'maxsfc',  # max surface value
             'mdn',     # maximum downward
             'mnsfc',   # min surface value
+            'msl',     # mean sea level
             'mup',     # maximum upward
             'sfc',     # surface
             'ua',      # upper air
@@ -231,20 +245,56 @@ class TestDefaultSpecs():
 
         return isinstance(k, bool)
 
-    def is_callable(self, func):
+    def is_callable(self, funcs):
 
-        ''' Returns true if func is the name of a callable function. '''
+        ''' Returns true if func in funcs list is the name of a callable function. '''
 
-        return hasattr(self.varspec, func) or callable(utils.get_func(func))
+        in_varspec = False
+        in_grib = False
+        in_package = False
+
+        funcs = funcs if isinstance(funcs, list) else [funcs]
+        callables = []
+
+        for func in funcs:
+            # Check datahandler.grib objects if a single word is provided
+            if len(func.split('.')) == 1:
+                for attr in dir(grib):
+                    if func in dir(grib.__getattribute__(attr)):
+                        callables.append(True)
+
+            else:
+
+                in_package = callable(utils.get_func(func))
+                in_varspec = hasattr(self.varspec, func)
+                callables.append(in_package or in_varspec)
+
+        return all(callables)
 
     @staticmethod
-    def  is_int(i):
+    def is_dict(d):
+
+        ''' Returns true if d is a dictionary '''
+
+        return is_instance(d, dict)
+
+    @staticmethod
+    def is_int(i):
 
         ''' Returns true if i is an integer. '''
 
         if isinstance(i, int):
             return True
         return i.isnumeric() and len(i.split('.')) == 1
+
+    @staticmethod
+    def is_number(i):
+
+        ''' Returns true if i is a number. '''
+
+        if isinstance(i, (int, float)):
+            return True
+        return i.isnumeric() and len(i.split('.')) <= 2
 
     @staticmethod
     def is_string(s):
@@ -259,17 +309,27 @@ class TestDefaultSpecs():
 
         return isinstance(wind, bool) or self.is_a_level(wind)
 
-    def check_keys(self, d):
+    def check_keys(self, d, depth=0):
 
         ''' Helper function that recursively checks the keys in the dictionary by calling the
         function defined in allowable. '''
 
+        max_depth = 2
+
+        # Only proceed if d is a dictionary
         if not isinstance(d, dict):
             return
+
+        # Proceed only up to max depth.
+        if depth >= max_depth:
+            return
+        else:
+            level = depth+1
+
         for k, v in d.items():
             assert (k in self.allowable.keys()) or self.is_a_level(k)
             if isinstance(v, dict):
-                self.check_keys(v)
+                self.check_keys(v, depth=level)
             else:
                 checker = self.allowable.get(k)
                 if isinstance(checker, bool):
