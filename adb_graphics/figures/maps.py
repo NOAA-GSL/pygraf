@@ -130,10 +130,19 @@ class DataMap():
 
     def _colorbar(self, cc, ax):
 
-        ''' Internal method that plots the color bar for a contourf field. '''
+        ''' Internal method that plots the color bar for a contourf field.
+            If ticks is set to zero, use a user-defined list of clevs from default_specs
+            If ticks is less than zero, use abs(ticks) as the step for labeling clevs '''
 
-        ticks = np.arange(np.amin(self.field.clevs),
-                          np.amax(self.field.clevs+1), self.field.ticks)
+        if self.field.ticks > 0:
+            ticks = np.arange(np.amin(self.field.clevs),
+                              np.amax(self.field.clevs+1), self.field.ticks)
+        elif self.field.ticks == 0:
+            ticks = self.field.clevs
+        else:
+            ticks = self.field.clevs[0:len(self.field.clevs):-self.field.ticks]
+        ticks = np.around(ticks, 4)
+
         cbar = plt.colorbar(cc,
                             ax=ax,
                             orientation='horizontal',
@@ -216,14 +225,16 @@ class DataMap():
             contoured = f'{cf.field.long_name} ({cf.units}, contoured)'
 
         # Analysis time (top) and forecast hour (bottom) on the left
-        plt.title(f"Analysis: {atime}\nFcst Hr: : {f.fhr}", loc='left', fontsize=16)
+        plt.title(f"Analysis: {atime}\nFcst Hr: {f.fhr}", loc='left', fontsize=16)
 
         # Atmospheric level and unit in the high center
         level, lev_unit = f.numeric_level
-        plt.title(f"{level} {lev_unit}", position=(0.5, 1.04), fontsize=18)
+        if not f.vspec.get('title'):
+            plt.title(f"{level} {lev_unit}", position=(0.5, 1.04), fontsize=18)
 
         # Two lines for shaded data (top), and contoured data (bottom)
-        plt.title(f"{f.field.long_name} ({f.units}, shaded)\n {contoured}",
+        title = f.vspec.get('title', f.field.long_name)
+        plt.title(f"{title} ({f.units}, shaded)\n {contoured}",
                   loc='right',
                   fontsize=16,
                   )
