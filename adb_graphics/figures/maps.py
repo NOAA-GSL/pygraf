@@ -228,7 +228,7 @@ class DataMap():
         plt.title(f"Analysis: {atime}\nFcst Hr: {f.fhr}", loc='left', fontsize=16)
 
         # Atmospheric level and unit in the high center
-        level, lev_unit = f.numeric_level
+        level, lev_unit = f.numeric_level()
         if not f.vspec.get('title'):
             plt.title(f"{level} {lev_unit}", position=(0.5, 1.04), fontsize=18)
 

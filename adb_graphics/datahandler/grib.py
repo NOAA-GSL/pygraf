@@ -7,6 +7,7 @@ specifics of grib files from UPP.
 
 import datetime
 from functools import lru_cache
+import os
 from string import digits, ascii_letters
 
 from matplotlib import cm
@@ -27,6 +28,8 @@ class GribFile():
         self.filename = filename
         self.contents = self._load()
 
+        self.file_type = 'nat' if 'nat' in os.path.basename(filename) else 'prs'
+
     def _load(self):
 
         ''' Internal method that opens the grib file. Returns a grib message
@@ -46,9 +49,19 @@ class GribFile():
         return field
 
     @staticmethod
-    def vector_magnitude(field1, field2):
+    def vector_magnitude(field1, field2, layer=0):
 
-        ''' Returns the vector magnitude of two component vecctor fields. '''
+        '''
+        Returns the vector magnitude of two component vector fields. The
+        input fields can be either NCL names (string) or full data fields. The
+        first layer of a variable is returned if none is provided.
+        '''
+
+        if isinstance(field1, str):
+            field1 = self.get_field(field1)[layer]
+
+        if isinstance(field2, str):
+            field2 = self.get_field(field2)[layer]
 
         return np.sqrt(field1**2 + field2**2)
 
@@ -136,7 +149,7 @@ class UPPData(GribFile, specs.VarSpec):
         ''' Wrapper that calls get_field method for the current variable.
         Returns the NioVariable object '''
 
-        return self.get_field(self.vspec.get('ncl_name'))
+        return self.get_field(self.ncl_name(self.vspec))
 
     def latlons(self):
 
@@ -151,6 +164,15 @@ class UPPData(GribFile, specs.VarSpec):
         ''' Returns the descriptor for the variable's level type. '''
 
         return self.field.level_type
+
+    def ncl_name(self, spec: dict):
+
+        ''' Get the ncl_name from the specified dict. '''
+
+        name = spec.get('ncl_name')
+        if isinstance(name, dict):
+            name = name.get(self.file_type)
+        return name
 
     def numeric_level(self, level=None):
 
@@ -281,7 +303,7 @@ class fieldData(UPPData):
             spec = self.spec.get(name, {}).get(level)
             if not spec:
                 raise errors.NoGraphicsDefinitionForVariable(name, level)
-            field = self.get_field(spec.get('ncl_name'))
+            field = self.get_field(self.ncl_name(self.spec))
 
         transforms = spec.get('transform')
 
@@ -294,7 +316,7 @@ class fieldData(UPPData):
                 levs = self.contents.variables[field.dimensions[0]][::]
 
                 # Requested level
-                lev_val, lev_unit = self.numeric_level
+                lev_val, lev_unit = self.numeric_level()
                 lev_val = lev_val * 100. if lev_unit == 'mb' else lev_val
 
                 # The index of the reqested level
@@ -310,8 +332,6 @@ class fieldData(UPPData):
             transforms = transforms if isinstance(transforms, list) else [transforms]
 
             for transform in transforms:
-
-                print(f'Transform: {transform}')
 
                 if len(transform.split('.')) == 1:
                     print(transform_kwargs)
@@ -366,7 +386,7 @@ class profileData(UPPData):
         self.site_code, _, self.site_num, lat, lon = \
                 loc[:31].split()
 
-        self.loc_name = loc[37:].rstrip()
+        self.site_name = loc[37:].rstrip()
 
         self.site_lat = float(lat)
         self.site_lon = -float(lon)
@@ -388,7 +408,7 @@ class profileData(UPPData):
                + np.abs(lons - self.site_lon)).argmin(), lats.shape)
 
         if x == 0 or y == 0 or x == max_x or y == max_y:
-            msg = f"{self.loc_name} is outside your domain!"
+            msg = f"{self.site_name} is outside your domain!"
             raise errors.OutsideDomain(msg)
 
         return (x, y)
@@ -402,7 +422,7 @@ class profileData(UPPData):
 
         # Retrieve the default_specs section for the specified level
         var_spec = self.spec.get(short_name, {}).get(lev, {})
-        ncl_name = var_spec.get('ncl_name')
+        ncl_name = self.ncl_name(var_spec)
 
 
         if not ncl_name:
@@ -411,12 +431,16 @@ class profileData(UPPData):
                    'ua',
                    )
 
+        layer = var_spec.get('layer')
+
         profile = self.contents.variables[ncl_name][::]
         if len(profile.shape) == 2:
             profile = profile[x, y]
         elif len(profile.shape) == 3:
 
-            if lev:
-                profile = profile[lev, x, y]
+            if layer is not None:
+                profile = profile[layer, x, y]
             else:
                 profile = profile[:, x, y]
+
+        return profile

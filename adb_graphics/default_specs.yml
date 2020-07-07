@@ -65,6 +65,12 @@ acpcp: # Accumulated precipitation
     ticks: 0
     transform: conversions.kgm2_to_in
     unit: in
+cape:
+  sfc:
+    ncl_name: CAPE_P0_L1_GLC0
+  mu:
+    ncl_name: CAPE_P0_2L108_GLC0
+    layer: 2
 ceil: # Ceiling
   ua: &ceil
     clevs: [0, 0.1, 0.3, 0.5, 1, 2, 3, 5, 10, 15, 20, 30, 60]
@@ -88,6 +94,20 @@ ceilexp2: # Ceiling - experimental no.2
     <<: *ceil
     ncl_name: CEIL_P0_L2_GLC0
     title: Ceiling (exp-2)
+cell: # Storm cell motion
+  ua:
+    ncl_name: USTM_P0_2L103_GLC0
+    transform: [vector_magnitude, converstions.ms_to_kt]
+    transform_kwargs:
+      field2: VVCSH_P0_2L103_GLC0
+    unit: kt
+
+cin: # Convective inhibition
+  sfc:
+    ncl_name: CIN_P0_L1_GLC0
+  mu:
+    ncl_name: CIN_P0_2L108_GLC0
+    layer: 2
 cref: # Composite reflectivity
   sfc: &refl
     clevs: !!python/object/apply:numpy.arange [5, 76, 5]
@@ -122,7 +142,9 @@ gh: # Geopotential height
     clevs: !!python/object/apply:numpy.arange [6, 990, 6]
     cmap: precipitation
     colors: terrain_colors
-    ncl_name: HGT_P0_L100_GLC0
+    ncl_name:
+      prs: HGT_P0_L100_GLC0
+      nat: HGT_P0_L105_GLC0
     ticks: 4
     transform: conversions.m_to_dm
     unit: dm
@@ -142,6 +164,8 @@ gh: # Geopotential height
     ticks: 0
     transform: []
     unit: gpm
+  ua:
+    <<: *ua_gh
 hlcy: # Helicity
   in16: &hlcy # Hourly updraft helicity over 1-6 km layer
     clevs: !!python/object/apply:numpy.arange [25, 301, 25]
@@ -181,8 +205,14 @@ hlcy: # Helicity
     layer: 2
     ncl_name: MXUPHL_P8_2L103_GLC0_max1h
     title: 2-5km Max Updraft Helicity (over prv hr)
+  sr01:
+    layer: 0
+    ncl_name: HLCY_P0_2L103_GLC0
+  sr03:
+    layer: 1
+    ncl_name: HLCY_P0_2L103_GLC0
 lcl: # Lifted condensation level
-  sfc:
+  sfc: &lcl
     clevs: !!python/object/apply:numpy.arange [0, 5000, 250]
     cmap: rainbow
     colors: lcl_colors
@@ -195,6 +225,16 @@ lcl: # Lifted condensation level
       variable2: gh
       level2: sfc
     unit: m agl
+  ua:
+    <<: *lcl
+li: # Lifted Index
+  sfc:
+    ncl_name: LFTX_P0_2L100_GLC0
+  best:
+    ncl_name: 4LFTX_P0_2L108_GLC0
+lpl: # Lifted parcel level
+  ua:
+    ncl_name: PLPL_P0_2L108_GLC0
 gust:
   10m:
     clevs: !!python/object/apply:numpy.arange [5, 95, 5]
@@ -245,6 +285,8 @@ pres:
     ticks: 20
     transform: conversions.pa_to_hpa
     unit: hPa
+  ua:
+    ncl_name: PRES_P0_L105_GLC0
 ptmp: # Potential temperature
   2m:
     clevs: !!python/object/apply:numpy.arange [210, 350, 5]
@@ -288,6 +330,19 @@ rh: # Relative Humidity
   850mb:
     <<: *rh
     ncl_name: RH_P0_L100_GLC0
+shear:
+  01km: # 0-1 km
+    ncl_name: VUCSH_P0_2L103_GLC0
+    layer: 1
+    transform: vector_magnitude
+    transform_kwargs:
+      field2: VVCSH_P0_2L103_GLC0
+  06km: # 0-6 km
+    ncl_name: VUCSH_P0_2L103_GLC0
+    layer: 0
+sphum: # Specific humidity
+  ua:
+    ncl_name: SPFH_P0_L105_GLC0
 tcc: # Total cloud cover
   sfc:
     <<: *cld_cover
@@ -321,7 +376,9 @@ temp: # Temperature
     cmap: jet
     colors: t_colors
     contour: gh
-    ncl_name: TMP_P0_L100_GLC0
+    ncl_name: 
+      prs: TMP_P0_L100_GLC0
+      nat: TMP_P0_L105_GLC0
     ticks: 5
     transform: conversions.k_to_c
     unit: C
@@ -344,6 +401,8 @@ temp: # Temperature
     transform: conversions.k_to_f
     unit: F
     wind: False
+  ua:
+    <<: *ua_temp
 totp: # Hourly total precipitation
   sfc:
     clevs: [0.002, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 1.0, 2.0]
@@ -360,20 +419,28 @@ u:
     ncl_name: UGRD_P0_L103_GLC0
     transform: conversions.ms_to_kt
   500mb: &ua_uwind
-    ncl_name: UGRD_P0_L100_GLC0
+    ncl_name:
+      prs: UGRD_P0_L100_GLC0
+      nat: UGRD_P0_L105_GLC0
   700mb: *ua_uwind
   850mb: *ua_uwind
   925mb: *ua_uwind
+  ua:
+    <<: *ua_uwind
 v:
   10m:
     ncl_name: VGRD_P0_L103_GLC0
     transform: conversions.ms_to_kt
   500mb: &ua_vwind
-    ncl_name: VGRD_P0_L100_GLC0
+    ncl_name:
+      prs: VGRD_P0_L100_GLC0
+      nat: VGRD_P0_L105_GLC0
     transform: conversions.ms_to_kt
   700mb: *ua_vwind
   850mb: *ua_vwind
   925mb: *ua_vwind
+  ua:
+    <<: *ua_vwind
 vort: # Absolute vorticity
   500mb:
     clevs: !!python/object/apply:numpy.arange [6, 29, 2]
