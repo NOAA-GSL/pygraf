@@ -10,14 +10,14 @@ import adb_graphics.figures.maps as maps
 filename = '../data/wrfnat_hrconus_12.grib2'
 airports = 'static/Airports_locs.txt'
 
-var = grib.UPPData(filename=filename,
-                   level='2ds',
-                   short_name='temp',
-                   )
-contour_var = grib.UPPData(filename=filename,
-                      level='500mb',
-                      short_name='gh',
-                      )
+var = grib.fieldData(filename=filename,
+                     level='2ds',
+                     short_name='temp',
+                     )
+contour_var = grib.fieldData(filename=filename,
+                             level='500mb',
+                             short_name='gh',
+                             )
 
 #contour_var = None
 
