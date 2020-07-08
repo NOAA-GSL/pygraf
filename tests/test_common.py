@@ -218,29 +218,9 @@ class TestDefaultSpecs():
         # The level is allowed
         allowed = ''.join([c for c in key if c in ascii_letters]) in \
             allowed_lev_type + allowed_stat
-        #for lev in allowed_lev_type:
-        #    ks = key.split(lev)
-
-        #    print(f"Key SPLIT: {ks}")
-        #    # If the lev didn't appear in the key, length of list is 1.
-        #    # If the lev didn't match exactly, the second element will the remainder of the string
-        #    if len(ks) == 2 and len(ks[1]) == 0:
-        #        numeric = ks[0].isnumeric() or ks[1].isnumeric()
-        #        allowed = ''.join([c for c in key if c in ascii_letters]) in allowed_lev_type
 
         if numeric and allowed:
             return True
-
-        ## Check for [stat][numeric]
-        #for stat in allowed_stat:
-        #    ks = key.split(stat)
-        #    if len(ks) == 2 and len(ks[0]) == 0:
-
-        #        numeric = ks[1].isnumeric()
-        #        allowed = ''.join([c for c in key if c in ascii_letters]) in allowed_stat
-
-        #        if numeric and allowed:
-        #            return True
 
         return False
 

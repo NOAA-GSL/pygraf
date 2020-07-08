@@ -52,22 +52,30 @@ class SkewTDiagram(grib.profileData):
 
     def _add_thermo_inset(self, skew):
 
+        # Build up the text that goes in the thermo-dyniamics box
         lines = []
         for name, items in self.thermo_variables.items():
+
+            # Magic to get the desired number of decimals to appear.
             decimals = items.get('decimals', 0)
             value = items['data']
             value = round(int(value)) if decimals == 0 else round(value, decimals)
+
+            # Sure would have been nice to use a variable in the f string to
+            # denote the format per variable.
             line = f"{name.upper():<7s}: {str(value):>10} {items['units']}"
             lines.append(line)
 
         contents = '\n'.join(lines)
 
+        # Draw the text box
         skew.ax.text(0.70, 0.98, contents,
-                     transform=skew.ax.transAxes,
-                     size=8,
+                     bbox=dict(facecolor='white', edgecolor='black', alpha=0.7),
                      fontproperties=fm.FontProperties(family='monospace'),
+                     size=8,
+                     transform=skew.ax.transAxes,
                      verticalalignment='top',
-                     bbox=dict(facecolor='white', edgecolor='black', alpha=0.7))
+                     )
 
     @property
     @lru_cache()
@@ -193,7 +201,7 @@ class SkewTDiagram(grib.profileData):
 
     def _plot_profile(self, skew):
 
-        profiles = self.atmo_profiles
+        profiles = self.atmo_profiles # dictionary
         pres = profiles.get('pres').get('data')
         temp = profiles.get('temp').get('data')
         sphum = profiles.get('sphum').get('data')
@@ -210,7 +218,6 @@ class SkewTDiagram(grib.profileData):
         parcel_profile = mpcalc.parcel_profile(pres,
                                                temp[0],
                                                dewpt[0]).to('degC')
-
         skew.plot(pres,
                   parcel_profile,
                   'orange',
@@ -231,32 +238,43 @@ class SkewTDiagram(grib.profileData):
 
     def _setup_diagram(self):
 
+        # Create a new figure. The dimensions here give a good aspect ratio.
         fig = plt.figure(figsize=(12, 12))
         skew = SkewT(fig, rotation=45, aspect=85)
 
-        ticks = [str(int(t)) for t in skew.ax.get_xticks()]
-
+        # Set the range covered by the x and y axes.
         skew.ax.set_ylim(1050, self.max_plev)
         skew.ax.set_xlim(-35, 50)
+
+        # The upper air grid is in Celcius, but we want ticks at the surface to
+        # display in Fahrenheit.
+
+        # Fahrenheit tick labels that will display
         labels_F = list(range(-20, 125, 20)) * units.degF
+
+        # Celcius VALUES for those tick marks. These put the ticks in the right
+        # spot.
         labels = labels_F.to('degC').magnitude
+
+        # Set the MINOR tick values to the CELCIUS values.
         skew.ax.xaxis.set_minor_locator(FixedLocator(labels))
 
-        skew.ax.set_xticklabels(ticks[1:-2])
+        # Set the MINOR tick labels to the FAHRENHEIT values.
         skew.ax.set_xticklabels(labels_F.magnitude, minor=True)
-
         skew.ax.tick_params(which='minor',
                             length=8)
 
+        # Turn off the MAJOR (celcius) tick marks, label the grid lines inside
+        # the axes.
         skew.ax.tick_params(axis='x',
-                            which='major',
-                            length=0,
                             labelbottom=True,
-                            labeltop=True,
+                            labelcolor='gray',
                             labelright=True,
                             labelrotation=45,
+                            labeltop=True,
+                            length=0,
                             pad=-25,
-                            labelcolor='gray',
+                            which='major',
                             )
 
         # Add the relevant special lines
@@ -384,11 +402,18 @@ class SkewTDiagram(grib.profileData):
         vtime = self.date_to_str(self.valid_dt)
 
         # Top Left
-        plt.title(f"Analysis: {atime}\nFcst Hr: {self.fhr}", loc='left',
-                  fontsize=16, position=(0, 1.03))
+        plt.title(f"Analysis: {atime}\nFcst Hr: {self.fhr}",
+                  fontsize=16,
+                  loc='left',
+                  position=(0, 1.03),
+                  )
 
         # Top Right
-        plt.title(f"Valid: {vtime}", loc='right', position=(1, 1.03), fontsize=16)
+        plt.title(f"Valid: {vtime}",
+                  fontsize=16,
+                  loc='right',
+                  position=(1, 1.03),
+                  )
 
         # Center
         site = f"{self.site_code} {self.site_num} {self.site_name}"
