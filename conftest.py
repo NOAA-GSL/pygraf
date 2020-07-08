@@ -12,14 +12,26 @@ def pytest_addoption(parser):
 
     ''' Define command line arguments to be parsed. '''
 
-    parser.addoption('--grib-file',
+    parser.addoption('--nat-file',
                      action='store',
-                     help='Path to grib-file.',
+                     help='Path to nat-file.',
+                     )
+
+    parser.addoption('--prs-file',
+                     action='store',
+                     help='Path to prs-file.',
                      )
 
 @pytest.fixture
-def gribfile(request):
+def natfile(request):
 
     ''' Interface to  pass a grib file to pytest'''
 
-    return request.config.getoption('--grib-file')
+    return request.config.getoption('--nat-file')
+
+@pytest.fixture
+def prsfile(request):
+
+    ''' Interface to  pass a grib file to pytest'''
+
+    return request.config.getoption('--prs-file')

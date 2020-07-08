@@ -74,7 +74,7 @@ cape:
 cell: # Storm cell motion
   ua:
     ncl_name: USTM_P0_2L103_GLC0
-    transform: [vector_magnitude, converstions.ms_to_kt]
+    transform: [vector_magnitude, conversions.ms_to_kt]
     transform_kwargs:
       field2: VVCSH_P0_2L103_GLC0
     unit: kt
@@ -375,7 +375,7 @@ temp: # Temperature
     cmap: jet
     colors: t_colors
     contour: gh
-    ncl_name: 
+    ncl_name:
       prs: TMP_P0_L100_GLC0
       nat: TMP_P0_L105_GLC0
     ticks: 5

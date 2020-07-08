@@ -262,7 +262,7 @@ class fieldData(UPPData):
             return color_spec
 
     @property
-    def corners(self):
+    def corners(self) -> list:
 
         '''
         Returns lat and lon of lower left (ll) and upper right(ur) corners:
@@ -272,7 +272,7 @@ class fieldData(UPPData):
         lat, lon = self.latlons()
         return [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
 
-    def field_diff(self, values, variable2, level2):
+    def field_diff(self, values, variable2, level2) -> np.ndarray:
 
         ''' Subtracts the values from variable2 from self.field. '''
 
@@ -307,6 +307,9 @@ class fieldData(UPPData):
             level      the level of the alternate field to use
         '''
 
+
+        level = level if level else self.level
+
         if name is None:
             field = self.field
             spec = self.vspec
@@ -314,7 +317,7 @@ class fieldData(UPPData):
             spec = self.spec.get(name, {}).get(level)
             if not spec:
                 raise errors.NoGraphicsDefinitionForVariable(name, level)
-            field = self.get_field(self.ncl_name(self.spec))
+            field = self.get_field(self.ncl_name(spec))
 
         transforms = spec.get('transform')
 
@@ -379,7 +382,7 @@ class fieldData(UPPData):
 
         return [component.values() for component in [u, v]]
 
-    def windspeed(self):
+    def windspeed(self) -> np.ndarray:
 
         ''' Compute the wind speed from the components. '''
 
@@ -424,7 +427,7 @@ class profileData(UPPData):
         self.site_lon = -float(lon)
 
     @lru_cache()
-    def get_xypoint(self):
+    def get_xypoint(self) -> tuple:
 
         '''
         Return the X, Y grid point corresponding to the site location. No

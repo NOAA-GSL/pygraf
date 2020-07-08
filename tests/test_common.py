@@ -13,7 +13,7 @@ To run the tests, type the following in the top level repo directory:
 
 '''
 
-from string import ascii_letters
+from string import ascii_letters, digits
 
 from matplotlib import cm
 from matplotlib import colors as mcolors
@@ -175,6 +175,7 @@ class TestDefaultSpecs():
         '''
 
         allowed_levels = [
+            'best',    # Best
             'esbl',    # ???
             'esblmn',  # ???
             'max',     # maximum in column
@@ -183,6 +184,7 @@ class TestDefaultSpecs():
             'mnsfc',   # min surface value
             'msl',     # mean sea level
             'mup',     # maximum upward
+            'mu',      # most unstable
             'sfc',     # surface
             'ua',      # upper air
             ]
@@ -190,8 +192,10 @@ class TestDefaultSpecs():
         allowed_lev_type = [
             'cm',      # centimeters
             'ds',      # difference
+            'km',      # kilometers
             'm',       # meters
             'mb',      # milibars
+            'sr',      # storm relative
             ]
 
         allowed_stat = [
@@ -206,29 +210,37 @@ class TestDefaultSpecs():
         if key in allowed_levels:
             return True
 
-        # Check for [numeric][lev_type] pattern
-        for lev in allowed_lev_type:
-            ks = key.split(lev)
+        # Check for [numeric][lev_type] or [lev_type][numeric] pattern
 
-            # If the lev didn't appear in the key, length of list is 1.
-            # If the lev didn't match exactly, the second element will the remainder of the string
-            if len(ks) == 2 and len(ks[1]) == 0:
-                numeric = ks[0].isnumeric()
-                allowed = ''.join([c for c in key if c in ascii_letters]) in allowed_lev_type
+        # Numbers come at beginning or end, only
+        numeric = ''.join([c for c in key if c in digits]) in key
 
-                if numeric and allowed:
-                    return True
+        # The level is allowed
+        allowed = ''.join([c for c in key if c in ascii_letters]) in \
+            allowed_lev_type + allowed_stat
+        #for lev in allowed_lev_type:
+        #    ks = key.split(lev)
 
-        # Check for [stat][numeric]
-        for stat in allowed_stat:
-            ks = key.split(stat)
-            if len(ks) == 2 and len(ks[0]) == 0:
+        #    print(f"Key SPLIT: {ks}")
+        #    # If the lev didn't appear in the key, length of list is 1.
+        #    # If the lev didn't match exactly, the second element will the remainder of the string
+        #    if len(ks) == 2 and len(ks[1]) == 0:
+        #        numeric = ks[0].isnumeric() or ks[1].isnumeric()
+        #        allowed = ''.join([c for c in key if c in ascii_letters]) in allowed_lev_type
 
-                numeric = ks[1].isnumeric()
-                allowed = ''.join([c for c in key if c in ascii_letters]) in allowed_stat
+        if numeric and allowed:
+            return True
 
-                if numeric and allowed:
-                    return True
+        ## Check for [stat][numeric]
+        #for stat in allowed_stat:
+        #    ks = key.split(stat)
+        #    if len(ks) == 2 and len(ks[0]) == 0:
+
+        #        numeric = ks[1].isnumeric()
+        #        allowed = ''.join([c for c in key if c in ascii_letters]) in allowed_stat
+
+        #        if numeric and allowed:
+        #            return True
 
         return False
 
