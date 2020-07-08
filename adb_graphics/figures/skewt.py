@@ -1,29 +1,41 @@
+# pylint: disable=invalid-name
+'''
+The module the contains the SkewTDiagram class responsible for creating a Skew-T
+Log-P diagram using MetPy.
+'''
+
 from collections import OrderedDict
 from functools import lru_cache
-import pygrib
 import numpy as np
-import Nio
-import pandas as pd
 
-import adb_graphics.datahandler.grib as grib
-import adb_graphics.figures.maps as maps
-import adb_graphics.conversions as conversions
-import adb_graphics.utils as utils
-import matplotlib.pyplot as plt
-from matplotlib.offsetbox import AnchoredText
 import matplotlib.font_manager as fm
-from matplotlib.ticker import MultipleLocator, FixedLocator, NullLocator
-
+import matplotlib.pyplot as plt
+from matplotlib.ticker import FixedLocator
 import metpy.calc as mpcalc
-
 from metpy.plots import Hodograph, SkewT
 from metpy.units import units
-from metpy.future import precipitable_water
-
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
+import adb_graphics.datahandler.grib as grib
+import adb_graphics.conversions as conversions
 
-class skewT(grib.profileData):
+class SkewTDiagram(grib.profileData):
+
+    ''' The class responsible for gathering all data needed from a grib file to
+    produce a Skew-T Log-P diagram.
+
+    Input:
+
+      filename         the full path to the grib file
+      loc              the entire line entry of the sites file.
+
+    Key word arguments:
+
+      max_plev         maximum pressure level to plot in mb
+
+    Additional keyword arguments for the grib.profileData base class should also
+    be included.
+    '''
 
     def __init__(self, filename, loc, **kwargs):
 
@@ -47,29 +59,29 @@ class skewT(grib.profileData):
 
         # OrderedDict because we need to get pressure profile first.
         atmo_vars = OrderedDict({
-                'pres': {
-                    'transform': 'hectoPa',
-                    'units': units.Pa,
-                    },
-                'gh': {
-                    'units': units.gpm,
-                    },
-                'sphum': {
-                    'units': units.dimensionless,
-                    },
-                'temp': {
-                    'transform': 'degF',
-                    'units': units.degK,
-                    },
-                'u': {
-                    'transform': 'knots',
-                    'units': units.meter_per_second,
-                    },
-                'v': {
-                    'transform': 'knots',
-                    'units': units.meter_per_second,
-                    },
-           })
+            'pres': {
+                'transform': 'hectoPa',
+                'units': units.Pa,
+                },
+            'gh': {
+                'units': units.gpm,
+                },
+            'sphum': {
+                'units': units.dimensionless,
+                },
+            'temp': {
+                'transform': 'degF',
+                'units': units.degK,
+                },
+            'u': {
+                'transform': 'knots',
+                'units': units.meter_per_second,
+                },
+            'v': {
+                'transform': 'knots',
+                'units': units.meter_per_second,
+                },
+            })
 
         top = None
         for var, items in atmo_vars.items():
@@ -102,70 +114,70 @@ class skewT(grib.profileData):
 
         thermo = OrderedDict({
             'cape': { # Convective available potential energy
-              'units': 'J/kg',
-              'level': 'sfc',
-              },
+                'units': 'J/kg',
+                'level': 'sfc',
+                },
             'cin': { # Convective inhibition
-              'units': 'J/kg',
-              'level': 'sfc',
-              },
+                'units': 'J/kg',
+                'level': 'sfc',
+                },
             'mucape': { # Most Unstable CAPE
-              'units': 'J/kg',
-              'level': 'mu',
-              'variable': 'cape',
-              },
+                'units': 'J/kg',
+                'level': 'mu',
+                'variable': 'cape',
+                },
             'mucin': { # CIN from MUCAPE level
-              'units': 'J/kg',
-              'level': 'mu',
-              'variable': 'cin',
-              },
+                'units': 'J/kg',
+                'level': 'mu',
+                'variable': 'cin',
+                },
             'li': { # Lifted Index
-              'decimals': 1,
-              'units': 'K',
-              'level': 'sfc',
-              },
+                'decimals': 1,
+                'units': 'K',
+                'level': 'sfc',
+                },
             'bli': { # Best Lifted Index
-              'decimals': 1,
-              'units': 'K',
-              'level': 'best',
-              'variable': 'li',
-              },
+                'decimals': 1,
+                'units': 'K',
+                'level': 'best',
+                'variable': 'li',
+                },
             'lcl': { # Lifted Condensation Level
-              'units': 'm',
-              },
+                'units': 'm',
+                },
             'lpl': { # Lifted Parcel Level
-              'units': 'hPa',
-              'transform': conversions.pa_to_hpa,
-              },
+                'units': 'hPa',
+                'transform': conversions.pa_to_hpa,
+                },
             'srh03': { # 0-3 km Storm relative helicity
-              'units': 'm2/s2',
-              'level': 'sr03',
-              'variable': 'hlcy',
-              },
+                'units': 'm2/s2',
+                'level': 'sr03',
+                'variable': 'hlcy',
+                },
             'srh01': { # 0-1 km Storm relative helicity
-              'units': 'm2/s2',
-              'level': 'sr01',
-              'variable': 'hlcy',
-              },
+                'units': 'm2/s2',
+                'level': 'sr01',
+                'variable': 'hlcy',
+                },
             'shr06': { # 0-6 km Shear
-              'units': 'kt',
-              'level': '06km',
-              'variable': 'shear',
-              },
+                'units': 'kt',
+                'level': '06km',
+                'variable': 'shear',
+                },
             'shr01': { # 0-1 km Shear
-              'units': 'kt',
-              'level': '01km',
-              'variable': 'shear',
-              },
+                'units': 'kt',
+                'level': '01km',
+                'variable': 'shear',
+                },
             'cell': { # Cell motion
-              'units': 'kt',
-              'transform': conversions.ms_to_kt,
-              },
+                'units': 'kt',
+                'transform': conversions.ms_to_kt,
+                },
             'pwtr': { # Precipitable water
-              'decimals': 1,
-              'units': 'mm',
-              'level': 'sfc',
-              },
+                'decimals': 1,
+                'units': 'mm',
+                'level': 'sfc',
+                },
             })
 
         for var, items in thermo.items():
@@ -181,9 +193,12 @@ class skewT(grib.profileData):
 
         return thermo
 
-    def create_skewT(self, **kwargs):
+    def create_diagram(self):
 
-        skew = self._setup_skewT()
+        ''' Calls the private methods for creating each component of the SkewT
+        Diagram. '''
+
+        skew = self._setup_diagram()
         self._title()
         self._plot_profile(skew)
         self._plot_wind_barbs(skew)
@@ -210,27 +225,60 @@ class skewT(grib.profileData):
                      size=8,
                      fontproperties=fm.FontProperties(family='monospace'),
                      verticalalignment='top',
-                     bbox=dict(facecolor='white',edgecolor='black', alpha=0.7))
+                     bbox=dict(facecolor='white', edgecolor='black', alpha=0.7))
 
     def _plot_hodograph(self, skew):
 
-        # Alias the wind data proviles
-        u = self.atmo_profiles.get('u', {}).get('data')
-        v = self.atmo_profiles.get('v', {}).get('data')
-        speed = self.vector_magnitude(u, v)
 
-        # Create an inset axes object that is 30% width and height of the
+        # Create an array that indicates which layer (10-3, 3-1, 0-1 km) the
+        # wind belongs to. The array, agl, will be set to the height
+        # corresponding to the top of the layer. The resulting array will look
+        # something like this:
+        #
+        #   agl = [1.0 1.0 1.0 3.0 3.0 3.0 10.0 10.0 10.0 10.87 ]
+        #
+        # Where the values above 10 km are unchanged, and there are three levels
+        # in each of the 3 layers of interest.
+        #
+        agl = np.copy(self.atmo_profiles.get('gh', {}).get('data')).to('km')
+
+        heights = [10, 3, 1]
+        agl_arr = agl.magnitude
+        for i, height in enumerate(heights):
+
+            mag_top = height
+            mag_bottom = 0 if i >= len(heights) - 1 else heights[i+1]
+
+            # Use exclude later to remove values above 10km
+            if i == 0:
+                exclude = -np.sum(agl_arr > mag_top)
+
+            # Check for the values between two levels
+            condition = np.logical_and(agl_arr <= mag_top, agl_arr > mag_bottom)
+            agl.magnitude[condition] = mag_top
+
+        # Note: agl is now an array with values corresponding to the heights
+        # array
+
+        # Retrieve the wind data profiles
+        u_wind = self.atmo_profiles.get('u', {}).get('data')
+        v_wind = self.atmo_profiles.get('v', {}).get('data')
+
+        # Drop the points above 10 km
+        u_wind = u_wind.magnitude[:exclude] * u_wind.units
+        v_wind = v_wind.magnitude[:exclude] * v_wind.units
+
+        # Create an inset axes object that is 28% width and height of the
         # figure and put it in the upper left hand corner.
+        ax = inset_axes(skew.ax, '25%', '25%', loc=2)
+        h = Hodograph(ax, component_range=80.)
+        h.add_grid(increment=20, linewidth=0.5)
 
-        ax = inset_axes(skew.ax, '28%', '28%', loc=2)
-        h = Hodograph(ax, component_range=80.,)
-        h.add_grid(increment=20,)
-        #        bbox=dict(facecolor='white',edgecolor='black', alpha=0.7))
+        # Plot the line colored by height AGL only up to the 10km level
+        h.plot_colormapped(u_wind, v_wind, agl[:exclude], linewidth=2)
 
-        # Plot a line colored by wind speed
-        h.plot_colormapped(u, v, speed)
-
-    def _plot_labels(self, skew):
+    @staticmethod
+    def _plot_labels(skew):
 
         skew.ax.set_xlabel('Temperature (F)')
         skew.ax.set_ylabel('Pressure (hPa)')
@@ -251,11 +299,16 @@ class skewT(grib.profileData):
         skew.plot(pres, dewpt, 'blue', linewidth=1.5)
 
         # Compute parcel profile and plot it
-        parcel_profile = mpcalc.parcel_profile(pres, temp[0],
-                dewpt[0]).to('degC')
+        parcel_profile = mpcalc.parcel_profile(pres,
+                                               temp[0],
+                                               dewpt[0]).to('degC')
 
-        skew.plot(pres, parcel_profile, 'orange', linewidth=1.2,
-        linestyle='dashed')
+        skew.plot(pres,
+                  parcel_profile,
+                  'orange',
+                  linestyle='dashed',
+                  linewidth=1.2,
+                  )
 
     def _plot_wind_barbs(self, skew):
 
@@ -263,15 +316,15 @@ class skewT(grib.profileData):
         skew.plot_barbs(self.atmo_profiles.get('pres', {}).get('data'),
                         self.atmo_profiles.get('u', {}).get('data'),
                         self.atmo_profiles.get('v', {}).get('data'),
-                color='blue',
-                linewidth=0.2,
-                y_clip_radius=0,
-                )
+                        color='blue',
+                        linewidth=0.2,
+                        y_clip_radius=0,
+                        )
 
-    def _setup_skewT(self):
+    def _setup_diagram(self):
 
         fig = plt.figure(figsize=(12, 12))
-        skew = SkewT(fig, rotation=45)
+        skew = SkewT(fig, rotation=45, aspect=85)
 
         ticks = [str(int(t)) for t in skew.ax.get_xticks()]
 
@@ -280,57 +333,66 @@ class skewT(grib.profileData):
         labels_F = list(range(-20, 125, 20)) * units.degF
         labels = labels_F.to('degC').magnitude
         skew.ax.xaxis.set_minor_locator(FixedLocator(labels))
+
         skew.ax.set_xticklabels(ticks[1:-2])
         skew.ax.set_xticklabels(labels_F.magnitude, minor=True)
-        skew.ax.tick_params(which='minor', length=8)
-        skew.ax.tick_params(axis='x', which='major', length=0, labelbottom=True,
-                labeltop=True, labelright=True, labelrotation=45, pad=-25,
-                labelcolor='gray')
+
+        skew.ax.tick_params(which='minor',
+                            length=8)
+
+        skew.ax.tick_params(axis='x',
+                            which='major',
+                            length=0,
+                            labelbottom=True,
+                            labeltop=True,
+                            labelright=True,
+                            labelrotation=45,
+                            pad=-25,
+                            labelcolor='gray',
+                            )
 
         # Add the relevant special lines
-
         dry_adiabats = np.arange(-40, 210, 10) * units.degC
         skew.plot_dry_adiabats(dry_adiabats,
-                colors='tan',
-                linestyles='solid',
-                linewidth=0.7,
-                )
+                               colors='tan',
+                               linestyles='solid',
+                               linewidth=0.7,
+                               )
 
         moist_adiabats = np.arange(8, 36, 4) * units.degC
         moist_pr = np.arange(1001, 220, -10) * units.hPa
-        adiabats = skew.plot_moist_adiabats(moist_adiabats, moist_pr,
-                colors='green',
-                linestyles='solid',
-                linewidth=0.7,
-                )
+        skew.plot_moist_adiabats(moist_adiabats,
+                                 moist_pr,
+                                 colors='green',
+                                 linestyles='solid',
+                                 linewidth=0.7,
+                                 )
 
         mixing_lines = np.array([1, 2, 3, 5, 8, 12, 16, 20]).reshape(-1, 1)  / 1000
         mix_pr = np.arange(1001, 400, -50) * units.hPa
         skew.plot_mixing_lines(w=mixing_lines, p=mix_pr,
-                colors='green',
-                linestyles=(0, (5, 10)),
-                linewidth=0.7,
-                )
+                               colors='green',
+                               linestyles=(0, (5, 10)),
+                               linewidth=0.7,
+                               )
         return skew
-
 
     def _title(self):
 
-         ''' Creates standard annotation for a skew-T. '''
+        ''' Creates standard annotation for a skew-T. '''
 
-         atime = self.date_to_str(self.anl_dt)
-         vtime = self.date_to_str(self.valid_dt)
+        atime = self.date_to_str(self.anl_dt)
+        vtime = self.date_to_str(self.valid_dt)
 
-         # Top Left
-         plt.title(f"Analysis: {atime}\nFcst Hr: {self.fhr}", loc='left',
-                 fontsize=16, position=(0, 1.03))
+        # Top Left
+        plt.title(f"Analysis: {atime}\nFcst Hr: {self.fhr}", loc='left',
+                  fontsize=16, position=(0, 1.03))
 
-         # Top Right
-         plt.title(f"Valid: {vtime}", loc='right', position=(1, 1.03), fontsize=16)
+        # Top Right
+        plt.title(f"Valid: {vtime}", loc='right', position=(1, 1.03), fontsize=16)
 
-         # Center
-         site = f"{self.site_code} {self.site_num} {self.site_name}"
-         site_loc = f"{self.site_lat},  {self.site_lon}"
-         site_title = f"{site} at nearest grid pt over land {site_loc}"
-         plt.title(site_title, loc='center', fontsize=12)
-
+        # Center
+        site = f"{self.site_code} {self.site_num} {self.site_name}"
+        site_loc = f"{self.site_lat},  {self.site_lon}"
+        site_title = f"{site} at nearest grid pt over land {site_loc}"
+        plt.title(site_title, loc='center', fontsize=12)

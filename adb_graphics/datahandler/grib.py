@@ -48,8 +48,7 @@ class GribFile():
 
         return field
 
-    @staticmethod
-    def vector_magnitude(field1, field2, layer=0):
+    def vector_magnitude(self, field1, field2, layer=0):
 
         '''
         Returns the vector magnitude of two component vector fields. The
@@ -67,6 +66,18 @@ class GribFile():
 
 
 class UPPData(GribFile, specs.VarSpec):
+
+    '''
+    Class provides interface for accessing field  data from UPP in
+    Grib2 format.
+
+    Input:
+        filename:    Path to grib file.
+        short_name:  name of variable corresponding to entry in specs configuration
+
+    Keyword Arguments:
+        config:      path to a user-specified configuration file
+    '''
 
     def __init__(self, filename, short_name, **kwargs):
 
@@ -136,12 +147,6 @@ class UPPData(GribFile, specs.VarSpec):
 
         return str(self.field.forecast_time[0])
 
-    def field_diff(self, values, variable2, level2):
-
-        ''' Subtracts the values from variable2 from self.field. '''
-
-        return values - self.values(variable2, level2)
-
     @property
     @lru_cache()
     def field(self):
@@ -209,7 +214,7 @@ class fieldData(UPPData):
 
     '''
     Class provides interface for accessing field (2D plan view) data from UPP in
-    Grib2 format. 
+    Grib2 format.
 
     Input:
         filename:    Path to grib file.
@@ -266,6 +271,12 @@ class fieldData(UPPData):
 
         lat, lon = self.latlons()
         return [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
+
+    def field_diff(self, values, variable2, level2):
+
+        ''' Subtracts the values from variable2 from self.field. '''
+
+        return values - self.values(variable2, level2)
 
     @property
     def ticks(self) -> int:
@@ -360,7 +371,11 @@ class fieldData(UPPData):
             return False
 
         # Create fieldData objects for u, v components
-        u, v = [fieldData(filename=self.filename, level=level, short_name=var) for var in ['u', 'v']]
+        field_lambda = lambda fn, level, var: fieldData(filename=fn,
+                                                        level=level,
+                                                        short_name=var,
+                                                        )
+        u, v = [field_lambda(self.filename, level, var) for var in ['u', 'v']]
 
         return [component.values() for component in [u, v]]
 
@@ -404,8 +419,10 @@ class profileData(UPPData):
         max_x, max_y = np.shape(lats)
 
         # Numpy magic to grab the X, Y grid point nearest the profile site
+        # pylint: disable=unbalanced-tuple-unpacking
         x, y = np.unravel_index((np.abs(lats - self.site_lat) \
                + np.abs(lons - self.site_lon)).argmin(), lats.shape)
+        # pylint: enable=unbalanced-tuple-unpacking
 
         if x == 0 or y == 0 or x == max_x or y == max_y:
             msg = f"{self.site_name} is outside your domain!"
@@ -414,6 +431,16 @@ class profileData(UPPData):
         return (x, y)
 
     def values(self, lev='ua', short_name=None):
+
+        '''
+        Returns the numpy array of values at the object's x, y location for the
+        requested variable. Transforms are performed in the Child class.
+
+        Optional Input:
+            short_name the name of a field other than defined in self
+            lev        the level of the alternate field to use, default='ua' for
+                       upper air
+        '''
 
         if not short_name:
             short_name = self.short_name
@@ -427,9 +454,9 @@ class profileData(UPPData):
 
         if not ncl_name:
             raise errors.NoGraphicsDefinitionForVariable(
-                    short_name,
-                   'ua',
-                   )
+                short_name,
+                'ua',
+                )
 
         layer = var_spec.get('layer')
 
