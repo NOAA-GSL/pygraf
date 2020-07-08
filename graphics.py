@@ -10,7 +10,7 @@ import yaml
 
 from adb_graphics.datahandler import grib
 from adb_graphics.figures import maps
-from adb_graphics.figures.skewt import skewT
+from adb_graphics.figures import skewt
 import adb_graphics.utils as utils
 
 
@@ -127,7 +127,7 @@ def prepare_skewt(cla):
 
     for site in sites:
 
-        skew = skewT(filename=grib_path, loc=site, max_plev=cla.max_plev)
+        skew = skewt.SkewTDiagram(filename=grib_path, loc=site, max_plev=cla.max_plev)
         skew.create_skewT()
         skew.save(outfile)
 
