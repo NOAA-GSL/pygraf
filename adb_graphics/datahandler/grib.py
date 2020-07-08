@@ -100,15 +100,6 @@ class UPPData(GribFile, specs.VarSpec):
         return datetime.datetime.strptime(self.field.initial_time, '%m/%d/%Y (%H:%M)')
 
     @property
-    def valid_dt(self) -> datetime.datetime:
-
-        ''' Returns a datetime object corresponding to the forecast hour's valid
-        time as set in the Grib file. '''
-
-        fh = datetime.timedelta(hours=int(self.fhr))
-        return self.anl_dt + fh
-
-    @property
     def clevs(self) -> np.ndarray:
 
         '''
@@ -198,6 +189,15 @@ class UPPData(GribFile, specs.VarSpec):
         lev_unit = ''.join([c for c in level if c in ascii_letters])
 
         return lev_val, lev_unit
+
+    @property
+    def valid_dt(self) -> datetime.datetime:
+
+        ''' Returns a datetime object corresponding to the forecast hour's valid
+        time as set in the Grib file. '''
+
+        fh = datetime.timedelta(hours=int(self.fhr))
+        return self.anl_dt + fh
 
     @property
     def vspec(self):
@@ -358,10 +358,10 @@ class fieldData(UPPData):
         '''
         Returns the u, v wind components as a list (length 2) of arrays.
 
-            Input:
-                level      bool or level key. If True, use same level as self,
-                           if a string level key is provided, use wind at that
-                           level.
+        Input:
+            level      bool or level key. If True, use same level as self,
+                       if a string level key is provided, use wind at that
+                       level.
         '''
 
         level = self.level if level and isinstance(level, bool) else level
@@ -392,20 +392,36 @@ class profileData(UPPData):
     '''
     Class provides methods for getting profiles from a specific lat/lon location
     from a grib file.
+
+    Input:
+
+      filename     full path to grib file
+      loc          single entry from sites file. Use the first 31 spaces to get
+                   site_code, site_num, lat, lon. Past 31 spaces is the site's
+                   long name.
+      short_name
+
+    Key word arguments:
+
+      Only used for base classes.
+
     '''
 
     def __init__(self, filename, loc, short_name, **kwargs):
 
         super().__init__(filename, short_name, **kwargs)
 
+        # The first 31 columns are space delimted
         self.site_code, _, self.site_num, lat, lon = \
                 loc[:31].split()
 
+        # The variable lenght site name is included past column 37
         self.site_name = loc[37:].rstrip()
 
+        # Convert the string to a number. Longitude should be negative for all
+        # these sites.
         self.site_lat = float(lat)
         self.site_lon = -float(lon)
-
 
     @lru_cache()
     def get_xypoint(self):
@@ -434,7 +450,7 @@ class profileData(UPPData):
 
         '''
         Returns the numpy array of values at the object's x, y location for the
-        requested variable. Transforms are performed in the Child class.
+        requested variable. Transforms are performed in the child class.
 
         Optional Input:
             short_name the name of a field other than defined in self
@@ -451,23 +467,21 @@ class profileData(UPPData):
         var_spec = self.spec.get(short_name, {}).get(lev, {})
         ncl_name = self.ncl_name(var_spec)
 
-
         if not ncl_name:
             raise errors.NoGraphicsDefinitionForVariable(
                 short_name,
                 'ua',
                 )
 
+        # Specifies the vertical index if one is needed.
         layer = var_spec.get('layer')
 
         profile = self.contents.variables[ncl_name][::]
         if len(profile.shape) == 2:
             profile = profile[x, y]
         elif len(profile.shape) == 3:
-
             if layer is not None:
                 profile = profile[layer, x, y]
             else:
                 profile = profile[:, x, y]
-
         return profile

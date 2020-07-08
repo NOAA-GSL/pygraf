@@ -66,11 +66,18 @@ acpcp: # Accumulated precipitation
     transform: conversions.kgm2_to_in
     unit: in
 cape:
-  sfc:
-    ncl_name: CAPE_P0_L1_GLC0
   mu:
     ncl_name: CAPE_P0_2L108_GLC0
     layer: 2
+  sfc:
+    ncl_name: CAPE_P0_L1_GLC0
+cell: # Storm cell motion
+  ua:
+    ncl_name: USTM_P0_2L103_GLC0
+    transform: [vector_magnitude, converstions.ms_to_kt]
+    transform_kwargs:
+      field2: VVCSH_P0_2L103_GLC0
+    unit: kt
 ceil: # Ceiling
   ua: &ceil
     clevs: [0, 0.1, 0.3, 0.5, 1, 2, 3, 5, 10, 15, 20, 30, 60]
@@ -94,20 +101,12 @@ ceilexp2: # Ceiling - experimental no.2
     <<: *ceil
     ncl_name: CEIL_P0_L2_GLC0
     title: Ceiling (exp-2)
-cell: # Storm cell motion
-  ua:
-    ncl_name: USTM_P0_2L103_GLC0
-    transform: [vector_magnitude, converstions.ms_to_kt]
-    transform_kwargs:
-      field2: VVCSH_P0_2L103_GLC0
-    unit: kt
-
 cin: # Convective inhibition
-  sfc:
-    ncl_name: CIN_P0_L1_GLC0
   mu:
     ncl_name: CIN_P0_2L108_GLC0
     layer: 2
+  sfc:
+    ncl_name: CIN_P0_L1_GLC0
 cref: # Composite reflectivity
   sfc: &refl
     clevs: !!python/object/apply:numpy.arange [5, 76, 5]
@@ -166,6 +165,24 @@ gh: # Geopotential height
     unit: gpm
   ua:
     <<: *ua_gh
+gust:
+  10m:
+    clevs: !!python/object/apply:numpy.arange [5, 95, 5]
+    cmap: gist_ncar
+    colors: wind_colors
+    ncl_name: GUST_P0_L1_GLC0
+    ticks: 5
+    transform: conversions.ms_to_kt
+    unit: kt
+hcc: # High-level cloud cover
+  sfc: &cld_cover
+    clevs: [2, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95]
+    cmap: gist_ncar
+    colors: cldcov_colors
+    ncl_name: HCDC_P0_L234_GLC0
+    ticks: 0
+    title: High-Level Cloud Cover
+    unit: '%'
 hlcy: # Helicity
   in16: &hlcy # Hourly updraft helicity over 1-6 km layer
     clevs: !!python/object/apply:numpy.arange [25, 301, 25]
@@ -211,6 +228,11 @@ hlcy: # Helicity
   sr03:
     layer: 1
     ncl_name: HLCY_P0_2L103_GLC0
+lcc: # Low-level cloud cover
+  sfc:
+    <<: *cld_cover
+    ncl_name: LCDC_P0_L214_GLC0
+    title: Low-Level Cloud Cover
 lcl: # Lifted condensation level
   sfc: &lcl
     clevs: !!python/object/apply:numpy.arange [0, 5000, 250]
@@ -235,29 +257,6 @@ li: # Lifted Index
 lpl: # Lifted parcel level
   ua:
     ncl_name: PLPL_P0_2L108_GLC0
-gust:
-  10m:
-    clevs: !!python/object/apply:numpy.arange [5, 95, 5]
-    cmap: gist_ncar
-    colors: wind_colors
-    ncl_name: GUST_P0_L1_GLC0
-    ticks: 5
-    transform: conversions.ms_to_kt
-    unit: kt
-hcc: # High-level cloud cover
-  sfc: &cld_cover
-    clevs: [2, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95]
-    cmap: gist_ncar
-    colors: cldcov_colors
-    ncl_name: HCDC_P0_L234_GLC0
-    ticks: 0
-    title: High-Level Cloud Cover
-    unit: '%'
-lcc: # Low-level cloud cover
-  sfc:
-    <<: *cld_cover
-    ncl_name: LCDC_P0_L214_GLC0
-    title: Low-Level Cloud Cover
 mcc: # Mid-level cloud cover
   sfc:
     <<: *cld_cover

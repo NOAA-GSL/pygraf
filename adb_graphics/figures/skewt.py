@@ -50,6 +50,25 @@ class SkewTDiagram(grib.profileData):
 
         self.max_plev = kwargs.get('max_plev', 0)
 
+    def _add_thermo_inset(self, skew):
+
+        lines = []
+        for name, items in self.thermo_variables.items():
+            decimals = items.get('decimals', 0)
+            value = items['data']
+            value = round(int(value)) if decimals == 0 else round(value, decimals)
+            line = f"{name.upper():<7s}: {str(value):>10} {items['units']}"
+            lines.append(line)
+
+        contents = '\n'.join(lines)
+
+        skew.ax.text(0.70, 0.98, contents,
+                     transform=skew.ax.transAxes,
+                     size=8,
+                     fontproperties=fm.FontProperties(family='monospace'),
+                     verticalalignment='top',
+                     bbox=dict(facecolor='white', edgecolor='black', alpha=0.7))
+
     @property
     @lru_cache()
     def atmo_profiles(self):
@@ -102,97 +121,6 @@ class SkewTDiagram(grib.profileData):
 
         return atmo_vars
 
-    @property
-    @lru_cache()
-    def thermo_variables(self):
-
-        '''
-        Return an ordered dictionary of thermodynamic variables needed for the skewT.
-        Ordered because we want to print these values in this order on the SkewT
-        diagram.
-        '''
-
-        thermo = OrderedDict({
-            'cape': { # Convective available potential energy
-                'units': 'J/kg',
-                'level': 'sfc',
-                },
-            'cin': { # Convective inhibition
-                'units': 'J/kg',
-                'level': 'sfc',
-                },
-            'mucape': { # Most Unstable CAPE
-                'units': 'J/kg',
-                'level': 'mu',
-                'variable': 'cape',
-                },
-            'mucin': { # CIN from MUCAPE level
-                'units': 'J/kg',
-                'level': 'mu',
-                'variable': 'cin',
-                },
-            'li': { # Lifted Index
-                'decimals': 1,
-                'units': 'K',
-                'level': 'sfc',
-                },
-            'bli': { # Best Lifted Index
-                'decimals': 1,
-                'units': 'K',
-                'level': 'best',
-                'variable': 'li',
-                },
-            'lcl': { # Lifted Condensation Level
-                'units': 'm',
-                },
-            'lpl': { # Lifted Parcel Level
-                'units': 'hPa',
-                'transform': conversions.pa_to_hpa,
-                },
-            'srh03': { # 0-3 km Storm relative helicity
-                'units': 'm2/s2',
-                'level': 'sr03',
-                'variable': 'hlcy',
-                },
-            'srh01': { # 0-1 km Storm relative helicity
-                'units': 'm2/s2',
-                'level': 'sr01',
-                'variable': 'hlcy',
-                },
-            'shr06': { # 0-6 km Shear
-                'units': 'kt',
-                'level': '06km',
-                'variable': 'shear',
-                },
-            'shr01': { # 0-1 km Shear
-                'units': 'kt',
-                'level': '01km',
-                'variable': 'shear',
-                },
-            'cell': { # Cell motion
-                'units': 'kt',
-                'transform': conversions.ms_to_kt,
-                },
-            'pwtr': { # Precipitable water
-                'decimals': 1,
-                'units': 'mm',
-                'level': 'sfc',
-                },
-            })
-
-        for var, items in thermo.items():
-
-            varname = items.get('variable', var)
-            tmp = self.values(lev=items.get('level', 'ua'), short_name=varname)
-
-            transform = items.get('transform')
-            if transform:
-                tmp = transform(tmp)
-
-            thermo[var]['data'] = tmp
-
-        return thermo
-
     def create_diagram(self):
 
         ''' Calls the private methods for creating each component of the SkewT
@@ -206,26 +134,6 @@ class SkewTDiagram(grib.profileData):
 
         self._plot_hodograph(skew)
         self._add_thermo_inset(skew)
-
-    def _add_thermo_inset(self, skew):
-
-
-        lines = []
-        for name, items in self.thermo_variables.items():
-            decimals = items.get('decimals', 0)
-            value = items['data']
-            value = round(int(value)) if decimals == 0 else round(value, decimals)
-            line = f"{name.upper():<7s}: {str(value):>10} {items['units']}"
-            lines.append(line)
-
-        contents = '\n'.join(lines)
-
-        skew.ax.text(0.65, 0.98, contents,
-                     transform=skew.ax.transAxes,
-                     size=8,
-                     fontproperties=fm.FontProperties(family='monospace'),
-                     verticalalignment='top',
-                     bbox=dict(facecolor='white', edgecolor='black', alpha=0.7))
 
     def _plot_hodograph(self, skew):
 
@@ -376,6 +284,97 @@ class SkewTDiagram(grib.profileData):
                                linewidth=0.7,
                                )
         return skew
+
+    @property
+    @lru_cache()
+    def thermo_variables(self):
+
+        '''
+        Return an ordered dictionary of thermodynamic variables needed for the skewT.
+        Ordered because we want to print these values in this order on the SkewT
+        diagram.
+        '''
+
+        thermo = OrderedDict({
+            'cape': { # Convective available potential energy
+                'units': 'J/kg',
+                'level': 'sfc',
+                },
+            'cin': { # Convective inhibition
+                'units': 'J/kg',
+                'level': 'sfc',
+                },
+            'mucape': { # Most Unstable CAPE
+                'units': 'J/kg',
+                'level': 'mu',
+                'variable': 'cape',
+                },
+            'mucin': { # CIN from MUCAPE level
+                'units': 'J/kg',
+                'level': 'mu',
+                'variable': 'cin',
+                },
+            'li': { # Lifted Index
+                'decimals': 1,
+                'units': 'K',
+                'level': 'sfc',
+                },
+            'bli': { # Best Lifted Index
+                'decimals': 1,
+                'units': 'K',
+                'level': 'best',
+                'variable': 'li',
+                },
+            'lcl': { # Lifted Condensation Level
+                'units': 'm',
+                },
+            'lpl': { # Lifted Parcel Level
+                'units': 'hPa',
+                'transform': conversions.pa_to_hpa,
+                },
+            'srh03': { # 0-3 km Storm relative helicity
+                'units': 'm2/s2',
+                'level': 'sr03',
+                'variable': 'hlcy',
+                },
+            'srh01': { # 0-1 km Storm relative helicity
+                'units': 'm2/s2',
+                'level': 'sr01',
+                'variable': 'hlcy',
+                },
+            'shr06': { # 0-6 km Shear
+                'units': 'kt',
+                'level': '06km',
+                'variable': 'shear',
+                },
+            'shr01': { # 0-1 km Shear
+                'units': 'kt',
+                'level': '01km',
+                'variable': 'shear',
+                },
+            'cell': { # Cell motion
+                'units': 'kt',
+                'transform': conversions.ms_to_kt,
+                },
+            'pwtr': { # Precipitable water
+                'decimals': 1,
+                'units': 'mm',
+                'level': 'sfc',
+                },
+            })
+
+        for var, items in thermo.items():
+
+            varname = items.get('variable', var)
+            tmp = self.values(lev=items.get('level', 'ua'), short_name=varname)
+
+            transform = items.get('transform')
+            if transform:
+                tmp = transform(tmp)
+
+            thermo[var]['data'] = tmp
+
+        return thermo
 
     def _title(self):
 
