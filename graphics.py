@@ -10,12 +10,14 @@ import yaml
 
 from adb_graphics.datahandler import grib
 from adb_graphics.figures import maps
+from adb_graphics.figures.skewt import skewT
+import adb_graphics.utils as utils
 
 
 AIRPORTS = 'static/Airports_locs.txt'
 
 
-def maps(cla):
+def prepare_maps(cla):
 
     '''
     Loads a set of images to be plotted, then creates them from grib input files.
@@ -27,7 +29,7 @@ def maps(cla):
 
     # Locate input grib file
     str_start_time = from_datetime(cla.start_time)
-    grib_file = images['input_files']['hrrr'].format(FCST_TIME=cla.fcst_hour)
+    grib_file = images['input_files']['hrrr_prs'].format(FCST_TIME=cla.fcst_hour)
     grib_path = os.path.join(cla.data_root, str_start_time, grib_file)
 
 
@@ -104,33 +106,35 @@ def maps(cla):
                 orientation='landscape',
                 )
 
-def skewT(cla):
+def prepare_skewt(cla):
 
-    with open(cla.sites, 'r') as sites_file:
-        sites = readlines()
+    # Load image list
+    with open(cla.image_list, 'r') as fn:
+        images = yaml.load(fn, Loader=yaml.Loader)[cla.image_set]
 
 
     # Locate input grib file
     str_start_time = from_datetime(cla.start_time)
-    grib_file = images['input_files']['hrrr'].format(FCST_TIME=cla.fcst_hour)
+    grib_file = images['input_files']['hrrr_nat'].format(FCST_TIME=cla.fcst_hour)
     grib_path = os.path.join(cla.data_root, str_start_time, grib_file)
 
 
     #TODO: define png_path
 
+    # Load sites
+    with open(cla.sites, 'r') as sites_file:
+        sites = sites_file.readlines()
+
     for site in sites:
 
-        skew = SkewT(filename=grib_path, loc=site, max_plev=cla.max_plev)
+        skew = skewT(filename=grib_path, loc=site, max_plev=cla.max_plev)
         skew.create_skewT()
         skew.save(outfile)
 
 
-
-
-
 def to_datetime(string):
     ''' Return a datetime object give a string like YYYYMMDDHH. '''
-    return dt.datetime.stptime(string, '%Y%m%d%H')
+    return dt.datetime.strptime(string, '%Y%m%d%H')
 
 
 def from_datetime(date):
@@ -162,11 +166,10 @@ def parse_args():
                         )
     parser.add_argument('--image_list',
                         help='Path to YAML config file specifying which graphics to create.',
-                        required=True,
                         )
     parser.add_argument('--sites',
                         help='Path to a sites file.',
-                        type=file_ok,
+                        type=utils.file_exists,
                         )
     parser.add_argument('--max_plev',
                         help='Maximum pressure level to plot for profiles.',
@@ -175,7 +178,6 @@ def parse_args():
     parser.add_argument('-m', '--image_set',
                         choices=['hourly'],
                         help='Name of top level key in image_list',
-                        required=True,
                         )
     parser.add_argument('-o', '--output_path',
                         help='Directory location desired for the output graphics files.',
@@ -199,6 +201,6 @@ def parse_args():
 if __name__ == '__main__':
     CLARGS = parse_args()
     if CLARGS.plot_type == 'skewT':
-        skewT(CLARGS)
+        prepare_skewt(CLARGS)
     elif CLARGS.plot_type == 'map':
-        maps(CLARGS)
+        prepare_maps(CLARGS)
