@@ -65,6 +65,15 @@ acpcp: # Accumulated precipitation
     ticks: 0
     transform: conversions.kgm2_to_in
     unit: in
+cape: # Surface CAPE
+  sfc: &cape
+    clevs: [1, 100, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
+    cmap: gist_ncar
+    colors: vort_colors
+    ncl_name: CAPE_P0_L1_GLC0
+    ticks: 0
+    title: Surface CAPE
+    unit: J/kg
 ceil: # Ceiling
   ua: &ceil
     clevs: [0, 0.1, 0.3, 0.5, 1, 2, 3, 5, 10, 15, 20, 30, 60]
@@ -88,6 +97,15 @@ ceilexp2: # Ceiling - experimental no.2
     <<: *ceil
     ncl_name: CEIL_P0_L2_GLC0
     title: Ceiling (exp-2)
+cin: # Surface Convective Inhibition
+  sfc:
+    clevs: [-300, -200, -150, -100, -75, -50, -40, -30, -20, -10, -1]
+    cmap: gist_ncar
+    colors: cin_colors
+    ncl_name: CIN_P0_L1_GLC0
+    ticks: 0
+    title: Surface CAPE
+    unit: J/kg
 cref: # Composite reflectivity
   sfc: &refl
     clevs: !!python/object/apply:numpy.arange [5, 76, 5]
@@ -117,6 +135,33 @@ dewp: # Dew point temperature
     transform: conversions.k_to_f
     unit: F
     wind: 10m
+G113bt: # GOES-W Brightness temperature, water vapor (Ch 3)
+  sat: &goes_sat
+    clevs: !!python/object/apply:numpy.arange [-80, 41, 1]
+    cmap: WVCIMSS_r
+    colors: goes_colors
+    ncl_name: SBT113_P0_L8_GLC0
+    ticks: -10
+    title: GOES-W Brightness Temperature, Water Vapor
+    transform: conversions.k_to_c
+    unit: ch 3
+G114bt: # GOES-W Brightness temperature, infrared (Ch 4)
+  sat:
+    <<: *goes_sat
+    ncl_name: SBT114_P0_L8_GLC0
+    title: GOES-W Brightness Temperature, Infrared
+    unit: ch 4
+G123bt: # GOES-E Brightness temperature, water vapor (Ch 3)
+  sat:
+    <<: *goes_sat
+    ncl_name: SBT123_P0_L8_GLC0
+    title: GOES-E Brightness Temperature, Water Vapor
+G124bt: # GOES-E Brightness temperature, infrared (Ch 4)
+  sat:
+    <<: *goes_sat
+    ncl_name: SBT124_P0_L8_GLC0
+    title: GOES-E Brightness Temperature, Infrared
+    unit: ch 4
 gh: # Geopotential height
   500mb: &ua_gh
     clevs: !!python/object/apply:numpy.arange [6, 990, 6]
@@ -228,6 +273,24 @@ mref: # Maximum reflectivity for past hour at 1 km AGL
     <<: *refl
     ncl_name: MAXREF_P8_L103_GLC0_max1h
     title: Max 1km agl Reflectivity (over prev hr)
+mucp: # Most Unstable CAPE
+  sfc: 
+    <<: *cape
+    layer: 2
+    ncl_name: CAPE_P0_2L108_GLC0
+    title: Most Unstable CAPE
+mulcp: # Most Unstable Layer CAPE
+  sfc: 
+    <<: *cape
+    layer: 1
+    ncl_name: CAPE_P0_2L108_GLC0
+    title: Most Unstable Layer CAPE
+mxcp: # Lowest 90 mb Mixed Layer CAPE
+  sfc: 
+    <<: *cape
+    layer: 0
+    ncl_name: CAPE_P0_2L108_GLC0
+    title: Lowest 90 mb Mixed Layer CAPE
 pres:
   sfc:
     clevs: !!python/object/apply:numpy.arange [650, 1051, 4]
@@ -288,6 +351,90 @@ rh: # Relative Humidity
   850mb:
     <<: *rh
     ncl_name: RH_P0_L100_GLC0
+soilt: # Soil Temperature
+  sfc: &soilt_levs
+    clevs: !!python/object/apply:numpy.arange [240, 311, 10]
+    cmap: gist_ncar
+    colors: soilt_colors
+    layer: 0
+    ncl_name: TSOIL_P0_2L106_GLC0
+    ticks: 0
+    title: Soil Temperature at Sfc
+    unit: K
+  1cm:
+    <<: *soilt_levs
+    layer: 1
+    title: Soil Temperature at 1cm
+  4cm:
+    <<: *soilt_levs
+    layer: 2
+    title: Soil Temperature at 4cm
+  10cm:
+    <<: *soilt_levs
+    layer: 3
+    title: Soil Temperature at 10cm
+  30cm:
+    <<: *soilt_levs
+    layer: 4
+    title: Soil Temperature at 30cm
+  60cm:
+    <<: *soilt_levs
+    layer: 5
+    title: Soil Temperature at 60cm
+  1m:
+    <<: *soilt_levs
+    layer: 6
+    title: Soil Temperature at 1m
+  1.6m:
+    <<: *soilt_levs
+    layer: 7
+    title: Soil Temperature at 1.6m
+  3m:
+    <<: *soilt_levs
+    layer: 8
+    title: Soil Temperature at 3m
+soilw: # Soil Moisture
+  sfc: &soilw_levs
+    clevs: !!python/object/apply:numpy.arange [0.0, 0.61, 0.1]
+    cmap: gist_ncar
+    colors: soilw_colors
+    layer: 0
+    ncl_name: SOILW_P0_2L106_GLC0
+    ticks: 0
+    title: Soil Moisture at Sfc
+    unit: fraction
+  1cm:
+    <<: *soilw_levs
+    layer: 1
+    title: Soil Moisture at 1cm
+  4cm:
+    <<: *soilw_levs
+    layer: 2
+    title: Soil Moisture at 4cm
+  10cm:
+    <<: *soilw_levs
+    layer: 3
+    title: Soil Moisture at 10cm
+  30cm:
+    <<: *soilw_levs
+    layer: 4
+    title: Soil Moisture at 30cm
+  60cm:
+    <<: *soilw_levs
+    layer: 5
+    title: Soil Moisture at 60cm
+  1m:
+    <<: *soilw_levs
+    layer: 6
+    title: Soil Moisture at 1m
+  1.6m:
+    <<: *soilw_levs
+    layer: 7
+    title: Soil Moisture at 1.6m
+  3m:
+    <<: *soilw_levs
+    layer: 8
+    title: Soil Moisture at 3m
 tcc: # Total cloud cover
   sfc:
     <<: *cld_cover
@@ -374,6 +521,23 @@ v:
   700mb: *ua_vwind
   850mb: *ua_vwind
   925mb: *ua_vwind
+vil: # Vertically integrated liquid
+  sfc:
+    clevs: [0.05, 0.15, 0.76, 3.47, 6.92, 12, 31.6, 35, 40, 45, 50, 55, 60, 65, 70]
+    cmap: precipitation
+    colors: vil_colors
+    ncl_name: VIL_P0_L10_GLC0
+    ticks: 0
+vis: # Visibility
+  sfc:
+    clevs: [0.0625, 0.125, 0.25, 0.5, 1, 1.5, 2, 3, 4, 5, 10, 30, 50]
+    cmap: gist_ncar
+    colors: vis_colors
+    ncl_name: VIS_P0_L1_GLC0
+    ticks: 0
+    title: Sfc Visibility
+    transform: [conversions.m_to_mi]
+    unit: mi
 vort: # Absolute vorticity
   500mb:
     clevs: !!python/object/apply:numpy.arange [6, 29, 2]

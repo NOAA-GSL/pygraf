@@ -1,3 +1,4 @@
+# pylint: disable=too-many-public-methods
 '''
 This module sets the specifications for certain atmospheric variables. Typically
 this is related to a spec that needs some level of computation, i.e. a set of
@@ -51,6 +52,17 @@ class VarSpec(abc.ABC):
         colors[mid-1] = [1, 1, 1, 1]
 
         return colors
+
+    @property
+    @lru_cache()
+    def cin_colors(self) -> np.ndarray:
+
+        ''' Default color map for Convective Inhibition '''
+
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          ([120, 100, 90, 85, 80, 70, 60, 50, 25, 20, 18])
+        grays = cm.get_cmap('Greys', 2)([0])
+        return np.concatenate((ncar, grays))
 
     @property
     @abc.abstractmethod
@@ -109,6 +121,17 @@ class VarSpec(abc.ABC):
         ctable = ctables.colortables.get_colortable(self.vspec.get('cmap')) \
                     (range(0, 42, 1)) # Carbone42_r
         return ctable
+
+    @property
+    @lru_cache()
+    def goes_colors(self) -> np.ndarray:
+
+        ''' Default color map for simulated GOES IR satellite '''
+
+        grays = cm.get_cmap('Greys_r', 33)(range(33))
+        ctable2 = ctables.colortables.get_colortable(self.vspec.get('cmap')) \
+                    (range(65, 150))
+        return np.concatenate((grays[-1:], grays, ctable2, grays[1:]))
 
     @property
     @lru_cache()
@@ -178,13 +201,32 @@ class VarSpec(abc.ABC):
 
     @property
     @lru_cache()
+    def soilt_colors(self) -> np.ndarray:
+
+        ''' Default color map for Soil Temperature '''
+
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          ([15, 20, 25, 50, 70, 80, 83, 88, 110])
+        return ncar
+
+    @property
+    @lru_cache()
+    def soilw_colors(self) -> np.ndarray:
+
+        ''' Default color map for Soil Moisture '''
+
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          ([88, 83, 80, 70, 50, 25, 20, 15])
+        return ncar
+
+    @property
+    @lru_cache()
     def t_colors(self) -> np.ndarray:
 
         ''' Default color map for Temperature '''
 
         ncolors = len(self.clevs)
         return cm.get_cmap(self.vspec.get('cmap', 'jet'), ncolors)(range(ncolors))
-
 
     @property
     @lru_cache()
@@ -195,6 +237,27 @@ class VarSpec(abc.ABC):
         ctable = ctables.colortables.get_colortable(self.vspec.get('cmap')) \
                     (range(0, 21, 1))
         return ctable
+
+    @property
+    @lru_cache()
+    def vil_colors(self) -> np.ndarray:
+
+        ''' Default color map for Vertically Integrated Liquid '''
+
+        ctable = ctables.colortables.get_colortable(self.vspec.get('cmap')) \
+                    ([0, 11, 15, 16, 4, 5, 12, 2, 19, 18, 7, 6, 8, 9, 10, 17])
+        return ctable
+
+    @property
+    @lru_cache()
+    def vis_colors(self) -> np.ndarray:
+
+        ''' Default color map for Visibility '''
+
+        grays = cm.get_cmap('Greys', 3)([1, 0])
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          ([15, 18, 20, 25, 50, 60, 70, 80, 85, 90, 100, 120])
+        return np.concatenate((grays, ncar))
 
     @property
     @lru_cache()

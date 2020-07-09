@@ -40,8 +40,10 @@ def test_conversion():
     assert np.array_equal(conversions.kgm2_to_in(a), a * 0.03937)
     assert np.array_equal(conversions.m_to_dm(a), a / 10)
     assert np.array_equal(conversions.m_to_kft(a), a / 304.8)
+    assert np.array_equal(conversions.m_to_mi(a), a / 1609.344)
     assert np.array_equal(conversions.ms_to_kt(a), a * 1.9438)
     assert np.array_equal(conversions.pa_to_hpa(a), a / 100)
+    assert np.array_equal(conversions.percent(a), a * 100)
     assert np.array_equal(conversions.vvel_scale(a), a * -10)
     assert np.array_equal(conversions.vort_scale(a), a / 1E-05)
 
@@ -51,8 +53,10 @@ def test_conversion():
         conversions.kgm2_to_in,
         conversions.m_to_dm,
         conversions.m_to_kft,
+        conversions.m_to_mi,
         conversions.ms_to_kt,
         conversions.pa_to_hpa,
+        conversions.percent,
         conversions.vvel_scale,
         conversions.vort_scale,
         ]
@@ -183,6 +187,7 @@ class TestDefaultSpecs():
             'mnsfc',   # min surface value
             'msl',     # mean sea level
             'mup',     # maximum upward
+            'sat',     # satellite
             'sfc',     # surface
             'ua',      # upper air
             ]
