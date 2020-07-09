@@ -365,6 +365,7 @@ temp: # Temperature
     clevs: !!python/object/apply:numpy.arange [-16, 17, 2]
     cmap: seismic
     colors: centered_diff
+    contour_colors: grey
     ncl_name: TMP_P0_L103_GLC0 # 2m Temp
     ticks: 2
     title: 2m Temp - Skin Temp
@@ -378,6 +379,7 @@ temp: # Temperature
     clevs: !!python/object/apply:numpy.arange [-60, 120, 10]
     cmap: jet
     colors: t_colors
+    contour_colors: grey
     ncl_name: TMP_P0_L103_GLC0
     ticks: 10
     transform: conversions.k_to_f
@@ -388,6 +390,7 @@ temp: # Temperature
     cmap: jet
     colors: t_colors
     contour: gh
+    contour_colors: grey
     ncl_name:
       prs: TMP_P0_L100_GLC0
       nat: TMP_P0_L105_GLC0
