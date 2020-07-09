@@ -69,14 +69,16 @@ cape:
   mu:
     ncl_name: CAPE_P0_2L108_GLC0
     layer: 2
+    unit: J/kg
   sfc:
     ncl_name: CAPE_P0_L1_GLC0
+    unit: J/kg
 cell: # Storm cell motion
   ua:
     ncl_name: USTM_P0_2L103_GLC0
     transform: [vector_magnitude, conversions.ms_to_kt]
     transform_kwargs:
-      field2: VVCSH_P0_2L103_GLC0
+      field2: VSTM_P0_2L103_GLC0
     unit: kt
 ceil: # Ceiling
   ua: &ceil
@@ -105,8 +107,10 @@ cin: # Convective inhibition
   mu:
     ncl_name: CIN_P0_2L108_GLC0
     layer: 2
+    unit: J/kg
   sfc:
     ncl_name: CIN_P0_L1_GLC0
+    unit: J/kg
 cref: # Composite reflectivity
   sfc: &refl
     clevs: !!python/object/apply:numpy.arange [5, 76, 5]
@@ -225,9 +229,11 @@ hlcy: # Helicity
   sr01:
     layer: 0
     ncl_name: HLCY_P0_2L103_GLC0
+    unit: $m^2 / s^2$
   sr03:
     layer: 1
     ncl_name: HLCY_P0_2L103_GLC0
+    unit: $m^2 / s^2$
 lcc: # Low-level cloud cover
   sfc:
     <<: *cld_cover
@@ -249,14 +255,19 @@ lcl: # Lifted condensation level
     unit: m agl
   ua:
     <<: *lcl
+    unit: m
 li: # Lifted Index
   sfc:
     ncl_name: LFTX_P0_2L100_GLC0
+    unit: K
   best:
     ncl_name: 4LFTX_P0_2L108_GLC0
+    unit: K
 lpl: # Lifted parcel level
   ua:
     ncl_name: PLPL_P0_2L108_GLC0
+    transform: conversions.pa_to_hpa
+    unit: hPa
 mcc: # Mid-level cloud cover
   sfc:
     <<: *cld_cover
@@ -330,14 +341,16 @@ rh: # Relative Humidity
     <<: *rh
     ncl_name: RH_P0_L100_GLC0
 shear:
-  01km: # 0-1 km
+  01km: &shear # 0-1 km
     ncl_name: VUCSH_P0_2L103_GLC0
     layer: 1
     transform: vector_magnitude
     transform_kwargs:
       field2: VVCSH_P0_2L103_GLC0
+      layer: 1
+    unit: $s^{-1}$
   06km: # 0-6 km
-    ncl_name: VUCSH_P0_2L103_GLC0
+    <<: *shear
     layer: 0
 sphum: # Specific humidity
   ua:

@@ -5,6 +5,7 @@ Classes that handle generic grib file handling, and those that handle the
 specifics of grib files from UPP.
 '''
 
+import abc
 import datetime
 from functools import lru_cache
 import os
@@ -47,22 +48,6 @@ class GribFile():
             raise errors.GribReadError(f'{ncl_name}')
 
         return field
-
-    def vector_magnitude(self, field1, field2, layer=0):
-
-        '''
-        Returns the vector magnitude of two component vector fields. The
-        input fields can be either NCL names (string) or full data fields. The
-        first layer of a variable is returned if none is provided.
-        '''
-
-        if isinstance(field1, str):
-            field1 = self.get_field(field1)[layer]
-
-        if isinstance(field2, str):
-            field2 = self.get_field(field2)[layer]
-
-        return np.sqrt(field1**2 + field2**2)
 
 
 class UPPData(GribFile, specs.VarSpec):
@@ -147,6 +132,12 @@ class UPPData(GribFile, specs.VarSpec):
 
         return self.get_field(self.ncl_name(self.vspec))
 
+    def field_diff(self, values, variable2, level2) -> np.ndarray:
+
+        ''' Subtracts the values from variable2 from self.field. '''
+
+        return values - self.values(name=variable2, level=level2)
+
     def latlons(self):
 
         ''' Returns the set of latitudes and longitudes '''
@@ -198,6 +189,12 @@ class UPPData(GribFile, specs.VarSpec):
 
         fh = datetime.timedelta(hours=int(self.fhr))
         return self.anl_dt + fh
+
+    @abc.abstractmethod
+    def values(self, level=None, name=None, **kwargs):
+
+        ''' Returns the values of a given variable. '''
+        ...
 
     @property
     def vspec(self):
@@ -272,12 +269,6 @@ class fieldData(UPPData):
         lat, lon = self.latlons()
         return [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
 
-    def field_diff(self, values, variable2, level2) -> np.ndarray:
-
-        ''' Subtracts the values from variable2 from self.field. '''
-
-        return values - self.values(variable2, level2)
-
     @property
     def ticks(self) -> int:
 
@@ -296,7 +287,7 @@ class fieldData(UPPData):
 
 
     @lru_cache()
-    def values(self, name=None, level=None) -> np.ndarray:
+    def values(self, level=None, name=None, **kwargs) -> np.ndarray:
 
         '''
         Returns the numpy array of values at the requested level for the
@@ -348,12 +339,27 @@ class fieldData(UPPData):
             for transform in transforms:
 
                 if len(transform.split('.')) == 1:
-                    print(transform_kwargs)
                     vals = self.__getattribute__(transform)(vals, **transform_kwargs)
                 else:
                     vals = utils.get_func(transform)(vals, **transform_kwargs)
 
         return vals
+
+    def vector_magnitude(self, field1, field2, layer=0):
+
+        '''
+        Returns the vector magnitude of two component vector fields. The
+        input fields can be either NCL names (string) or full data fields. The
+        first layer of a variable is returned if none is provided.
+        '''
+
+        if isinstance(field1, str):
+            field1 = self.get_field(field1)[layer]
+
+        if isinstance(field2, str):
+            field2 = self.get_field(field2)[layer]
+
+        return conversions.magnitude(field1, field2)
 
     @lru_cache()
     def wind(self, level) -> [np.ndarray, np.ndarray]:
@@ -449,35 +455,46 @@ class profileData(UPPData):
 
         return (x, y)
 
-    def values(self, lev='ua', short_name=None):
+    def values(self, level=None, name=None, **kwargs):
 
         '''
         Returns the numpy array of values at the object's x, y location for the
         requested variable. Transforms are performed in the child class.
 
         Optional Input:
-            short_name the name of a field other than defined in self
-            lev        the level of the alternate field to use, default='ua' for
+            name       the short name of a field other than defined in self
+            level      the level of the alternate field to use, default='ua' for
                        upper air
+
+        Keyword Args:
+            layer      a numeric layer corresponding to an index of the field to
+                       be returned
+            ncl_name   the NCL name of the variable to be retrieved
         '''
 
-        if not short_name:
-            short_name = self.short_name
+        layer = kwargs.get('layer')
+        ncl_name = kwargs.get('ncl_name')
+
+        # Set the default here since this is an instance of an abstract method
+        level = level if level else 'ua'
+
+        if not name:
+            name = self.short_name
 
         x, y = self.get_xypoint()
 
         # Retrieve the default_specs section for the specified level
-        var_spec = self.spec.get(short_name, {}).get(lev, {})
-        ncl_name = self.ncl_name(var_spec)
+        var_spec = self.spec.get(name, {}).get(level, {})
+        ncl_name = ncl_name if ncl_name else self.ncl_name(var_spec)
 
         if not ncl_name:
             raise errors.NoGraphicsDefinitionForVariable(
-                short_name,
+                name,
                 'ua',
                 )
 
         # Specifies the vertical index if one is needed.
-        layer = var_spec.get('layer')
+        layer = layer if layer else var_spec.get('layer')
 
         profile = self.contents.variables[ncl_name][::]
         if len(profile.shape) == 2:
@@ -488,3 +505,21 @@ class profileData(UPPData):
             else:
                 profile = profile[:, x, y]
         return profile
+
+    def vector_magnitude(self, field1, field2, layer=None, level='ua'):
+
+        '''
+        Returns the vector magnitude of two component vector profiles. The
+        input fields can be either NCL names (string) or full data fields.
+
+        If no layer or level is provided, the default 'ua' will be used in
+        self.values.
+        '''
+
+        if isinstance(field1, str):
+            field1 = self.values(ncl_name=field1, layer=layer, level=level)
+
+        if isinstance(field2, str):
+            field2 = self.values(ncl_name=field2, layer=layer, level=level)
+
+        return conversions.magnitude(field1, field2)

@@ -17,7 +17,8 @@ from metpy.units import units
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 import adb_graphics.datahandler.grib as grib
-import adb_graphics.conversions as conversions
+import adb_graphics.errors as errors
+import adb_graphics.utils as utils
 
 class SkewTDiagram(grib.profileData):
 
@@ -59,6 +60,7 @@ class SkewTDiagram(grib.profileData):
             # Magic to get the desired number of decimals to appear.
             decimals = items.get('decimals', 0)
             value = items['data']
+            print(f"THERMO: {name} {value}")
             value = round(int(value)) if decimals == 0 else round(value, decimals)
 
             # Sure would have been nice to use a variable in the f string to
@@ -81,10 +83,22 @@ class SkewTDiagram(grib.profileData):
     @lru_cache()
     def atmo_profiles(self):
 
-        ''' Return a dictionary of atmospheric data profiles for each variable
-        needed by the skewT. '''
+        '''
+        Return a dictionary of atmospheric data profiles for each variable
+        needed by the skewT.
 
-        # OrderedDict because we need to get pressure profile first.
+        Each of these variables must be have units set appropriately for use
+        with MetPy SkewT. Handle those units and conversions here since it
+        differs from the requirements of other graphics units/transforms.
+        '''
+
+        # OrderedDict because we need to get pressure profile first. Entries in
+        # the dict are as follows:
+        #
+        #   Variable short name:   consistent with default_specs.yml
+        #      transform:          units string to pass to MetPy's to() function
+        #      units:              the end unit of the field (after transform,
+        #                          if applicable).
         atmo_vars = OrderedDict({
             'pres': {
                 'transform': 'hectoPa',
@@ -114,7 +128,7 @@ class SkewTDiagram(grib.profileData):
         for var, items in atmo_vars.items():
 
             # Get the profile values and attach MetPy units
-            tmp = np.asarray(self.values(short_name=var)) * items['units']
+            tmp = np.asarray(self.values(name=var)) * items['units']
 
             # Apply any needed transdecimals
             transform = items.get('transform')
@@ -311,72 +325,76 @@ class SkewTDiagram(grib.profileData):
         Return an ordered dictionary of thermodynamic variables needed for the skewT.
         Ordered because we want to print these values in this order on the SkewT
         diagram.
+        The return dictionary contains a 'data' entry for each variable that
+        includes the value of the metric.
+
+        Variables' transforms and units are handled by default specs in much the
+        same way as in fieldData class since these are not used by MetPy
+        explictly.
         '''
 
+        # OrderedDict so that we get the thermodynamic variables printed in the
+        # same order every time in the resulting SkewT inset. The fields
+        # include:
+        #
+        #    Variable short name:     can be consistent with default_specs.yml.
+        #                             If not, must provide level and variable
+        #                             entries
+        #       level:                (optional) level to choose in
+        #                             default_specs.yml. Default is 'ua'
+        #       variable:             (optional) top-level variable to choose
+        #                             from default_specs.yml.
+        #       decimals:             (optional) number of decimal places to
+        #                             include when formatting output. Defaults
+        #                             to 0 (integer).
         thermo = OrderedDict({
             'cape': { # Convective available potential energy
-                'units': 'J/kg',
                 'level': 'sfc',
                 },
             'cin': { # Convective inhibition
-                'units': 'J/kg',
                 'level': 'sfc',
                 },
             'mucape': { # Most Unstable CAPE
-                'units': 'J/kg',
                 'level': 'mu',
                 'variable': 'cape',
                 },
             'mucin': { # CIN from MUCAPE level
-                'units': 'J/kg',
                 'level': 'mu',
                 'variable': 'cin',
                 },
             'li': { # Lifted Index
                 'decimals': 1,
-                'units': 'K',
                 'level': 'sfc',
                 },
             'bli': { # Best Lifted Index
                 'decimals': 1,
-                'units': 'K',
                 'level': 'best',
                 'variable': 'li',
                 },
             'lcl': { # Lifted Condensation Level
-                'units': 'm',
                 },
             'lpl': { # Lifted Parcel Level
-                'units': 'hPa',
-                'transform': conversions.pa_to_hpa,
                 },
             'srh03': { # 0-3 km Storm relative helicity
-                'units': 'm2/s2',
                 'level': 'sr03',
                 'variable': 'hlcy',
                 },
             'srh01': { # 0-1 km Storm relative helicity
-                'units': 'm2/s2',
                 'level': 'sr01',
                 'variable': 'hlcy',
                 },
             'shr06': { # 0-6 km Shear
-                'units': 'kt',
                 'level': '06km',
                 'variable': 'shear',
                 },
             'shr01': { # 0-1 km Shear
-                'units': 'kt',
                 'level': '01km',
                 'variable': 'shear',
                 },
             'cell': { # Cell motion
-                'units': 'kt',
-                'transform': conversions.ms_to_kt,
                 },
             'pwtr': { # Precipitable water
                 'decimals': 1,
-                'units': 'mm',
                 'level': 'sfc',
                 },
             })
@@ -384,13 +402,30 @@ class SkewTDiagram(grib.profileData):
         for var, items in thermo.items():
 
             varname = items.get('variable', var)
-            tmp = self.values(lev=items.get('level', 'ua'), short_name=varname)
+            lev = items.get('level', 'ua')
+            spec = self.spec.get(varname, {}).get(lev)
 
-            transform = items.get('transform')
-            if transform:
-                tmp = transform(tmp)
+            if not spec:
+                raise errors.NoGraphicsDefinitionForVariable(varname, lev)
+
+            tmp = self.values(level=lev, name=varname)
+
+            transforms = spec.get('transform')
+            if transforms:
+                transform_kwargs = spec.get('transform_kwargs', {})
+
+                # Treat any transforms as a list
+                transforms = transforms if isinstance(transforms, list) else [transforms]
+
+                for transform in transforms:
+
+                    if len(transform.split('.')) == 1:
+                        tmp = self.__getattribute__(transform)(tmp, **transform_kwargs)
+                    else:
+                        tmp = utils.get_func(transform)(tmp, **transform_kwargs)
 
             thermo[var]['data'] = tmp
+            thermo[var]['units'] = spec.get('unit')
 
         return thermo
 

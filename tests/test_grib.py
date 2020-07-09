@@ -83,5 +83,5 @@ def test_profileData(natfile):
     assert isinstance(profile.values(), np.ndarray)
 
     # The values should return a single number (0) or a 1D array (1)
-    assert len(np.shape((profile.values(lev='best', short_name='li')))) == 0
-    assert len(np.shape((profile.values(short_name='temp')))) == 1
+    assert len(np.shape((profile.values(level='best', name='li')))) == 0
+    assert len(np.shape((profile.values(name='temp')))) == 1
