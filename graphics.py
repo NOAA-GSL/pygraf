@@ -1,8 +1,10 @@
 # pylint: disable=too-many-locals,invalid-name
 ''' Driver for creating all the graphics needed for a specific input dataset. '''
 
+# pylint: disable=wrong-import-position, wrong-import-order
 import matplotlib as mpl
 mpl.use('Agg')
+# pylint: enable=wrong-import-position, wrong-import-order
 
 import argparse
 import datetime as dt
@@ -62,7 +64,7 @@ def main(cla):
             # Load the spec for the current variable
             spec = specs.get(variable, {}).get(level)
 
-            if spec == None:
+            if not spec:
                 msg = f'graphics: {variable} {level}'
                 raise errors.NoGraphicsDefinitionForVariable(msg)
 

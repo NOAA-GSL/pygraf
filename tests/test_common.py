@@ -261,7 +261,7 @@ class TestDefaultSpecs():
         ''' Returns true if func in funcs list is the name of a callable function. '''
 
         in_varspec = False
-        in_grib = False
+        in_grib = False  # pylint: disable=unused-variable
         in_package = False
 
         funcs = funcs if isinstance(funcs, list) else [funcs]
@@ -271,8 +271,10 @@ class TestDefaultSpecs():
             # Check datahandler.grib objects if a single word is provided
             if len(func.split('.')) == 1:
                 for attr in dir(grib):
+                    # pylint: disable=no-member
                     if func in dir(grib.__getattribute__(attr)):
                         callables.append(True)
+                    # pylint: enable=no-member
 
             else:
 
@@ -287,7 +289,7 @@ class TestDefaultSpecs():
 
         ''' Returns true if d is a dictionary '''
 
-        return is_instance(d, dict)
+        return isinstance(d, dict)
 
     @staticmethod
     def is_int(i):
@@ -334,8 +336,8 @@ class TestDefaultSpecs():
         # Proceed only up to max depth.
         if depth >= max_depth:
             return
-        else:
-            level = depth+1
+
+        level = depth+1
 
         for k, v in d.items():
             assert (k in self.allowable.keys()) or self.is_a_level(k)

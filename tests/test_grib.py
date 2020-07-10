@@ -15,7 +15,9 @@ def test_UPPData(natfile, prsfile):
 
     class UPP(grib.UPPData):
 
-        def values(lev=None, name=None, **kwargs):
+        ''' Test class needed to define the values as an abstract class '''
+
+        def values(self, level=None, name=None, **kwargs):
             return 1
 
     upp_nat = UPP(natfile, short_name='temp')
