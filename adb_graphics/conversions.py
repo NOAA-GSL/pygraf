@@ -43,6 +43,11 @@ def m_to_kft(field: np.ndarray, **kwargs) -> np.ndarray:
 
     return np.asarray(field) / 304.8
 
+def m_to_mi(field: np.ndarray, **kwargs) -> np.ndarray:
+
+    ''' Conversion from meters to miles '''
+    return np.asarray(field) / 1609.344
+
 def ms_to_kt(field: np.ndarray, **kwargs) -> np.ndarray:
 
     ''' Conversion from m s-1 to knots '''
