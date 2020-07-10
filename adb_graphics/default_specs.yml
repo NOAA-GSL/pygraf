@@ -104,7 +104,7 @@ cin: # Surface Convective Inhibition
     colors: cin_colors
     ncl_name: CIN_P0_L1_GLC0
     ticks: 0
-    title: Surface CAPE
+    title: Surface CIN
     unit: J/kg
 cref: # Composite reflectivity
   sfc: &refl
