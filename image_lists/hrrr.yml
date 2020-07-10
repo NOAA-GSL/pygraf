@@ -106,12 +106,20 @@ hourly:
       - sfc
     blcc:
       - sfc
-    bli:
-      - sfc
+    li:
+      - best
     cape:
       - sfc
+      - mu
+      - mul
+      - mx90mb
     cin:
       - sfc
+    cloud_cover:
+      - high
+      - low
+      - mid
+      - total
     cpofp:
       - sfc
     ectp:
@@ -124,8 +132,6 @@ hourly:
       - maxsfc
     hail:
       - max
-    hcc:
-      - sfc
     hpbl:
       - sfc
     lcl:
@@ -138,19 +144,9 @@ hourly:
       - sfc
     ltg3:
       - sfc
-    lcc:
-      - sfc
-    mcc:
-      - sfc
     mnvv:
       - sfc
     mref:
-      - sfc
-    mucp:
-      - sfc
-    mulcp:
-      - sfc
-    mxcp:
       - sfc
     pchg:
       - sfc
@@ -175,8 +171,6 @@ hourly:
     solar:
       - sfc
     ssrun:
-      - sfc
-    tcc:
       - sfc
     ulwrf:
       - sfc
@@ -203,9 +197,9 @@ hourly:
       - 10cm
       - 30cm
       - 60cm
-      - 100cm
-      - 160cm
-      - 300cm
+      - 1m
+      - 1.6m
+      - 3m
     soilw: *soilt_levs
     ref:
       - m10

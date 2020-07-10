@@ -190,6 +190,8 @@ class TestDefaultSpecs():
             'mid',     # mid-level clouds
             'mnsfc',   # min surface value
             'msl',     # mean sea level
+            'mu',      # most unstable
+            'mul',     # most unstable layer
             'mup',     # maximum upward
             'mu',      # most unstable
             'sat',     # satellite
@@ -222,11 +224,19 @@ class TestDefaultSpecs():
         # Check for [numeric][lev_type] or [lev_type][numeric] pattern
 
         # Numbers come at beginning or end, only
-        numeric = ''.join([c for c in key if c in digits]) in key
+        numeric = ''.join([c for c in key if c in digits + '.']) in key
 
         # The level is allowed
-        allowed = ''.join([c for c in key if c in ascii_letters]) in \
-            allowed_lev_type + allowed_stat
+        level_str = [c for c in key if c in ascii_letters]
+        allowed = ''.join(level_str) in allowed_lev_type + allowed_stat
+
+        # Check the other direction - level string contains one of the allowed
+        # types.
+        if not allowed:
+            for lev in allowed_lev_type + allowed_stat:
+                if lev in level_str:
+                    allowed = True
+                    break
 
         if numeric and allowed:
             return True

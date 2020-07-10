@@ -13,8 +13,13 @@ def test_UPPData(natfile, prsfile):
 
     ''' Test the UPPData class methods on both types of input files. '''
 
-    upp_nat = grib.UPPData(natfile, short_name='temp')
-    upp_prs = grib.UPPData(prsfile, short_name='temp')
+    class UPP(grib.UPPData):
+
+        def values(lev=None, name=None, **kwargs):
+            return 1
+
+    upp_nat = UPP(natfile, short_name='temp')
+    upp_prs = UPP(prsfile, short_name='temp')
 
     # Ensure appropriate typing and size (where applicable)
     for upp in [upp_nat, upp_prs]:
@@ -54,7 +59,7 @@ def test_fieldData(prsfile):
         assert isinstance(component, np.ndarray)
 
     # Test retrieving other values
-    assert np.array_equal(field.values(), field.values('temp', '500mb'))
+    assert np.array_equal(field.values(), field.values(name='temp', level='500mb'))
 
 
     # Return zeros by subtracting same field

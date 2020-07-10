@@ -66,10 +66,13 @@ acpcp: # Accumulated precipitation
     transform: conversions.kgm2_to_in
     unit: in
 cape:
-  mu: # Most Unstable CAPE
-    <<: *cape
+  mu: &cape # Most Unstable CAPE
+    clevs: [1, 100, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
+    cmap: gist_ncar
+    colors: vort_colors
     layer: 2
     ncl_name: CAPE_P0_2L108_GLC0
+    ticks: 0
     title: Most Unstable CAPE
     unit: J/kg
   mul: # Most Unstable Layer CAPE
@@ -82,14 +85,10 @@ cape:
     layer: 0
     ncl_name: CAPE_P0_2L108_GLC0
     title: Lowest 90 mb Mixed Layer CAPE
-  sfc: &cape
-    clevs: [1, 100, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
-    cmap: gist_ncar
-    colors: vort_colors
+  sfc:
+    <<: *cape
     ncl_name: CAPE_P0_L1_GLC0
-    ticks: 0
     title: Surface CAPE
-    unit: J/kg
 cell: # Storm cell motion
   ua:
     ncl_name: USTM_P0_2L103_GLC0

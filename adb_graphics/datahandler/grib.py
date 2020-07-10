@@ -216,7 +216,7 @@ class fieldData(UPPData):
     Input:
         filename:    Path to grib file.
         level:       level corresponding to entry in specs configuration
-        short_name:  name of variable corresponding to entry in specs configuration
+        name      :  name of variable corresponding to entry in specs configuration
 
     Keyword Arguments:
         config:      path to a user-specified configuration file
