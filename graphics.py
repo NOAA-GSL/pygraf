@@ -1,6 +1,9 @@
 # pylint: disable=too-many-locals,invalid-name
 ''' Driver for creating all the graphics needed for a specific input dataset. '''
 
+import matplotlib as mpl
+mpl.use('Agg')
+
 import argparse
 import datetime as dt
 import os
@@ -9,6 +12,7 @@ import matplotlib.pyplot as plt
 import yaml
 
 from adb_graphics.datahandler import grib
+import adb_graphics.errors as errors
 from adb_graphics.figures import maps
 
 
@@ -27,7 +31,7 @@ def main(cla):
 
     # Locate input grib file
     str_start_time = from_datetime(cla.start_time)
-    grib_file = images['input_files']['hrrr'].format(FCST_TIME=cla.fcst_hour)
+    grib_file = images['input_files']['hrrr_prs'].format(FCST_TIME=cla.fcst_hour)
     grib_path = os.path.join(cla.data_root, str_start_time, grib_file)
 
 
@@ -56,9 +60,13 @@ def main(cla):
         for level in levels:
 
             # Load the spec for the current variable
-            spec = specs.get(variable).get(level)
+            spec = specs.get(variable, {}).get(level)
 
-            field = grib.UPPData(
+            if spec == None:
+                msg = f'graphics: {variable} {level}'
+                raise errors.NoGraphicsDefinitionForVariable(msg)
+
+            field = grib.fieldData(
                 filename=grib_path,
                 level=level,
                 short_name=variable,
@@ -66,13 +74,13 @@ def main(cla):
 
             contour_field = spec.get('contour')
             if contour_field is not None:
-                contour_field = grib.UPPData(
+                contour_field = grib.fieldData(
                     filename=grib_path,
                     level=level,
                     short_name=contour_field,
                     )
 
-            _, ax = plt.subplots(1, 1, figsize=(18, 18))
+            _, ax = plt.subplots(1, 1, figsize=(12, 12))
 
             m = maps.Map(
                 airport_fn=AIRPORTS,
@@ -86,7 +94,7 @@ def main(cla):
                 map_=m,
                 )
 
-            dm.draw()
+            dm.draw(show=True)
 
             png_suffix = level if level != 'ua' else ''
             png_file = f'{variable}{"_" + tile}{png_suffix}'
