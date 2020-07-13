@@ -65,15 +65,37 @@ acpcp: # Accumulated precipitation
     ticks: 0
     transform: conversions.kgm2_to_in
     unit: in
-cape: # Surface CAPE
-  sfc: &cape
+cape:
+  mu: &cape # Most Unstable CAPE
     clevs: [1, 100, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
     cmap: gist_ncar
     colors: vort_colors
-    ncl_name: CAPE_P0_L1_GLC0
+    layer: 2
+    ncl_name: CAPE_P0_2L108_GLC0
     ticks: 0
-    title: Surface CAPE
+    title: Most Unstable CAPE
     unit: J/kg
+  mul: # Most Unstable Layer CAPE
+    <<: *cape
+    layer: 1
+    ncl_name: CAPE_P0_2L108_GLC0
+    title: Most Unstable Layer CAPE
+  mx90mb: # Lowest 90 mb Mixed Layer CAPE
+    <<: *cape
+    layer: 0
+    ncl_name: CAPE_P0_2L108_GLC0
+    title: Lowest 90 mb Mixed Layer CAPE
+  sfc:
+    <<: *cape
+    ncl_name: CAPE_P0_L1_GLC0
+    title: Surface CAPE
+cell: # Storm cell motion
+  ua:
+    ncl_name: USTM_P0_2L103_GLC0
+    transform: [vector_magnitude, conversions.ms_to_kt]
+    transform_kwargs:
+      field2: VSTM_P0_2L103_GLC0
+    unit: kt
 ceil: # Ceiling
   ua: &ceil
     clevs: [0, 0.1, 0.3, 0.5, 1, 2, 3, 5, 10, 15, 20, 30, 60]
@@ -98,6 +120,10 @@ ceilexp2: # Ceiling - experimental no.2
     ncl_name: CEIL_P0_L2_GLC0
     title: Ceiling (exp-2)
 cin: # Surface Convective Inhibition
+  mu:
+    ncl_name: CIN_P0_2L108_GLC0
+    layer: 2
+    unit: J/kg
   sfc:
     clevs: [-300, -200, -150, -100, -75, -50, -40, -30, -20, -10, -1]
     cmap: gist_ncar
@@ -106,6 +132,27 @@ cin: # Surface Convective Inhibition
     ticks: 0
     title: Surface CIN
     unit: J/kg
+cloud_cover:
+  high: &cld_cover
+    clevs: [2, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95]
+    cmap: gist_ncar
+    colors: cldcov_colors
+    ncl_name: HCDC_P0_L234_GLC0
+    ticks: 0
+    title: High-Level Cloud Cover
+    unit: '%'
+  low:
+    <<: *cld_cover
+    ncl_name: LCDC_P0_L214_GLC0
+    title: Low-Level Cloud Cover
+  mid:
+    <<: *cld_cover
+    ncl_name: MCDC_P0_L224_GLC0
+    title: Mid-Level Cloud Cover
+  total:
+    <<: *cld_cover
+    ncl_name: TCDC_P0_L10_GLC0
+    title: Total Cloud Cover
 cref: # Composite reflectivity
   sfc: &refl
     clevs: !!python/object/apply:numpy.arange [5, 76, 5]
@@ -167,7 +214,9 @@ gh: # Geopotential height
     clevs: !!python/object/apply:numpy.arange [6, 990, 6]
     cmap: precipitation
     colors: terrain_colors
-    ncl_name: HGT_P0_L100_GLC0
+    ncl_name:
+      prs: HGT_P0_L100_GLC0
+      nat: HGT_P0_L105_GLC0
     ticks: 4
     transform: conversions.m_to_dm
     unit: dm
@@ -187,6 +236,17 @@ gh: # Geopotential height
     ticks: 0
     transform: []
     unit: gpm
+  ua:
+    <<: *ua_gh
+gust:
+  10m:
+    clevs: !!python/object/apply:numpy.arange [5, 95, 5]
+    cmap: gist_ncar
+    colors: wind_colors
+    ncl_name: GUST_P0_L1_GLC0
+    ticks: 5
+    transform: conversions.ms_to_kt
+    unit: kt
 hlcy: # Helicity
   in16: &hlcy # Hourly updraft helicity over 1-6 km layer
     clevs: !!python/object/apply:numpy.arange [25, 301, 25]
@@ -226,8 +286,16 @@ hlcy: # Helicity
     layer: 2
     ncl_name: MXUPHL_P8_2L103_GLC0_max1h
     title: 2-5km Max Updraft Helicity (over prv hr)
+  sr01:
+    layer: 0
+    ncl_name: HLCY_P0_2L103_GLC0
+    unit: $m^2 / s^2$
+  sr03:
+    layer: 1
+    ncl_name: HLCY_P0_2L103_GLC0
+    unit: $m^2 / s^2$
 lcl: # Lifted condensation level
-  sfc:
+  sfc: &lcl
     clevs: !!python/object/apply:numpy.arange [0, 5000, 250]
     cmap: rainbow
     colors: lcl_colors
@@ -240,57 +308,26 @@ lcl: # Lifted condensation level
       variable2: gh
       level2: sfc
     unit: m agl
-gust:
-  10m:
-    clevs: !!python/object/apply:numpy.arange [5, 95, 5]
-    cmap: gist_ncar
-    colors: wind_colors
-    ncl_name: GUST_P0_L1_GLC0
-    ticks: 5
-    transform: conversions.ms_to_kt
-    unit: kt
-hcc: # High-level cloud cover
-  sfc: &cld_cover
-    clevs: [2, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95]
-    cmap: gist_ncar
-    colors: cldcov_colors
-    ncl_name: HCDC_P0_L234_GLC0
-    ticks: 0
-    title: High-Level Cloud Cover
-    unit: '%'
-lcc: # Low-level cloud cover
+  ua:
+    <<: *lcl
+    unit: m
+li: # Lifted Index
   sfc:
-    <<: *cld_cover
-    ncl_name: LCDC_P0_L214_GLC0
-    title: Low-Level Cloud Cover
-mcc: # Mid-level cloud cover
-  sfc:
-    <<: *cld_cover
-    ncl_name: MCDC_P0_L224_GLC0
-    title: Mid-Level Cloud Cover
+    ncl_name: LFTX_P0_2L100_GLC0
+    unit: K
+  best:
+    ncl_name: 4LFTX_P0_2L108_GLC0
+    unit: K
+lpl: # Lifted parcel level
+  ua:
+    ncl_name: PLPL_P0_2L108_GLC0
+    transform: conversions.pa_to_hpa
+    unit: hPa
 mref: # Maximum reflectivity for past hour at 1 km AGL
   sfc:
     <<: *refl
     ncl_name: MAXREF_P8_L103_GLC0_max1h
     title: Max 1km agl Reflectivity (over prev hr)
-mucp: # Most Unstable CAPE
-  sfc: 
-    <<: *cape
-    layer: 2
-    ncl_name: CAPE_P0_2L108_GLC0
-    title: Most Unstable CAPE
-mulcp: # Most Unstable Layer CAPE
-  sfc: 
-    <<: *cape
-    layer: 1
-    ncl_name: CAPE_P0_2L108_GLC0
-    title: Most Unstable Layer CAPE
-mxcp: # Lowest 90 mb Mixed Layer CAPE
-  sfc: 
-    <<: *cape
-    layer: 0
-    ncl_name: CAPE_P0_2L108_GLC0
-    title: Lowest 90 mb Mixed Layer CAPE
 pres:
   sfc:
     clevs: !!python/object/apply:numpy.arange [650, 1051, 4]
@@ -308,6 +345,8 @@ pres:
     ticks: 20
     transform: conversions.pa_to_hpa
     unit: hPa
+  ua:
+    ncl_name: PRES_P0_L105_GLC0
 ptmp: # Potential temperature
   2m:
     clevs: !!python/object/apply:numpy.arange [210, 350, 5]
@@ -351,6 +390,18 @@ rh: # Relative Humidity
   850mb:
     <<: *rh
     ncl_name: RH_P0_L100_GLC0
+shear:
+  01km: &shear # 0-1 km
+    ncl_name: VUCSH_P0_2L103_GLC0
+    layer: 1
+    transform: vector_magnitude
+    transform_kwargs:
+      field2: VVCSH_P0_2L103_GLC0
+      layer: 1
+    unit: $s^{-1}$
+  06km: # 0-6 km
+    <<: *shear
+    layer: 0
 soilt: # Soil Temperature
   sfc: &soilt_levs
     clevs: !!python/object/apply:numpy.arange [240, 311, 10]
@@ -435,16 +486,15 @@ soilw: # Soil Moisture
     <<: *soilw_levs
     layer: 8
     title: Soil Moisture at 3m
-tcc: # Total cloud cover
-  sfc:
-    <<: *cld_cover
-    ncl_name: TCDC_P0_L10_GLC0
-    title: Total Cloud Cover
+sphum: # Specific humidity
+  ua:
+    ncl_name: SPFH_P0_L105_GLC0
 temp: # Temperature
   2ds: # 2m - Sfc
     clevs: !!python/object/apply:numpy.arange [-16, 17, 2]
     cmap: seismic
     colors: centered_diff
+    contour_colors: grey
     ncl_name: TMP_P0_L103_GLC0 # 2m Temp
     ticks: 2
     title: 2m Temp - Skin Temp
@@ -458,6 +508,7 @@ temp: # Temperature
     clevs: !!python/object/apply:numpy.arange [-60, 120, 10]
     cmap: jet
     colors: t_colors
+    contour_colors: grey
     ncl_name: TMP_P0_L103_GLC0
     ticks: 10
     transform: conversions.k_to_f
@@ -468,7 +519,10 @@ temp: # Temperature
     cmap: jet
     colors: t_colors
     contour: gh
-    ncl_name: TMP_P0_L100_GLC0
+    contour_colors: grey
+    ncl_name:
+      prs: TMP_P0_L100_GLC0
+      nat: TMP_P0_L105_GLC0
     ticks: 5
     transform: conversions.k_to_c
     unit: C
@@ -491,6 +545,8 @@ temp: # Temperature
     transform: conversions.k_to_f
     unit: F
     wind: False
+  ua:
+    <<: *ua_temp
 totp: # Hourly total precipitation
   sfc:
     clevs: [0.002, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 1.0, 2.0]
@@ -507,20 +563,28 @@ u:
     ncl_name: UGRD_P0_L103_GLC0
     transform: conversions.ms_to_kt
   500mb: &ua_uwind
-    ncl_name: UGRD_P0_L100_GLC0
+    ncl_name:
+      prs: UGRD_P0_L100_GLC0
+      nat: UGRD_P0_L105_GLC0
   700mb: *ua_uwind
   850mb: *ua_uwind
   925mb: *ua_uwind
+  ua:
+    <<: *ua_uwind
 v:
   10m:
     ncl_name: VGRD_P0_L103_GLC0
     transform: conversions.ms_to_kt
   500mb: &ua_vwind
-    ncl_name: VGRD_P0_L100_GLC0
+    ncl_name:
+      prs: VGRD_P0_L100_GLC0
+      nat: VGRD_P0_L105_GLC0
     transform: conversions.ms_to_kt
   700mb: *ua_vwind
   850mb: *ua_vwind
   925mb: *ua_vwind
+  ua:
+    <<: *ua_vwind
 vil: # Vertically integrated liquid
   sfc:
     clevs: [0.05, 0.15, 0.76, 3.47, 6.92, 12, 31.6, 35, 40, 45, 50, 55, 60, 65, 70]

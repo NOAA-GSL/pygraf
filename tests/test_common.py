@@ -13,7 +13,7 @@ To run the tests, type the following in the top level repo directory:
 
 '''
 
-from string import ascii_letters
+from string import ascii_letters, digits
 
 from matplotlib import cm
 from matplotlib import colors as mcolors
@@ -179,24 +179,34 @@ class TestDefaultSpecs():
         '''
 
         allowed_levels = [
+            'best',    # Best
             'esbl',    # ???
             'esblmn',  # ???
+            'high',    # high clouds
+            'low',     # low clouds
             'max',     # maximum in column
             'maxsfc',  # max surface value
             'mdn',     # maximum downward
+            'mid',     # mid-level clouds
             'mnsfc',   # min surface value
             'msl',     # mean sea level
+            'mu',      # most unstable
+            'mul',     # most unstable layer
             'mup',     # maximum upward
+            'mu',      # most unstable
             'sat',     # satellite
             'sfc',     # surface
+            'total',   # total clouds
             'ua',      # upper air
             ]
 
         allowed_lev_type = [
             'cm',      # centimeters
             'ds',      # difference
+            'km',      # kilometers
             'm',       # meters
             'mb',      # milibars
+            'sr',      # storm relative
             ]
 
         allowed_stat = [
@@ -211,29 +221,25 @@ class TestDefaultSpecs():
         if key in allowed_levels:
             return True
 
-        # Check for [numeric][lev_type] pattern
-        for lev in allowed_lev_type:
-            ks = key.split(lev)
+        # Check for [numeric][lev_type] or [lev_type][numeric] pattern
 
-            # If the lev didn't appear in the key, length of list is 1.
-            # If the lev didn't match exactly, the second element will the remainder of the string
-            if len(ks) == 2 and len(ks[1]) == 0:
-                numeric = ks[0].isnumeric()
-                allowed = ''.join([c for c in key if c in ascii_letters]) in allowed_lev_type
+        # Numbers come at beginning or end, only
+        numeric = ''.join([c for c in key if c in digits + '.']) in key
 
-                if numeric and allowed:
-                    return True
+        # The level is allowed
+        level_str = [c for c in key if c in ascii_letters]
+        allowed = ''.join(level_str) in allowed_lev_type + allowed_stat
 
-        # Check for [stat][numeric]
-        for stat in allowed_stat:
-            ks = key.split(stat)
-            if len(ks) == 2 and len(ks[0]) == 0:
+        # Check the other direction - level string contains one of the allowed
+        # types.
+        if not allowed:
+            for lev in allowed_lev_type + allowed_stat:
+                if lev in level_str:
+                    allowed = True
+                    break
 
-                numeric = ks[1].isnumeric()
-                allowed = ''.join([c for c in key if c in ascii_letters]) in allowed_stat
-
-                if numeric and allowed:
-                    return True
+        if numeric and allowed:
+            return True
 
         return False
 
@@ -255,7 +261,7 @@ class TestDefaultSpecs():
         ''' Returns true if func in funcs list is the name of a callable function. '''
 
         in_varspec = False
-        in_grib = False
+        in_grib = False  # pylint: disable=unused-variable
         in_package = False
 
         funcs = funcs if isinstance(funcs, list) else [funcs]
@@ -265,8 +271,10 @@ class TestDefaultSpecs():
             # Check datahandler.grib objects if a single word is provided
             if len(func.split('.')) == 1:
                 for attr in dir(grib):
+                    # pylint: disable=no-member
                     if func in dir(grib.__getattribute__(attr)):
                         callables.append(True)
+                    # pylint: enable=no-member
 
             else:
 
@@ -281,7 +289,7 @@ class TestDefaultSpecs():
 
         ''' Returns true if d is a dictionary '''
 
-        return is_instance(d, dict)
+        return isinstance(d, dict)
 
     @staticmethod
     def is_int(i):
@@ -328,8 +336,8 @@ class TestDefaultSpecs():
         # Proceed only up to max depth.
         if depth >= max_depth:
             return
-        else:
-            level = depth+1
+
+        level = depth+1
 
         for k, v in d.items():
             assert (k in self.allowable.keys()) or self.is_a_level(k)
