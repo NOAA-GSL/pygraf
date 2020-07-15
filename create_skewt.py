@@ -66,6 +66,7 @@ def parse_args():
     return parser.parse_args()
 
 
+@utils.timer
 def prepare_skewt(cla):
 
     # Locate input grib file
@@ -104,6 +105,7 @@ def prepare_skewt(cla):
             format='png',
             orientation='landscape',
             )
+        plt.close()
 
 
 if __name__ == '__main__':

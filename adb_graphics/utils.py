@@ -4,10 +4,12 @@ A set of generic utilities available to all the adb_graphics components.
 
 import argparse
 import datetime as dt
+import functools
 import importlib as il
 from math import atan2, degrees
 import os
 import sys
+import time
 
 import numpy as np
 
@@ -137,6 +139,17 @@ def label_lines(lines, align=True, xvals=None, **kwargs):
 
     for line, x, label in zip(labLines, xvals, labels):
         label_line(line, x, label, align, **kwargs)
+
+def timer(func):
+    @functools.wraps(func)
+    def wrapper_timer(*args, **kwargs):
+        tic = time.perf_counter()
+        value = func(*args, **kwargs)
+        toc = time.perf_counter()
+        elapsed_time = toc - tic
+        print(f"Elapsed time: {elapsed_time:0.4f} seconds")
+        return value
+    return wrapper_timer
 
 def to_datetime(string):
     ''' Return a datetime object give a string like YYYYMMDDHH. '''
