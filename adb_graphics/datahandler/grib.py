@@ -190,6 +190,12 @@ class UPPData(GribFile, specs.VarSpec):
         fh = datetime.timedelta(hours=int(self.fhr))
         return self.anl_dt + fh
 
+    @abc.abstractmethod
+    def values(self, level=None, name=None, **kwargs):
+
+        ''' Returns the values of a given variable. '''
+        ...
+
     @property
     def vspec(self):
 
@@ -390,18 +396,19 @@ class fieldData(UPPData):
         return conversions.magnitude(u, v)
 
 
-class profileData():
+class profileData(UPPData):
 
     '''
     Class provides methods for getting profiles from a specific lat/lon location
-    from a grib file (provided).
+    from a grib file.
 
     Input:
 
-      grib_data    UPPData object
+      filename     full path to grib file
       loc          single entry from sites file. Use the first 31 spaces to get
                    site_code, site_num, lat, lon. Past 31 spaces is the site's
                    long name.
+      short_name
 
     Key word arguments:
 
@@ -409,9 +416,9 @@ class profileData():
 
     '''
 
-    def __init__(self, grib_data, loc, **kwargs):
+    def __init__(self, filename, loc, short_name, **kwargs):
 
-        self.grib_data = grib_data
+        super().__init__(filename, short_name, **kwargs)
 
         # The first 31 columns are space delimted
         self.site_code, _, self.site_num, lat, lon = \
@@ -425,12 +432,6 @@ class profileData():
         self.site_lat = float(lat)
         self.site_lon = -float(lon)
 
-    def field_diff(self, values, variable2, level2) -> np.ndarray:
-
-        ''' Subtracts the values from variable2 from self.field. '''
-
-        return values - self.values(name=variable2, level=level2)
-
     @lru_cache()
     def get_xypoint(self) -> tuple:
 
@@ -439,7 +440,7 @@ class profileData():
         interpolation is used.
         '''
 
-        lats, lons = self.grib_data.latlons()
+        lats, lons = self.latlons()
         max_x, max_y = np.shape(lats)
 
         # Numpy magic to grab the X, Y grid point nearest the profile site
@@ -478,13 +479,13 @@ class profileData():
         level = level if level else 'ua'
 
         if not name:
-            name = self.grib_data.short_name
+            name = self.short_name
 
         x, y = self.get_xypoint()
 
         # Retrieve the default_specs section for the specified level
-        var_spec = self.grib_data.spec.get(name, {}).get(level, {})
-        ncl_name = ncl_name if ncl_name else self.grib_data.ncl_name(var_spec)
+        var_spec = self.spec.get(name, {}).get(level, {})
+        ncl_name = ncl_name if ncl_name else self.ncl_name(var_spec)
 
         if not ncl_name:
             raise errors.NoGraphicsDefinitionForVariable(
@@ -495,7 +496,7 @@ class profileData():
         # Specifies the vertical index if one is needed.
         layer = layer if layer else var_spec.get('layer')
 
-        profile = self.grib_data.contents.variables[ncl_name][::]
+        profile = self.contents.variables[ncl_name][::]
         if len(profile.shape) == 2:
             profile = profile[x, y]
         elif len(profile.shape) == 3:
