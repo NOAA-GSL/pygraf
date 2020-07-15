@@ -4,6 +4,7 @@ Driver for creating all the SkewT diagrams needed for a specific input dataset.
 
 import argparse
 import datetime as dt
+from multiprocessing import Pool
 import os
 
 import matplotlib.pyplot as plt
@@ -65,6 +66,25 @@ def parse_args():
 
     return parser.parse_args()
 
+def parallel_skewt(cla, grib_path, site, workdir):
+
+    skew = skewt.SkewTDiagram(filename=grib_path, loc=site, max_plev=cla.max_plev)
+    skew.create_diagram()
+    outfile = f"skewt_{skew.site_code}_{skew.site_num}_f{cla.fcst_hour:02d}.png"
+    png_path = os.path.join(workdir, outfile)
+
+    print('*' * 80)
+    print(f"Creating image file: {png_path}")
+    print('*' * 80)
+
+    plt.savefig(
+        png_path,
+        bbox_inches='tight',
+        dpi='figure',
+        format='png',
+        orientation='landscape',
+        )
+    plt.close()
 
 @utils.timer
 def prepare_skewt(cla):
@@ -82,31 +102,18 @@ def prepare_skewt(cla):
     with open(cla.sites, 'r') as sites_file:
         sites = sites_file.readlines()
 
-    print((('-' * 120)+'\n') * 2)
+    print((('-' * 80)+'\n') * 2)
     print(f'Creating graphics for input file: {grib_path}')
     print(f'Output graphics directory: {workdir}')
     print()
-    print((('-' * 120)+'\n') * 2)
+    print((('-' * 80)+'\n') * 2)
 
+    skewt_args = []
     for site in sites:
-        skew = skewt.SkewTDiagram(filename=grib_path, loc=site, max_plev=cla.max_plev)
-        skew.create_diagram()
-        outfile = f"skewt_{skew.site_code}_{skew.site_num}_f{cla.fcst_hour:02d}.png"
-        png_path = os.path.join(workdir, outfile)
+        skewt_args.append((cla, grib_path, site, workdir))
 
-        print('*' * 120)
-        print(f"Creating image file: {png_path}")
-        print('*' * 120)
-
-        plt.savefig(
-            png_path,
-            bbox_inches='tight',
-            dpi='figure',
-            format='png',
-            orientation='landscape',
-            )
-        plt.close()
-
+    with Pool(processes=cla.nprocs) as pool:
+        pool.starmap(parallel_skewt, skewt_args)
 
 if __name__ == '__main__':
 
