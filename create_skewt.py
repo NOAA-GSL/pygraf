@@ -41,10 +41,6 @@ def parse_args():
                         default='wrfnat_hrconus_{FCST_TIME:02d}.grib2',
                         help='File naming convention',
                         )
-    parser.add_argument('--sites',
-                        help='Path to a sites file.',
-                        type=utils.file_exists,
-                        )
     parser.add_argument('--max_plev',
                         help='Maximum pressure level to plot for profiles.',
                         type=int,
@@ -65,6 +61,10 @@ def parse_args():
                         help='Start time in YYYYMMDDHH format',
                         required=True,
                         type=utils.to_datetime,
+                        )
+    parser.add_argument('--sites',
+                        help='Path to a sites file.',
+                        type=utils.file_exists,
                         )
     parser.add_argument('-z',
                         dest='zip_dir',
