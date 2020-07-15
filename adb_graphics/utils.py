@@ -3,13 +3,13 @@ A set of generic utilities available to all the adb_graphics components.
 '''
 
 import argparse
+import datetime as dt
 import importlib as il
 from math import atan2, degrees
 import os
 import sys
 
 import numpy as np
-
 
 def file_exists(filename: str):
 
@@ -20,6 +20,10 @@ def file_exists(filename: str):
         raise argparse.ArgumentTypeError(msg)
 
     return filename
+
+def from_datetime(date):
+    ''' Return a string like YYYYMMDDHH given a datetime object. '''
+    return dt.datetime.strftime(date, '%Y%m%d%H')
 
 def get_func(val: str):
 
@@ -133,3 +137,8 @@ def label_lines(lines, align=True, xvals=None, **kwargs):
 
     for line, x, label in zip(labLines, xvals, labels):
         label_line(line, x, label, align, **kwargs)
+
+def to_datetime(string):
+    ''' Return a datetime object give a string like YYYYMMDDHH. '''
+
+    return dt.datetime.strptime(string, '%Y%m%d%H')
