@@ -7,7 +7,6 @@ mpl.use('Agg')
 # pylint: enable=wrong-import-position, wrong-import-order
 
 import argparse
-import datetime as dt
 import os
 
 import matplotlib.pyplot as plt
@@ -107,6 +106,7 @@ def main(cla):
             print(f"Creating image file: {png_path}")
             print('*' * 120)
 
+            # pylint: disable=duplicate-code
             plt.savefig(
                 png_path,
                 bbox_inches='tight',

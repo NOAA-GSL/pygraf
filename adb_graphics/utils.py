@@ -141,6 +141,9 @@ def label_lines(lines, align=True, xvals=None, **kwargs):
         label_line(line, x, label, align, **kwargs)
 
 def timer(func):
+
+    ''' Decorator function that provides an elapsed time for a method. '''
+
     @functools.wraps(func)
     def wrapper_timer(*args, **kwargs):
         tic = time.perf_counter()
