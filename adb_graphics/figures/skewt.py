@@ -38,12 +38,12 @@ class SkewTDiagram(grib.profileData):
     be included.
     '''
 
-    def __init__(self, filename, loc, **kwargs):
+    def __init__(self, grib_data, loc, **kwargs):
 
         # Initialize on the temperature field since we need to gather
         # field-specific data from this object, e.g. dates, lat, lon, etc.
 
-        super().__init__(filename=filename,
+        super().__init__(grib_data=grib_data,
                          loc=loc,
                          short_name='temp',
                          **kwargs,
@@ -402,7 +402,7 @@ class SkewTDiagram(grib.profileData):
 
             varname = items.get('variable', var)
             lev = items.get('level', 'ua')
-            spec = self.spec.get(varname, {}).get(lev)
+            spec = self.grib_data.spec.get(varname, {}).get(lev)
 
             if not spec:
                 raise errors.NoGraphicsDefinitionForVariable(varname, lev)
@@ -432,11 +432,11 @@ class SkewTDiagram(grib.profileData):
 
         ''' Creates standard annotation for a skew-T. '''
 
-        atime = self.date_to_str(self.anl_dt)
-        vtime = self.date_to_str(self.valid_dt)
+        atime = self.grib_data.date_to_str(self.grib_data.anl_dt)
+        vtime = self.grib_data.date_to_str(self.grib_data.valid_dt)
 
         # Top Left
-        plt.title(f"Analysis: {atime}\nFcst Hr: {self.fhr}",
+        plt.title(f"Analysis: {atime}\nFcst Hr: {self.grib_data.fhr}",
                   fontsize=16,
                   loc='left',
                   position=(0, 1.03),
