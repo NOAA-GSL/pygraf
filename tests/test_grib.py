@@ -63,7 +63,6 @@ def test_fieldData(prsfile):
     # Test retrieving other values
     assert np.array_equal(field.values(), field.values(name='temp', level='500mb'))
 
-
     # Return zeros by subtracting same field
     diff = field.field_diff(field.values(), variable2='temp', level2='500mb')
     assert isinstance(diff, np.ndarray)
@@ -73,6 +72,16 @@ def test_fieldData(prsfile):
     windspeed = field.windspeed()
     u_wind, v_wind = field.wind(True)
     assert np.array_equal(windspeed, np.sqrt(u_wind**2 + v_wind**2))
+
+    # Test transform
+    assert np.array_equal(field.get_transform('conversions.k_to_f', field.values(), {}), \
+                          (field.values() - 273.15) * 9/5 +32)
+
+    field2 = grib.fieldData(prsfile, level='ua', short_name='ceil')
+    transforms = field2.vspec.get('transform')
+    transform_kwargs = field2.vspec.get('transform_kwargs', {})
+    assert np.array_equal(field2.get_transform(transforms, field2.values(), transform_kwargs), \
+                          field2.field_diff(field2.values(), variable2='gh', level2='sfc') / 304.8)
 
     # Expected size of values
     assert len(np.shape((field.values()))) == 2

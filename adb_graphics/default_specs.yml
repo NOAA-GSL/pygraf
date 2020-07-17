@@ -98,7 +98,7 @@ cell: # Storm cell motion
     unit: kt
 ceil: # Ceiling
   ua: &ceil
-    clevs: [0, 0.1, 0.3, 0.5, 1, 2, 3, 5, 10, 15, 20, 30, 60]
+    clevs: [0, 0.1, 0.3, 0.5, 1, 2, 3, 5, 10, 15, 20, 30, 52]
     cmap: gist_ncar
     colors: ceil_colors
     ncl_name: HGT_P0_L215_GLC0
@@ -247,6 +247,25 @@ gust:
     ticks: 5
     transform: conversions.ms_to_kt
     unit: kt
+hail: # Max 1h Hail diameter
+  maxsfc: &hail # surface
+    clevs: [0.01, 0.25, 0.50, 0.75, 1.0, 1.5, 2.0, 2.5, 3.0]
+    cmap: gist_ncar
+    colors: hail_colors
+    ncl_name: HAIL_P8_L104_GLC0_max1h
+    ticks: 0
+    title: Max 1h Hail/Graupel Diameter at Surface
+    transform: conversions.m_to_in
+    unit: in
+  max: # total atmosphere
+    <<: *hail
+    ncl_name: HAIL_P8_L10_GLC0_max1h
+    title: Max 1h Hail/Graupel Diameter, Total Atm
+hailcast: # Max 1h Hail diameter
+  maxsfc: # surface, from HAILCAST
+    <<: *hail
+    ncl_name: HAIL_P8_L1_GLC0_max1h
+    title: Max 1h Hail Diameterat Sfc from HAILCAST
 hlcy: # Helicity
   in16: &hlcy # Hourly updraft helicity over 1-6 km layer
     clevs: !!python/object/apply:numpy.arange [25, 301, 25]
@@ -311,6 +330,15 @@ lcl: # Lifted condensation level
   ua:
     <<: *lcl
     unit: m
+lhtfl: # Latent Heat Net Flux
+  sfc:
+    clevs: !!python/object/apply:numpy.arange [-100, 401, 25]
+    cmap: Carbone42
+    colors: lhtfl_colors
+    ncl_name: LHTFL_P0_L1_GLC0
+    ticks: 0
+    title: Latent Heat Net Flux
+    unit: W/m^2
 li: # Lifted Index
   sfc:
     ncl_name: LFTX_P0_2L100_GLC0
@@ -323,6 +351,15 @@ lpl: # Lifted parcel level
     ncl_name: PLPL_P0_2L108_GLC0
     transform: conversions.pa_to_hpa
     unit: hPa
+ltg3: # Lightning Threat (LTG1 + LTG2)
+  sfc: 
+    clevs: [0.02, 0.5, 1.0, 1.5, 2.0, 2.5, 3, 4, 5, 6, 7, 8, 10, 12]
+    cmap: NWSReflectivity
+    colors: cref_colors
+    ncl_name: LTNG_P0_L10_GLC0
+    ticks: 0
+    title: Lightning Threat (comb of LTG1 and LTG2)
+    unit: flashes / km^2 / 5 min
 mref: # Maximum reflectivity for past hour at 1 km AGL
   sfc:
     <<: *refl
@@ -390,6 +427,15 @@ rh: # Relative Humidity
   850mb:
     <<: *rh
     ncl_name: RH_P0_L100_GLC0
+rvil: # Radar-derived Vertically Integrated Liquid
+  sfc: &vert_int_liq
+    clevs: [0.05, 0.15, 0.76, 3.47, 6.92, 12, 31.6, 35, 40, 45, 50, 55, 60, 65, 70]
+    cmap: precipitation
+    colors: vil_colors
+    ncl_name: VIL_P0_L10_GLC0
+    ticks: 0
+    title: Radar-derived Vertically Integrated Liquid
+    unit: kg/m^2
 shear:
   01km: &shear # 0-1 km
     ncl_name: VUCSH_P0_2L103_GLC0
@@ -402,6 +448,15 @@ shear:
   06km: # 0-6 km
     <<: *shear
     layer: 0
+soilm: # Soil Moisture Availability
+  sfc:
+    clevs: [0, 5, 15, 25, 35, 45, 55, 65, 75, 85, 95]
+    cmap: Spectral
+    colors: soilm_colors
+    ncl_name: MSTAV_P0_L106_GLC0
+    ticks: 0
+    title: Soil Moisture Availability
+    unit: "%"
 soilt: # Soil Temperature
   sfc: &soilt_levs
     clevs: !!python/object/apply:numpy.arange [240, 311, 10]
@@ -585,13 +640,11 @@ v:
   925mb: *ua_vwind
   ua:
     <<: *ua_vwind
-vil: # Vertically integrated liquid
+vil: # Vertically Integrated Liquid
   sfc:
-    clevs: [0.05, 0.15, 0.76, 3.47, 6.92, 12, 31.6, 35, 40, 45, 50, 55, 60, 65, 70]
-    cmap: precipitation
-    colors: vil_colors
-    ncl_name: VIL_P0_L10_GLC0
-    ticks: 0
+    <<: *vert_int_liq
+    ncl_name: VAR_0_16_201_P0_L10_GLC0
+    title: Vertically Integrated Liquid
 vis: # Visibility
   sfc:
     clevs: [0.0625, 0.125, 0.25, 0.5, 1, 1.5, 2, 3, 4, 5, 10, 30, 50]

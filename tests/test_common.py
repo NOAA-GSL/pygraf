@@ -39,6 +39,7 @@ def test_conversion():
     assert np.array_equal(conversions.k_to_f(a), (a - 273.15) * 9/5 + 32)
     assert np.array_equal(conversions.kgm2_to_in(a), a * 0.03937)
     assert np.array_equal(conversions.m_to_dm(a), a / 10)
+    assert np.array_equal(conversions.m_to_in(a), a * 39.3701)
     assert np.array_equal(conversions.m_to_kft(a), a / 304.8)
     assert np.array_equal(conversions.m_to_mi(a), a / 1609.344)
     assert np.array_equal(conversions.ms_to_kt(a), a * 1.9438)
@@ -52,6 +53,7 @@ def test_conversion():
         conversions.k_to_f,
         conversions.kgm2_to_in,
         conversions.m_to_dm,
+        conversions.m_to_in,
         conversions.m_to_kft,
         conversions.m_to_mi,
         conversions.ms_to_kt,

@@ -135,6 +135,17 @@ class VarSpec(abc.ABC):
 
     @property
     @lru_cache()
+    def hail_colors(self) -> np.ndarray:
+
+        ''' Default color map for Hail diameter '''
+
+        grays = cm.get_cmap('Greys', 2)([0])
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          ([100, 15, 18, 20, 25, 60, 80, 85, 90])
+        return np.concatenate((grays, ncar))
+
+    @property
+    @lru_cache()
     def hlcy_colors(self) -> np.ndarray:
 
         ''' Default color map for Helicity '''
@@ -153,6 +164,17 @@ class VarSpec(abc.ABC):
         ctable = ctables.colortables.get_colortable(self.vspec.get('cmap')) \
                     (range(60, 180, 6)) # rainbow
         return ctable
+
+    @property
+    @lru_cache()
+    def lhtfl_colors(self) -> np.ndarray:
+
+        ''' Default color map for Soil Moisture Availability '''
+
+        grays = cm.get_cmap('Greys', 8)([6, 5, 4, 3, 2])
+        ctable = ctables.colortables.get_colortable(self.vspec.get('cmap')) \
+                    (range(0, 33, 2))
+        return np.concatenate((grays, ctable))
 
     @property
     @lru_cache()
@@ -197,6 +219,15 @@ class VarSpec(abc.ABC):
 
         ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
                           ([122, 114, 96, 85, 79, 69, 60, 49, 31, 21, 17, 109, 113])
+        return ncar
+
+    @property
+    @lru_cache()
+    def soilm_colors(self) -> np.ndarray:
+
+        ''' Default color map for Soil Moisture Availability '''
+
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128)(range(0, 122, 11))
         return ncar
 
     @property

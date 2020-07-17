@@ -18,7 +18,6 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 import adb_graphics.datahandler.grib as grib
 import adb_graphics.errors as errors
-import adb_graphics.utils as utils
 
 class SkewTDiagram(grib.profileData):
 
@@ -412,16 +411,7 @@ class SkewTDiagram(grib.profileData):
             transforms = spec.get('transform')
             if transforms:
                 transform_kwargs = spec.get('transform_kwargs', {})
-
-                # Treat any transforms as a list
-                transforms = transforms if isinstance(transforms, list) else [transforms]
-
-                for transform in transforms:
-
-                    if len(transform.split('.')) == 1:
-                        tmp = self.__getattribute__(transform)(tmp, **transform_kwargs)
-                    else:
-                        tmp = utils.get_func(transform)(tmp, **transform_kwargs)
+                tmp = self.get_transform(transforms, tmp, transform_kwargs)
 
             thermo[var]['data'] = tmp
             thermo[var]['units'] = spec.get('unit')
