@@ -271,16 +271,6 @@ class VarSpec(abc.ABC):
 
     @property
     @lru_cache()
-    def vil_colors(self) -> np.ndarray:
-
-        ''' Default color map for Vertically Integrated Liquid '''
-
-        ctable = ctables.colortables.get_colortable(self.vspec.get('cmap')) \
-                    ([0, 11, 15, 16, 4, 5, 12, 2, 19, 18, 7, 6, 8, 9, 10, 17])
-        return ctable
-
-    @property
-    @lru_cache()
     def vis_colors(self) -> np.ndarray:
 
         ''' Default color map for Visibility '''
