@@ -167,9 +167,9 @@ class VarSpec(abc.ABC):
 
     @property
     @lru_cache()
-    def lhtfl_colors(self) -> np.ndarray:
+    def latent_heat_flux_colors(self) -> np.ndarray:
 
-        ''' Default color map for Soil Moisture Availability '''
+        ''' Default color map for Latent Heat Flux '''
 
         grays = cm.get_cmap('Greys', 8)([6, 5, 4, 3, 2])
         ctable = ctables.colortables.get_colortable(self.vspec.get('cmap')) \

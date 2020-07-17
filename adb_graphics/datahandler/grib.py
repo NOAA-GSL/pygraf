@@ -139,9 +139,7 @@ class UPPData(GribFile, specs.VarSpec):
 
     def get_transform(self, transforms: str, val: np.ndarray, transform_kwargs):
 
-        '''
-	Applies a set of one or more transforms to an np.array of data values
-        '''
+        ''' Applies a set of one or more transforms to an np.array of data values '''
 
         # Treat any transforms as a list
         transforms = transforms if isinstance(transforms, list) else [transforms]
