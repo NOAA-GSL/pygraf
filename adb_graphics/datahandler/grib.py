@@ -20,7 +20,6 @@ from .. import errors
 from .. import specs
 from .. import utils
 
-
 class GribFile():
 
     ''' Wrappers and helper functions for interfacing with pyNIO.'''
@@ -137,6 +136,20 @@ class UPPData(GribFile, specs.VarSpec):
         ''' Subtracts the values from variable2 from self.field. '''
 
         return values - self.values(name=variable2, level=level2)
+
+    def get_transform(self, transforms: str, val: np.ndarray, transform_kwargs):
+
+        ''' Applies a set of one or more transforms to an np.array of data values '''
+
+        # Treat any transforms as a list
+        transforms = transforms if isinstance(transforms, list) else [transforms]
+
+        for transform in transforms:
+            if len(transform.split('.')) == 1:
+                val = self.__getattribute__(transform)(val, **transform_kwargs)
+            else:
+                val = utils.get_func(transform)(val, **transform_kwargs)
+        return val
 
     def latlons(self):
 
@@ -310,8 +323,6 @@ class fieldData(UPPData):
                 raise errors.NoGraphicsDefinitionForVariable(name, level)
             field = self.get_field(self.ncl_name(spec))
 
-        transforms = spec.get('transform')
-
         if len(field.shape) == 2:
             vals = field[::]
         elif len(field.shape) == 3:
@@ -327,22 +338,13 @@ class fieldData(UPPData):
                 # The index of the reqested level
                 lev = int(np.argwhere(levs == lev_val))
             except KeyError:
-                lev = self.vspec.get('layer')
+                lev = spec.get('layer')
             vals = field[lev, :, :]
 
+        transforms = spec.get('transform')
         if transforms:
             transform_kwargs = spec.get('transform_kwargs', {})
-
-            # Treat any transforms as a list
-            transforms = transforms if isinstance(transforms, list) else [transforms]
-
-            for transform in transforms:
-
-                if len(transform.split('.')) == 1:
-                    vals = self.__getattribute__(transform)(vals, **transform_kwargs)
-                else:
-                    vals = utils.get_func(transform)(vals, **transform_kwargs)
-
+            vals = self.get_transform(transforms, vals, transform_kwargs)
         return vals
 
     def vector_magnitude(self, field1, field2, layer=0):

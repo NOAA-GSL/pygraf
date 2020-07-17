@@ -37,6 +37,12 @@ def m_to_dm(field: np.ndarray, **kwargs) -> np.ndarray:
 
     return np.asarray(field) / 10.
 
+def m_to_in(field: np.ndarray, **kwargs) -> np.ndarray:
+
+    ''' Conversion from meters to inches '''
+
+    return np.asarray(field) * 39.3701
+
 def m_to_kft(field: np.ndarray, **kwargs) -> np.ndarray:
 
     ''' Conversion from meters to kilofeet '''
