@@ -146,6 +146,17 @@ class VarSpec(abc.ABC):
 
     @property
     @lru_cache()
+    def heat_flux_colors(self) -> np.ndarray:
+
+        ''' Default color map for Latent/Sensible Heat Flux '''
+
+        grays = cm.get_cmap('Greys', 8)([6, 5, 4, 3, 2])
+        ctable = ctables.colortables.get_colortable(self.vspec.get('cmap')) \
+                    (range(0, 33, 2))
+        return np.concatenate((grays, ctable))
+
+    @property
+    @lru_cache()
     def hlcy_colors(self) -> np.ndarray:
 
         ''' Default color map for Helicity '''
@@ -167,14 +178,22 @@ class VarSpec(abc.ABC):
 
     @property
     @lru_cache()
-    def latent_heat_flux_colors(self) -> np.ndarray:
+    def lifted_index_colors(self) -> np.ndarray:
 
-        ''' Default color map for Latent Heat Flux '''
+        ''' Default color map for Lifted Index '''
 
-        grays = cm.get_cmap('Greys', 8)([6, 5, 4, 3, 2])
         ctable = ctables.colortables.get_colortable(self.vspec.get('cmap')) \
-                    (range(0, 33, 2))
-        return np.concatenate((grays, ctable))
+                          (range(40, 168, 4))
+        return ctable
+
+    @property
+    @lru_cache()
+    def pbl_colors(self) -> np.ndarray:
+
+        ''' Default color map for PBL Height '''
+
+        return ctables.colortables.get_colortable(self.vspec.get('cmap')) \
+                          (range(15, 60, 3))
 
     @property
     @lru_cache()
@@ -213,13 +232,47 @@ class VarSpec(abc.ABC):
 
     @property
     @lru_cache()
+    def radiation_colors(self) -> np.ndarray:
+
+        ''' Default color map for Longwave Radiation '''
+
+        grays = cm.get_cmap('Greys', 2)([0])
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          ([15, 18, 20, 25, 50, 60, 70, 80, 85, 90, 100, 120, 125])
+        return np.concatenate((grays, ncar))
+
+    @property
+    @lru_cache()
+    def radiation_bw_colors(self) -> np.ndarray:
+
+        ''' Default grayscale map for Outgoing Shortwave Radiation '''
+
+        return cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          (range(30, 110))
+
+    @property
+    @lru_cache()
+    def radiation_mix_colors(self) -> np.ndarray:
+
+        ''' Default color map for Longwave Radiation '''
+
+        ncar = ctables.colortables.get_colortable(self.vspec.get('cmap')) \
+                          ([21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, \
+                            34, 35, 36, 37, 38, 8, 7, 6, 5, 4, 3, 2, 1, 2, 3, 4, \
+                            5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
+        grays = cm.get_cmap('Greys', 100)(range(10, 100))
+        return np.concatenate((ncar, grays))
+
+    @property
+    @lru_cache()
     def rh_colors(self) -> np.ndarray:
 
         ''' Default color map for Relative Humidity '''
 
+        grays = cm.get_cmap('Greys', 2)([0])
         ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
-                          ([122, 114, 96, 85, 79, 69, 60, 49, 31, 21, 17, 109, 113])
-        return ncar
+                          ([15, 18, 20, 25, 50, 60, 70, 80, 85, 90, 100, 120])
+        return np.concatenate((grays, ncar))
 
     @property
     @lru_cache()

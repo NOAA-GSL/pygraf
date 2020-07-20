@@ -182,6 +182,7 @@ class TestDefaultSpecs():
 
         allowed_levels = [
             'best',    # Best
+            'blcc',    # boundary layer cld cover
             'esbl',    # ???
             'esblmn',  # ???
             'high',    # high clouds
@@ -196,6 +197,8 @@ class TestDefaultSpecs():
             'mul',     # most unstable layer
             'mup',     # maximum upward
             'mu',      # most unstable
+            'nta',     # nominal top of atmosphere
+            'pw',      # wrt precipitable water
             'sat',     # satellite
             'sfc',     # surface
             'total',   # total clouds
