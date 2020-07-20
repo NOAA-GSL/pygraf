@@ -18,6 +18,7 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 import adb_graphics.datahandler.grib as grib
 import adb_graphics.errors as errors
+import adb_graphics.utils as utils
 
 class SkewTDiagram(grib.profileData):
 
@@ -289,13 +290,19 @@ class SkewTDiagram(grib.profileData):
                             which='major',
                             )
 
-        # Add the relevant special lines
+        # Add the relevant special lines with their labels
         dry_adiabats = np.arange(-40, 210, 10) * units.degC
         skew.plot_dry_adiabats(dry_adiabats,
                                colors='tan',
                                linestyles='solid',
                                linewidth=0.7,
                                )
+        utils.label_lines(ax=skew.ax,
+                          lines=skew.dry_adiabats,
+                          labels=dry_adiabats.magnitude,
+                          end='top',
+                          offset=1,
+                          )
 
         moist_adiabats = np.arange(8, 36, 4) * units.degC
         moist_pr = np.arange(1001, 220, -10) * units.hPa
@@ -305,6 +312,11 @@ class SkewTDiagram(grib.profileData):
                                  linestyles='solid',
                                  linewidth=0.7,
                                  )
+        utils.label_lines(ax=skew.ax,
+                          lines=skew.moist_adiabats,
+                          labels=moist_adiabats.magnitude,
+                          end='top',
+                          )
 
         mixing_lines = np.array([1, 2, 3, 5, 8, 12, 16, 20]).reshape(-1, 1)  / 1000
         mix_pr = np.arange(1001, 400, -50) * units.hPa
@@ -313,6 +325,11 @@ class SkewTDiagram(grib.profileData):
                                linestyles=(0, (5, 10)),
                                linewidth=0.7,
                                )
+        utils.label_lines(ax=skew.ax,
+                          lines=skew.mixing_lines,
+                          labels=mixing_lines * 1000,
+                          )
+
         return skew
 
     @property
