@@ -9,7 +9,7 @@ Pytests for the common utilities included in this package. Includes:
 
 To run the tests, type the following in the top level repo directory:
 
-    python -m pytest --grib-file [path/to/gribfile]
+    python -m pytest --nat-file [path/to/gribfile] --prs-file [path/to/gribfile]
 
 '''
 
