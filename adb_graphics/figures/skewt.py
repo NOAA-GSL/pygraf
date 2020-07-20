@@ -197,11 +197,11 @@ class SkewTDiagram(grib.profileData):
         # a LineCollection returned from plot_colormapped. Using lines and
         # colors from outside scope.
         def make_proxy(zval, idx=None, **kwargs):
-            color = colors[idx] if idx<len(colors) else lines.cmap(zval-1)
+            color = colors[idx] if idx < len(colors) else lines.cmap(zval-1)
             return Line2D([0, 1], [0, 1], color=color, linewidth=line_width, **kwargs)
 
         # Make a list of proxies
-        proxies = [make_proxy(item, idx=i) for i, item in 
+        proxies = [make_proxy(item, idx=i) for i, item in
                    enumerate(intervals.magnitude)]
 
         # Draw the legend
