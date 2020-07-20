@@ -80,10 +80,10 @@ def label_line(ax, label, segment, align=True, end='bottom', offset=0, **kwargs)
     # Label location
     if end == 'bottom':
         x, y = segment[0 + offset, :]
-        ip = 1
+        ip = 1 + offset
     elif end == 'top':
         x, y = segment[-1 - offset, :]
-        ip = -1
+        ip = -1 - offset
 
     if align:
         #Compute the slope
