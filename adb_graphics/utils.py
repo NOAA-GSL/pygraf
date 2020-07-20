@@ -3,13 +3,15 @@ A set of generic utilities available to all the adb_graphics components.
 '''
 
 import argparse
+import datetime as dt
+import functools
 import importlib as il
 from math import atan2, degrees
 import os
 import sys
+import time
 
 import numpy as np
-
 
 def file_exists(filename: str):
 
@@ -20,6 +22,10 @@ def file_exists(filename: str):
         raise argparse.ArgumentTypeError(msg)
 
     return filename
+
+def from_datetime(date):
+    ''' Return a string like YYYYMMDDHH given a datetime object. '''
+    return dt.datetime.strftime(date, '%Y%m%d%H')
 
 def get_func(val: str):
 
@@ -133,3 +139,22 @@ def label_lines(lines, align=True, xvals=None, **kwargs):
 
     for line, x, label in zip(labLines, xvals, labels):
         label_line(line, x, label, align, **kwargs)
+
+def timer(func):
+
+    ''' Decorator function that provides an elapsed time for a method. '''
+
+    @functools.wraps(func)
+    def wrapper_timer(*args, **kwargs):
+        tic = time.perf_counter()
+        value = func(*args, **kwargs)
+        toc = time.perf_counter()
+        elapsed_time = toc - tic
+        print(f"Elapsed time: {elapsed_time:0.4f} seconds")
+        return value
+    return wrapper_timer
+
+def to_datetime(string):
+    ''' Return a datetime object give a string like YYYYMMDDHH. '''
+
+    return dt.datetime.strptime(string, '%Y%m%d%H')

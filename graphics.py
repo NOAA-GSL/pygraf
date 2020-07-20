@@ -7,7 +7,6 @@ mpl.use('Agg')
 # pylint: enable=wrong-import-position, wrong-import-order
 
 import argparse
-import datetime as dt
 import os
 
 import matplotlib.pyplot as plt
@@ -16,6 +15,7 @@ import yaml
 from adb_graphics.datahandler import grib
 import adb_graphics.errors as errors
 from adb_graphics.figures import maps
+import adb_graphics.utils as utils
 
 
 AIRPORTS = 'static/Airports_locs.txt'
@@ -32,7 +32,7 @@ def main(cla):
         images = yaml.load(fn, Loader=yaml.Loader)[cla.image_set]
 
     # Locate input grib file
-    str_start_time = from_datetime(cla.start_time)
+    str_start_time = utils.from_datetime(cla.start_time)
     grib_file = images['input_files']['hrrr_prs'].format(FCST_TIME=cla.fcst_hour)
     grib_path = os.path.join(cla.data_root, str_start_time, grib_file)
 
@@ -106,6 +106,7 @@ def main(cla):
             print(f"Creating image file: {png_path}")
             print('*' * 120)
 
+            # pylint: disable=duplicate-code
             plt.savefig(
                 png_path,
                 bbox_inches='tight',
@@ -113,16 +114,6 @@ def main(cla):
                 format='png',
                 orientation='landscape',
                 )
-
-
-def to_datetime(string):
-    ''' Return a datetime object give a string like YYYYMMDDHH. '''
-    return dt.datetime.strptime(string, '%Y%m%d%H')
-
-
-def from_datetime(date):
-    ''' Return a string like YYYYMMDDHH given a datetime object. '''
-    return dt.datetime.strftime(date, '%Y%m%d%H')
 
 def webname(prefix, tile='', suffix=''):
     ''' Return the filename expected for the web graphic. '''
@@ -160,7 +151,7 @@ def parse_args():
     parser.add_argument('-s', '--start_time',
                         help='Start time in YYYYMMDDHH format',
                         required=True,
-                        type=to_datetime,
+                        type=utils.to_datetime,
                         )
     parser.add_argument('--subh_freq',
                         default=60,
