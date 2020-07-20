@@ -11,6 +11,7 @@ import numpy as np
 import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FixedLocator
+from matplotlib.lines import Line2D
 import metpy.calc as mpcalc
 from metpy.plots import Hodograph, SkewT
 from metpy.units import units
@@ -64,13 +65,13 @@ class SkewTDiagram(grib.profileData):
 
             # Sure would have been nice to use a variable in the f string to
             # denote the format per variable.
-            line = f"{name.upper():<7s}: {str(value):>10} {items['units']}"
+            line = f"{name.upper():<7s} {str(value):>6} {items['units']}"
             lines.append(line)
 
         contents = '\n'.join(lines)
 
         # Draw the text box
-        skew.ax.text(0.70, 0.98, contents,
+        skew.ax.text(0.78, 0.98, contents,
                      bbox=dict(facecolor='white', edgecolor='black', alpha=0.7),
                      fontproperties=fm.FontProperties(family='monospace'),
                      size=8,
@@ -171,31 +172,9 @@ class SkewTDiagram(grib.profileData):
         #
         agl = np.copy(self.atmo_profiles.get('gh', {}).get('data')).to('km')
 
-        heights = [10, 3, 1]
-        agl_arr = agl.magnitude
-        for i, height in enumerate(heights):
-
-            mag_top = height
-            mag_bottom = 0 if i >= len(heights) - 1 else heights[i+1]
-
-            # Use exclude later to remove values above 10km
-            if i == 0:
-                exclude = -np.sum(agl_arr > mag_top)
-
-            # Check for the values between two levels
-            condition = np.logical_and(agl_arr <= mag_top, agl_arr > mag_bottom)
-            agl.magnitude[condition] = mag_top
-
-        # Note: agl is now an array with values corresponding to the heights
-        # array
-
         # Retrieve the wind data profiles
         u_wind = self.atmo_profiles.get('u', {}).get('data')
         v_wind = self.atmo_profiles.get('v', {}).get('data')
-
-        # Drop the points above 10 km
-        u_wind = u_wind.magnitude[:exclude] * u_wind.units
-        v_wind = v_wind.magnitude[:exclude] * v_wind.units
 
         # Create an inset axes object that is 28% width and height of the
         # figure and put it in the upper left hand corner.
@@ -203,8 +182,34 @@ class SkewTDiagram(grib.profileData):
         h = Hodograph(ax, component_range=80.)
         h.add_grid(increment=20, linewidth=0.5)
 
+        intervals = [0, 1, 3, 10] * agl.units
+        colors = ['xkcd:salmon', 'xkcd:aquamarine', 'xkcd:navy blue']
+        line_width = 1.5
+
         # Plot the line colored by height AGL only up to the 10km level
-        h.plot_colormapped(u_wind, v_wind, agl[:exclude], linewidth=2)
+        lines = h.plot_colormapped(u_wind, v_wind, agl,
+                                   colors=colors,
+                                   intervals=intervals,
+                                   linewidth=line_width,
+                                   )
+
+        # Local function to create a proxy line object for creating a legend on
+        # a LineCollection returned from plot_colormapped. Using lines and
+        # colors from outside scope.
+        def make_proxy(zval, idx=None, **kwargs):
+            color = colors[idx] if idx<len(colors) else lines.cmap(zval-1)
+            return Line2D([0, 1], [0, 1], color=color, linewidth=line_width, **kwargs)
+
+        # Make a list of proxies
+        proxies = [make_proxy(item, idx=i) for i, item in 
+                   enumerate(intervals.magnitude)]
+
+        # Draw the legend
+        ax.legend(proxies[:-1],
+                  ['0-1 km', '1-3 km', '3-10 km', ''],
+                  fontsize='small',
+                  loc='lower left',
+                  )
 
     @staticmethod
     def _plot_labels(skew):
