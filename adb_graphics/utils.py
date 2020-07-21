@@ -56,47 +56,52 @@ def get_func(val: str):
 
 
 # pylint: disable=invalid-name, too-many-locals
-def label_line(line, x, label=None, align=True, **kwargs):
+def label_line(ax, label, segment, align=True, end='bottom', offset=0, **kwargs):
 
-    ''' Label line with line2D label data '''
+    '''
+    Label a single line with line2D label data.
 
-    ax = line.axes
-    xdata = line.get_xdata()
-    ydata = line.get_ydata()
+    Input:
 
-    if (x < xdata[0]) or (x > xdata[-1]):
-        print('x label location is outside data range!')
-        return
+    Input:
 
-    #Find corresponding y co-ordinate and angle of the line
-    ip = 1
-    for i, xd in enumerate(xdata):
-        if x < xd:
-            ip = i
-            break
+      ax        the SkewT object axis
+      label     label to be used for the current line
+      segment   a list (array) of values for the current line
+      align     optional bool to enable the rotation of the label to line angle
+      end       the end of the line at which to put the label. 'bottom' or 'top'
+      offset    index to use for the "end" of the array
 
-    y = ydata[ip-1] + (ydata[ip]-ydata[ip-1])*(x-xdata[ip-1])/(xdata[ip]-xdata[ip-1])
+    Key Word Arguments
 
-    if not label:
-        label = line.get_label()
+      Any kwargs accepted by matplotlib's text box.
+    '''
+
+    # Label location
+    if end == 'bottom':
+        x, y = segment[0 + offset, :]
+        ip = 1 + offset
+    elif end == 'top':
+        x, y = segment[-1 - offset, :]
+        ip = -1 - offset
 
     if align:
         #Compute the slope
-        dx = xdata[ip] - xdata[ip-1]
-        dy = ydata[ip] - ydata[ip-1]
+        dx = segment[ip, 0] - segment[ip-1, 0]
+        dy = segment[ip, 1] - segment[ip-1, 1]
         ang = degrees(atan2(dy, dx))
 
         #Transform to screen co-ordinates
         pt = np.array([x, y]).reshape((1, 2))
         trans_angle = ax.transData.transform_angles(np.array((ang, )), pt)[0]
 
+        if end == 'top':
+            trans_angle -= 180
+
     else:
         trans_angle = 0
 
     #Set a bunch of keyword arguments
-    if 'color' not in kwargs:
-        kwargs['color'] = line.get_color()
-
     if ('horizontalalignment' not in kwargs) and ('ha' not in kwargs):
         kwargs['ha'] = 'center'
 
@@ -109,36 +114,45 @@ def label_line(line, x, label=None, align=True, **kwargs):
     if 'clip_on' not in kwargs:
         kwargs['clip_on'] = True
 
-    if 'zorder' not in kwargs:
-        kwargs['zorder'] = 2.5
+    if 'fontsize' not in kwargs:
+        kwargs['fontsize'] = 'larger'
 
+    if 'fontweight' not in kwargs:
+        kwargs['fontweight'] = 'bold'
+
+    # Larger value (e.g., 2.0) to move box in front of other diagram elements
+    if 'zorder' not in kwargs:
+        kwargs['zorder'] = 1.50
+
+    # Place the text box label on the line.
     ax.text(x, y, label, rotation=trans_angle, **kwargs)
 
-def label_lines(lines, align=True, xvals=None, **kwargs):
+def label_lines(ax, lines, labels, offset=0, **kwargs):
 
     '''
-    retrieved from
-    https://stackoverflow.com/questions/16992038/inline-labels-in-matplotlib
+    Plots labels on a set of lines from SkewT.
+
+    Input:
+
+      ax      the SkewT object axis
+      lines   the SkewT object special lines
+      labels  list of labels to be used 
+      offset  index to use for the "end" of the array
+
+    Key Word Arguments
+
+      color   line color
+
+      Along with any other kwargs accepted by matplotlib's text box.
     '''
 
-    #ax = lines[0].axes
-    ax = kwargs.get('ax', lines.axes)
-    labLines = []
-    labels = []
+    if 'color' not in kwargs:
+        kwargs['color'] = lines.get_color()[0]
 
-    #Take only the lines which have labels other than the default ones
-    for line in lines.get_segments():
-        label = line.get_label()
-        if "_line" not in label:
-            labLines.append(line)
-            labels.append(label)
-
-    if xvals is None:
-        xmin, xmax = ax.get_xlim()
-        xvals = np.linspace(xmin, xmax, len(labLines)+2)[1:-1]
-
-    for line, x, label in zip(labLines, xvals, labels):
-        label_line(line, x, label, align, **kwargs)
+    for i, line in enumerate(lines.get_segments()):
+        label = int(labels[i])
+        label = label[0] if isinstance(label, list) else label
+        label_line(ax, label, line, align=True, offset=offset, **kwargs)
 
 def timer(func):
 
