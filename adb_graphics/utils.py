@@ -13,15 +13,15 @@ import time
 
 import numpy as np
 
-def file_exists(filename: str):
+def path_exists(path: str):
 
     ''' Checks whether a file exists, and returns the path if it does. '''
 
-    if not os.path.exists(filename):
-        msg = f'{filename} does not exist!'
+    if not os.path.exists(path):
+        msg = f'{path} does not exist!'
         raise argparse.ArgumentTypeError(msg)
 
-    return filename
+    return path
 
 def from_datetime(date):
     ''' Return a string like YYYYMMDDHH given a datetime object. '''
@@ -56,7 +56,7 @@ def get_func(val: str):
 
 
 # pylint: disable=invalid-name, too-many-locals
-def label_line(ax, label, segment, align=True, end='bottom', offset=0, **kwargs):
+def label_line(ax, label, segment, **kwargs):
 
     '''
     Label a single line with line2D label data.
@@ -68,14 +68,20 @@ def label_line(ax, label, segment, align=True, end='bottom', offset=0, **kwargs)
       ax        the SkewT object axis
       label     label to be used for the current line
       segment   a list (array) of values for the current line
+
+    Key Word Arguments
+
       align     optional bool to enable the rotation of the label to line angle
       end       the end of the line at which to put the label. 'bottom' or 'top'
       offset    index to use for the "end" of the array
 
-    Key Word Arguments
-
       Any kwargs accepted by matplotlib's text box.
     '''
+
+    # Strip non-text-box key word arguments and set default if they don't exist
+    align = kwargs.pop('align', True)
+    end = kwargs.pop('end', 'bottom')
+    offset = kwargs.pop('offset', 0)
 
     # Label location
     if end == 'bottom':
@@ -136,7 +142,7 @@ def label_lines(ax, lines, labels, offset=0, **kwargs):
 
       ax      the SkewT object axis
       lines   the SkewT object special lines
-      labels  list of labels to be used 
+      labels  list of labels to be used
       offset  index to use for the "end" of the array
 
     Key Word Arguments
@@ -151,8 +157,27 @@ def label_lines(ax, lines, labels, offset=0, **kwargs):
 
     for i, line in enumerate(lines.get_segments()):
         label = int(labels[i])
-        label = label[0] if isinstance(label, list) else label
         label_line(ax, label, line, align=True, offset=offset, **kwargs)
+
+def old_enough(age, file_path):
+
+    '''
+    Helper function to test the age of a file.
+
+    Input:
+
+      age         desired age in minutes
+      file_path   full path to file to check
+
+    Output:
+
+      bool    whether the file is at least age minutes old
+    '''
+
+    file_time = dt.datetime.fromtimestamp(os.path.getctime(file_path))
+    max_age = dt.datetime.now() - dt.timedelta(minutes=age)
+
+    return file_time < max_age
 
 def timer(func):
 
