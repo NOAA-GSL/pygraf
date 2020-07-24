@@ -182,8 +182,10 @@ class VarSpec(abc.ABC):
 
         ''' Default color map for Lifted Index '''
 
-        ctable = ctables.colortables.get_colortable(self.vspec.get('cmap')) \
-                          (range(40, 168, 4))
+        ctable = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          (range(4, 125, 4))
+        ctable[14] = [1, 1, 1, 1]
+        ctable[15] = [1, 1, 1, 1]
         return ctable
 
     @property
@@ -238,7 +240,7 @@ class VarSpec(abc.ABC):
 
         grays = cm.get_cmap('Greys', 2)([0])
         ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
-                          ([15, 18, 20, 25, 50, 60, 70, 80, 85, 90, 100, 120, 125])
+                          (range(0, 126, 5))
         return np.concatenate((grays, ncar))
 
     @property
@@ -257,9 +259,7 @@ class VarSpec(abc.ABC):
         ''' Default color map for Longwave Radiation '''
 
         ncar = ctables.colortables.get_colortable(self.vspec.get('cmap')) \
-                          ([21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, \
-                            34, 35, 36, 37, 38, 8, 7, 6, 5, 4, 3, 2, 1, 2, 3, 4, \
-                            5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
+                            (range(0, 40))
         grays = cm.get_cmap('Greys', 100)(range(10, 100))
         return np.concatenate((ncar, grays))
 

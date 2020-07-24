@@ -133,7 +133,7 @@ cin: # Surface Convective Inhibition
     title: Surface CIN
     unit: J/kg
 cloudcover:
-  blcc: &cld_cover
+  blcc: &cld_cover # PBL + 1 km Cloud Cover
     clevs: [2, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95]
     cmap: gist_ncar
     colors: cldcov_colors
@@ -191,7 +191,7 @@ dewp: # Dew point temperature
     transform: conversions.k_to_f
     unit: F
     wind: 10m
-ectp: # Echo Top
+echotop: # Echo Top
   sfc:
     clevs: !!python/object/apply:numpy.arange [4, 50, 3]
     cmap: NWSReflectivity
@@ -369,8 +369,8 @@ lhtfl: # Latent Heat Net Flux
     unit: W/m^2
 li: # Lifted Index
   best: &lifted_index
-    clevs: !!python/object/apply:numpy.arange [-15, 15]
-    cmap: rainbow_r
+    clevs: !!python/object/apply:numpy.arange [-15, 16]
+    cmap: Spectral
     colors: lifted_index_colors
     ncl_name: 4LFTX_P0_2L108_GLC0
     ticks: 0
@@ -673,14 +673,14 @@ u:
     <<: *ua_uwind
 ulwrf: # Upward Longwave Radiation Flux
   sfc: &radiation_flux
-    clevs: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200]
+    clevs: !!python/object/apply:numpy.arange [350, 601, 10]
     cmap: gist_ncar
     colors: radiation_colors
     ncl_name: ULWRF_P0_L1_GLC0
     ticks: 0
     title: Upward Longwave Radiation Flux, Surface
     unit: W/m^2
-  nta:
+  top: # Nominal top of atmosphere
     clevs: !!python/object/apply:numpy.arange [80, 341, 2]
     cmap: ir_rgbv_r
     colors: radiation_mix_colors
@@ -693,7 +693,7 @@ uswrf: # Upward Shortwave Radiation Flux
     <<: *radiation_flux
     ncl_name: USWRF_P0_L1_GLC0
     title: Upward Shortwave Radiation Flux, Surface
-  nta:
+  top: # Nominal top of atmosphere
     <<: *radiation_flux
     clevs: !!python/object/apply:numpy.arange [50, 851, 10]
     cmap: Greys_r

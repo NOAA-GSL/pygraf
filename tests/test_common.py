@@ -197,10 +197,10 @@ class TestDefaultSpecs():
             'mul',     # most unstable layer
             'mup',     # maximum upward
             'mu',      # most unstable
-            'nta',     # nominal top of atmosphere
             'pw',      # wrt precipitable water
             'sat',     # satellite
             'sfc',     # surface
+            'top',     # nominal top of atmosphere
             'total',   # total clouds
             'ua',      # upper air
             ]
