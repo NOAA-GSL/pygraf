@@ -132,8 +132,17 @@ cin: # Surface Convective Inhibition
     ticks: 0
     title: Surface CIN
     unit: J/kg
-cloud_cover:
-  high: &cld_cover
+cloudcover:
+  blcc: &cld_cover # PBL + 1 km Cloud Cover
+    clevs: [2, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95]
+    cmap: gist_ncar
+    colors: cldcov_colors
+    ncl_name: TCDC_P0_L211_GLC0
+    ticks: 0
+    title: PBL + 1km Cloud Cover
+    unit: '%'
+  high:
+    <<: *cld_cover
     clevs: [2, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95]
     cmap: gist_ncar
     colors: cldcov_colors
@@ -182,6 +191,16 @@ dewp: # Dew point temperature
     transform: conversions.k_to_f
     unit: F
     wind: 10m
+echotop: # Echo Top
+  sfc:
+    clevs: !!python/object/apply:numpy.arange [4, 50, 3]
+    cmap: NWSReflectivity
+    colors: cref_colors
+    ncl_name: RETOP_P0_L3_GLC0
+    ticks: 0
+    title: Echo Top
+    transform: conversions.m_to_kft
+    unit: kft
 G113bt: # GOES-W Brightness temperature, water vapor (Ch 3)
   sat: &goes_sat
     clevs: !!python/object/apply:numpy.arange [-80, 41, 1]
@@ -313,6 +332,15 @@ hlcy: # Helicity
     layer: 1
     ncl_name: HLCY_P0_2L103_GLC0
     unit: $m^2 / s^2$
+hpbl: # Height of Planetary Boundary Layer
+  sfc: 
+    clevs: [25, 50, 100, 200, 300, 500, 750, 1000, 1500, 2000, 2500, 3000, 4000, 5000]
+    cmap: ir_rgbv
+    colors: pbl_colors
+    ncl_name: HPBL_P0_L1_GLC0
+    ticks: 0
+    title: PBL Height
+    unit: m
 lcl: # Lifted condensation level
   sfc: &lcl
     clevs: !!python/object/apply:numpy.arange [0, 5000, 250]
@@ -331,21 +359,27 @@ lcl: # Lifted condensation level
     <<: *lcl
     unit: m
 lhtfl: # Latent Heat Net Flux
-  sfc:
+  sfc: &heat_flux
     clevs: !!python/object/apply:numpy.arange [-100, 401, 25]
     cmap: Carbone42
-    colors: lhtfl_colors
+    colors: heat_flux_colors
     ncl_name: LHTFL_P0_L1_GLC0
     ticks: 0
     title: Latent Heat Net Flux
     unit: W/m^2
 li: # Lifted Index
-  sfc:
-    ncl_name: LFTX_P0_2L100_GLC0
-    unit: K
-  best:
+  best: &lifted_index
+    clevs: !!python/object/apply:numpy.arange [-15, 16]
+    cmap: Spectral
+    colors: lifted_index_colors
     ncl_name: 4LFTX_P0_2L108_GLC0
-    unit: K
+    ticks: 0
+    title: Best Lifted Index (lowest 180 mb)
+    unit: C
+  sfc:
+    <<: *lifted_index
+    ncl_name: LFTX_P0_2L100_GLC0
+    title: Surface Lifted Index
 lpl: # Lifted parcel level
   ua:
     ncl_name: PLPL_P0_2L108_GLC0
@@ -427,6 +461,10 @@ rh: # Relative Humidity
   850mb:
     <<: *rh
     ncl_name: RH_P0_L100_GLC0
+  pw: # RH wrt Precipitable Water
+    <<: *rh
+    ncl_name: RHPW_P0_L10_GLC0
+    title: Relative Humidity wrt Precipitable Water
 rvil: # Radar-derived Vertically Integrated Liquid
   sfc: &vert_int_liq
     clevs: [0.05, 0.15, 0.76, 3.47, 6.92, 12, 31.6, 35, 40, 45, 50, 55, 60, 65, 70]
@@ -448,6 +486,13 @@ shear:
   06km: # 0-6 km
     <<: *shear
     layer: 0
+shtfl: # Sensible Heat Net Flux
+  sfc:
+    <<: *heat_flux
+    ncl_name: SHTFL_P0_L1_GLC0
+    ticks: 0
+    title: Sensible Heat Net Flux
+    unit: W/m^2
 soilm: # Soil Moisture Availability
   sfc:
     clevs: [0, 5, 15, 25, 35, 45, 55, 65, 75, 85, 95]
@@ -626,6 +671,36 @@ u:
   925mb: *ua_uwind
   ua:
     <<: *ua_uwind
+ulwrf: # Upward Longwave Radiation Flux
+  sfc: &radiation_flux
+    clevs: !!python/object/apply:numpy.arange [350, 601, 10]
+    cmap: gist_ncar
+    colors: radiation_colors
+    ncl_name: ULWRF_P0_L1_GLC0
+    ticks: 0
+    title: Upward Longwave Radiation Flux, Surface
+    unit: W/m^2
+  top: # Nominal top of atmosphere
+    clevs: !!python/object/apply:numpy.arange [80, 341, 2]
+    cmap: ir_rgbv_r
+    colors: radiation_mix_colors
+    ncl_name: ULWRF_P0_L8_GLC0
+    ticks: 20
+    title: Outgoing Longwave Radiation Flux, Top of Atmosphere
+    unit: W/m^2
+uswrf: # Upward Shortwave Radiation Flux
+  sfc:
+    <<: *radiation_flux
+    ncl_name: USWRF_P0_L1_GLC0
+    title: Upward Shortwave Radiation Flux, Surface
+  top: # Nominal top of atmosphere
+    <<: *radiation_flux
+    clevs: !!python/object/apply:numpy.arange [50, 851, 10]
+    cmap: Greys_r
+    colors: radiation_bw_colors
+    ncl_name: USWRF_P0_L8_GLC0
+    ticks: 40
+    title: Outgoing Shortwave Radiation Flux, Top of Atmosphere
 v:
   10m:
     ncl_name: VGRD_P0_L103_GLC0

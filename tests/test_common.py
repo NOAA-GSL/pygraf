@@ -182,6 +182,7 @@ class TestDefaultSpecs():
 
         allowed_levels = [
             'best',    # Best
+            'blcc',    # boundary layer cld cover
             'esbl',    # ???
             'esblmn',  # ???
             'high',    # high clouds
@@ -196,8 +197,10 @@ class TestDefaultSpecs():
             'mul',     # most unstable layer
             'mup',     # maximum upward
             'mu',      # most unstable
+            'pw',      # wrt precipitable water
             'sat',     # satellite
             'sfc',     # surface
+            'top',     # nominal top of atmosphere
             'total',   # total clouds
             'ua',      # upper air
             ]
@@ -351,10 +354,12 @@ class TestDefaultSpecs():
                     assert checker
                 else:
                     assert checker(v)
-
+                    
     def test_keys(self):
 
         ''' Tests each of top-level variables in the config file by calling the helper function. '''
 
-        for spec in self.cfg.values():
+        for short_name, spec in self.cfg.items():
+            assert '_' not in short_name
             self.check_keys(spec)
+           
