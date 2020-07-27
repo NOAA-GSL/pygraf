@@ -55,6 +55,31 @@
 #      anchor needs to be applied before another section.
 #
 
+1hsm: # Helicity
+  sfc: &hlcy # 0-1 km Storm Relative Helicity
+    clevs: [25, 50, 100, 150, 200, 250, 300, 400, 500, 600, 700, 800]
+    cmap: gist_ncar
+    colors: hlcy_colors
+    layer: 0
+    ncl_name: HLCY_P0_2L103_GLC0
+    ticks: 0
+    title: 0-1 km Storm Relative Helicity
+    unit: m2/s2
+1ref: # Composite reflectivity
+  1000m: &refl
+    clevs: !!python/object/apply:numpy.arange [5, 76, 5]
+    cmap: NWSReflectivity
+    colors: cref_colors
+    ncl_name: REFD_P0_L103_GLC0
+    ticks: 5
+    title: 1 km agl Reflectivity
+    unit: dBZ
+3hsm: # Helicity
+  sfc: # 0-3 km Storm Relative Helicity
+    <<: *hlcy
+    layer: 1
+    ncl_name: HLCY_P0_2L103_GLC0
+    title: 0-3 km Storm Relative Helicity
 acpcp: # Accumulated precipitation
   sfc: # Not yet supported
     clevs: [0.01, 0.1, 0.25, 0.5, 1, 2, 3, 5, 10, 15, 20, 40]
@@ -163,13 +188,19 @@ cloudcover:
     ncl_name: TCDC_P0_L10_GLC0
     title: Total Cloud Cover
 cref: # Composite reflectivity
-  sfc: &refl
-    clevs: !!python/object/apply:numpy.arange [5, 76, 5]
-    cmap: NWSReflectivity
-    colors: cref_colors
+  sfc:
+    <<: *refl
     ncl_name: REFC_P0_L10_GLC0
-    ticks: 5
-    unit: dB
+    title: Composite Reflectivity
+cpofp:
+  sfc: # Frozen Precipitation Percentage
+    clevs: [-0.1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+    cmap: gist_ncar
+    colors: frzn_colors
+    ncl_name: CPOFP_P0_L1_GLC0
+    ticks: 0
+    title: Frozen Precip Percentage
+    unit: '%'
 ctop: # Cloud top height
   ua:
     clevs: !!python/object/apply:numpy.arange [0, 61, 5]
@@ -286,29 +317,54 @@ hailcast: # Max 1h Hail diameter
     ncl_name: HAIL_P8_L1_GLC0_max1h
     title: Max 1h Hail Diameterat Sfc from HAILCAST
 hlcy: # Helicity
-  in16: &hlcy # Hourly updraft helicity over 1-6 km layer
+  in16: # Hourly updraft helicity over 1-6 km layer
+    <<: *hlcy
     clevs: !!python/object/apply:numpy.arange [25, 301, 25]
-    cmap: gist_ncar
-    colors: hlcy_colors
     layer: 1
     ncl_name: UPHL_P0_2L103_GLC0
     ticks: 25
     title: 1-6km Updraft Helicity
-    unit: m2/s2
   in25: # Hourly updraft helicity over 2-5 km layer
     <<: *hlcy 
+    clevs: !!python/object/apply:numpy.arange [25, 301, 25]
     layer: 0
     ncl_name: UPHL_P0_2L103_GLC0
     title: 2-5km Updraft Helicity
+  mn02: # Hourly minimum of updraft helicity over 0-2 km layer
+    <<: *hlcy
+    clevs: !!python/object/apply:numpy.arange [12.5, 150.5, 12.5]
+    layer: 0
+    ncl_name: VAR_0_7_200_P8_2L103_GLC0_min1h
+    ticks: 12.5
+    title: 0-2km Min Updraft Helicity (over prv hr)
+  mn03: # Hourly minimum of updraft helicity over 0-3 km layer
+    <<: *hlcy
+    clevs: !!python/object/apply:numpy.arange [12.5, 150.5, 12.5]
+    layer: 1
+    ncl_name: VAR_0_7_200_P8_2L103_GLC0_min1h
+    ticks: 12.5
+    title: 0-3km Min Updraft Helicity (over prv hr)
+  mn16: # Hourly minimum of updraft helicity over 1-6 km layer
+    <<: *hlcy
+    clevs: !!python/object/apply:numpy.arange [25, 301, 25]
+    layer: 3
+    ncl_name: VAR_0_7_200_P8_2L103_GLC0_min1h
+    title: 1-6km Min Updraft Helicity (over prv hr)
+  mn25: # Hourly minimum of updraft helicity over 2-5 km layer
+    <<: *hlcy
+    clevs: !!python/object/apply:numpy.arange [25, 301, 25]
+    layer: 2
+    ncl_name: VAR_0_7_200_P8_2L103_GLC0_min1h
+    title: 2-5km Min Updraft Helicity (over prv hr)
   mx02: # Hourly maximum of updraft helicity over 0-2 km layer
-    <<: *hlcy 
+    <<: *hlcy
     clevs: !!python/object/apply:numpy.arange [12.5, 150.5, 12.5]
     layer: 0
     ncl_name: MXUPHL_P8_2L103_GLC0_max1h
     ticks: 12.5
     title: 0-2km Max Updraft Helicity (over prv hr)
   mx03: # Hourly maximum of updraft helicity over 0-3 km layer
-    <<: *hlcy 
+    <<: *hlcy
     clevs: !!python/object/apply:numpy.arange [12.5, 150.5, 12.5]
     layer: 1
     ncl_name: MXUPHL_P8_2L103_GLC0_max1h
@@ -316,11 +372,13 @@ hlcy: # Helicity
     title: 0-3km Max Updraft Helicity (over prv hr)
   mx16: # Hourly maximum of updraft helicity over 1-6 km layer
     <<: *hlcy
+    clevs: !!python/object/apply:numpy.arange [25, 301, 25]
     layer: 3
-    title: 1-6km Max Updraft Helicity (over prv hr)
     ncl_name: MXUPHL_P8_2L103_GLC0_max1h
+    title: 1-6km Max Updraft Helicity (over prv hr)
   mx25: # Hourly maximum of updraft helicity over 2-5 km layer
     <<: *hlcy
+    clevs: !!python/object/apply:numpy.arange [25, 301, 25]
     layer: 2
     ncl_name: MXUPHL_P8_2L103_GLC0_max1h
     title: 2-5km Max Updraft Helicity (over prv hr)
@@ -394,6 +452,15 @@ ltg3: # Lightning Threat (LTG1 + LTG2)
     ticks: 0
     title: Lightning Threat (comb of LTG1 and LTG2)
     unit: flashes / km^2 / 5 min
+mnvv: # Mean Vertical Veolcity
+  sfc:
+    clevs: [-20, -15, -10, -5, -1, -0.75, -0.5, -0.25, -0.1, 0.1, 0.25, 0.5, 0.75, 1, 5, 10, 15, 20]
+    cmap: nipy_spectral
+    colors: mean_vvel_colors
+    ncl_name: DZDT_P8_2L104_GLC0_avg1h
+    ticks: 0
+    title: Mean Vertical Velocity, sigma layers 0.5-0.8
+    unit: m/s
 mref: # Maximum reflectivity for past hour at 1 km AGL
   sfc:
     <<: *refl
@@ -586,9 +653,28 @@ soilw: # Soil Moisture
     <<: *soilw_levs
     layer: 8
     title: Soil Moisture at 3m
+solar: # Incoming Solar Radiation
+  sfc: &incoming_radiation
+    clevs: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100]
+    cmap: gist_ncar
+    colors: vort_colors
+    ncl_name: DSWRF_P0_L1_GLC0
+    ticks: 0
+    title: Incoming Solar Radiation
+    unit: W/m^2
 sphum: # Specific humidity
   ua:
     ncl_name: SPFH_P0_L105_GLC0
+ssrun: # Storm Surface Runoff
+  sfc: &precip
+    clevs: [0.002, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 1.0, 2.0]
+    cmap: gist_ncar
+    colors: pcp_colors
+    ncl_name: SSRUN_P8_L1_GLC0_acc1h
+    ticks: 0
+    title: Storm Surface Runoff
+    transform: conversions.kgm2_to_in
+    unit: in
 temp: # Temperature
   2ds: # 2m - Sfc
     clevs: !!python/object/apply:numpy.arange [-16, 17, 2]
@@ -649,15 +735,10 @@ temp: # Temperature
     <<: *ua_temp
 totp: # Hourly total precipitation
   sfc:
-    clevs: [0.002, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 1.0, 2.0]
-    cmap: gist_ncar
-    colors: pcp_colors
+    <<: *precip
     contour_colors: red
     ncl_name: APCP_P8_L1_GLC0_acc1h
-    ticks: 0
     title: 1 hr Total Precip
-    transform: conversions.kgm2_to_in
-    unit: in
 u:
   10m:
     ncl_name: UGRD_P0_L103_GLC0
@@ -715,11 +796,30 @@ v:
   925mb: *ua_vwind
   ua:
     <<: *ua_vwind
+vbdsf: # Incoming Direct Radiation
+  sfc:
+    <<: *incoming_radiation
+    ncl_name: VBDSF_P0_L1_GLC0
+    title: Incoming Direct Radiation
+vddsf: # Incoming Diffuse Radiation
+  sfc:
+    <<: *incoming_radiation
+    ncl_name: VDDSF_P0_L1_GLC0
+    title: Incoming Diffuse Radiation
 vil: # Vertically Integrated Liquid
   sfc:
     <<: *vert_int_liq
     ncl_name: VAR_0_16_201_P0_L10_GLC0
     title: Vertically Integrated Liquid
+vig: # Vertically-integrated graupel
+  sfc:
+    clevs: !!python/object/apply:numpy.arange [5, 91, 5]
+    cmap: jet
+    colors: graupel_colors
+    ncl_name: TCOLG_P8_L200_GLC0_max1h
+    ticks: 0
+    title: Max Vertically Integrated Graupel (over previous hour)
+    unit: mm
 vis: # Visibility
   sfc:
     clevs: [0.0625, 0.125, 0.25, 0.5, 1, 1.5, 2, 3, 4, 5, 10, 30, 50]
