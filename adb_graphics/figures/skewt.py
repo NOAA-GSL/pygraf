@@ -156,6 +156,7 @@ class SkewTDiagram(grib.profileData):
 
         self._plot_hodograph(skew)
         self._add_thermo_inset(skew)
+        self.contents.close()
 
     def _plot_hodograph(self, skew):
 
