@@ -207,7 +207,7 @@ def prepare_skewt(cla):
                 png_files = glob.glob(os.path.join(workdir, '*.png'))
                 with zipfile.ZipFile(zipf, 'a', zipfile.ZIP_DEFLATED) as zfile:
                     for png_file in png_files:
-                        zfile.write(png_file)
+                        zfile.write(png_file, os.path.basename(png_file))
                         os.remove(png_file)
                 # Directory is empty now -- rmdir is fine.
                 os.rmdir(workdir)
