@@ -74,13 +74,17 @@ def main(cla):
                 short_name=variable,
                 )
 
-            contour_field = spec.get('contour')
-            if contour_field is not None:
-                contour_field = grib.fieldData(
-                    filename=grib_path,
-                    level=level,
-                    short_name=contour_field,
-                    )
+            contours = spec.get('contours')
+            contour_fields = []
+            if contours is not None:
+                for contour, color in contours.items():
+                    contour_fields.append(grib.fieldData(
+                        filename=grib_path,
+                        level=level,
+                        line_color=color,
+                        short_name=contour,
+                        )
+                        )
 
             _, ax = plt.subplots(1, 1, figsize=(12, 12))
 
@@ -92,7 +96,7 @@ def main(cla):
 
             dm = maps.DataMap(
                 field=field,
-                contour_field=contour_field,
+                contour_field=contour_fields,
                 map_=m,
                 )
 

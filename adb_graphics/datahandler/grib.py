@@ -240,6 +240,7 @@ class fieldData(UPPData):
         super().__init__(filename, short_name, **kwargs)
 
         self.level = level
+        self.line_color = kwargs.get('line_color')
 
     @property
     def cmap(self):

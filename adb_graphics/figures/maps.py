@@ -118,14 +118,14 @@ class DataMap():
     Input:
 
         field             datahandler data object for data field to shade
-        contour_field     dandhandler data object for data field to contour
+        contour_fields    list of dandhandler data objects fields to contour
         map               maps object
 
     '''
 
     def __init__(self, field, map_, contour_field=None):
         self.field = field
-        self.contour_field = contour_field
+        self.contour_fields = contour_field
         self.map = map_
 
     def _colorbar(self, cc, ax):
@@ -161,16 +161,33 @@ class DataMap():
 
         # Draw a map and add the shaded field
         self.map.draw()
-        cf = self._draw_field(field=self.field, func=self.map.m.contourf, \
+        cf = self._draw_field(field=self.field, func=self.map.m.contourf,
                               colors=self.field.colors, extend='both', ax=ax)
         self._colorbar(cc=cf, ax=ax)
 
-        # Contour a secondary field, if requested
-        if self.contour_field is not None:
-            cc = self._draw_field(field=self.contour_field, func=self.map.m.contour, ax=ax, \
-                       colors=self.field.vspec.get('contour_colors', self.contour_field.colors))
-            clab = plt.clabel(cc, self.contour_field.clevs[::4], fontsize=18, inline=1, fmt='%4.0f')
-            _ = [txt.set_bbox(dict(facecolor='k', edgecolor='none', pad=0)) for txt in clab]
+        # Contour secondary fields, if requested
+        if self.contour_field:
+            for contour_field in self.contour_fields:
+                cc = self._draw_field(ax=ax,
+                                      field=contour_field,
+                                      colors=contour_field.line_color,
+                                      func=self.map.m.contour,
+                                      )
+                clab = plt.clabel(cc, contour_field.clevs[::4],
+                                  fmt='%4.0f',
+                                  fontsize=18,
+                                  inline=1,
+                                  )
+                # Set the background color for the line labels to black
+                _ = [txt.set_bbox(dict(facecolor='k', edgecolor='none', pad=0)) for
+                        txt in clab]
+
+        if self.hatches:
+            for field, settings in self.hatches.items():
+                self._draw_field(field=field,
+                                 func=self.map.m.contourf,
+                                 extend='lower',
+                                 hatches=[
 
         # Add wind barbs, if requested
         add_wind = self.field.vspec.get('wind', False)

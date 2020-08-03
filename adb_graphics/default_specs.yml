@@ -13,7 +13,8 @@
 #
 #   colors: name of function that defines a list of colors
 #
-#   contour: specifies a field to be contoured, and must come from same level
+#   contours: a dictionary of fields to be contoured, and their colors. they
+#             must come from same level
 #
 #   layer: for arrays with multiple fields stacked in the vertical,
 #          provide the desired level
@@ -60,7 +61,8 @@ acpcp: # Accumulated precipitation
     clevs: [0.01, 0.1, 0.25, 0.5, 1, 2, 3, 5, 10, 15, 20, 40]
     cmap: gist_ncar
     colors: accumulated_precip_colors
-    contour_colors: grey
+    contours:
+      gh: grey
     ncl_name: APCP_P8_L1_GLC0_acc{fhr}h
     ticks: 0
     transform: conversions.kgm2_to_in
@@ -71,6 +73,8 @@ cape:
     cmap: gist_ncar
     colors: vort_colors
     layer: 2
+    hatches:
+
     ncl_name: CAPE_P0_2L108_GLC0
     ticks: 0
     title: Most Unstable CAPE
@@ -185,7 +189,8 @@ dewp: # Dew point temperature
     clevs: [-60, -50, -40, -30, -20, -10, 0, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 66, 68, 70, 80, 90, 100, 110, 120]
     cmap: Carbone42_r
     colors: dewp_colors
-    contour_colors: grey
+    contours:
+      gh: grey
     ncl_name: DPT_P0_L103_GLC0
     ticks: -4
     transform: conversions.k_to_f
@@ -346,7 +351,8 @@ lcl: # Lifted condensation level
     clevs: !!python/object/apply:numpy.arange [0, 5000, 250]
     cmap: rainbow
     colors: lcl_colors
-    contour_colors: white
+    contours:
+      gh: white
     ncl_name: HGT_P0_L5_GLC0
     ticks: -2
     title: Lifted Condensation Level Height
@@ -594,7 +600,8 @@ temp: # Temperature
     clevs: !!python/object/apply:numpy.arange [-16, 17, 2]
     cmap: seismic
     colors: centered_diff
-    contour_colors: grey
+    contours:
+      gh: grey
     ncl_name: TMP_P0_L103_GLC0 # 2m Temp
     ticks: 2
     title: 2m Temp - Skin Temp
@@ -608,7 +615,6 @@ temp: # Temperature
     clevs: !!python/object/apply:numpy.arange [-60, 120, 10]
     cmap: jet
     colors: t_colors
-    contour_colors: grey
     ncl_name: TMP_P0_L103_GLC0
     ticks: 10
     transform: conversions.k_to_f
@@ -618,8 +624,8 @@ temp: # Temperature
     clevs: !!python/object/apply:numpy.arange [-70, 10, 2.5]
     cmap: jet
     colors: t_colors
-    contour: gh
-    contour_colors: grey
+    contours:
+      gh: grey
     ncl_name:
       prs: TMP_P0_L100_GLC0
       nat: TMP_P0_L105_GLC0
@@ -652,7 +658,8 @@ totp: # Hourly total precipitation
     clevs: [0.002, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 1.0, 2.0]
     cmap: gist_ncar
     colors: pcp_colors
-    contour_colors: red
+    contours:
+      gh: red
     ncl_name: APCP_P8_L1_GLC0_acc1h
     ticks: 0
     title: 1 hr Total Precip
@@ -735,7 +742,8 @@ vort: # Absolute vorticity
     clevs: !!python/object/apply:numpy.arange [6, 29, 2]
     cmap: gist_ncar
     colors: vort_colors
-    contour_colors: grey
+    contours:
+      gh: grey
     ncl_name: ABSV_P0_L100_GLC0
     ticks: 2
     transform: conversions.vort_scale
@@ -745,7 +753,8 @@ vvel: # Vertical velocity
     clevs: !!python/object/apply:numpy.arange [-17, 34, 5]
     cmap: gist_ncar
     colors: vvel_colors
-    contour_colors: grey
+    contours:
+      gh: grey
     ncl_name: VVEL_P0_L100_GLC0
     ticks: 5
     transform: conversions.vvel_scale
