@@ -98,6 +98,11 @@ def parse_args():
                         default='wrfnat_hrconus_{FCST_TIME:02d}.grib2',
                         help='File naming convention',
                         )
+    parser.add_argument('--file_type',
+                        choices=('nat', 'prs'),
+                        default='nat',
+                        help='Type of levels contained in grib file.',
+                        )
     parser.add_argument('--max_plev',
                         help='Maximum pressure level to plot for profiles.',
                         type=int,
@@ -121,7 +126,12 @@ def parallel_skewt(cla, fhr, grib_path, site, workdir):
       workdir    output directory
     '''
 
-    skew = skewt.SkewTDiagram(filename=grib_path, loc=site, max_plev=cla.max_plev)
+    skew = skewt.SkewTDiagram(
+        filename=grib_path,
+        filetype=cla.file_type,
+        loc=site,
+        max_plev=cla.max_plev,
+        )
     skew.create_diagram()
     outfile = f"skewt_{skew.site_code}_{skew.site_num}_f{fhr:02d}.png"
     png_path = os.path.join(workdir, outfile)
