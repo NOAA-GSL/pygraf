@@ -8,7 +8,6 @@ specifics of grib files from UPP.
 import abc
 import datetime
 from functools import lru_cache
-import os
 from string import digits, ascii_letters
 
 from matplotlib import cm
@@ -24,18 +23,18 @@ class GribFile():
 
     ''' Wrappers and helper functions for interfacing with pyNIO.'''
 
-    def __init__(self, filename):
+    def __init__(self, filename, filetype):
         self.filename = filename
         self.contents = self._load()
 
-        self.file_type = 'nat' if 'nat' in os.path.basename(filename) else 'prs'
+        self.filetype = filetype
 
     def _load(self):
 
         ''' Internal method that opens the grib file. Returns a grib message
         iterator. '''
 
-        return Nio.open_file(self.filename) # pylint: disable=c-extension-no-member
+        return Nio.open_file(self.filename, format="grib2") # pylint: disable=c-extension-no-member
 
     def get_field(self, ncl_name):
 
@@ -67,8 +66,9 @@ class UPPData(GribFile, specs.VarSpec):
 
         # Parse kwargs first
         config = kwargs.get('config', 'adb_graphics/default_specs.yml')
+        filetype = kwargs.get('filetype', 'prs')
 
-        GribFile.__init__(self, filename)
+        GribFile.__init__(self, filename, filetype)
         specs.VarSpec.__init__(self, config)
 
         self.spec = self.yml
@@ -171,7 +171,7 @@ class UPPData(GribFile, specs.VarSpec):
 
         name = spec.get('ncl_name')
         if isinstance(name, dict):
-            name = name.get(self.file_type)
+            name = name.get(self.filetype)
         return name
 
     def numeric_level(self, level=None):

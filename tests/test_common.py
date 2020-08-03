@@ -354,7 +354,7 @@ class TestDefaultSpecs():
                     assert checker
                 else:
                     assert checker(v)
-                    
+
     def test_keys(self):
 
         ''' Tests each of top-level variables in the config file by calling the helper function. '''
@@ -362,4 +362,3 @@ class TestDefaultSpecs():
         for short_name, spec in self.cfg.items():
             assert '_' not in short_name
             self.check_keys(spec)
-           

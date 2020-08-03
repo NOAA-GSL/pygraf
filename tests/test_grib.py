@@ -20,7 +20,7 @@ def test_UPPData(natfile, prsfile):
         def values(self, level=None, name=None, **kwargs):
             return 1
 
-    upp_nat = UPP(natfile, short_name='temp')
+    upp_nat = UPP(natfile, filetype='nat', short_name='temp')
     upp_prs = UPP(prsfile, short_name='temp')
 
     # Ensure appropriate typing and size (where applicable)
@@ -93,7 +93,7 @@ def test_profileData(natfile):
     ''' Test the profileData class methods on a nat file'''
 
     loc = ' BNA   9999 99999  36.12  86.69  597 Nashville, TN\n'
-    profile = grib.profileData(natfile, loc=loc, short_name='temp')
+    profile = grib.profileData(natfile, filetype='nat', loc=loc, short_name='temp')
 
     assert isinstance(profile.get_xypoint(), tuple)
     assert isinstance(profile.values(), np.ndarray)
