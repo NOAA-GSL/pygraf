@@ -98,6 +98,11 @@ def parse_args():
                         default='wrfnat_hrconus_{FCST_TIME:02d}.grib2',
                         help='File naming convention',
                         )
+    parser.add_argument('--file_type',
+                        choices=('nat', 'prs'),
+                        default='nat',
+                        help='Type of levels contained in grib file.',
+                        )
     parser.add_argument('--max_plev',
                         help='Maximum pressure level to plot for profiles.',
                         type=int,
@@ -121,7 +126,12 @@ def parallel_skewt(cla, fhr, grib_path, site, workdir):
       workdir    output directory
     '''
 
-    skew = skewt.SkewTDiagram(filename=grib_path, loc=site, max_plev=cla.max_plev)
+    skew = skewt.SkewTDiagram(
+        filename=grib_path,
+        filetype=cla.file_type,
+        loc=site,
+        max_plev=cla.max_plev,
+        )
     skew.create_diagram()
     outfile = f"skewt_{skew.site_code}_{skew.site_num}_f{fhr:02d}.png"
     png_path = os.path.join(workdir, outfile)
@@ -159,6 +169,8 @@ def prepare_skewt(cla):
     if cla.zip_dir:
         os.makedirs(cla.zip_dir, exist_ok=True)
         zipf = os.path.join(cla.zip_dir, 'files.zip')
+        if os.path.exists(zipf):
+            os.remove(zipf)
 
     # Load sites
     with open(cla.sites, 'r') as sites_file:
@@ -173,7 +185,7 @@ def prepare_skewt(cla):
     # new files as they become available.
     while fcst_hours:
         timer_sleep = time.time()
-        for fhr in fcst_hours:
+        for fhr in sorted(fcst_hours):
             grib_path = os.path.join(cla.data_root,
                                      cla.file_tmpl.format(FCST_TIME=fhr))
 
@@ -207,8 +219,10 @@ def prepare_skewt(cla):
                 png_files = glob.glob(os.path.join(workdir, '*.png'))
                 with zipfile.ZipFile(zipf, 'a', zipfile.ZIP_DEFLATED) as zfile:
                     for png_file in png_files:
-                        zfile.write(png_file)
+                        zfile.write(png_file, os.path.basename(png_file))
                         os.remove(png_file)
+                # Directory is empty now -- rmdir is fine.
+                os.rmdir(workdir)
 
             # Keep track of last time we did something useful
             timer_end = time.time()
@@ -232,4 +246,11 @@ if __name__ == '__main__':
 
     CLARGS = parse_args()
     CLARGS.fcst_hour = fhr_list(CLARGS.fcst_hour)
+
+    print(f"Running script with args: ")
+    print((('-' * 80)+'\n') * 2)
+
+    for name, val in CLARGS.__dict__.items():
+        print(f"{name:>15s}: {val}")
+
     prepare_skewt(CLARGS)
