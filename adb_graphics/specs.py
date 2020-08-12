@@ -216,9 +216,7 @@ class VarSpec(abc.ABC):
 
         ''' Default color map for Mean Vertical Velocity '''
 
-        segments = [[15, 56, 5], [85, 113, 3]]
-        ctable = cm.get_cmap(self.vspec.get('cmap'), 128) \
-                (list(chain(*[range(*i) for i in segments])))
+        ctable = cm.get_cmap(self.vspec.get('cmap'), 128)(range(0, 114, 6))
         ctable[9] = [1, 1, 1, 1]
         return ctable
 
@@ -310,6 +308,17 @@ class VarSpec(abc.ABC):
 
     @property
     @lru_cache()
+    def shear_colors(self) -> np.ndarray:
+
+        ''' Default color map for Vertical Shear '''
+
+        ctable = cm.get_cmap(self.vspec.get('cmap'), 16) \
+                          (range(5, 15))
+        ctable[9] = [1, 1, 1, 1]
+        return ctable
+
+    @property
+    @lru_cache()
     def soilm_colors(self) -> np.ndarray:
 
         ''' Default color map for Soil Moisture Availability '''
@@ -365,6 +374,7 @@ class VarSpec(abc.ABC):
         grays = cm.get_cmap('Greys', 3)([1, 0])
         ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
                           ([15, 18, 20, 25, 50, 60, 70, 80, 85, 90, 100, 120])
+
         return np.concatenate((grays, ncar))
 
     @property

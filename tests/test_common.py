@@ -127,13 +127,14 @@ class TestDefaultSpecs():
             'colors': self.is_a_color,
             'contour': self.is_a_key,
             'contour_colors': self.is_a_color,
-            'layer': self.is_int,
             'ncl_name': True,
             'ticks': self.is_number,
             'title': self.is_string,
             'transform': self.is_callable,
             'transform_kwargs': self.is_dict,
             'unit': self.is_string,
+            'vertical_index': self.is_int,
+            'vertical_level_name': self.is_string,
             'wind': self.is_wind,
             }
 

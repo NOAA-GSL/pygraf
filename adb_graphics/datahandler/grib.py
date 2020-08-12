@@ -184,10 +184,10 @@ class UPPData(GribFile, specs.VarSpec):
         '''
 
         level = level if level else self.level
-
         # Gather all the numbers and convert to integer
-        lev_val = ''.join([c for c in level if c in digits])
-        lev_val = int(lev_val) if lev_val else lev_val
+        lev_val = ''.join([c for c in level if (c in digits or c == '.')])
+        if lev_val:
+            lev_val = float(lev_val) if '.' in lev_val else int(lev_val)
 
         # Gather all the letters
         lev_unit = ''.join([c for c in level if c in ascii_letters])
@@ -328,26 +328,35 @@ class fieldData(UPPData):
         elif len(field.shape) == 3:
 
             # Available variable levels
-            try:
-                levs = self.contents.variables[field.dimensions[0]][::]
+            dim_name = spec.get('vertical_level_name',
+                                field.dimensions[0])
+            print('grib.py: dim_name = ', dim_name)
+            levs = self.contents.variables[dim_name][::]
+            print('grib.py: levs = ', levs)
 
-                # Requested level
-                lev_val, lev_unit = self.numeric_level()
-                lev_val = lev_val * 100. if lev_unit == 'mb' else lev_val
+            # Requested level
+            lev_val, lev_unit = self.numeric_level()
+            lev_val = lev_val / 100. if lev_unit == 'cm' else lev_val
+            lev_val = lev_val * 100. if lev_unit in ['mb', 'mxmb'] else lev_val
+            lev_val = lev_val * 1000. if lev_unit in ['km', 'mx', 'sr'] else lev_val
+            print('grib.py: lev_val, lev_unit = ', lev_val, lev_unit)
 
-                # The index of the reqested level
+            # The index of the requested level
+            lev = spec.get('vertical_index')
+            print('grib.py: lev = ', lev)
+            if lev is None:
                 lev = int(np.argwhere(levs == lev_val))
-            except KeyError:
-                lev = spec.get('layer')
+            print('grib.py: lev = ', lev)
             vals = field[lev, :, :]
 
-        transforms = spec.get('transform')
-        if transforms:
-            transform_kwargs = spec.get('transform_kwargs', {})
-            vals = self.get_transform(transforms, vals, transform_kwargs)
+            transforms = spec.get('transform')
+            if transforms:
+                transform_kwargs = spec.get('transform_kwargs', {})
+                vals = self.get_transform(transforms, vals, transform_kwargs)
+
         return vals
 
-    def vector_magnitude(self, field1, field2, layer=0):
+    def vector_magnitude(self, field1, field2, vertical_index=0):
 
         '''
         Returns the vector magnitude of two component vector fields. The
@@ -356,10 +365,10 @@ class fieldData(UPPData):
         '''
 
         if isinstance(field1, str):
-            field1 = self.get_field(field1)[layer]
+            field1 = self.get_field(field1)[vertical_index]
 
         if isinstance(field2, str):
-            field2 = self.get_field(field2)[layer]
+            field2 = self.get_field(field2)[vertical_index]
 
         return conversions.magnitude(field1, field2)
 
