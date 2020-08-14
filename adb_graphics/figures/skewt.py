@@ -33,6 +33,7 @@ class SkewTDiagram(grib.profileData):
 
     Key word arguments:
 
+      fhr              forecast hour
       max_plev         maximum pressure level to plot in mb
 
     Additional keyword arguments for the grib.profileData base class should also

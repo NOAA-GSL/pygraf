@@ -173,7 +173,7 @@ class VarSpec(abc.ABC):
         ''' Default color map for Lifted Condensation Level '''
 
         ctable = ctables.colortables.get_colortable(self.vspec.get('cmap')) \
-                    (range(60, 180, 6)) # rainbow
+                    (range(50, 180, 7)) # rainbow
         return ctable
 
     @property

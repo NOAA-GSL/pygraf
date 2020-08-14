@@ -14,6 +14,8 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import numpy as np
 
+import adb_graphics.utils as utils
+
 # REGIONS is a dict with predefined regions specifying the corners of the grid to be plotted.
 #     Order: [lower left lat, upper right lat, lower left lon, upper right lon]
 
@@ -123,9 +125,11 @@ class DataMap():
 
     '''
 
-    def __init__(self, field, map_, contour_field=None):
+    def __init__(self, field, map_, contour_fields=None, hatch_fields=None):
+
         self.field = field
-        self.contour_fields = contour_field
+        self.contour_fields = contour_fields
+        self.hatch_fields = hatch_fields
         self.map = map_
 
     def _colorbar(self, cc, ax):
@@ -152,6 +156,7 @@ class DataMap():
                             )
         cbar.ax.set_xticklabels(ticks, fontsize=18)
 
+    @utils.timer
     def draw(self, show=False):
 
         ''' Main method for creating the plot. Set show=True to display the
@@ -161,33 +166,46 @@ class DataMap():
 
         # Draw a map and add the shaded field
         self.map.draw()
-        cf = self._draw_field(field=self.field, func=self.map.m.contourf,
-                              colors=self.field.colors, extend='both', ax=ax)
-        self._colorbar(cc=cf, ax=ax)
+        cf = self._draw_field(ax=ax,
+                              colors=self.field.colors,
+                              extend='both',
+                              field=self.field,
+                              func=self.map.m.contourf,
+                              levels=self.field.clevs,
+                              )
+        self._colorbar(ax=ax, cc=cf)
 
         # Contour secondary fields, if requested
-        if self.contour_field:
+        if self.contour_fields:
             for contour_field in self.contour_fields:
+                levels = contour_field.contour_kwargs.pop('levels',
+                                                          contour_field.clevs)
                 cc = self._draw_field(ax=ax,
                                       field=contour_field,
-                                      colors=contour_field.line_color,
                                       func=self.map.m.contour,
+                                      levels=levels,
+                                      **contour_field.contour_kwargs,
                                       )
-                clab = plt.clabel(cc, contour_field.clevs[::4],
-                                  fmt='%4.0f',
-                                  fontsize=18,
-                                  inline=1,
-                                  )
-                # Set the background color for the line labels to black
-                _ = [txt.set_bbox(dict(facecolor='k', edgecolor='none', pad=0)) for
-                        txt in clab]
+                if len(levels) == len(contour_field.clevs):
+                    clab = plt.clabel(cc, contour_field.clevs[::4],
+                                      fmt='%4.0f',
+                                      fontsize=18,
+                                      inline=1,
+                                      )
+                    # Set the background color for the line labels to black
+                    _ = [txt.set_bbox(dict(facecolor='k', edgecolor='none', pad=0)) for
+                         txt in clab]
 
-        if self.hatches:
-            for field, settings in self.hatches.items():
-                self._draw_field(field=field,
+        # Add hatched fields, if requested
+        # Levels should be included in the settings dict here since they don't
+        # correspond to a full field of contours.
+        if self.hatch_fields:
+            for field in self.hatch_fields:
+                self._draw_field(ax=ax,
+                                 field=field,
                                  func=self.map.m.contourf,
-                                 extend='lower',
-                                 hatches=[
+                                 **field.contour_kwargs,
+                                 )
 
         # Add wind barbs, if requested
         add_wind = self.field.vspec.get('wind', False)
@@ -221,8 +239,9 @@ class DataMap():
         '''
 
         x, y = self._xy_mesh(field)
+
+        print(f'{field.short_name} min/max: {np.amin(field.values()), np.amax(field.values())}')
         return func(x, y, field.values(),
-                    field.clevs,
                     ax=ax,
                     **kwargs,
                     )
@@ -237,9 +256,14 @@ class DataMap():
 
         # Create a descriptor string for the contoured field, if one exists
         contoured = ''
-        if self.contour_field is not None:
-            cf = self.contour_field
-            contoured = f'{cf.field.long_name} ({cf.units}, contoured)'
+        if self.hatch_fields:
+            cf = self.hatch_fields[0]
+            title = cf.vspec.get('title', cf.field.long_name)
+            contoured = f'{title} ({cf.units}, hatched)'
+        elif self.contour_fields:
+            cf = self.contour_fields[0]
+            title = cf.vspec.get('title', cf.field.long_name)
+            contoured = f'{title} ({cf.units}, contoured)'
 
         # Analysis time (top) and forecast hour (bottom) on the left
         plt.title(f"Analysis: {atime}\nFcst Hr: {f.fhr}", loc='left', fontsize=16)

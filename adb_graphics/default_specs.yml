@@ -13,11 +13,19 @@
 #
 #   colors: name of function that defines a list of colors
 #
-#   contours: a dictionary of fields to be contoured, and their colors. they
-#             must come from same level
+#   contours: a dictionary of fields to be contoured, and their contour key word
+#             arguments. the top level contour name should be the key for the
+#             field to be hatched, and may inidicate a different level separated
+#             by an underscore, e.g. rh_850mb would contour the 850mb level rh
+#             on the map.
 #
 #   layer: for arrays with multiple fields stacked in the vertical,
 #          provide the desired level
+#
+#   hatches: a dictionary of fields to be hatched, and their contourf key word
+#            arguments. the top level hatch name should be the key for the field
+#            to be hatched, and may have a different level separated by an
+#            underscore, e.g. rh_850mb would hatch the 850mb level.
 #
 #   ncl_name: the name of the variable as expected by NCL
 #
@@ -62,7 +70,8 @@ acpcp: # Accumulated precipitation
     cmap: gist_ncar
     colors: accumulated_precip_colors
     contours:
-      gh: grey
+      gh:
+        colors: grey
     ncl_name: APCP_P8_L1_GLC0_acc{fhr}h
     ticks: 0
     transform: conversions.kgm2_to_in
@@ -73,24 +82,54 @@ cape:
     cmap: gist_ncar
     colors: vort_colors
     layer: 2
+    contours:
+      lpl_agl:
+        colors: 'k'
+        levels: [50, 1000]
+        linewidths: 0.6
     hatches:
-
+      lpl_agl:
+        alpha: 0
+        hatches: ['///', '']
+        levels: [50, 1000]
     ncl_name: CAPE_P0_2L108_GLC0
     ticks: 0
     title: Most Unstable CAPE
     unit: J/kg
   mul: # Most Unstable Layer CAPE
     <<: *cape
+    contours:
+    hatches:
     layer: 1
     ncl_name: CAPE_P0_2L108_GLC0
     title: Most Unstable Layer CAPE
   mx90mb: # Lowest 90 mb Mixed Layer CAPE
     <<: *cape
+    contours:
+      cin:
+        colors: 'k'
+        levels: [-1000, -50]
+        linewidths: 0.6
+    hatches:
+      cin_mx90mb:
+        alpha: 0
+        hatches: ['///', '']
+        levels: [-1000, -50]
     layer: 0
     ncl_name: CAPE_P0_2L108_GLC0
     title: Lowest 90 mb Mixed Layer CAPE
   sfc:
     <<: *cape
+    contours:
+      cin:
+        colors: 'k'
+        levels: [-1000, -50]
+        linewidths: 0.6
+    hatches:
+      cin_sfclt:
+        alpha: 0
+        hatches: ['///', '']
+        levels: [-1000, -50]
     ncl_name: CAPE_P0_L1_GLC0
     title: Surface CAPE
 cell: # Storm cell motion
@@ -128,7 +167,11 @@ cin: # Surface Convective Inhibition
     ncl_name: CIN_P0_2L108_GLC0
     layer: 2
     unit: J/kg
-  sfc:
+  mx90mb: # Lowest 90 mb Mixed Layer CIN
+    layer: 0
+    ncl_name: CIN_P0_2L108_GLC0
+    title: 'ML CIN < -50'
+  sfc: &sfc_cin
     clevs: [-300, -200, -150, -100, -75, -50, -40, -30, -20, -10, -1]
     cmap: gist_ncar
     colors: cin_colors
@@ -136,14 +179,17 @@ cin: # Surface Convective Inhibition
     ticks: 0
     title: Surface CIN
     unit: J/kg
+  sfclt:
+    <<: *sfc_cin
+    title: Surface CIN < -50
 cloudcover:
-  blcc: &cld_cover # PBL + 1 km Cloud Cover
+  blcc: &cld_cover # PBL ... 1 km Cloud Cover
     clevs: [2, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95]
     cmap: gist_ncar
     colors: cldcov_colors
     ncl_name: TCDC_P0_L211_GLC0
     ticks: 0
-    title: PBL + 1km Cloud Cover
+    title: PBL ... 1km Cloud Cover
     unit: '%'
   high:
     <<: *cld_cover
@@ -189,8 +235,6 @@ dewp: # Dew point temperature
     clevs: [-60, -50, -40, -30, -20, -10, 0, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 66, 68, 70, 80, 90, 100, 110, 120]
     cmap: Carbone42_r
     colors: dewp_colors
-    contours:
-      gh: grey
     ncl_name: DPT_P0_L103_GLC0
     ticks: -4
     transform: conversions.k_to_f
@@ -253,6 +297,8 @@ gh: # Geopotential height
   925mb:
     <<: *ua_gh
     clevs: !!python/object/apply:numpy.arange [3, 600, 3]
+  1000mb:
+    <<: *ua_gh
   sfc:
     <<: *ua_gh
     clevs: !!python/object/apply:numpy.arange [0, 5000, 250]
@@ -352,11 +398,14 @@ lcl: # Lifted condensation level
     cmap: rainbow
     colors: lcl_colors
     contours:
-      gh: white
+      lcl:
+        colors: white
+        levels: [1000, 100000]
+        linewidths: 1.2
     ncl_name: HGT_P0_L5_GLC0
     ticks: -2
     title: Lifted Condensation Level Height
-    transform: field_diff
+#    transform: field_diff
     transform_kwargs:
       variable2: gh
       level2: sfc
@@ -387,11 +436,19 @@ li: # Lifted Index
     ncl_name: LFTX_P0_2L100_GLC0
     title: Surface Lifted Index
 lpl: # Lifted parcel level
+  agl:
+    ncl_name: PLPL_P0_2L108_GLC0
+    title: Lifted Parcel Level AGL >50
+    transform: [conversions.pa_to_hpa, field_diff, opposite]
+    transform_kwargs:
+      variable2: pres
+      level2: sfc
+    unit: hPa
   ua:
     ncl_name: PLPL_P0_2L108_GLC0
     transform: conversions.pa_to_hpa
     unit: hPa
-ltg3: # Lightning Threat (LTG1 + LTG2)
+ltg3: # Lightning Threat (LTG1 ... LTG2)
   sfc: 
     clevs: [0.02, 0.5, 1.0, 1.5, 2.0, 2.5, 3, 4, 5, 6, 7, 8, 10, 12]
     cmap: NWSReflectivity
@@ -458,15 +515,43 @@ rh: # Relative Humidity
     ncl_name: RH_P0_L103_GLC0
     ticks: 10
     unit: '%'
-  500mb:
+  500mb: &rh_ua
     <<: *rh
     ncl_name: RH_P0_L100_GLC0
+    contours:
+      pres_sfc:
+        colors: 'k'
+        levels: [0, 500]
+        linewidths: 0.6
+    hatches:
+      pres_sfc:
+        alpha: 0
+        hatches: ['...', '']
+        levels: [0, 500]
   700mb:
-    <<: *rh
-    ncl_name: RH_P0_L100_GLC0
+    <<: *rh_ua
+    contours:
+      pres_sfc:
+        levels: [0, 700]
+        colors: 'k'
+        linewidths: 0.6
+    hatches:
+      pres_sfc:
+        alpha: 0
+        hatches: ['...', '']
+        levels: [0, 700]
   850mb:
-    <<: *rh
-    ncl_name: RH_P0_L100_GLC0
+    <<: *rh_ua
+    contours:
+      pres_sfc:
+        levels: [0, 850]
+        colors: 'k'
+        linewidths: 0.6
+    hatches:
+      pres_sfc:
+        alpha: 0
+        hatches: ['...', '']
+        levels: [0, 850]
   pw: # RH wrt Precipitable Water
     <<: *rh
     ncl_name: RHPW_P0_L10_GLC0
@@ -600,8 +685,6 @@ temp: # Temperature
     clevs: !!python/object/apply:numpy.arange [-16, 17, 2]
     cmap: seismic
     colors: centered_diff
-    contours:
-      gh: grey
     ncl_name: TMP_P0_L103_GLC0 # 2m Temp
     ticks: 2
     title: 2m Temp - Skin Temp
@@ -625,7 +708,17 @@ temp: # Temperature
     cmap: jet
     colors: t_colors
     contours:
-      gh: grey
+      pres_sfc:
+        levels: [0, 500]
+        colors: 'k'
+        linewidths: 0.6
+      gh:
+        colors: grey
+    hatches:
+      pres_sfc:
+        alpha: 0
+        hatches: ['...', '']
+        levels: [0, 500]
     ncl_name:
       prs: TMP_P0_L100_GLC0
       nat: TMP_P0_L105_GLC0
@@ -636,12 +729,73 @@ temp: # Temperature
   700mb:
     <<: *ua_temp
     clevs: !!python/object/apply:numpy.arange [-40, 40, 2.5]
+    contours:
+      pres_sfc:
+        levels: [0, 700]
+        colors: 'k'
+        linewidths: 0.6
+      gh:
+        colors: grey
+    hatches:
+      pres_sfc:
+        alpha: 0
+        hatches: ['...', '']
+        levels: [0, 500]
+    ncl_name:
+      prs: TMP_P0_L100_GLC0
+      nat: TMP_P0_L105_GLC0
+    ticks: 5
+    transform: conversions.k_to_c
+    unit: C
+    wind: True
+  700mb:
+    <<: *ua_temp
+    clevs: !!python/object/apply:numpy.arange [-40, 40, 2.5]
+    contours:
+      pres_sfc:
+        colors: 'k'
+        levels: [0, 700]
+        linewidths: 0.6
+      gh:
+        colors: grey
+    hatches:
+      pres_sfc:
+        alpha: 0
+        hatches: ['...', '']
+        levels: [0, 700]
+    ncl_name:
+      prs: TMP_P0_L100_GLC0
+      nat: TMP_P0_L105_GLC0
+    ticks: 5
+    transform: conversions.k_to_c
+    unit: C
+    wind: True
   850mb:
     <<: *ua_temp
     clevs: !!python/object/apply:numpy.arange [-40, 40, 2.5]
+    contours:
+      pres_sfc:
+        colors: 'k'
+        levels: [0, 850]
+        linewidths: 0.6
+    hatches:
+      pres_sfc:
+        alpha: 0
+        hatches: ['...', '']
+        levels: [0, 850]
   925mb:
     <<: *ua_temp
     clevs: !!python/object/apply:numpy.arange [-40, 40, 2.5]
+    contours:
+      pres_sfc:
+        colors: 'k'
+        levels: [0, 925]
+        linewidths: 0.6
+    hatches:
+      pres_sfc:
+        alpha: 0
+        hatches: ['...', '']
+        levels: [0, 925]
   sfc:
     clevs: !!python/object/apply:numpy.arange [-60, 120, 10]
     cmap: jet
@@ -653,13 +807,28 @@ temp: # Temperature
     wind: False
   ua:
     <<: *ua_temp
+thick:
+  500mb:
+    <<: *ua_gh
+    transform: [conversions.m_to_dm, field_diff]
+    transform_kwargs:
+      variable2: gh
+      level2: 1000mb
 totp: # Hourly total precipitation
   sfc:
     clevs: [0.002, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 1.0, 2.0]
     cmap: gist_ncar
     colors: pcp_colors
     contours:
-      gh: red
+      pres_msl:
+        colors: red
+        linewidths: 0.8
+        levels: !!python/object/apply:numpy.arange [650, 1051, 2]
+      thick_500mb:
+        colors: blue
+        levels: !!python/object/apply:numpy.arange [402, 601, 6]
+        linewidths: 0.8
+        linestyles: dashed
     ncl_name: APCP_P8_L1_GLC0_acc1h
     ticks: 0
     title: 1 hr Total Precip
@@ -743,7 +912,8 @@ vort: # Absolute vorticity
     cmap: gist_ncar
     colors: vort_colors
     contours:
-      gh: grey
+      gh:
+        colors: 'xkcd:light gray'
     ncl_name: ABSV_P0_L100_GLC0
     ticks: 2
     transform: conversions.vort_scale
@@ -754,7 +924,8 @@ vvel: # Vertical velocity
     cmap: gist_ncar
     colors: vvel_colors
     contours:
-      gh: grey
+      gh:
+        colors: grey
     ncl_name: VVEL_P0_L100_GLC0
     ticks: 5
     transform: conversions.vvel_scale
