@@ -39,10 +39,6 @@
 #              of the method. To call a function from a module, use the syntax
 #              "module.function"
 #
-#   transform_kwargs: the contents form a quaternary level of yaml heirarchy
-#                     with keys corresponding to transform function arguments,
-#                     and their values.
-#
 #   unit: the resulting unit of the variable
 #
 #   wind: a boolean variable that switches on/off the wind barbs drawn from the
@@ -74,7 +70,8 @@ acpcp: # Accumulated precipitation
         colors: grey
     ncl_name: APCP_P8_L1_GLC0_acc{fhr}h
     ticks: 0
-    transform: conversions.kgm2_to_in
+    transform:
+      funcs: conversions.kgm2_to_in
     unit: in
 cape:
   mu: &cape # Most Unstable CAPE
@@ -135,9 +132,10 @@ cape:
 cell: # Storm cell motion
   ua:
     ncl_name: USTM_P0_2L103_GLC0
-    transform: [vector_magnitude, conversions.ms_to_kt]
-    transform_kwargs:
-      field2: VSTM_P0_2L103_GLC0
+    transform: 
+      funcs: [vector_magnitude, conversions.ms_to_kt]
+      kwargs:
+        field2: VSTM_P0_2L103_GLC0
     unit: kt
 ceil: # Ceiling
   ua: &ceil
@@ -147,10 +145,11 @@ ceil: # Ceiling
     ncl_name: HGT_P0_L215_GLC0
     ticks: 0
     title: Ceiling
-    transform: [field_diff, conversions.m_to_kft]
-    transform_kwargs:
-      variable2: gh
-      level2: sfc
+    transform:
+      funcs: [field_diff, conversions.m_to_kft]
+      kwargs:
+        variable2: gh
+        level2: sfc
     unit: kft agl
 ceilexp: # Ceiling - experimental
   ua:
@@ -228,7 +227,7 @@ ctop: # Cloud top height
     ncl_name: HGT_P0_L3_GLC0
     ticks: 0
     title: Cloud Top Height
-    transform: [conversions.m_to_kft]
+    transform: conversions.m_to_kft
     unit: kft asl
 dewp: # Dew point temperature
   2m:
@@ -405,10 +404,6 @@ lcl: # Lifted condensation level
     ncl_name: HGT_P0_L5_GLC0
     ticks: -2
     title: Lifted Condensation Level Height
-#    transform: field_diff
-    transform_kwargs:
-      variable2: gh
-      level2: sfc
     unit: m agl
   ua:
     <<: *lcl
@@ -439,10 +434,11 @@ lpl: # Lifted parcel level
   agl:
     ncl_name: PLPL_P0_2L108_GLC0
     title: Lifted Parcel Level AGL >50
-    transform: [conversions.pa_to_hpa, field_diff, opposite]
-    transform_kwargs:
-      variable2: pres
-      level2: sfc
+    transform:
+      funcs: [conversions.pa_to_hpa, field_diff, opposite]
+      kwargs:
+        variable2: pres
+        level2: sfc
     unit: hPa
   ua:
     ncl_name: PLPL_P0_2L108_GLC0
@@ -569,10 +565,11 @@ shear:
   01km: &shear # 0-1 km
     ncl_name: VUCSH_P0_2L103_GLC0
     layer: 1
-    transform: vector_magnitude
-    transform_kwargs:
-      field2: VVCSH_P0_2L103_GLC0
-      layer: 1
+    transform:
+      funcs: vector_magnitude
+      kwargs:
+        field2: VVCSH_P0_2L103_GLC0
+        layer: 1
     unit: $s^{-1}$
   06km: # 0-6 km
     <<: *shear
@@ -688,10 +685,11 @@ temp: # Temperature
     ncl_name: TMP_P0_L103_GLC0 # 2m Temp
     ticks: 2
     title: 2m Temp - Skin Temp
-    transform: [conversions.k_to_f, field_diff]
-    transform_kwargs:
-      variable2: temp
-      level2: sfc
+    transform:
+      funcs: [conversions.k_to_f, field_diff]
+      kwargs:
+        variable2: temp
+        level2: sfc
     unit: F
     wind: False
   2m:
@@ -810,10 +808,11 @@ temp: # Temperature
 thick:
   500mb:
     <<: *ua_gh
-    transform: [conversions.m_to_dm, field_diff]
-    transform_kwargs:
-      variable2: gh
-      level2: 1000mb
+    transform:
+      funcs: [conversions.m_to_dm, field_diff]
+      kwargs:
+        variable2: gh
+        level2: 1000mb
 totp: # Hourly total precipitation
   sfc:
     clevs: [0.002, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 1.0, 2.0]
@@ -904,7 +903,7 @@ vis: # Visibility
     ncl_name: VIS_P0_L1_GLC0
     ticks: 0
     title: Sfc Visibility
-    transform: [conversions.m_to_mi]
+    transform: conversions.m_to_mi
     unit: mi
 vort: # Absolute vorticity
   500mb:
