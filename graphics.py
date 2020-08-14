@@ -27,21 +27,26 @@ def main(cla):
     Loads a set of images to be plotted, then creates them from grib input files.
     '''
 
+    # Create an empty zip file
+    zipf = None
+    if cla.zip_dir:
+        os.makedirs(cla.zip_dir, exist_ok=True)
+        zipf = os.path.join(cla.zip_dir, 'files.zip')
+
     # Load image list
     with open(cla.image_list, 'r') as fn:
         images = yaml.load(fn, Loader=yaml.Loader)[cla.image_set]
 
     # Locate input grib file
-    str_start_time = utils.from_datetime(cla.start_time)
-    grib_file = images['input_files']['hrrr_prs'].format(FCST_TIME=cla.fcst_hour)
-    grib_path = os.path.join(cla.data_root, str_start_time, grib_file)
-
+    grib_path = os.path.join(cla.data_root,
+                             cla.file_tmpl.format(FCST_TIME=cla.fcst_hour))
 
     if not os.path.exists(grib_path):
         raise IOError(f"{grib_path} not found!")
 
     # Create working directory
-    workdir = os.path.join(cla.output_path, str_start_time + f"{cla.fcst_hour:02d}")
+    workdir = os.path.join(cla.output_path,
+                           f"{utils.from_datetime(cla.start_time)}{cla.fcst_hour:02d}")
     os.makedirs(workdir, exist_ok=True)
 
     # Load default specs configuration
@@ -52,8 +57,7 @@ def main(cla):
     print((('-' * 120)+'\n') * 2)
     print(f'Creating graphics for input file: {grib_path}')
     print(f'Output graphics directory: {workdir}')
-    print(f'Graphics specification follows: {spec_file}')
-    print()
+    print(f'Graphics specification follows: {spec_file}\n')
     print((('-' * 120)+'\n') * 2)
 
     tile = ''
@@ -69,22 +73,43 @@ def main(cla):
                 raise errors.NoGraphicsDefinitionForVariable(msg)
 
             field = grib.fieldData(
+                fhr=cla.fcst_hour,
                 filename=grib_path,
                 level=level,
                 short_name=variable,
                 )
 
+            # Create a list of fieldData objects for each contour requested
             contours = spec.get('contours')
             contour_fields = []
             if contours is not None:
-                for contour, color in contours.items():
+                for contour, contour_kwargs in contours.items():
+                    if '_' in contour:
+                        var, lev = contour.split('_')
+                    else:
+                        var, lev = contour, level
+
                     contour_fields.append(grib.fieldData(
+                        fhr=cla.fcst_hour,
                         filename=grib_path,
-                        level=level,
-                        line_color=color,
-                        short_name=contour,
-                        )
-                        )
+                        level=lev,
+                        contour_kwargs=contour_kwargs,
+                        short_name=var,
+                        ))
+
+            # Create a list of fieldData objects for each hatched area requested
+            hatches = spec.get('hatches')
+            hatch_fields = []
+            if hatches is not None:
+                for hatch, hatch_kwargs in hatches.items():
+                    var, lev = hatch.split('_')
+                    hatch_fields.append(grib.fieldData(
+                        fhr=cla.fcst_hour,
+                        filename=grib_path,
+                        level=lev,
+                        contour_kwargs=hatch_kwargs,
+                        short_name=var,
+                        ))
 
             _, ax = plt.subplots(1, 1, figsize=(12, 12))
 
@@ -96,14 +121,15 @@ def main(cla):
 
             dm = maps.DataMap(
                 field=field,
-                contour_field=contour_fields,
+                contour_fields=contour_fields,
+                hatch_fields=hatch_fields,
                 map_=m,
                 )
 
             dm.draw(show=True)
 
             png_suffix = level if level != 'ua' else ''
-            png_file = f'{variable}{"_" + tile}{png_suffix}'
+            png_file = f'{variable}{"_" + tile}{png_suffix}.png'
             png_path = os.path.join(workdir, png_file)
 
             print('*' * 120)
@@ -130,29 +156,30 @@ def parse_args():
 
     parser = argparse.ArgumentParser(description='Script to drive the creation of graphics.')
 
-    parser.add_argument('-d', '--data_root',
+    # Short args
+    parser.add_argument('-d',
+                        dest='data_root',
                         help='Cycle-independant data directory location.',
                         required=True,
                         )
-    parser.add_argument('-f', '--fcst_hour',
+    parser.add_argument('-f',
+                        dest='fcst_hour',
                         help='Forecast hour',
                         required=True,
                         type=int,
                         )
-    parser.add_argument('--image_list',
-                        help='Path to YAML config file specifying which graphics to create.',
-                        required=True,
+    parser.add_argument('-n',
+                        default=1,
+                        dest='nprocs',
+                        help='Number of processes to use for parallelization.',
                         )
-    parser.add_argument('-m', '--image_set',
-                        choices=['hourly'],
-                        help='Name of top level key in image_list',
-                        required=True,
-                        )
-    parser.add_argument('-o', '--output_path',
+    parser.add_argument('-o',
+                        dest='output_path',
                         help='Directory location desired for the output graphics files.',
                         required=True,
                         )
-    parser.add_argument('-s', '--start_time',
+    parser.add_argument('-s',
+                        dest='start_time',
                         help='Start time in YYYYMMDDHH format',
                         required=True,
                         type=utils.to_datetime,
@@ -161,9 +188,29 @@ def parse_args():
                         default=60,
                         help='Sub-hourly frequency in minutes.',
                         )
-    parser.add_argument('-t', '--num_threads',
-                        default=1,
-                        help='Number of threads to use.',
+    parser.add_argument('-z',
+                        dest='zip_dir',
+                        help='Full path to zip directory.',
+                        )
+
+    # Long args
+    parser.add_argument('--file_tmpl',
+                        default='wrfnat_hrconus_{FCST_TIME:02d}.grib2',
+                        help='File naming convention',
+                        )
+    parser.add_argument('--file_type',
+                        choices=('nat', 'prs'),
+                        default='prs',
+                        help='Type of levels contained in grib file.',
+                        )
+    parser.add_argument('--image_list',
+                        help='Path to YAML config file specifying which graphics to create.',
+                        required=True,
+                        )
+    parser.add_argument('--image_set',
+                        choices=['hourly'],
+                        help='Name of top level key in image_list',
+                        required=True,
                         )
     return parser.parse_args()
 

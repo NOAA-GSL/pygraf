@@ -127,6 +127,7 @@ def parallel_skewt(cla, fhr, grib_path, site, workdir):
     '''
 
     skew = skewt.SkewTDiagram(
+        fhr=fhr,
         filename=grib_path,
         filetype=cla.file_type,
         loc=site,
