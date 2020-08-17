@@ -330,23 +330,18 @@ class fieldData(UPPData):
             # Available variable levels
             dim_name = spec.get('vertical_level_name',
                                 field.dimensions[0])
-            print('grib.py: dim_name = ', dim_name)
             levs = self.contents.variables[dim_name][::]
-            print('grib.py: levs = ', levs)
 
             # Requested level
             lev_val, lev_unit = self.numeric_level()
             lev_val = lev_val / 100. if lev_unit == 'cm' else lev_val
             lev_val = lev_val * 100. if lev_unit in ['mb', 'mxmb'] else lev_val
             lev_val = lev_val * 1000. if lev_unit in ['km', 'mx', 'sr'] else lev_val
-            print('grib.py: lev_val, lev_unit = ', lev_val, lev_unit)
 
             # The index of the requested level
             lev = spec.get('vertical_index')
-            print('grib.py: lev = ', lev)
             if lev is None:
                 lev = int(np.argwhere(levs == lev_val))
-            print('grib.py: lev = ', lev)
             vals = field[lev, :, :]
 
             transforms = spec.get('transform')
