@@ -175,7 +175,24 @@ class VarSpec(abc.ABC):
         ctable = ctables.colortables.get_colortable(self.vspec.get('cmap')) \
                     (range(60, 180, 6)) # rainbow
         return ctable
+    @property
+    @lru_cache()
+    def mdn_colors(self) -> np.ndarray:
 
+        ''' Default color map for Max Downdraft '''
+
+        grays = cm.get_cmap('Greys', 2)([0])
+        jet18 = cm.get_cmap('jet', 18)(range(18, 1, -1), alpha=0.6)
+        return np.concatenate((jet18, grays))
+    @property
+    @lru_cache()
+    def mup_colors(self) -> np.ndarray:
+
+        ''' Default color map for Max Updraft '''
+
+        grays = cm.get_cmap('Greys', 2)([0])
+        jet18 = cm.get_cmap('jet', 18)(range(1, 18, 1), alpha=0.6)
+        return np.concatenate((grays, jet18))
     @property
     @lru_cache()
     def lifted_index_colors(self) -> np.ndarray:
@@ -361,7 +378,15 @@ class VarSpec(abc.ABC):
 
         ''' Default color map for Wind Speed '''
 
-        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
-                          ([21, 27, 46, 62, 69, 77, 83, 95, 102, \
-                          119, 129, 17, 19, 21, 27, 46, 62, 69, 77])
-        return ncar
+        grays = cm.get_cmap('Greys', 2)([0])
+        rbw = cm.get_cmap('rainbow', 21)(range(3, 21))
+        return np.concatenate((grays, rbw))
+    @property
+    @lru_cache()
+    def wind_colors_high(self) -> np.ndarray:
+
+        ''' Default color map for High Wind Speed '''
+
+        grays = cm.get_cmap('Greys', 2)([0])
+        rbw = cm.get_cmap('rainbow', 16)(range(3, 16))
+        return np.concatenate((grays, rbw))

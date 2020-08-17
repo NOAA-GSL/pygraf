@@ -390,7 +390,7 @@ class fieldData(UPPData):
 
         return [component.values() for component in [u, v]]
 
-    def windspeed(self) -> np.ndarray:
+    def windspeed(self, u) -> np.ndarray:
 
         ''' Compute the wind speed from the components. '''
 
