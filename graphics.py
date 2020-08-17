@@ -129,7 +129,7 @@ def main(cla):
             dm.draw(show=True)
 
             png_suffix = level if level != 'ua' else ''
-            png_file = f'{variable}{"_" + tile}{png_suffix}.png'
+            png_file = f'{variable}{"_" + tile}{png_suffix}'
             png_path = os.path.join(workdir, png_file)
 
             print('*' * 120)

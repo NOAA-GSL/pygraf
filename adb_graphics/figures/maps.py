@@ -120,7 +120,7 @@ class DataMap():
     Input:
 
         field             datahandler data object for data field to shade
-        contour_fields    list of dandhandler data objects fields to contour
+        contour_fields    list of datahandler object fields to contour
         map               maps object
 
     '''
@@ -240,7 +240,6 @@ class DataMap():
 
         x, y = self._xy_mesh(field)
 
-        print(f'{field.short_name} min/max: {np.amin(field.values()), np.amax(field.values())}')
         return func(x, y, field.values(),
                     ax=ax,
                     **kwargs,
