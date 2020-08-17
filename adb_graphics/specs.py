@@ -124,6 +124,17 @@ class VarSpec(abc.ABC):
 
     @property
     @lru_cache()
+    def frzn_colors(self) -> np.ndarray:
+
+        ''' Default color map for Frozen Precip % '''
+
+        grays = cm.get_cmap('Greys', 7)([0, 2])
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          ([120, 90, 85, 80, 70, 60, 50, 25, 20, 15])
+        return np.concatenate((grays, ncar))
+
+    @property
+    @lru_cache()
     def goes_colors(self) -> np.ndarray:
 
         ''' Default color map for simulated GOES IR satellite '''
@@ -132,6 +143,17 @@ class VarSpec(abc.ABC):
         ctable2 = ctables.colortables.get_colortable(self.vspec.get('cmap')) \
                     (range(65, 150))
         return np.concatenate((grays[-1:], grays, ctable2, grays[1:]))
+
+    @property
+    @lru_cache()
+    def graupel_colors(self) -> np.ndarray:
+
+        ''' Default color map for Max Vertically Integrated Graupel '''
+
+        grays = cm.get_cmap('Greys', 3)([0])
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          (range(20, 128, 6))
+        return np.concatenate((grays, ncar))
 
     @property
     @lru_cache()
@@ -186,6 +208,16 @@ class VarSpec(abc.ABC):
                           (range(4, 125, 4))
         ctable[14] = [1, 1, 1, 1]
         ctable[15] = [1, 1, 1, 1]
+        return ctable
+
+    @property
+    @lru_cache()
+    def mean_vvel_colors(self) -> np.ndarray:
+
+        ''' Default color map for Mean Vertical Velocity '''
+
+        ctable = cm.get_cmap(self.vspec.get('cmap'), 128)(range(0, 114, 6))
+        ctable[9] = [1, 1, 1, 1]
         return ctable
 
     @property
@@ -276,6 +308,17 @@ class VarSpec(abc.ABC):
 
     @property
     @lru_cache()
+    def shear_colors(self) -> np.ndarray:
+
+        ''' Default color map for Vertical Shear '''
+
+        ctable = cm.get_cmap(self.vspec.get('cmap'), 16) \
+                          (range(5, 15))
+        ctable[9] = [1, 1, 1, 1]
+        return ctable
+
+    @property
+    @lru_cache()
     def soilm_colors(self) -> np.ndarray:
 
         ''' Default color map for Soil Moisture Availability '''
@@ -331,6 +374,7 @@ class VarSpec(abc.ABC):
         grays = cm.get_cmap('Greys', 3)([1, 0])
         ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
                           ([15, 18, 20, 25, 50, 60, 70, 80, 85, 90, 100, 120])
+
         return np.concatenate((grays, ncar))
 
     @property
@@ -352,7 +396,7 @@ class VarSpec(abc.ABC):
 
         grays = cm.get_cmap('Greys', 2)([0])
         ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
-                          ([15, 18, 20, 25, 50, 60, 70, 80, 85, 90, 100, 120])
+                          ([15, 18, 20, 25, 50, 60, 70, 80, 83, 90, 100, 120])
         return np.concatenate((grays, ncar))
 
     @property

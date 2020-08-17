@@ -170,6 +170,8 @@ def prepare_skewt(cla):
     if cla.zip_dir:
         os.makedirs(cla.zip_dir, exist_ok=True)
         zipf = os.path.join(cla.zip_dir, 'files.zip')
+        if os.path.exists(zipf):
+            os.remove(zipf)
 
     # Load sites
     with open(cla.sites, 'r') as sites_file:
