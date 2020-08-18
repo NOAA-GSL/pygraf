@@ -894,7 +894,10 @@ wspeed: # Wind Speed
     ncl_name: UGRD_P0_L103_GLC0
     ticks: 5
     title: 10m Wind
-    transform: [conversions.ms_to_kt, windspeed]
+#    transform: [conversions.ms_to_kt, windspeed]
+    transform: [vector_magnitude, conversions.ms_to_kt]
+    transform_kwargs:
+      field2: VGRD_P0_L103_GLC0
     unit: kt
     wind: True
   850mb:

@@ -69,6 +69,8 @@ def test_fieldData(prsfile):
     assert not np.any(diff)
 
     # Windspeed
+#    u = grib.fieldData(prsfile, level='500mb', short_name='u')
+#    windspeed = field.windspeed(u)
     windspeed = field.windspeed()
     u_wind, v_wind = field.wind(True)
     assert np.array_equal(windspeed, np.sqrt(u_wind**2 + v_wind**2))
