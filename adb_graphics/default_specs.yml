@@ -94,6 +94,10 @@ cape:
     cmap: gist_ncar
     colors: vort_colors
     contours:
+      cape:
+        colors: white
+        levels: [1000, 100000]
+        linewidths: 1.2
       lpl_agl:
         colors: 'k'
         levels: [50, 1000]
@@ -148,7 +152,7 @@ cape:
 cell: # Storm cell motion
   ua:
     ncl_name: USTM_P0_2L103_GLC0
-    transform: 
+    transform:
       funcs: [vector_magnitude, conversions.ms_to_kt]
       kwargs:
         field2: VSTM_P0_2L103_GLC0
@@ -539,7 +543,6 @@ pres:
     clevs: !!python/object/apply:numpy.arange [650, 1051, 4]
     cmap: gist_ncar
     colors: ps_colors
-    contour_colors: Black
     ncl_name: PRES_P0_L1_GLC0
     ticks: 20
     transform: conversions.pa_to_hpa

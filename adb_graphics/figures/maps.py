@@ -121,6 +121,8 @@ class DataMap():
 
         field             datahandler data object for data field to shade
         contour_fields    list of datahandler object fields to contour
+        hatch_fields      list of datahandler object fields to hatch over shaded
+                          fields
         map               maps object
 
     '''
@@ -186,15 +188,14 @@ class DataMap():
                                       levels=levels,
                                       **contour_field.contour_kwargs,
                                       )
-                if len(levels) == len(contour_field.clevs):
-                    clab = plt.clabel(cc, contour_field.clevs[::4],
-                                      fmt='%4.0f',
-                                      fontsize=18,
-                                      inline=1,
-                                      )
-                    # Set the background color for the line labels to black
-                    _ = [txt.set_bbox(dict(facecolor='k', edgecolor='none', pad=0)) for
-                         txt in clab]
+                clab = plt.clabel(cc, levels[::4],
+                                  fmt='%4.0f',
+                                  fontsize=12,
+                                  inline=1,
+                                  )
+                # Set the background color for the line labels to black
+                _ = [txt.set_bbox(dict(facecolor='k', edgecolor='none', pad=0)) for
+                     txt in clab]
 
         # Add hatched fields, if requested
         # Levels should be included in the settings dict here since they don't
@@ -253,16 +254,24 @@ class DataMap():
         atime = f.date_to_str(f.anl_dt)
         vtime = f.date_to_str(f.valid_dt)
 
-        # Create a descriptor string for the contoured field, if one exists
-        contoured = ''
+        # Create a descriptor string for the first hatched field, if one exists
+        contoured = []
+        not_labeled = [f.short_name]
         if self.hatch_fields:
             cf = self.hatch_fields[0]
-            title = cf.vspec.get('title', cf.field.long_name)
-            contoured = f'{title} ({cf.units}, hatched)'
-        elif self.contour_fields:
-            cf = self.contour_fields[0]
-            title = cf.vspec.get('title', cf.field.long_name)
-            contoured = f'{title} ({cf.units}, contoured)'
+            not_labeled.extend([h.short_name for h in self.hatch_fields])
+            if cf not in ['pres']:
+                title = cf.vspec.get('title', cf.field.long_name)
+                contoured.append(f'{title} ({cf.units}, hatched)')
+
+        # Add descriptor string for the important contoured fields
+        if self.contour_fields:
+            for cf in self.contour_fields:
+                if cf.short_name not in not_labeled:
+                    title = cf.vspec.get('title', cf.field.long_name)
+                    contoured.append(f'{title} ({cf.units}, contoured)')
+
+        contoured = ', '.join(contoured)
 
         # Analysis time (top) and forecast hour (bottom) on the left
         plt.title(f"Analysis: {atime}\nFcst Hr: {f.fhr}", loc='left', fontsize=16)

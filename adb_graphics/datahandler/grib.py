@@ -348,10 +348,13 @@ class fieldData(UPPData):
                 lev = int(np.argwhere(levs == lev_val))
             vals = field[lev, :, :]
 
-            transforms = spec.get('transform')
-            if transforms:
-                transform_kwargs = spec.get('transform_kwargs', {})
-                vals = self.get_transform(transforms, vals, transform_kwargs)
+        transforms = spec.get('transform')
+        if transforms:
+            transform_kwargs = {}
+            if isinstance(transforms, dict):
+                transform_kwargs = transforms.get('kwargs', {})
+                transforms = transforms.get('funcs')
+            vals = self.get_transform(transforms, vals, transform_kwargs)
 
         return vals
 

@@ -129,7 +129,7 @@ def main(cla):
             dm.draw(show=True)
 
             png_suffix = level if level != 'ua' else ''
-            png_file = f'{variable}{"_" + tile}{png_suffix}'
+            png_file = f'{variable}{"_" + tile}{png_suffix}.png'
             png_path = os.path.join(workdir, png_file)
 
             print('*' * 120)
@@ -144,6 +144,8 @@ def main(cla):
                 format='png',
                 orientation='landscape',
                 )
+
+            plt.close()
 
 def webname(prefix, tile='', suffix=''):
     ''' Return the filename expected for the web graphic. '''
