@@ -13,6 +13,7 @@ To run the tests, type the following in the top level repo directory:
 
 '''
 
+from inspect import signature
 from string import ascii_letters, digits
 
 from matplotlib import cm
@@ -125,18 +126,121 @@ class TestDefaultSpecs():
             'clevs': self.is_a_clev,
             'cmap': self.is_a_cmap,
             'colors': self.is_a_color,
-            'contour': self.is_a_key,
-            'contour_colors': self.is_a_color,
+            'contours': self.is_a_contour_dict,
+            'hatches': self.is_a_contourf_dict,
             'ncl_name': True,
             'ticks': self.is_number,
             'title': self.is_string,
-            'transform': self.is_callable,
-            'transform_kwargs': self.is_dict,
+            'transform': self.check_transform,
             'unit': self.is_string,
             'vertical_index': self.is_int,
             'vertical_level_name': self.is_string,
             'wind': self.is_wind,
             }
+
+    def check_kwargs(self, accepted_args, kwargs):
+
+        ''' Ensure a dictionary entry matches the kwargs accepted by a function.
+        '''
+
+        assert isinstance(kwargs, dict)
+
+        for key, args in kwargs.items():
+
+            lev = None
+            if '_' in key:
+                short_name, lev = key.split('_')
+            else:
+                short_name = key
+
+            assert self.is_a_key(short_name)
+
+            if lev:
+                assert self.cfg.get(short_name).get(lev) is not None
+
+            for arg in args.keys():
+                assert arg in accepted_args
+
+        return True
+
+    def check_transform(self, entry):
+
+        '''
+        Check that the transform entry is either a single transformation
+        function, a list of transformation functions, or a dictionary containing
+        the functions list and the kwargs list like so:
+
+            transform:
+              funcs: [list, of, functions]
+              kwargs:
+                first_arg: value
+                sec_arg: value
+
+        The functions listed under functions MUST be methods, not attributes!
+        '''
+
+        kwargs = dict()
+
+        # Check that each item listed is callable
+        if isinstance(entry, (list, str)):
+            assert self.is_callable(entry)
+
+        # If the transform entry is a dictionary, check that it has the
+        # appropriate contents
+        elif isinstance(entry, dict):
+
+            funcs = entry.get('funcs')
+            assert funcs is not None
+
+            # Make sure funcs is a list
+            funcs = funcs if isinstance(funcs, list) else [funcs]
+
+            # Key word arguments may not be present.
+            kwargs = entry.get('kwargs')
+
+            transforms = [self.get_callable(func) for func in funcs]
+
+            # The signatures bit gives us a list of all the accepted arguments
+            # for the functions listed in the variable all_params. Test fails
+            # when provided arguments don't appear in all_params.
+            # arguments not in that list, we fail.
+            if kwargs:
+                signatures = [signature(func) for func in transforms if
+                              callable(func)]
+
+                all_params = []
+                for sig in signatures:
+                    parameters = [p.name for p in sig.parameters.values()
+                                  if p.kind == p.POSITIONAL_OR_KEYWORD]
+                    all_params.extend(parameters)
+
+                for key in kwargs.keys():
+                    assert key in all_params
+
+        return True
+
+
+    # pylint: disable=inconsistent-return-statements
+    def get_callable(self, func):
+
+
+        ''' Return the callable function given a function name. '''
+
+        if func in dir(self.varspec):
+            return self.varspec.__getattribute__(func)
+
+        # Check datahandler.grib objects if a single word is provided
+        if len(func.split('.')) == 1:
+
+            for attr in dir(grib):
+                # pylint: disable=no-member
+                if func in dir(grib.__getattribute__(attr)):
+                    return grib.__getattribute__(attr).__dict__.get(func)
+
+        elif callable(utils.get_func(func)):
+            return utils.get_func(func)
+
+
 
     @staticmethod
     def is_a_clev(clev):
@@ -160,12 +264,51 @@ class TestDefaultSpecs():
         ''' Returns true for a cmap that is a Colormap object. '''
         return cmap in dir(cm) + list(ctables.colortables.keys())
 
+    def is_a_contour_dict(self, entry):
+
+        ''' Set up the accepted arguments for plt.contour, and check the given
+        arguments. '''
+
+        args = ['X', 'Y', 'Z', 'levels',
+                'corner_mask', 'colors', 'alpha', 'cmap', 'norm', 'vmin',
+                'vmax', 'origin', 'extent', 'locator', 'extend', 'xunits',
+                'yunits', 'antialiased', 'nchunk', 'linewidths', 'linestyles']
+
+        if entry is None:
+            return True
+
+        return self.check_kwargs(args, entry)
+
+    def is_a_contourf_dict(self, entry):
+
+        ''' Set up the accepted arguments for plt.contourf, and check the given
+        arguments. '''
+
+        args = ['X', 'Y', 'Z', 'levels',
+                'corner_mask', 'colors', 'alpha', 'cmap', 'norm', 'vmin',
+                'vmax', 'origin', 'extent', 'locator', 'extend', 'xunits',
+                'yunits', 'antialiased', 'nchunk', 'linewidths',
+                'hatches']
+
+        if entry is None:
+            return True
+
+        return self.check_kwargs(args, entry)
+
     def is_a_color(self, color):
 
         ''' Returns true if color is contained in the list of recognized colors. '''
 
-        colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS)
-        return color in colors.keys() or self.is_callable(color)
+        colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS,
+                      **ctables.colortables)
+
+        if color in colors.keys():
+            return True
+
+        if color in dir(self.varspec):
+            return True
+
+        return False
 
     @staticmethod
     def is_a_level(key):
@@ -182,6 +325,7 @@ class TestDefaultSpecs():
         '''
 
         allowed_levels = [
+            'agl',     # above ground level
             'best',    # Best
             'blcc',    # boundary layer cld cover
             'esbl',    # ???
@@ -201,6 +345,7 @@ class TestDefaultSpecs():
             'pw',      # wrt precipitable water
             'sat',     # satellite
             'sfc',     # surface
+            'sfclt',   # surface (less than)
             'top',     # nominal top of atmosphere
             'total',   # total clouds
             'ua',      # upper air
@@ -266,27 +411,17 @@ class TestDefaultSpecs():
 
         ''' Returns true if func in funcs list is the name of a callable function. '''
 
-        in_varspec = False
-        in_grib = False  # pylint: disable=unused-variable
-        in_package = False
-
         funcs = funcs if isinstance(funcs, list) else [funcs]
+
         callables = []
-
         for func in funcs:
-            # Check datahandler.grib objects if a single word is provided
-            if len(func.split('.')) == 1:
-                for attr in dir(grib):
-                    # pylint: disable=no-member
-                    if func in dir(grib.__getattribute__(attr)):
-                        callables.append(True)
-                    # pylint: enable=no-member
-
+            callable_ = self.get_callable(func)
+            if isinstance(callable_, np.ndarray):
+                callables.append(True)
+            elif callable(callable_):
+                callables.append(True)
             else:
-
-                in_package = callable(utils.get_func(func))
-                in_varspec = hasattr(self.varspec, func)
-                callables.append(in_package or in_varspec)
+                callables.append(False)
 
         return all(callables)
 
@@ -346,15 +481,20 @@ class TestDefaultSpecs():
         level = depth+1
 
         for k, v in d.items():
+            # Check that the key is allowable
             assert (k in self.allowable.keys()) or self.is_a_level(k)
-            if isinstance(v, dict):
-                self.check_keys(v, depth=level)
-            else:
-                checker = self.allowable.get(k)
+
+            # Call a checker if one exists for the key, otherwise descend into
+            # next level of dict
+            checker = self.allowable.get(k)
+            if checker:
                 if isinstance(checker, bool):
                     assert checker
                 else:
                     assert checker(v)
+            else:
+                if isinstance(v, dict):
+                    self.check_keys(v, depth=level)
 
     def test_keys(self):
 

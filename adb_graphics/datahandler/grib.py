@@ -75,6 +75,8 @@ class UPPData(GribFile, specs.VarSpec):
         self.short_name = short_name
         self.level = 'ua'
 
+        self.fhr = str(kwargs['fhr'])
+
     @property
     def anl_dt(self) -> datetime.datetime:
 
@@ -94,7 +96,7 @@ class UPPData(GribFile, specs.VarSpec):
         function. The logic to parse those options is included here.
         '''
 
-        clev = np.asarray(self.vspec['clevs'])
+        clev = np.asarray(self.vspec.get('clevs', []))
 
         # Is clevs a list?
         if isinstance(clev, (list, np.ndarray)):
@@ -114,13 +116,6 @@ class UPPData(GribFile, specs.VarSpec):
         object'''
 
         return date.strftime('%Y%m%d %H UTC')
-
-    @property
-    def fhr(self) -> str:
-
-        ''' Returns the forecast hour from the grib file. '''
-
-        return str(self.field.forecast_time[0])
 
     @property
     @lru_cache()
@@ -172,7 +167,7 @@ class UPPData(GribFile, specs.VarSpec):
         name = spec.get('ncl_name')
         if isinstance(name, dict):
             name = name.get(self.filetype)
-        return name
+        return name.format(fhr=self.fhr)
 
     def numeric_level(self, level=None):
 
@@ -193,6 +188,14 @@ class UPPData(GribFile, specs.VarSpec):
         lev_unit = ''.join([c for c in level if c in ascii_letters])
 
         return lev_val, lev_unit
+
+    @staticmethod
+    def opposite(values, **kwargs) -> np.ndarray:
+    # pylint: disable=unused-argument
+
+        ''' Returns the opposite of input values  '''
+
+        return - values
 
     @property
     def valid_dt(self) -> datetime.datetime:
@@ -240,6 +243,7 @@ class fieldData(UPPData):
         super().__init__(filename, short_name, **kwargs)
 
         self.level = level
+        self.contour_kwargs = kwargs.get('contour_kwargs', {})
 
     @property
     def cmap(self):
@@ -333,7 +337,7 @@ class fieldData(UPPData):
             levs = self.contents.variables[dim_name][::]
 
             # Requested level
-            lev_val, lev_unit = self.numeric_level()
+            lev_val, lev_unit = self.numeric_level(level)
             lev_val = lev_val / 100. if lev_unit == 'cm' else lev_val
             lev_val = lev_val * 100. if lev_unit in ['mb', 'mxmb'] else lev_val
             lev_val = lev_val * 1000. if lev_unit in ['km', 'mx', 'sr'] else lev_val
@@ -344,10 +348,13 @@ class fieldData(UPPData):
                 lev = int(np.argwhere(levs == lev_val))
             vals = field[lev, :, :]
 
-            transforms = spec.get('transform')
-            if transforms:
-                transform_kwargs = spec.get('transform_kwargs', {})
-                vals = self.get_transform(transforms, vals, transform_kwargs)
+        transforms = spec.get('transform')
+        if transforms:
+            transform_kwargs = {}
+            if isinstance(transforms, dict):
+                transform_kwargs = transforms.get('kwargs', {})
+                transforms = transforms.get('funcs')
+            vals = self.get_transform(transforms, vals, transform_kwargs)
 
         return vals
 
@@ -386,10 +393,12 @@ class fieldData(UPPData):
             return False
 
         # Create fieldData objects for u, v components
-        field_lambda = lambda fn, level, var: fieldData(filename=fn,
-                                                        level=level,
-                                                        short_name=var,
-                                                        )
+        field_lambda = lambda fn, level, var: fieldData(
+            fhr=self.fhr,
+            filename=fn,
+            level=level,
+            short_name=var,
+            )
         u, v = [field_lambda(self.filename, level, var) for var in ['u', 'v']]
 
         return [component.values() for component in [u, v]]
@@ -479,7 +488,7 @@ class profileData(UPPData):
         '''
 
         layer = kwargs.get('layer')
-        ncl_name = kwargs.get('ncl_name')
+        ncl_name = kwargs.get('ncl_name', '').format(fhr=self.fhr)
 
         # Set the default here since this is an instance of an abstract method
         level = level if level else 'ua'

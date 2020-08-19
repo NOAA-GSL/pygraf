@@ -23,5 +23,5 @@ contour_var = grib.fieldData(filename=filename,
 
 fig, ax = plt.subplots(1, 1, figsize=(12, 12))
 m = maps.Map(airports, ax, corners=var.corners, region='fv3')
-dm = maps.DataMap(field=var, contour_field=contour_var, map_=m)
+dm = maps.DataMap(field=var, contour_fields=[contour_var], map_=m)
 dm.draw(show=True)

@@ -20,8 +20,8 @@ def test_UPPData(natfile, prsfile):
         def values(self, level=None, name=None, **kwargs):
             return 1
 
-    upp_nat = UPP(natfile, filetype='nat', short_name='temp')
-    upp_prs = UPP(prsfile, short_name='temp')
+    upp_nat = UPP(natfile, fhr=2, filetype='nat', short_name='temp')
+    upp_prs = UPP(prsfile, fhr=2, short_name='temp')
 
     # Ensure appropriate typing and size (where applicable)
     for upp in [upp_nat, upp_prs]:
@@ -45,7 +45,7 @@ def test_fieldData(prsfile):
 
     ''' Test the fieldData class methods on a prs file'''
 
-    field = grib.fieldData(prsfile, level='500mb', short_name='temp')
+    field = grib.fieldData(prsfile, fhr=2, level='500mb', short_name='temp')
 
     assert isinstance(field.cmap, mcolors.Colormap)
     assert isinstance(field.colors, np.ndarray)
@@ -77,7 +77,7 @@ def test_fieldData(prsfile):
     assert np.array_equal(field.get_transform('conversions.k_to_f', field.values(), {}), \
                           (field.values() - 273.15) * 9/5 +32)
 
-    field2 = grib.fieldData(prsfile, level='ua', short_name='ceil')
+    field2 = grib.fieldData(prsfile, fhr=2, level='ua', short_name='ceil')
     transforms = field2.vspec.get('transform')
     transform_kwargs = field2.vspec.get('transform_kwargs', {})
     assert np.array_equal(field2.get_transform(transforms, field2.values(), transform_kwargs), \
@@ -93,7 +93,7 @@ def test_profileData(natfile):
     ''' Test the profileData class methods on a nat file'''
 
     loc = ' BNA   9999 99999  36.12  86.69  597 Nashville, TN\n'
-    profile = grib.profileData(natfile, filetype='nat', loc=loc, short_name='temp')
+    profile = grib.profileData(natfile, fhr=2, filetype='nat', loc=loc, short_name='temp')
 
     assert isinstance(profile.get_xypoint(), tuple)
     assert isinstance(profile.values(), np.ndarray)
