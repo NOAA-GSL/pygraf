@@ -1,4 +1,4 @@
-# pylint: disable=too-many-locals,invalid-name
+# pylint: disable=too-many-locals,invalid-name,too-many-statements
 ''' Driver for creating all the graphics needed for a specific input dataset. '''
 
 # pylint: disable=wrong-import-position, wrong-import-order
