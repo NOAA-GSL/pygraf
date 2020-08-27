@@ -20,37 +20,19 @@ import matplotlib.pyplot as plt
 from adb_graphics.figures import skewt
 import adb_graphics.utils as utils
 
-def fhr_list(args):
-
-    '''
-    Given an arg list, return the sequence of forecast hours to process.
-
-    The length of the list will determine what forecast hours are returned:
-
-      Length = 1:   A single fhr is to be processed
-      Length = 2:   A sequence of start, stop with increment 1
-      Length = 3:   A sequence of start, stop, increment
-      Length > 3:   List as is
-
-    argparse should provide a list of at least one item (nargs='+').
-
-    Must ensure that the list contains integers.
-    '''
-
-    args = args if isinstance(args, list) else [args]
-    arg_len = len(args)
-    if arg_len in (2, 3):
-        return list(range(*args))
-
-    return args
-
 def parse_args():
 
     ''' Set up argparse command line arguments, and return the Namespace
         containing the settings. '''
 
     parser = argparse.ArgumentParser(description='Script to drive the \
-                                     creation of SkewT diagrams.')
+                                     creation of graphices files.')
+
+    # Positional argument
+    parser.add_argument('graphic_type',
+                        choices=['maps', 'skewts'],
+                        help='The type of graphics to create.',
+                        )
 
     # Short args
     parser.add_argument('-d',
@@ -103,14 +85,34 @@ def parse_args():
                         default='nat',
                         help='Type of levels contained in grib file.',
                         )
-    parser.add_argument('--max_plev',
+
+    # SkewT-specific args
+    skewt_group = parser.add_argument_group('SkewT Arguments')
+    skewt_group.add_argument('--max_plev',
                         help='Maximum pressure level to plot for profiles.',
                         type=int,
                         )
-    parser.add_argument('--sites',
+    skewt_group.add_argument('--sites',
                         help='Path to a sites file.',
                         type=utils.path_exists,
                         )
+
+    # Map-specific args
+    map_group = parser.add_argument_group('Map Arguments')
+    map_group.add_argument('--image_list',
+                        help='Path to YAML config file specifying which variables to map.',
+                        required=True,
+                        )
+    map_group.add_argument('--image_set',
+                        choices=['hourly'],
+                        help='Name of top level key in image_list',
+                        required=True,
+                        )
+    map_group.add_argument('--subh_freq',
+                        default=60,
+                        help='Sub-hourly frequency in minutes.',
+                        )
+
 
     return parser.parse_args()
 
@@ -152,12 +154,11 @@ def parallel_skewt(cla, fhr, grib_path, site, workdir):
     plt.close()
 
 @utils.timer
-def prepare_skewt(cla):
+def graphics_driver(cla):
 
     '''
     Function that interprets the command line arguments to locate the input grib
-    file, create the output directory, and set up creating Skew-T diagrams in
-    parallel.
+    file, create the output directory, and call the graphic-specifc function.
 
     Input:
 
@@ -173,9 +174,10 @@ def prepare_skewt(cla):
         if os.path.exists(zipf):
             os.remove(zipf)
 
-    # Load sites
-    with open(cla.sites, 'r') as sites_file:
-        sites = sites_file.readlines()
+    # Load sites - SkewT Specific
+    if cla.sites:
+        with open(cla.sites, 'r') as sites_file:
+            sites = sites_file.readlines()
 
     fcst_hours = copy.deepcopy(cla.fcst_hour)
 
@@ -199,7 +201,7 @@ def prepare_skewt(cla):
 
             # Create the working directory
             workdir = os.path.join(cla.output_path,
-                                   f"{utils.from_datetime(cla.start_time)}{fhr:02d}")
+                                   f"{sutils.from_datetime(cla.start_time)}{fhr:02d}")
             os.makedirs(workdir, exist_ok=True)
 
             print((('-' * 80)+'\n') * 2)
@@ -209,8 +211,11 @@ def prepare_skewt(cla):
             print()
             print((('-' * 80)+'\n') * 2)
 
-            skewt_args = [(cla, fhr, grib_path, site, workdir) for site in
-                          sites]
+
+
+            if cla.graphic_type == 'skewts':
+                func_args = [(cla, fhr, grib_path, site, workdir) for site in
+                             sites]
 
             with Pool(processes=cla.nprocs) as pool:
                 pool.starmap(parallel_skewt, skewt_args)
@@ -246,12 +251,12 @@ def prepare_skewt(cla):
 if __name__ == '__main__':
 
     CLARGS = parse_args()
-    CLARGS.fcst_hour = fhr_list(CLARGS.fcst_hour)
+    CLARGS.fcst_hour = utils.fhr_list(CLARGS.fcst_hour)
 
-    print(f"Running script with args: ")
+    print(f"Running script for {CLARGS.graphic_type} with args: ")
     print((('-' * 80)+'\n') * 2)
 
     for name, val in CLARGS.__dict__.items():
         print(f"{name:>15s}: {val}")
 
-    prepare_skewt(CLARGS)
+    graphics_driver(CLARGS)

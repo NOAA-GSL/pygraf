@@ -166,7 +166,13 @@ def parse_args():
                         )
     parser.add_argument('-f',
                         dest='fcst_hour',
-                        help='Forecast hour',
+                        help='A list describing forecast hours.' +
+                        'If one argument, one fhr will be processed.' +
+                        'If 2 or 3 arguments, a sequence of forecast' +
+                        ' hours [start, stop, [increment]] will be ' +
+                        'processed. If more than 3 arguments, the list ' +
+                        'is processed as-is.',
+                        nargs='+',
                         required=True,
                         type=int,
                         )
@@ -218,4 +224,6 @@ def parse_args():
 
 if __name__ == '__main__':
     CLARGS = parse_args()
+    CLARGS.fcst_hour = utils.fhr_list(CLARGS.fcst_hour)
+
     main(CLARGS)
