@@ -1,3 +1,4 @@
+# pylint: disable=invalid-name
 '''
 Driver for creating all the SkewT diagrams needed for a specific input dataset.
 '''
@@ -16,9 +17,88 @@ import time
 import zipfile
 
 import matplotlib.pyplot as plt
+import yaml
 
+from adb_graphics.datahandler import grib
+from adb_graphics.figures import maps
 from adb_graphics.figures import skewt
 import adb_graphics.utils as utils
+
+
+AIRPORTS = 'static/Airports_locs.txt'
+
+
+def create_skewt(cla, fhr, grib_path, workdir):
+
+    ''' Generate arguments for parallel processing of Skew T graphics,
+    and generate a pool of workers to complete the tasks. '''
+
+    args = [(cla, fhr, grib_path, site, workdir) for site in cla.sites]
+
+    with Pool(processes=cla.nprocs) as pool:
+        pool.starmap(parallel_skewt, args)
+
+def create_maps(cla, fhr, grib_path, workdir):
+
+    ''' Generate arguments for parallel processing of plan-view maps and
+    generate a pool of workers to complete the task. '''
+
+    args = []
+
+    for variable, levels in cla.images[1].items():
+        for level in levels:
+
+            # Load the spec for the current variable
+            spec = cla.specs.get(variable, {}).get(level)
+
+            args.append((fhr, grib_path, level, spec,
+                         variable, workdir))
+
+    with Pool(processes=cla.nprocs) as pool:
+        pool.starmap(parallel_maps, args)
+
+def load_images(arg):
+
+    ''' Check that input image file exists, and that it contains the
+    requested section. Return a 2-list (required by argparse) of the
+    file path and dictionary of images to be created.
+    '''
+
+    # Agument is expected to be a 2-list of file name and internal
+    # section name.
+    image_file = arg[0]
+    image_set = arg[1]
+
+    # Check that the file exists
+    image_file = utils.path_exists(image_file)
+
+    # Load yaml file
+    with open(image_file, 'r') as fn:
+        images = yaml.load(fn, Loader=yaml.Loader)[image_set]
+
+    return [image_file, images.get('variables')]
+
+def load_sites(arg):
+
+    ''' Check that the sites file exists, and return its contents. '''
+
+    # Check that the file exists
+    path = utils.path_exists(arg)
+
+    with open(path, 'r') as sites_file:
+        sites = sites_file.readlines()
+    return sites
+
+def load_specs(arg):
+
+    ''' Check to make sure arg file exists. Return its contents. '''
+
+    spec_file = utils.path_exists(arg)
+
+    with open(spec_file, 'r') as fn:
+        specs = yaml.load(fn, Loader=yaml.Loader)
+
+    return specs
 
 def parse_args():
 
@@ -29,92 +109,210 @@ def parse_args():
                                      creation of graphices files.')
 
     # Positional argument
-    parser.add_argument('graphic_type',
-                        choices=['maps', 'skewts'],
-                        help='The type of graphics to create.',
-                        )
+    parser.add_argument(
+        'graphic_type',
+        choices=['maps', 'skewts'],
+        help='The type of graphics to create.',
+        )
 
     # Short args
-    parser.add_argument('-d',
-                        dest='data_root',
-                        help='Cycle-independant data directory location.',
-                        required=True,
-                        type=utils.path_exists,
-                        )
-    parser.add_argument('-f',
-                        dest='fcst_hour',
-                        help='A list describing forecast hours.' +
-                        'If one argument, one fhr will be processed.' +
-                        'If 2 or 3 arguments, a sequence of forecast' +
-                        ' hours [start, stop, [increment]] will be ' +
-                        'processed. If more than 3 arguments, the list ' +
-                        'is processed as-is.',
-                        nargs='+',
-                        required=True,
-                        type=int,
-                        )
-    parser.add_argument('-n',
-                        default=1,
-                        dest='nprocs',
-                        help='Number of processes to use for parallelization.',
-                        type=int,
-                       )
-    parser.add_argument('-o',
-                        dest='output_path',
-                        help='Directory location desired for the output graphics files.',
-                        required=True,
-                        )
-    parser.add_argument('-s',
-                        dest='start_time',
-                        help='Start time in YYYYMMDDHH format',
-                        required=True,
-                        type=utils.to_datetime,
-                        )
-    parser.add_argument('-z',
-                        dest='zip_dir',
-                        help='Full path to zip directory.',
-                        )
+    parser.add_argument(
+        '-d',
+        dest='data_root',
+        help='Cycle-independant data directory location.',
+        required=True,
+        type=utils.path_exists,
+        )
+    parser.add_argument(
+        '-f',
+        dest='fcst_hour',
+        help='A list describing forecast hours.  If one argument, \
+        one fhr will be processed.  If 2 or 3 arguments, a sequence \
+        of forecast hours [start, stop, [increment]] will be \
+        processed.  If more than 3 arguments, the list is processed \
+        as-is.',
+        nargs='+',
+        required=True,
+        type=int,
+        )
+    parser.add_argument(
+        '-n',
+        default=1,
+        dest='nprocs',
+        help='Number of processes to use for parallelization.',
+        type=int,
+        )
+    parser.add_argument(
+        '-o',
+        dest='output_path',
+        help='Directory location desired for the output graphics files.',
+        required=True,
+        )
+    parser.add_argument(
+        '-s',
+        dest='start_time',
+        help='Start time in YYYYMMDDHH format',
+        required=True,
+        type=utils.to_datetime,
+        )
+    parser.add_argument(
+        '-z',
+        dest='zip_dir',
+        help='Full path to zip directory.',
+        )
 
     # Long args
-    parser.add_argument('--file_tmpl',
-                        default='wrfnat_hrconus_{FCST_TIME:02d}.grib2',
-                        help='File naming convention',
-                        )
-    parser.add_argument('--file_type',
-                        choices=('nat', 'prs'),
-                        default='nat',
-                        help='Type of levels contained in grib file.',
-                        )
+    parser.add_argument(
+        '--file_tmpl',
+        default='wrfnat_hrconus_{FCST_TIME:02d}.grib2',
+        help='File naming convention',
+        )
+    parser.add_argument(
+        '--file_type',
+        choices=('nat', 'prs'),
+        default='nat',
+        help='Type of levels contained in grib file.',
+        )
 
     # SkewT-specific args
     skewt_group = parser.add_argument_group('SkewT Arguments')
-    skewt_group.add_argument('--max_plev',
-                        help='Maximum pressure level to plot for profiles.',
-                        type=int,
-                        )
-    skewt_group.add_argument('--sites',
-                        help='Path to a sites file.',
-                        type=utils.path_exists,
-                        )
+    skewt_group.add_argument(
+        '--max_plev',
+        help='Maximum pressure level to plot for profiles.',
+        type=int,
+        )
+    skewt_group.add_argument(
+        '--sites',
+        help='Path to a sites file.',
+        type=load_sites,
+        )
 
     # Map-specific args
     map_group = parser.add_argument_group('Map Arguments')
-    map_group.add_argument('--image_list',
-                        help='Path to YAML config file specifying which variables to map.',
-                        required=True,
-                        )
-    map_group.add_argument('--image_set',
-                        choices=['hourly'],
-                        help='Name of top level key in image_list',
-                        required=True,
-                        )
-    map_group.add_argument('--subh_freq',
-                        default=60,
-                        help='Sub-hourly frequency in minutes.',
-                        )
+    map_group.add_argument(
+        '--images',
+        help='Path to YAML config file specifying which \
+        variables to map and the top-level section to use.',
+        metavar=('[FILE,', 'SECTION]'),
+        nargs=2,
+        type=load_images,
+        )
+    map_group.add_argument(
+        '--specs',
+        default='adb_graphics/default_specs.yml',
+        help='Path to the specs YAML file.',
+        )
+    map_group.add_argument(
+        '--subh_freq',
+        default=60,
+        help='Sub-hourly frequency in minutes.',
+        )
 
 
     return parser.parse_args()
+
+def parallel_maps(fhr, grib_path, level, spec, variable, workdir,
+                  tile=''):
+
+    # pylint: disable=too-many-arguments,too-many-locals
+
+    '''
+    Function that creates a single plan-view map. Can be used in
+    parallel.
+
+    Input:
+
+      fhr        forecast hour
+      grib_path  the full path to the grib file
+      level      the vertical level of the variable to be plotted
+                 corresponding to a key in the specs file
+      spec       the dictionary of specifications for the given variable
+                 and level
+      variable   the name of the variable section in the specs file
+      workdir    output directory
+    '''
+
+    # Object to be plotted on the map in filled contours.
+    field = grib.fieldData(
+        fhr=fhr,
+        filename=grib_path,
+        level=level,
+        short_name=variable,
+        )
+
+    # Create a list of fieldData objects for each contour field requested
+    # These will show up as line contours on the plot.
+    contours = spec.get('contours')
+    contour_fields = []
+    if contours is not None:
+        for contour, contour_kwargs in contours.items():
+            if '_' in contour:
+                var, lev = contour.split('_')
+            else:
+                var, lev = contour, level
+
+            contour_fields.append(grib.fieldData(
+                fhr=fhr,
+                filename=grib_path,
+                level=lev,
+                contour_kwargs=contour_kwargs,
+                short_name=var,
+                ))
+
+    # Create a list of fieldData objects for each hatched area requested
+    hatches = spec.get('hatches')
+    hatch_fields = []
+    if hatches is not None:
+        for hatch, hatch_kwargs in hatches.items():
+            var, lev = hatch.split('_')
+            hatch_fields.append(grib.fieldData(
+                fhr=fhr,
+                filename=grib_path,
+                level=lev,
+                contour_kwargs=hatch_kwargs,
+                short_name=var,
+                ))
+
+    _, ax = plt.subplots(1, 1, figsize=(12, 12))
+
+    # Generate a map object
+    m = maps.Map(
+        airport_fn=AIRPORTS,
+        ax=ax,
+        corners=field.corners,
+        )
+
+    # Send all objects (map, field, contours, hatches) to a DataMap object
+    dm = maps.DataMap(
+        field=field,
+        contour_fields=contour_fields,
+        hatch_fields=hatch_fields,
+        map_=m,
+        )
+
+    # Draw the mape
+    dm.draw(show=True)
+
+    # Build the output path
+    png_suffix = level if level != 'ua' else ''
+    png_file = f'{variable}{"_" + tile}{png_suffix}.png'
+    png_path = os.path.join(workdir, png_file)
+
+    print('*' * 120)
+    print(f"Creating image file: {png_path}")
+    print('*' * 120)
+
+    # Save the png file to disk
+    plt.savefig(
+        png_path,
+        bbox_inches='tight',
+        dpi='figure',
+        format='png',
+        orientation='landscape',
+        )
+
+    plt.close()
+
 
 def parallel_skewt(cla, fhr, grib_path, site, workdir):
 
@@ -153,6 +351,7 @@ def parallel_skewt(cla, fhr, grib_path, site, workdir):
         )
     plt.close()
 
+
 @utils.timer
 def graphics_driver(cla):
 
@@ -173,11 +372,6 @@ def graphics_driver(cla):
         zipf = os.path.join(cla.zip_dir, 'files.zip')
         if os.path.exists(zipf):
             os.remove(zipf)
-
-    # Load sites - SkewT Specific
-    if cla.sites:
-        with open(cla.sites, 'r') as sites_file:
-            sites = sites_file.readlines()
 
     fcst_hours = copy.deepcopy(cla.fcst_hour)
 
@@ -201,7 +395,7 @@ def graphics_driver(cla):
 
             # Create the working directory
             workdir = os.path.join(cla.output_path,
-                                   f"{sutils.from_datetime(cla.start_time)}{fhr:02d}")
+                                   f"{utils.from_datetime(cla.start_time)}{fhr:02d}")
             os.makedirs(workdir, exist_ok=True)
 
             print((('-' * 80)+'\n') * 2)
@@ -214,11 +408,9 @@ def graphics_driver(cla):
 
 
             if cla.graphic_type == 'skewts':
-                func_args = [(cla, fhr, grib_path, site, workdir) for site in
-                             sites]
-
-            with Pool(processes=cla.nprocs) as pool:
-                pool.starmap(parallel_skewt, skewt_args)
+                create_skewt(cla, fhr, grib_path, workdir)
+            else:
+                create_maps(cla, fhr, grib_path, workdir)
 
             # Zip png files and remove the originals
             if zipf:
@@ -253,10 +445,15 @@ if __name__ == '__main__':
     CLARGS = parse_args()
     CLARGS.fcst_hour = utils.fhr_list(CLARGS.fcst_hour)
 
+    # Only need to load the default in memory if we're making maps.
+    if CLARGS.graphic_type == 'maps':
+        CLARGS.specs = load_specs(CLARGS.specs)
+
     print(f"Running script for {CLARGS.graphic_type} with args: ")
     print((('-' * 80)+'\n') * 2)
 
     for name, val in CLARGS.__dict__.items():
         print(f"{name:>15s}: {val}")
+
 
     graphics_driver(CLARGS)
