@@ -149,9 +149,6 @@ class UPPData(GribFile, specs.VarSpec):
                          applied
         '''
 
-
-        transforms = transforms if isinstance(transforms, list) else [transforms]
-
         transform_kwargs = {}
         if isinstance(transforms, dict):
             transform_list = transforms.get('funcs')
