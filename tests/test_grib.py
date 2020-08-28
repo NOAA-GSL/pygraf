@@ -79,7 +79,8 @@ def test_fieldData(prsfile):
 
     field2 = grib.fieldData(prsfile, fhr=2, level='ua', short_name='ceil')
     transforms = field2.vspec.get('transform')
-    transform_kwargs = field2.vspec.get('transform_kwargs', {})
+    transform_kwargs = transforms.get('kwargs')
+    transforms = transforms.get('funcs')
     assert np.array_equal(field2.get_transform(transforms, field2.values(), transform_kwargs), \
                           field2.field_diff(field2.values(), variable2='gh', level2='sfc') / 304.8)
 
