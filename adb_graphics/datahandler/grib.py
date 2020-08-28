@@ -354,6 +354,7 @@ class fieldData(UPPData):
             if isinstance(transforms, dict):
                 transform_kwargs = transforms.get('kwargs', {})
                 transforms = transforms.get('funcs')
+
             vals = self.get_transform(transforms, vals, transform_kwargs)
 
         return vals

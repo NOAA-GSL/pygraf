@@ -204,6 +204,18 @@ def path_exists(path: str):
 
     return path
 
+def process_transforms(transforms):
+
+    transform_kwargs = {}
+    if isinstance(transforms, dict):
+        transform_kwargs = transforms.get('kwargs', {})
+        transforms = transforms.get('funcs')
+    return transforms, transform_kwargs
+
+
+
+
+
 def timer(func):
 
     ''' Decorator function that provides an elapsed time for a method. '''
