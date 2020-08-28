@@ -372,7 +372,7 @@ class fieldData(UPPData):
 
         transforms = spec.get('transform')
         if transforms:
-            vals = self.get_transform(transforms, vals, transform_kwargs)
+            vals = self.get_transform(transforms, vals)
 
         return vals
 
