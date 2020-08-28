@@ -434,10 +434,8 @@ class SkewTDiagram(grib.profileData):
 
             transforms = spec.get('transform')
             if transforms:
-                tmp = utils.process_transforms(
-                        transforms=transforms,
-                        values=tmp,
-                        )
+                tmp = self.get_transform(transforms, tmp,
+                        transform_kwargs)
 
             thermo[var]['data'] = tmp
             thermo[var]['units'] = spec.get('unit')

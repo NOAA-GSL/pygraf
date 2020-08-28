@@ -132,14 +132,36 @@ class UPPData(GribFile, specs.VarSpec):
 
         return values - self.values(name=variable2, level=level2)
 
-    def get_transform(self, transforms: str, val: np.ndarray, transform_kwargs):
+    def get_transform(self, transforms, val):
 
-        ''' Applies a set of one or more transforms to an np.array of data values '''
+        ''' Applies a set of one or more transforms to an np.array of
+        data values.
 
-        # Treat any transforms as a list
+        Input:
+
+          transforms:    the transform section of a variable spec
+          val:           a value, list, or array of values to be
+                         transformed
+
+        Return:
+
+          val:           updated values after transforms have been
+                         applied
+        '''
+
+
         transforms = transforms if isinstance(transforms, list) else [transforms]
 
-        for transform in transforms:
+        transform_kwargs = {}
+        if isinstance(transforms, dict):
+            transform_list = transforms.get('funcs')
+            transform_kwargs = transforms.get('kwargs')
+        elif isinstance(transforms, str):
+            transform_list = [transforms]
+        else:
+            transform_list = transforms
+
+        for transform in transform_list:
             if len(transform.split('.')) == 1:
                 val = self.__getattribute__(transform)(val, **transform_kwargs)
             else:
@@ -350,11 +372,6 @@ class fieldData(UPPData):
 
         transforms = spec.get('transform')
         if transforms:
-            transform_kwargs = {}
-            if isinstance(transforms, dict):
-                transform_kwargs = transforms.get('kwargs', {})
-                transforms = transforms.get('funcs')
-
             vals = self.get_transform(transforms, vals, transform_kwargs)
 
         return vals
