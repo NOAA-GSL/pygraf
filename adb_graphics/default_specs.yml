@@ -188,6 +188,8 @@ cin: # Surface Convective Inhibition
     colors: cin_colors
     ncl_name: CIN_P0_2L108_GLC0
     unit: J/kg
+    vertical_index: 2
+    vertical_level_name: lv_SPDL4_l0
   mx90mb: # Lowest 90 mb Mixed Layer CIN
     ncl_name: CIN_P0_2L108_GLC0
     title: 'ML CIN < -50'
@@ -651,6 +653,7 @@ shear:
       funcs: vector_magnitude
       kwargs:
         field2: VVCSH_P0_2L103_GLC0
+        one_lev: True
         vertical_index: 0
     ticks: 0
     unit: $s^{-1}$
@@ -658,9 +661,12 @@ shear:
     vertical_level_name: lv_HTGL2_l1
   06km: # 0-6 km
     <<: *shear
-    transform_kwargs:
-      field2: VVCSH_P0_2L103_GLC0
-      vertical_index: 1
+    transform:
+      funcs: vector_magnitude
+      kwargs:
+        field2: VVCSH_P0_2L103_GLC0
+        one_lev: True
+        vertical_index: 1
     vertical_index: 1
 shtfl: # Sensible Heat Net Flux
   sfc:
@@ -799,28 +805,6 @@ temp: # Temperature
     contours:
       pres_sfc:
         levels: [0, 500]
-        colors: 'k'
-        linewidths: 0.6
-      gh:
-        colors: grey
-    hatches:
-      pres_sfc:
-        alpha: 0
-        hatches: ['...', '']
-        levels: [0, 500]
-    ncl_name:
-      prs: TMP_P0_L100_GLC0
-      nat: TMP_P0_L105_GLC0
-    ticks: 5
-    transform: conversions.k_to_c
-    unit: C
-    wind: True
-  700mb:
-    <<: *ua_temp
-    clevs: !!python/object/apply:numpy.arange [-40, 40, 2.5]
-    contours:
-      pres_sfc:
-        levels: [0, 700]
         colors: 'k'
         linewidths: 0.6
       gh:
