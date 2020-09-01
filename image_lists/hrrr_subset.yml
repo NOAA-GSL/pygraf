@@ -41,7 +41,7 @@ hourly:
       - mx90mb
     cin:
       - sfc
-    cloud_cover:
+    cloudcover:
       - high
       - low
       - mid
@@ -51,7 +51,7 @@ hourly:
     vil:
       - sfc
     soilt: &soilt_levs
-      - sfc
+      - 0cm
       - 1cm
       - 4cm
       - 10cm
