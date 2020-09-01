@@ -126,7 +126,9 @@ class UPPData(GribFile, specs.VarSpec):
 
         return self.get_field(self.ncl_name(self.vspec))
 
-    def field_diff(self, values, variable2, level2) -> np.ndarray:
+    def field_diff(self, values, variable2, level2, **kwargs) -> np.ndarray:
+
+        # pylint: disable=unused-argument
 
         ''' Subtracts the values from variable2 from self.field. '''
 
@@ -142,7 +144,7 @@ class UPPData(GribFile, specs.VarSpec):
         levs = self.contents.variables[dim_name][::]
 
         # Requested level
-        lev_val, lev_unit = self.numeric_level(level)
+        lev_val, _ = self.numeric_level(level)
 
         # The index of the requested level
         lev = spec.get('vertical_index')
@@ -385,6 +387,8 @@ class fieldData(UPPData):
         return vals
 
     def vector_magnitude(self, field1, field2, vertical_index=0, **kwargs):
+
+        # pylint: disable=unused-argument
 
         '''
         Returns the vector magnitude of two component vector fields. The
