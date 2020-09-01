@@ -559,7 +559,7 @@ class profileData(UPPData):
                 profile = profile[:, x, y]
         return profile
 
-    def vector_magnitude(self, field1, field2, vertical_index=None, level='ua', **kwargs):
+    def vector_magnitude(self, field1, field2, level='ua', vertical_index=None, **kwargs):
 
         '''
         Returns the vector magnitude of two component vector profiles. The
@@ -572,17 +572,17 @@ class profileData(UPPData):
 
         if isinstance(field1, str):
             field1 = self.values(
+                level=level,
                 ncl_name=field1,
                 vertical_index=vertical_index,
-                level=level,
                 **kwargs,
                 )
 
         if isinstance(field2, str):
             field2 = self.values(
+                level=level,
                 ncl_name=field2,
                 vertical_index=vertical_index,
-                level=level,
                 **kwargs,
                 )
 

@@ -196,10 +196,10 @@ class DataMap():
                 if contour_field.short_name not in not_labeled:
                     try:
                         clab = plt.clabel(cc, levels[::4],
+                                          colors='w',
                                           fmt='%1.0f',
                                           fontsize=10,
                                           inline=1,
-                                          colors='w',
                                           )
                         # Set the background color for the line labels to black
                         _ = [txt.set_bbox(dict(color='k')) for txt in clab]
