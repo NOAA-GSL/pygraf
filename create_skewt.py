@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt
 import yaml
 
 from adb_graphics.datahandler import grib
+import adb_graphics.errors as errors
 from adb_graphics.figures import maps
 from adb_graphics.figures import skewt
 import adb_graphics.utils as utils
@@ -51,6 +52,10 @@ def create_maps(cla, fhr, grib_path, workdir):
             # Load the spec for the current variable
             spec = cla.specs.get(variable, {}).get(level)
 
+            if not spec:
+                msg = f'graphics: {variable} {level}'
+                raise errors.NoGraphicsDefinitionForVariable(msg)
+
             args.append((fhr, grib_path, level, spec,
                          variable, workdir))
 
@@ -66,6 +71,7 @@ def load_images(arg):
 
     # Agument is expected to be a 2-list of file name and internal
     # section name.
+
     image_file = arg[0]
     image_set = arg[1]
 
@@ -195,7 +201,6 @@ def parse_args():
         variables to map and the top-level section to use.',
         metavar=('[FILE,', 'SECTION]'),
         nargs=2,
-        type=load_images,
         )
     map_group.add_argument(
         '--specs',
@@ -448,6 +453,8 @@ if __name__ == '__main__':
     # Only need to load the default in memory if we're making maps.
     if CLARGS.graphic_type == 'maps':
         CLARGS.specs = load_specs(CLARGS.specs)
+
+        CLARGS.images = load_images(CLARGS.images)
 
     print(f"Running script for {CLARGS.graphic_type} with args: ")
     print((('-' * 80)+'\n') * 2)
