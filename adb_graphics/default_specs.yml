@@ -80,12 +80,10 @@ acpcp: # Accumulated precipitation
     clevs: [0.01, 0.1, 0.25, 0.5, 1, 2, 3, 5, 10, 15, 20, 40]
     cmap: gist_ncar
     colors: accumulated_precip_colors
-    contours:
-      gh:
-        colors: grey
     ncl_name: APCP_P8_L1_GLC0_acc{fhr}h
     ticks: 0
-    transform: conversions.kgm2_to_in
+    transform:
+      funcs: conversions.kgm2_to_in
     unit: in
 acfrzr: # Run Total Freezing Rain
   sfc:
@@ -94,7 +92,8 @@ acfrzr: # Run Total Freezing Rain
     colors: pcp_colors
     ncl_name: FROZR_P8_L1_GLC0_acc{fhr}h
     ticks: 0
-    transform: conversions.kgm2_to_in
+    transform:
+      funcs: conversions.kgm2_to_in
     unit: in
 cape:
   mu: &cape # Most Unstable CAPE
@@ -1072,5 +1071,6 @@ weasd: # Water equivalent of accumulated snow depth
     ncl_name: WEASD_P8_L1_GLC0_acc{fhr}h
     ticks: 0
     title: Snow Water Equivalent
-    transform: conversions.kgm2_to_in
+    transform:
+      funcs: conversions.kgm2_to_in
     unit: in
