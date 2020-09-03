@@ -211,7 +211,7 @@ class UPPData(GribFile, specs.VarSpec):
             name = name.get(self.filetype)
         return name.format(fhr=self.fhr)
 
-    def numeric_level(self, level=None):
+    def numeric_level(self, index_match=True, level=None):
 
         '''
         Split the numeric level and unit associated with the level key.
@@ -229,9 +229,10 @@ class UPPData(GribFile, specs.VarSpec):
         # Gather all the letters
         lev_unit = ''.join([c for c in level if c in ascii_letters])
 
-        lev_val = lev_val / 100. if lev_unit == 'cm' else lev_val
-        lev_val = lev_val * 100. if lev_unit in ['mb', 'mxmb'] else lev_val
-        lev_val = lev_val * 1000. if lev_unit in ['km', 'mx', 'sr'] else lev_val
+        if index_match:
+            lev_val = lev_val / 100. if lev_unit == 'cm' else lev_val
+            lev_val = lev_val * 100. if lev_unit in ['mb', 'mxmb'] else lev_val
+            lev_val = lev_val * 1000. if lev_unit in ['km', 'mx', 'sr'] else lev_val
 
         return lev_val, lev_unit
 
