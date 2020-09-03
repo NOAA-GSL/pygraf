@@ -177,25 +177,37 @@ class DataMap():
                               )
         self._colorbar(ax=ax, cc=cf)
 
+        not_labeled = [self.field.short_name]
+        if self.hatch_fields:
+            not_labeled.extend([h.short_name for h in self.hatch_fields])
+
         # Contour secondary fields, if requested
         if self.contour_fields:
             for contour_field in self.contour_fields:
                 levels = contour_field.contour_kwargs.pop('levels',
                                                           contour_field.clevs)
+
                 cc = self._draw_field(ax=ax,
                                       field=contour_field,
                                       func=self.map.m.contour,
                                       levels=levels,
                                       **contour_field.contour_kwargs,
                                       )
-                clab = plt.clabel(cc, levels[::4],
-                                  fmt='%4.0f',
-                                  fontsize=12,
-                                  inline=1,
-                                  )
-                # Set the background color for the line labels to black
-                _ = [txt.set_bbox(dict(facecolor='k', edgecolor='none', pad=0)) for
-                     txt in clab]
+                if contour_field.short_name not in not_labeled:
+                    try:
+                        clab = plt.clabel(cc, levels[::4],
+                                          colors='w',
+                                          fmt='%1.0f',
+                                          fontsize=10,
+                                          inline=1,
+                                          )
+                        # Set the background color for the line labels to black
+                        _ = [txt.set_bbox(dict(color='k')) for txt in clab]
+
+                    except ValueError:
+                        print(f'Cannot add contour labels to map for {self.field.short_name} \
+                                {self.field.level}')
+
 
         # Add hatched fields, if requested
         # Levels should be included in the settings dict here since they don't

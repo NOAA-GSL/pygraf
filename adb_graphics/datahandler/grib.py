@@ -126,20 +126,62 @@ class UPPData(GribFile, specs.VarSpec):
 
         return self.get_field(self.ncl_name(self.vspec))
 
-    def field_diff(self, values, variable2, level2) -> np.ndarray:
+    def field_diff(self, values, variable2, level2, **kwargs) -> np.ndarray:
+
+        # pylint: disable=unused-argument
 
         ''' Subtracts the values from variable2 from self.field. '''
 
         return values - self.values(name=variable2, level=level2)
 
-    def get_transform(self, transforms: str, val: np.ndarray, transform_kwargs):
+    def get_level(self, field, level, spec):
 
-        ''' Applies a set of one or more transforms to an np.array of data values '''
+        ''' Returns the value of the level to for a 3D array '''
 
-        # Treat any transforms as a list
-        transforms = transforms if isinstance(transforms, list) else [transforms]
+        # Follow convention of fieldData objects for getting vertical level
+        dim_name = spec.get('vertical_level_name',
+                            field.dimensions[0])
+        levs = self.contents.variables[dim_name][::]
 
-        for transform in transforms:
+        # Requested level
+        lev_val, _ = self.numeric_level(level)
+
+        # The index of the requested level
+        lev = spec.get('vertical_index')
+        if lev is None:
+            lev = int(np.argwhere(levs == lev_val))
+
+        return lev
+
+    def get_transform(self, transforms, val):
+
+        ''' Applies a set of one or more transforms to an np.array of
+        data values.
+
+        Input:
+
+          transforms:    the transform section of a variable spec
+          val:           a value, list, or array of values to be
+                         transformed
+
+        Return:
+
+          val:           updated values after transforms have been
+                         applied
+        '''
+
+        transform_kwargs = {}
+        if isinstance(transforms, dict):
+            transform_list = transforms.get('funcs')
+            if not isinstance(transform_list, list):
+                transform_list = [transform_list]
+            transform_kwargs = transforms.get('kwargs')
+        elif isinstance(transforms, str):
+            transform_list = [transforms]
+        else:
+            transform_list = transforms
+
+        for transform in transform_list:
             if len(transform.split('.')) == 1:
                 val = self.__getattribute__(transform)(val, **transform_kwargs)
             else:
@@ -186,6 +228,10 @@ class UPPData(GribFile, specs.VarSpec):
 
         # Gather all the letters
         lev_unit = ''.join([c for c in level if c in ascii_letters])
+
+        lev_val = lev_val / 100. if lev_unit == 'cm' else lev_val
+        lev_val = lev_val * 100. if lev_unit in ['mb', 'mxmb'] else lev_val
+        lev_val = lev_val * 1000. if lev_unit in ['km', 'mx', 'sr'] else lev_val
 
         return lev_val, lev_unit
 
@@ -331,34 +377,18 @@ class fieldData(UPPData):
             vals = field[::]
         elif len(field.shape) == 3:
 
-            # Available variable levels
-            dim_name = spec.get('vertical_level_name',
-                                field.dimensions[0])
-            levs = self.contents.variables[dim_name][::]
-
-            # Requested level
-            lev_val, lev_unit = self.numeric_level(level)
-            lev_val = lev_val / 100. if lev_unit == 'cm' else lev_val
-            lev_val = lev_val * 100. if lev_unit in ['mb', 'mxmb'] else lev_val
-            lev_val = lev_val * 1000. if lev_unit in ['km', 'mx', 'sr'] else lev_val
-
-            # The index of the requested level
-            lev = spec.get('vertical_index')
-            if lev is None:
-                lev = int(np.argwhere(levs == lev_val))
+            lev = self.get_level(field, level, spec)
             vals = field[lev, :, :]
 
         transforms = spec.get('transform')
         if transforms:
-            transform_kwargs = {}
-            if isinstance(transforms, dict):
-                transform_kwargs = transforms.get('kwargs', {})
-                transforms = transforms.get('funcs')
-            vals = self.get_transform(transforms, vals, transform_kwargs)
+            vals = self.get_transform(transforms, vals)
 
         return vals
 
-    def vector_magnitude(self, field1, field2, vertical_index=0):
+    def vector_magnitude(self, field1, field2, vertical_index=0, **kwargs):
+
+        # pylint: disable=unused-argument
 
         '''
         Returns the vector magnitude of two component vector fields. The
@@ -482,25 +512,29 @@ class profileData(UPPData):
                        upper air
 
         Keyword Args:
-            layer      a numeric layer corresponding to an index of the field to
-                       be returned
-            ncl_name   the NCL name of the variable to be retrieved
+            ncl_name         the NCL name of the variable to be retrieved
+            one_lev          bool flag. if True, get the single level of the variable
+            vertical_index   the index of the required level
         '''
 
-        layer = kwargs.get('layer')
-        ncl_name = kwargs.get('ncl_name', '').format(fhr=self.fhr)
-
-        # Set the default here since this is an instance of an abstract method
+        # Set the defaults here since this is an instance of an abstract method
+        # level refers to the level key in the specs file.
         level = level if level else 'ua'
 
         if not name:
             name = self.short_name
 
+        one_lev = kwargs.get('one_lev', False)
+
+        # Retrive the location for the profile
         x, y = self.get_xypoint()
 
         # Retrieve the default_specs section for the specified level
         var_spec = self.spec.get(name, {}).get(level, {})
-        ncl_name = ncl_name if ncl_name else self.ncl_name(var_spec)
+
+        # Set the NCL name from the specs section, unless otherwise specified
+        ncl_name = kwargs.get('ncl_name') or self.ncl_name(var_spec)
+        ncl_name = ncl_name.format(fhr=self.fhr)
 
         if not ncl_name:
             raise errors.NoGraphicsDefinitionForVariable(
@@ -508,20 +542,24 @@ class profileData(UPPData):
                 'ua',
                 )
 
-        # Specifies the vertical index if one is needed.
-        layer = layer if layer else var_spec.get('layer')
+        # Get the full 2- or 3-D field
+        field = self.contents.variables[ncl_name]
 
-        profile = self.contents.variables[ncl_name][::]
+        profile = field[::]
+        lev = 0
         if len(profile.shape) == 2:
             profile = profile[x, y]
         elif len(profile.shape) == 3:
-            if layer is not None:
-                profile = profile[layer, x, y]
+            if one_lev:
+                lev = kwargs.get('vertical_index')
+                if lev is None:
+                    lev = self.get_level(field, level, var_spec)
+                profile = profile[lev, x, y]
             else:
                 profile = profile[:, x, y]
         return profile
 
-    def vector_magnitude(self, field1, field2, layer=None, level='ua'):
+    def vector_magnitude(self, field1, field2, level='ua', vertical_index=None, **kwargs):
 
         '''
         Returns the vector magnitude of two component vector profiles. The
@@ -531,10 +569,21 @@ class profileData(UPPData):
         self.values.
         '''
 
+
         if isinstance(field1, str):
-            field1 = self.values(ncl_name=field1, layer=layer, level=level)
+            field1 = self.values(
+                level=level,
+                ncl_name=field1,
+                vertical_index=vertical_index,
+                **kwargs,
+                )
 
         if isinstance(field2, str):
-            field2 = self.values(ncl_name=field2, layer=layer, level=level)
+            field2 = self.values(
+                level=level,
+                ncl_name=field2,
+                vertical_index=vertical_index,
+                **kwargs,
+                )
 
         return conversions.magnitude(field1, field2)

@@ -13,8 +13,9 @@ To run the tests, type the following in the top level repo directory:
 
 '''
 
-from inspect import signature
+from inspect import getfullargspec
 from string import ascii_letters, digits
+import warnings
 
 from matplotlib import cm
 from matplotlib import colors as mcolors
@@ -198,24 +199,40 @@ class TestDefaultSpecs():
             # Key word arguments may not be present.
             kwargs = entry.get('kwargs')
 
-            transforms = [self.get_callable(func) for func in funcs]
 
-            # The signatures bit gives us a list of all the accepted arguments
+            transforms = []
+            for func in funcs:
+                callables = self.get_callable(func)
+                callables = callables if isinstance(callables, list) else \
+                            [callables]
+                transforms.extend(callables)
+
+            # The argspecs bit gives us a list of all the accepted arguments
             # for the functions listed in the variable all_params. Test fails
             # when provided arguments don't appear in all_params.
             # arguments not in that list, we fail.
             if kwargs:
-                signatures = [signature(func) for func in transforms if
-                              callable(func)]
+                argspecs = [getfullargspec(func) for func in transforms if
+                            callable(func)]
 
                 all_params = []
-                for sig in signatures:
-                    parameters = [p.name for p in sig.parameters.values()
-                                  if p.kind == p.POSITIONAL_OR_KEYWORD]
+                for argspec in argspecs:
+
+                    # Make sure all functions accept key word arguments
+                    assert argspec.varkw is not None
+
+                    parameters = []
+                    for argtype in [argspec.args, argspec.varargs, argspec.varkw]:
+                        if argtype is not None:
+                            parameters.extend(argtype)
                     all_params.extend(parameters)
 
                 for key in kwargs.keys():
-                    assert key in all_params
+                    if key not in all_params:
+                        msg = f'Function key {key} is not an expicit parameter \
+                                in any of the transforms: {funcs}!'
+                        warnings.warn(msg, UserWarning)
+
 
         return True
 
@@ -232,15 +249,17 @@ class TestDefaultSpecs():
         # Check datahandler.grib objects if a single word is provided
         if len(func.split('.')) == 1:
 
+            funcs = []
             for attr in dir(grib):
                 # pylint: disable=no-member
                 if func in dir(grib.__getattribute__(attr)):
-                    return grib.__getattribute__(attr).__dict__.get(func)
+                    funcs.append(grib.__getattribute__(attr).__dict__.get(func))
+            return funcs
 
-        elif callable(utils.get_func(func)):
+        if callable(utils.get_func(func)):
             return utils.get_func(func)
 
-
+        raise ValueError('{func} is not a known callable function!')
 
     @staticmethod
     def is_a_clev(clev):
@@ -416,12 +435,15 @@ class TestDefaultSpecs():
         callables = []
         for func in funcs:
             callable_ = self.get_callable(func)
-            if isinstance(callable_, np.ndarray):
-                callables.append(True)
-            elif callable(callable_):
-                callables.append(True)
-            else:
-                callables.append(False)
+            callable_ = callable_ if isinstance(callable_, list) else [callable_]
+
+            for clbl in callable_:
+                if isinstance(clbl, np.ndarray):
+                    callables.append(True)
+                elif callable(clbl):
+                    callables.append(True)
+                else:
+                    callables.append(False)
 
         return all(callables)
 
