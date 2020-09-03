@@ -36,14 +36,11 @@ def add_logo(fpath, position):
 
     logo_file = 'static/noaa-logo-100x100.png'
     logo_image = Image.open(logo_file)
-    logo_width, logo_height = logo_image.size
 
     image = Image.open(fpath)
-    image_width, image_height = image.size
-
     image.paste(logo_image,
-               position,
-               logo_image)
+                position,
+                logo_image)
     image.save(fpath)
 
 def create_skewt(cla, fhr, grib_path, workdir):
