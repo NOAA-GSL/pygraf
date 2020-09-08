@@ -26,9 +26,9 @@ TILE_DEFS = {
     'SC': [25, 42, -106.5, -88],
     'SE': [25, 37, -93.5, -74],
     'SW': [24.5, 45, -122, -104],
-    'ATL': [31.2, 35.8, -87.4, -80.6],
+    'ATL': [31.2, 35.8, -87.4, -79.8],
     'CA-NV': [30, 45, -124, -114],
-    'CentralCA': [34.5, 40.5, -124, -117],
+    'CentralCA': [34.5, 40.5, -124, -118],
     'CHI-DET': [39, 44, -92, -83],
     'DCArea': [36.7, 40, -81, -72],
     'EastCO': [36.5, 41.5, -108, -101.8],
@@ -81,15 +81,22 @@ class Map():
 
         ''' Draws map boundaries - coasts, states, countries. '''
 
+        self.m.drawstates()
+
+        if self.tile != 'full':
+            self.m.drawcounties(antialiased=False,
+                                color='gray',
+                                linewidth=0.1,
+                                zorder=10,
+                                )
+
         try:
             self.m.drawcoastlines(linewidth=0.5)
         except ValueError:
             pass
 
-        self.m.drawstates()
         self.m.drawcountries()
-        if self.tile != 'full':
-            self.m.drawcounties(linewidth=0.2, zorder=100)
+
 
     def draw(self):
 
@@ -118,7 +125,8 @@ class Map():
 
         ''' Wrapper around basemap creation '''
 
-        return Basemap(ax=self.ax,
+        return Basemap(area_thresh=1000,
+                       ax=self.ax,
                        lat_0=center_lat,
                        lat_1=lat_1,
                        lat_2=lat_2,
