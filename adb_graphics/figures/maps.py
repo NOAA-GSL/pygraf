@@ -16,12 +16,28 @@ import numpy as np
 
 import adb_graphics.utils as utils
 
-# REGIONS is a dict with predefined regions specifying the corners of the grid to be plotted.
+# TILE_DEFS is a dict with predefined tiles specifying the corners of the grid to be plotted.
 #     Order: [lower left lat, upper right lat, lower left lon, upper right lon]
 
-REGIONS = {
-    'hrrr': [21.1381, 47.8422, 360-122.72, 360-60.9172],
-    'fv3': [22.4140, 47.1024, -122.2141, -62.6567],
+TILE_DEFS = {
+    'NC': [37, 49, -108, -86],
+    'NW': [37, 52 , -125, -102],
+    'NE': [36.5, 49, -91, -67],
+    'SW': [25, 39, -122, -103],
+    'SC': [25, 42, -107, -89],
+    'SE': [25, 38, -94, -74],
+    'ATL': [31, 37, -86, -80],
+    'CA-NV': [30, 45, -124, -114],
+    'CentralCA': [35, 40, -124, -118],
+    'CHI-DET': [39, 44, -92, -83],
+    'DCArea': [36, 40, -81, -72],
+    'EastCO': [43, 38 , -101, -106],
+    'GreatLakes': [37, 50, -92, -70],
+    'SEA-POR': [45, 50, -127, -119],
+    'NYC-BOS': [40, 43, -78, -69],
+    'SouthFL': [25, 29, -83, -78],
+    'SouthCA': [32, 36, -121, -115],
+    'VortexSE': [30, 37, -92.5, -82],
 }
 
 
@@ -38,29 +54,42 @@ class Map():
 
         Keyword arguments:
 
-          region        string corresponding to REGIONS dict key
           map_proj      dict describing the map projection to use.
                         The only options currently are for lcc settings in
                         _get_basemap()
           corners       list of values lat and lon of lower left (ll) and upper
                         right(ur) corners:
                              ll_lat, ur_lat, ll_lon, ur_lon
+          tile          a string corresponding to a pre-defined tile in the
+                        TILE_DEFS dictionary
     '''
 
     def __init__(self, airport_fn, ax, **kwargs):
 
         self.ax = ax
-        self.corners = kwargs.get('corners', REGIONS[kwargs.get('region', 'hrrr')])
-        self.m = self._get_basemap(**kwargs.get('map_proj', {}))
+        self.tile = kwargs.get('tile', 'full')
         self.airports = self.load_airports(airport_fn)
+
+        # Set the corners of the domain, either explicitly, or by tile label
+        self.corners = kwargs.get('corners')
+        if self.corners is None:
+            self.corners = self.get_corners()
+
+        self.m = self._get_basemap(**kwargs.get('map_proj', {}))
 
     def boundaries(self):
 
         ''' Draws map boundaries - coasts, states, countries. '''
 
-        self.m.drawcoastlines()
+        try:
+            self.m.drawcoastlines(linewidth=0.5)
+        except ValueError:
+            pass
+
         self.m.drawstates()
         self.m.drawcountries()
+        if self.tile != 'full':
+            self.m.drawcounties(linewidth=0.2, zorder=100)
 
     def draw(self):
 
@@ -97,10 +126,22 @@ class Map():
                        llcrnrlon=self.corners[2],
                        lon_0=center_lon,
                        projection='lcc',
-                       resolution='l',
+                       resolution='i',
                        urcrnrlat=self.corners[1],
                        urcrnrlon=self.corners[3],
                        )
+
+    def get_corners(self):
+
+        '''
+        Gather the corners for a specific tile. Corners are supplied in the
+        following format:
+
+        lat and lon of lower left (ll) and upper right(ur) corners:
+             ll_lat, ur_lat, ll_lon, ur_lon
+        '''
+
+        return TILE_DEFS[self.tile]
 
     @staticmethod
     def load_airports(fn):
