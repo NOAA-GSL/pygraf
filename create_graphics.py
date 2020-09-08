@@ -327,7 +327,7 @@ def parallel_maps(fhr, grib_path, level, spec, variable, workdir,
     # Build the output path
     png_suffix = level if level != 'ua' else ''
     tile_label = f'_{tile}' if tile != 'full' else ''
-    png_file = f'{variable}{tile_label}{png_suffix}.png'
+    png_file = f'{variable}{tile_label}{png_suffix}_f{fhr:03d}.png'
     png_path = os.path.join(workdir, png_file)
 
     print('*' * 120)
