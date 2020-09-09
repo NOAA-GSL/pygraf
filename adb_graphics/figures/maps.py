@@ -81,19 +81,26 @@ class Map():
 
         ''' Draws map boundaries - coasts, states, countries. '''
 
-        self.m.drawstates()
-
-        if self.tile != 'full':
-            self.m.drawcounties(antialiased=False,
-                                color='gray',
-                                linewidth=0.1,
-                                zorder=10,
-                                )
 
         try:
             self.m.drawcoastlines(linewidth=0.5)
         except ValueError:
-            pass
+            self.m.drawcounties(color='k',
+                                linewidth=0.4,
+                                zorder=10,
+                                )
+        else:
+
+            if self.tile != 'full':
+                self.m.drawcounties(antialiased=False,
+                                    color='gray',
+                                    linewidth=0.1,
+                                    zorder=10,
+                                    )
+
+
+
+        self.m.drawstates()
 
         self.m.drawcountries()
 
