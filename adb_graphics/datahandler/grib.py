@@ -23,11 +23,12 @@ class GribFile():
 
     ''' Wrappers and helper functions for interfacing with pyNIO.'''
 
-    def __init__(self, filename, filetype):
+    def __init__(self, filename, filetype, **kwargs):
         self.filename = filename
         self.contents = self._load()
 
         self.filetype = filetype
+        self.grid_suffix = kwargs.get('grid_suffix', 'GLC0')
 
     def _load(self):
 
@@ -68,7 +69,7 @@ class UPPData(GribFile, specs.VarSpec):
         config = kwargs.get('config', 'adb_graphics/default_specs.yml')
         filetype = kwargs.get('filetype', 'prs')
 
-        GribFile.__init__(self, filename, filetype)
+        GribFile.__init__(self, filename, filetype, **kwargs)
         specs.VarSpec.__init__(self, config)
 
         self.spec = self.yml
@@ -209,7 +210,7 @@ class UPPData(GribFile, specs.VarSpec):
         name = spec.get('ncl_name')
         if isinstance(name, dict):
             name = name.get(self.filetype)
-        return name.format(fhr=self.fhr)
+        return name.format(fhr=self.fhr, grid=self.grid_suffix)
 
     def numeric_level(self, index_match=True, level=None):
 
@@ -535,7 +536,7 @@ class profileData(UPPData):
 
         # Set the NCL name from the specs section, unless otherwise specified
         ncl_name = kwargs.get('ncl_name') or self.ncl_name(var_spec)
-        ncl_name = ncl_name.format(fhr=self.fhr)
+        ncl_name = ncl_name.format(fhr=self.fhr, grid=self.grid_suffix)
 
         if not ncl_name:
             raise errors.NoGraphicsDefinitionForVariable(

@@ -1,72 +1,72 @@
 hourly:
   variables:
-    rh:
-      - 2m
-      - 850mb
-    temp:
-      - 2ds
-      - 2m
-      - 500mb
-      - 700mb
-      - 850mb
-      - 925mb
-      - sfc
-    vort:
-      - 500mb
-    vvel:
-      - 700mb
-    hlcy:
-      - in16
-      - in25
-      - mx02
-      - mx03
-      - mx16
-    dewp:
-      - 2m
-    gust:
-      - 10m
-    vvort:
-      - mx01
-      - mx02
-    cape:
-      - sfc
-      - mu
-      - mul
-      - mx90mb
-    cin:
-      - sfc
-    cloudcover:
-      - high
-      - low
-      - mid
-      - total
-    lcl:
-      - sfc
-    vil:
-      - sfc
-    soilt: &soilt_levs
-      - 0cm
-      - 1cm
-      - 4cm
-      - 10cm
-      - 30cm
-      - 60cm
-      - 1m
-      - 1.6m
-      - 3m
-    G113bt:
-      - sat
-    G114bt:
-      - sat
-    G123bt:
-      - sat
-    G124bt:
-      - sat
+#    rh:
+#      - 2m
+#      - 850mb
+#    temp:
+#      - 2ds
+#      - 2m
+#      - 500mb
+#      - 700mb
+#      - 850mb
+#      - 925mb
+#      - sfc
+#    vort:
+#      - 500mb
+#    vvel:
+#      - 700mb
+#    hlcy:
+#      - in16
+#      - in25
+#      - mx02
+#      - mx03
+#      - mx16
+#    dewp:
+#      - 2m
+#    gust:
+#      - 10m
+#    vvort:
+#      - mx01
+#      - mx02
+#    cape:
+#      - sfc
+#      - mu
+#      - mul
+#      - mx90mb
+#    cin:
+#      - sfc
+#    cloudcover:
+#      - high
+#      - low
+#      - mid
+#      - total
+#    lcl:
+#      - sfc
+#    vil:
+#      - sfc
+#    soilt: &soilt_levs
+#      - 0cm
+#      - 1cm
+#      - 4cm
+#      - 10cm
+#      - 30cm
+#      - 60cm
+#      - 1m
+#      - 1.6m
+#      - 3m
+#    G113bt:
+#      - sat
+#    G114bt:
+#      - sat
+#    G123bt:
+#      - sat
+#    G124bt:
+#      - sat
     ceil:
       - ua
-    ceilexp:
-      - ua
-    ceilexp2:
-      - ua
-    ctop:
-      - ua
+#    ceilexp:
+#      - ua
+#    ceilexp2:
+#      - ua
+#    ctop:
+#      - ua

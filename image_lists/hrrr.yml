@@ -1,29 +1,80 @@
 hourly:
+  grid_suffix: GLC0
   variables:
-    rh:
-      - 2m
-      - 850mb
-      - ua
-    temp:
-      - 2ds
-      - 2m
-      - 500mb
-      - 700mb
-      - 850mb
-      - 925mb
+    1hsm:
       - sfc
-    wind:
-      - 10m
-      - 80m
-      - 850mb
-      - 250mb
+    1hsnw:
+      - sfc
+    1ref:
+      - sfc
+    3hsm:
+      - sfc
+    6kshr:
+      - sfc
+    acfrzr:
+      - sfc
+    acfrozr:
+      - sfc
+    acpcp:
+      - sfc
+    acsnod:
+      - sfc
+    acp:
+      - esbl
+      - esblmn
+      - sfc
+    acsnw:
+      - esbl
+      - esblmn
+      - sfc
+    blcc:
+      - sfc
+    cape:
+      - sfc
+      - mu
+      - mul
+      - mx90mb
+    ceil:
+      - ua
+    ceilexp:
+      - ua
+    ceilexp2:
+      - ua
+    cin:
+      - sfc
+    cloudcover:
+      - high
+      - low
+      - mid
+      - total
+    cpofp:
+      - sfc
+    cref:
+      - esbl
+      - sfc
+    ctop:
+      - ua
+    dewp:
+      - 2m
+    ectp:
+      - sfc
+    flru:
+      - sfc
+    hail:
+      - maxsfc
       - max
-      - mdn
-      - mup
-    vort:
-      - 500mb
-    vvel:
-      - 700mb
+    hailcast:
+      - maxsfc
+    gust:
+      - 10m
+    G113bt:
+      - sat
+    G114bt:
+      - sat
+    G123bt:
+      - sat
+    G124bt:
+      - sat
     hlcy:
       - esbl
       - in16
@@ -45,89 +96,14 @@ hourly:
       - mx03
       - mx16
       - mx25
-    dewp:
-      - 2m
-    gust:
-      - 10m
-    ptemp:
-      - 2m
-    wchg:
-      - 80m
-      - esbl
-    wpwr:
-      - 80m
-    pwtr:
-      - sfc
-    acp:
-      - esbl
-      - esblmn
-      - sfc
-    acsnw:
-      - esbl
-      - esblmn
-      - sfc
-    hvyacp:
-      - esbl
-    hvy1snw:
-      - esbl
-    cref:
-      - esbl
-      - sfc
-    totp:
-      - esbl
-      - esblmn
-      - sfc
-    vvort:
-      - mx01
-      - mx02
-    1hsm:
-      - sfc
-    1hsnw:
-      - sfc
-    1ref:
-      - sfc
-    3hsm:
-      - sfc
-    6kshr:
-      - sfc
-    acsnod:
-      - sfc
-    acpcp:
-      - sfc
-    acfrzr:
-      - sfc
-    acfrozr:
-      - sfc
-    blcc:
-      - sfc
-    li:
-      - best
-    cape:
-      - sfc
-      - mu
-      - mul
-      - mx90mb
-    cin:
-      - sfc
-    cloudcover:
-      - high
-      - low
-      - mid
-      - total
-    cpofp:
-      - sfc
-    ectp:
-      - sfc
-    flru:
-      - sfc
-    hail:
-      - maxsfc
-    hailcast:
-      - maxsfc
-    hail:
-      - max
     hpbl:
       - sfc
+    hvy1snw:
+      - esbl
+    hvyacp:
+      - esbl
+    li:
+      - best
     lcl:
       - sfc
     lhtfl:
@@ -144,8 +120,19 @@ hourly:
       - sfc
     pchg:
       - sfc
+    ptemp:
+      - 2m
     ptyp:
       - sfc
+    pwtr:
+      - sfc
+    ref:
+      - m10
+      - maxm10
+    rh:
+      - 2m
+      - 850mb
+      - ua
     rhpw:
       - sfc
     rvil:
@@ -162,9 +149,32 @@ hourly:
       - sfc
     soilm:
       - sfc
+    soilt: &soilt_levs
+      - 0cm
+      - 1cm
+      - 4cm
+      - 10cm
+      - 30cm
+      - 60cm
+      - 1m
+      - 1.6m
+      - 3m
+    soilw: *soilt_levs
     solar:
       - sfc
     ssrun:
+      - sfc
+    temp:
+      - 2ds
+      - 2m
+      - 500mb
+      - 700mb
+      - 850mb
+      - 925mb
+      - sfc
+    totp:
+      - esbl
+      - esblmn
       - sfc
     ulwrf:
       - sfc
@@ -178,39 +188,29 @@ hourly:
       - sfc
     vig:
       - sfc
-    vis:
-      - sfc
     vil:
       - sfc
+    vis:
+      - sfc
+    vort:
+      - 500mb
+    vvel:
+      - 700mb
+    vvort:
+      - mx01
+      - mx02
+    wchg:
+      - 80m
+      - esbl
     weasd:
       - sfc
-    soilt: &soilt_levs
-      - 0cm
-      - 1cm
-      - 4cm
-      - 10cm
-      - 30cm
-      - 60cm
-      - 1m
-      - 1.6m
-      - 3m
-    soilw: *soilt_levs
-    ref:
-      - m10
-      - maxm10
-    G113bt:
-      - sat
-    G114bt:
-      - sat
-    G123bt:
-      - sat
-    G124bt:
-      - sat
-    ceil:
-      - ua
-    ceilexp:
-      - ua
-    ceilexp2:
-      - ua
-    ctop:
-      - ua
+    wind:
+      - 10m
+      - 80m
+      - 850mb
+      - 250mb
+      - max
+      - mdn
+      - mup
+    wpwr:
+      - 80m

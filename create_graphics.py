@@ -70,7 +70,7 @@ def create_maps(cla, fhr, grib_path, workdir):
                 msg = f'graphics: {variable} {level}'
                 raise errors.NoGraphicsDefinitionForVariable(msg)
 
-            args.append((fhr, grib_path, level, spec,
+            args.append((cla, fhr, grib_path, level, spec,
                          variable, workdir))
 
     with Pool(processes=cla.nprocs) as pool:
@@ -96,7 +96,7 @@ def load_images(arg):
     with open(image_file, 'r') as fn:
         images = yaml.load(fn, Loader=yaml.Loader)[image_set]
 
-    return [image_file, images.get('variables')]
+    return [images.get('grid_suffix'), images.get('variables')]
 
 def load_sites(arg):
 
@@ -230,7 +230,7 @@ def parse_args():
 
     return parser.parse_args()
 
-def parallel_maps(fhr, grib_path, level, spec, variable, workdir,
+def parallel_maps(cla, fhr, grib_path, level, spec, variable, workdir,
                   tile=''):
 
     # pylint: disable=too-many-arguments,too-many-locals
@@ -241,6 +241,7 @@ def parallel_maps(fhr, grib_path, level, spec, variable, workdir,
 
     Input:
 
+      cla        command line arguments Namespace object
       fhr        forecast hour
       grib_path  the full path to the grib file
       level      the vertical level of the variable to be plotted
@@ -255,6 +256,7 @@ def parallel_maps(fhr, grib_path, level, spec, variable, workdir,
     field = grib.fieldData(
         fhr=fhr,
         filename=grib_path,
+        grid_suffix=cla.images[0],
         level=level,
         short_name=variable,
         )
@@ -273,6 +275,7 @@ def parallel_maps(fhr, grib_path, level, spec, variable, workdir,
             contour_fields.append(grib.fieldData(
                 fhr=fhr,
                 filename=grib_path,
+                grid_suffix=cla.images[0],
                 level=lev,
                 contour_kwargs=contour_kwargs,
                 short_name=var,
@@ -287,6 +290,7 @@ def parallel_maps(fhr, grib_path, level, spec, variable, workdir,
             hatch_fields.append(grib.fieldData(
                 fhr=fhr,
                 filename=grib_path,
+                grid_suffix=cla.images[0],
                 level=lev,
                 contour_kwargs=hatch_kwargs,
                 short_name=var,
@@ -351,6 +355,7 @@ def parallel_skewt(cla, fhr, grib_path, site, workdir):
         fhr=fhr,
         filename=grib_path,
         filetype=cla.file_type,
+        grid_suffix=cla.images[0],
         loc=site,
         max_plev=cla.max_plev,
         )
