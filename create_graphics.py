@@ -17,6 +17,7 @@ import time
 import zipfile
 
 import matplotlib.pyplot as plt
+from PIL import Image
 import yaml
 
 from adb_graphics.datahandler import grib
@@ -28,6 +29,19 @@ import adb_graphics.utils as utils
 
 AIRPORTS = 'static/Airports_locs.txt'
 
+
+def add_logo(fpath, position):
+
+    ''' Add the NOAA logo to a PNG image file, fpath '''
+
+    logo_file = 'static/noaa-logo-100x100.png'
+    logo_image = Image.open(logo_file)
+
+    image = Image.open(fpath)
+    image.paste(logo_image,
+                position,
+                logo_image)
+    image.save(fpath)
 
 def create_skewt(cla, fhr, grib_path, workdir):
 
@@ -318,6 +332,8 @@ def parallel_maps(fhr, grib_path, level, spec, variable, workdir,
 
     plt.close()
 
+    add_logo(png_path, (20, 645))
+
 
 def parallel_skewt(cla, fhr, grib_path, site, workdir):
 
@@ -356,6 +372,7 @@ def parallel_skewt(cla, fhr, grib_path, site, workdir):
         )
     plt.close()
 
+    add_logo(png_path, (125, 875))
 
 @utils.timer
 def graphics_driver(cla):
