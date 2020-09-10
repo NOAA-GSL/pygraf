@@ -90,7 +90,6 @@ class Map():
                                 zorder=10,
                                 )
         else:
-
             if self.tile != 'full':
                 self.m.drawcounties(antialiased=False,
                                     color='gray',
@@ -98,12 +97,8 @@ class Map():
                                     zorder=10,
                                     )
 
-
-
         self.m.drawstates()
-
         self.m.drawcountries()
-
 
     def draw(self):
 
