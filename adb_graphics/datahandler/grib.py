@@ -8,6 +8,7 @@ specifics of grib files from UPP.
 import abc
 import datetime
 from functools import lru_cache
+import os
 from string import digits, ascii_letters
 
 from matplotlib import cm
@@ -19,22 +20,23 @@ from .. import errors
 from .. import specs
 from .. import utils
 
+
 class GribFile():
 
     ''' Wrappers and helper functions for interfacing with pyNIO.'''
 
-    def __init__(self, filename, filetype):
+    def __init__(self, filename):
         self.filename = filename
         self.contents = self._load()
 
-        self.filetype = filetype
+        self.file_type = 'nat' if 'nat' in os.path.basename(filename) else 'prs'
 
     def _load(self):
 
         ''' Internal method that opens the grib file. Returns a grib message
         iterator. '''
 
-        return Nio.open_file(self.filename, format="grib2") # pylint: disable=c-extension-no-member
+        return Nio.open_file(self.filename) # pylint: disable=c-extension-no-member
 
     def get_field(self, ncl_name):
 
@@ -66,9 +68,8 @@ class UPPData(GribFile, specs.VarSpec):
 
         # Parse kwargs first
         config = kwargs.get('config', 'adb_graphics/default_specs.yml')
-        filetype = kwargs.get('filetype', 'prs')
 
-        GribFile.__init__(self, filename, filetype)
+        GribFile.__init__(self, filename)
         specs.VarSpec.__init__(self, config)
 
         self.spec = self.yml
@@ -137,20 +138,6 @@ class UPPData(GribFile, specs.VarSpec):
 
         return values - self.values(name=variable2, level=level2)
 
-    def get_transform(self, transforms: str, val: np.ndarray, transform_kwargs):
-
-        ''' Applies a set of one or more transforms to an np.array of data values '''
-
-        # Treat any transforms as a list
-        transforms = transforms if isinstance(transforms, list) else [transforms]
-
-        for transform in transforms:
-            if len(transform.split('.')) == 1:
-                val = self.__getattribute__(transform)(val, **transform_kwargs)
-            else:
-                val = utils.get_func(transform)(val, **transform_kwargs)
-        return val
-
     def latlons(self):
 
         ''' Returns the set of latitudes and longitudes '''
@@ -171,7 +158,7 @@ class UPPData(GribFile, specs.VarSpec):
 
         name = spec.get('ncl_name')
         if isinstance(name, dict):
-            name = name.get(self.filetype)
+            name = name.get(self.file_type)
         return name
 
     def numeric_level(self, level=None):
@@ -184,10 +171,10 @@ class UPPData(GribFile, specs.VarSpec):
         '''
 
         level = level if level else self.level
+
         # Gather all the numbers and convert to integer
-        lev_val = ''.join([c for c in level if (c in digits or c == '.')])
-        if lev_val:
-            lev_val = float(lev_val) if '.' in lev_val else int(lev_val)
+        lev_val = ''.join([c for c in level if c in digits])
+        lev_val = int(lev_val) if lev_val else lev_val
 
         # Gather all the letters
         lev_unit = ''.join([c for c in level if c in ascii_letters])
@@ -323,35 +310,42 @@ class fieldData(UPPData):
                 raise errors.NoGraphicsDefinitionForVariable(name, level)
             field = self.get_field(self.ncl_name(spec))
 
+        transforms = spec.get('transform')
+
         if len(field.shape) == 2:
             vals = field[::]
         elif len(field.shape) == 3:
 
             # Available variable levels
-            dim_name = spec.get('vertical_level_name',
-                                field.dimensions[0])
-            levs = self.contents.variables[dim_name][::]
+            try:
+                levs = self.contents.variables[field.dimensions[0]][::]
 
-            # Requested level
-            lev_val, lev_unit = self.numeric_level()
-            lev_val = lev_val / 100. if lev_unit == 'cm' else lev_val
-            lev_val = lev_val * 100. if lev_unit in ['mb', 'mxmb'] else lev_val
-            lev_val = lev_val * 1000. if lev_unit in ['km', 'mx', 'sr'] else lev_val
+                # Requested level
+                lev_val, lev_unit = self.numeric_level()
+                lev_val = lev_val * 100. if lev_unit == 'mb' else lev_val
 
-            # The index of the requested level
-            lev = spec.get('vertical_index')
-            if lev is None:
+                # The index of the reqested level
                 lev = int(np.argwhere(levs == lev_val))
+            except KeyError:
+                lev = self.vspec.get('layer')
             vals = field[lev, :, :]
 
-            transforms = spec.get('transform')
-            if transforms:
-                transform_kwargs = spec.get('transform_kwargs', {})
-                vals = self.get_transform(transforms, vals, transform_kwargs)
+        if transforms:
+            transform_kwargs = spec.get('transform_kwargs', {})
+
+            # Treat any transforms as a list
+            transforms = transforms if isinstance(transforms, list) else [transforms]
+
+            for transform in transforms:
+
+                if len(transform.split('.')) == 1:
+                    vals = self.__getattribute__(transform)(vals, **transform_kwargs)
+                else:
+                    vals = utils.get_func(transform)(vals, **transform_kwargs)
 
         return vals
 
-    def vector_magnitude(self, field1, field2, vertical_index=0):
+    def vector_magnitude(self, field1, field2, layer=0):
 
         '''
         Returns the vector magnitude of two component vector fields. The
@@ -360,10 +354,10 @@ class fieldData(UPPData):
         '''
 
         if isinstance(field1, str):
-            field1 = self.get_field(field1)[vertical_index]
+            field1 = self.get_field(field1)[layer]
 
         if isinstance(field2, str):
-            field2 = self.get_field(field2)[vertical_index]
+            field2 = self.get_field(field2)[layer]
 
         return conversions.magnitude(field1, field2)
 
@@ -393,13 +387,6 @@ class fieldData(UPPData):
         u, v = [field_lambda(self.filename, level, var) for var in ['u', 'v']]
 
         return [component.values() for component in [u, v]]
-
-    def windspeed(self) -> np.ndarray:
-
-        ''' Compute the wind speed from the components. '''
-
-        u, v = self.wind(level=True)
-        return conversions.magnitude(u, v)
 
 
 class profileData(UPPData):

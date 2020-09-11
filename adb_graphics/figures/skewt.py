@@ -33,6 +33,7 @@ class SkewTDiagram(grib.profileData):
 
     Key word arguments:
 
+      fhr              forecast hour
       max_plev         maximum pressure level to plot in mb
 
     Additional keyword arguments for the grib.profileData base class should also
@@ -61,7 +62,7 @@ class SkewTDiagram(grib.profileData):
             # Magic to get the desired number of decimals to appear.
             decimals = items.get('decimals', 0)
             value = items['data']
-            value = round(int(value)) if decimals == 0 else round(value, decimals)
+            value = int(value) if decimals == 0 else round(value, decimals)
 
             # Sure would have been nice to use a variable in the f string to
             # denote the format per variable.
@@ -429,12 +430,11 @@ class SkewTDiagram(grib.profileData):
             if not spec:
                 raise errors.NoGraphicsDefinitionForVariable(varname, lev)
 
-            tmp = self.values(level=lev, name=varname)
+            tmp = self.values(level=lev, name=varname, one_lev=True)
 
             transforms = spec.get('transform')
             if transforms:
-                transform_kwargs = spec.get('transform_kwargs', {})
-                tmp = self.get_transform(transforms, tmp, transform_kwargs)
+                tmp = self.get_transform(transforms, tmp)
 
             thermo[var]['data'] = tmp
             thermo[var]['units'] = spec.get('unit')

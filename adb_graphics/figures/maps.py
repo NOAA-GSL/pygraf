@@ -14,12 +14,30 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import numpy as np
 
-# REGIONS is a dict with predefined regions specifying the corners of the grid to be plotted.
+import adb_graphics.utils as utils
+
+# TILE_DEFS is a dict with predefined tiles specifying the corners of the grid to be plotted.
 #     Order: [lower left lat, upper right lat, lower left lon, upper right lon]
 
-REGIONS = {
-    'hrrr': [21.1381, 47.8422, 360-122.72, 360-60.9172],
-    'fv3': [22.4140, 47.1024, -122.2141, -62.6567],
+TILE_DEFS = {
+    'NC': [37, 49, -108, -86],
+    'NE': [36, 47.5, -91, -64.5],
+    'NW': [37, 52, -125, -104],
+    'SC': [25, 42, -106.5, -88],
+    'SE': [25, 37, -93.5, -74],
+    'SW': [24.5, 45, -122, -104],
+    'ATL': [31.2, 35.8, -87.4, -79.8],
+    'CA-NV': [30, 45, -124, -114],
+    'CentralCA': [34.5, 40.5, -124, -118],
+    'CHI-DET': [39, 44, -92, -83],
+    'DCArea': [36.7, 40, -81, -72],
+    'EastCO': [36.5, 41.5, -108, -101.8],
+    'GreatLakes': [37, 50, -95, -70],
+    'NYC-BOS': [40, 43, -78.5, -68.5],
+    'SEA-POR': [43, 50, -125, -119],
+    'SouthCA': [31, 37, -120, -114],
+    'SouthFL': [24, 28.5, -84, -77],
+    'VortexSE': [30, 37, -92.5, -82],
 }
 
 
@@ -36,27 +54,49 @@ class Map():
 
         Keyword arguments:
 
-          region        string corresponding to REGIONS dict key
           map_proj      dict describing the map projection to use.
                         The only options currently are for lcc settings in
                         _get_basemap()
           corners       list of values lat and lon of lower left (ll) and upper
                         right(ur) corners:
                              ll_lat, ur_lat, ll_lon, ur_lon
+          tile          a string corresponding to a pre-defined tile in the
+                        TILE_DEFS dictionary
     '''
 
     def __init__(self, airport_fn, ax, **kwargs):
 
         self.ax = ax
-        self.corners = kwargs.get('corners', REGIONS[kwargs.get('region', 'hrrr')])
-        self.m = self._get_basemap(**kwargs.get('map_proj', {}))
+        self.tile = kwargs.get('tile', 'full')
         self.airports = self.load_airports(airport_fn)
+
+        # Set the corners of the domain, either explicitly, or by tile label
+        self.corners = kwargs.get('corners')
+        if self.corners is None:
+            self.corners = self.get_corners()
+
+        self.m = self._get_basemap(**kwargs.get('map_proj', {}))
 
     def boundaries(self):
 
         ''' Draws map boundaries - coasts, states, countries. '''
 
-        self.m.drawcoastlines()
+
+        try:
+            self.m.drawcoastlines(linewidth=0.5)
+        except ValueError:
+            self.m.drawcounties(color='k',
+                                linewidth=0.4,
+                                zorder=10,
+                                )
+        else:
+            if self.tile != 'full':
+                self.m.drawcounties(antialiased=False,
+                                    color='gray',
+                                    linewidth=0.1,
+                                    zorder=10,
+                                    )
+
         self.m.drawstates()
         self.m.drawcountries()
 
@@ -87,7 +127,8 @@ class Map():
 
         ''' Wrapper around basemap creation '''
 
-        return Basemap(ax=self.ax,
+        return Basemap(area_thresh=1000,
+                       ax=self.ax,
                        lat_0=center_lat,
                        lat_1=lat_1,
                        lat_2=lat_2,
@@ -95,10 +136,22 @@ class Map():
                        llcrnrlon=self.corners[2],
                        lon_0=center_lon,
                        projection='lcc',
-                       resolution='l',
+                       resolution='i',
                        urcrnrlat=self.corners[1],
                        urcrnrlon=self.corners[3],
                        )
+
+    def get_corners(self):
+
+        '''
+        Gather the corners for a specific tile. Corners are supplied in the
+        following format:
+
+        lat and lon of lower left (ll) and upper right(ur) corners:
+             ll_lat, ur_lat, ll_lon, ur_lon
+        '''
+
+        return TILE_DEFS[self.tile]
 
     @staticmethod
     def load_airports(fn):
@@ -118,14 +171,18 @@ class DataMap():
     Input:
 
         field             datahandler data object for data field to shade
-        contour_field     dandhandler data object for data field to contour
+        contour_fields    list of datahandler object fields to contour
+        hatch_fields      list of datahandler object fields to hatch over shaded
+                          fields
         map               maps object
 
     '''
 
-    def __init__(self, field, map_, contour_field=None):
+    def __init__(self, field, map_, contour_fields=None, hatch_fields=None):
+
         self.field = field
-        self.contour_field = contour_field
+        self.contour_fields = contour_fields
+        self.hatch_fields = hatch_fields
         self.map = map_
 
     def _colorbar(self, cc, ax):
@@ -152,6 +209,7 @@ class DataMap():
                             )
         cbar.ax.set_xticklabels(ticks, fontsize=18)
 
+    @utils.timer
     def draw(self, show=False):
 
         ''' Main method for creating the plot. Set show=True to display the
@@ -161,16 +219,57 @@ class DataMap():
 
         # Draw a map and add the shaded field
         self.map.draw()
-        cf = self._draw_field(field=self.field, func=self.map.m.contourf, \
-                              colors=self.field.colors, extend='both', ax=ax)
-        self._colorbar(cc=cf, ax=ax)
+        cf = self._draw_field(ax=ax,
+                              colors=self.field.colors,
+                              extend='both',
+                              field=self.field,
+                              func=self.map.m.contourf,
+                              levels=self.field.clevs,
+                              )
+        self._colorbar(ax=ax, cc=cf)
 
-        # Contour a secondary field, if requested
-        if self.contour_field is not None:
-            cc = self._draw_field(field=self.contour_field, func=self.map.m.contour, ax=ax, \
-                       colors=self.field.vspec.get('contour_colors', self.contour_field.colors))
-            clab = plt.clabel(cc, self.contour_field.clevs[::4], fontsize=18, inline=1, fmt='%4.0f')
-            _ = [txt.set_bbox(dict(facecolor='k', edgecolor='none', pad=0)) for txt in clab]
+        not_labeled = [self.field.short_name]
+        if self.hatch_fields:
+            not_labeled.extend([h.short_name for h in self.hatch_fields])
+
+        # Contour secondary fields, if requested
+        if self.contour_fields:
+            for contour_field in self.contour_fields:
+                levels = contour_field.contour_kwargs.pop('levels',
+                                                          contour_field.clevs)
+
+                cc = self._draw_field(ax=ax,
+                                      field=contour_field,
+                                      func=self.map.m.contour,
+                                      levels=levels,
+                                      **contour_field.contour_kwargs,
+                                      )
+                if contour_field.short_name not in not_labeled:
+                    try:
+                        clab = plt.clabel(cc, levels[::4],
+                                          colors='w',
+                                          fmt='%1.0f',
+                                          fontsize=10,
+                                          inline=1,
+                                          )
+                        # Set the background color for the line labels to black
+                        _ = [txt.set_bbox(dict(color='k')) for txt in clab]
+
+                    except ValueError:
+                        print(f'Cannot add contour labels to map for {self.field.short_name} \
+                                {self.field.level}')
+
+
+        # Add hatched fields, if requested
+        # Levels should be included in the settings dict here since they don't
+        # correspond to a full field of contours.
+        if self.hatch_fields:
+            for field in self.hatch_fields:
+                self._draw_field(ax=ax,
+                                 field=field,
+                                 func=self.map.m.contourf,
+                                 **field.contour_kwargs,
+                                 )
 
         # Add wind barbs, if requested
         add_wind = self.field.vspec.get('wind', False)
@@ -204,8 +303,8 @@ class DataMap():
         '''
 
         x, y = self._xy_mesh(field)
+
         return func(x, y, field.values(),
-                    field.clevs,
                     ax=ax,
                     **kwargs,
                     )
@@ -218,17 +317,30 @@ class DataMap():
         atime = f.date_to_str(f.anl_dt)
         vtime = f.date_to_str(f.valid_dt)
 
-        # Create a descriptor string for the contoured field, if one exists
-        contoured = ''
-        if self.contour_field is not None:
-            cf = self.contour_field
-            contoured = f'{cf.field.long_name} ({cf.units}, contoured)'
+        # Create a descriptor string for the first hatched field, if one exists
+        contoured = []
+        not_labeled = [f.short_name]
+        if self.hatch_fields:
+            cf = self.hatch_fields[0]
+            not_labeled.extend([h.short_name for h in self.hatch_fields])
+            if cf not in ['pres']:
+                title = cf.vspec.get('title', cf.field.long_name)
+                contoured.append(f'{title} ({cf.units}, hatched)')
+
+        # Add descriptor string for the important contoured fields
+        if self.contour_fields:
+            for cf in self.contour_fields:
+                if cf.short_name not in not_labeled:
+                    title = cf.vspec.get('title', cf.field.long_name)
+                    contoured.append(f'{title} ({cf.units}, contoured)')
+
+        contoured = ', '.join(contoured)
 
         # Analysis time (top) and forecast hour (bottom) on the left
         plt.title(f"Analysis: {atime}\nFcst Hr: {f.fhr}", loc='left', fontsize=16)
 
         # Atmospheric level and unit in the high center
-        level, lev_unit = f.numeric_level()
+        level, lev_unit = f.numeric_level(index_match=False)
         if not f.vspec.get('title'):
             plt.title(f"{level} {lev_unit}", position=(0.5, 1.04), fontsize=18)
 

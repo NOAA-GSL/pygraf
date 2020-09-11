@@ -13,15 +13,30 @@ import time
 
 import numpy as np
 
-def path_exists(path: str):
+def fhr_list(args):
 
-    ''' Checks whether a file exists, and returns the path if it does. '''
+    '''
+    Given an argparse list argument, return the sequence of forecast hours to
+    process.
 
-    if not os.path.exists(path):
-        msg = f'{path} does not exist!'
-        raise argparse.ArgumentTypeError(msg)
+    The length of the list will determine what forecast hours are returned:
 
-    return path
+      Length = 1:   A single fhr is to be processed
+      Length = 2:   A sequence of start, stop with increment 1
+      Length = 3:   A sequence of start, stop, increment
+      Length > 3:   List as is
+
+    argparse should provide a list of at least one item (nargs='+').
+
+    Must ensure that the list contains integers.
+    '''
+
+    args = args if isinstance(args, list) else [args]
+    arg_len = len(args)
+    if arg_len in (2, 3):
+        return list(range(*args))
+
+    return args
 
 def from_datetime(date):
     ''' Return a string like YYYYMMDDHH given a datetime object. '''
@@ -178,6 +193,16 @@ def old_enough(age, file_path):
     max_age = dt.datetime.now() - dt.timedelta(minutes=age)
 
     return file_time < max_age
+
+def path_exists(path: str):
+
+    ''' Checks whether a file exists, and returns the path if it does. '''
+
+    if not os.path.exists(path):
+        msg = f'{path} does not exist!'
+        raise argparse.ArgumentTypeError(msg)
+
+    return path
 
 def timer(func):
 
