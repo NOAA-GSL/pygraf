@@ -60,21 +60,36 @@ def create_maps(cla, fhr, grib_path, workdir):
 
     args = []
 
-    for variable, levels in cla.images[1].items():
-        for level in levels:
+    for tile in cla.tiles:
+        for variable, levels in cla.images[1].items():
+            for level in levels:
 
-            # Load the spec for the current variable
-            spec = cla.specs.get(variable, {}).get(level)
+                # Load the spec for the current variable
+                spec = cla.specs.get(variable, {}).get(level)
 
-            if not spec:
-                msg = f'graphics: {variable} {level}'
-                raise errors.NoGraphicsDefinitionForVariable(msg)
+                if not spec:
+                    msg = f'graphics: {variable} {level}'
+                    raise errors.NoGraphicsDefinitionForVariable(msg)
 
-            args.append((cla, fhr, grib_path, level, spec,
-                         variable, workdir))
+                args.append((cla, fhr, grib_path, level, spec,
+                             variable, workdir, tile))
 
     with Pool(processes=cla.nprocs) as pool:
         pool.starmap(parallel_maps, args)
+
+def generate_tile_list(arg_list):
+
+    ''' Given the input arguments -- a list if the argument is provided, return
+    the list. If no arg is provided, defaults to the full domain, and if 'all'
+    is provided, the full domain, and all subdomains are plotted. '''
+
+    if not arg_list:
+        return ['full']
+
+    if 'all' in arg_list:
+        return ['full'] + list(maps.TILE_DEFS.keys())
+
+    return arg_list
 
 def load_images(arg):
 
@@ -226,12 +241,19 @@ def parse_args():
         default=60,
         help='Sub-hourly frequency in minutes.',
         )
-
-
+    map_group.add_argument(
+        '--tiles',
+        choices=['full', 'all'] + list(maps.TILE_DEFS.keys()),
+        default=['full'],
+        help='The domains to plot. Choose from any of those listed. Special \
+        choices: full is full model output domain, and all is the full domain, \
+        plus all of the sub domains.',
+        nargs='+',
+        )
     return parser.parse_args()
 
 def parallel_maps(cla, fhr, grib_path, level, spec, variable, workdir,
-                  tile=''):
+                  tile='full'):
 
     # pylint: disable=too-many-arguments,too-many-locals
 
@@ -298,11 +320,15 @@ def parallel_maps(cla, fhr, grib_path, level, spec, variable, workdir,
 
     _, ax = plt.subplots(1, 1, figsize=(12, 12))
 
+
+    corners = field.corners if tile == 'full' else None
+
     # Generate a map object
     m = maps.Map(
         airport_fn=AIRPORTS,
         ax=ax,
         grid_info=field.grid_info,
+        tile=tile,
         )
 
     # Send all objects (map, field, contours, hatches) to a DataMap object
@@ -318,7 +344,8 @@ def parallel_maps(cla, fhr, grib_path, level, spec, variable, workdir,
 
     # Build the output path
     png_suffix = level if level != 'ua' else ''
-    png_file = f'{variable}{"_" + tile}{png_suffix}.png'
+    tile_label = f'_{tile}' if tile != 'full' else ''
+    png_file = f'{variable}{tile_label}{png_suffix}_f{fhr:03d}.png'
     png_path = os.path.join(workdir, png_file)
 
     print('*' * 120)
@@ -480,6 +507,7 @@ if __name__ == '__main__':
         CLARGS.specs = load_specs(CLARGS.specs)
 
         CLARGS.images = load_images(CLARGS.images)
+        CLARGS.tiles = generate_tile_list(CLARGS.tiles)
 
     print(f"Running script for {CLARGS.graphic_type} with args: ")
     print((('-' * 80)+'\n') * 2)
