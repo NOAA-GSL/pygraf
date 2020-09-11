@@ -1,0 +1,114 @@
+hourly:
+  grid_suffix: GRLL0
+  variables:
+#    1hsnw:
+#      - sfc
+#    acp:
+#      - sfc
+#    acsnw:
+#      - sfc
+#    acfrozr:
+#      - sfc
+#    acfrzr:
+#      - sfc
+#    acpcp:
+#      - sfc
+    cape:
+      - mu
+#      - mul
+#      - mx90mb
+#      - sfc
+#    cctop:
+#      - ua
+#    ceil:
+#      - ua
+#    ctop:
+#      - ua
+#    cin:
+#      - sfc
+#    cloudcover:
+#      - high
+#      - low
+#      - mid
+#      - total
+#    cref:
+#      - sfc
+#    dewp:
+#      - 2m
+#    ectp:
+#      - sfc
+#    flru:
+#      - sfc
+#    gust:
+#      - 10m
+#    hpbl:
+#      - sfc
+#    lhtfl:
+#      - sfc
+#    ltng:
+#      - sfc
+#    pchg:
+#      - sfc
+#    ptemp:
+#      - 2m
+#    ptyp:
+#      - sfc
+#    pwtr:
+#      - sfc
+#    rh:
+#      - 2m
+#      - 850mb
+#      - ua
+#    rhpw:
+#      - sfc
+#    rvil:
+#      - sfc
+#    shtfl:
+#      - sfc
+#    snod:
+#      - sfc
+#    soilt: &soilt_levs
+#      - 1cm
+#      - 4cm
+#      - 10cm
+#    soilw:
+#      <<: *soilt_levs
+#      - 0cm
+#    solar:
+#      - sfc
+#    temp:
+#      - 2ds
+#      - 2m
+#      - 500mb
+#      - 700mb
+#      - 850mb
+#      - 925mb
+#      - sfc
+#    totp:
+#      - sfc
+#    ulwrf:
+#      - sfc
+#      - nta
+#    uswrf:
+#      - sfc
+#      - nta
+#    vil:
+#      - sfc
+#    vis:
+#      - sfc
+#    vort:
+#      - 500mb
+#    vvel:
+#      - 700mb
+#    wchg:
+#      - 80m
+#    wind:
+#      - 10m
+#      - 80m
+#      - 850mb
+#      - 250mb
+#    wmag:
+#      - 250mb
+#      - 850mb
+#    weasd:
+#      - sfc
