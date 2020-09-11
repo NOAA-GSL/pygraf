@@ -139,6 +139,11 @@ class UPPData(GribFile, specs.VarSpec):
 
         ''' Returns the value of the level to for a 3D array '''
 
+        # The index of the requested level
+        lev = spec.get('vertical_index')
+        if lev is not None:
+            return lev
+
         # Follow convention of fieldData objects for getting vertical level
         dim_name = spec.get('vertical_level_name',
                             field.dimensions[0])
@@ -147,12 +152,7 @@ class UPPData(GribFile, specs.VarSpec):
         # Requested level
         lev_val, _ = self.numeric_level(level)
 
-        # The index of the requested level
-        lev = spec.get('vertical_index')
-        if lev is None:
-            lev = int(np.argwhere(levs == lev_val))
-
-        return lev
+        return int(np.argwhere(levs == lev_val))
 
     def get_transform(self, transforms, val):
 
@@ -333,6 +333,62 @@ class fieldData(UPPData):
 
         lat, lon = self.latlons()
         return [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
+
+    @property
+    def grid_info(self):
+
+        ''' Returns a dict that includes the grid info for the full grid. '''
+
+        # Keys are grib names, values are Basemap argument names
+        ncl_to_basemap = dict(
+                CenterLon='lon_0',
+                CenterLat='lat_0',
+                Latin2='lat_1',
+                Latin1='lat_2',
+                Lov='lon_0',
+                La1='lat_1',
+                La2='lat_2',
+                Lo1='lon_1',
+                Lo2='lon_2',
+                )
+
+        # Last coordinate listed should be latitude or longitude
+        lat_var, lon_var = self.field.coordinates.split()
+
+        # Get the latitude variable
+        lat = self.contents.variables[lat_var]
+        lon = self.contents.variables[lon_var]
+
+        print('LAT ATTR')
+        for key, val in lat.attributes.items():
+            print(f'{key}: {val}')
+
+        grid_info = {}
+
+        if self.grid_suffix == 'GLC0':
+            grid_info['projection'] = 'lcc'
+            grid_info['corners'] = self.corners
+            grid_info['lat_0'] = 39.0
+            attrs =  ['Latin1', 'Latin2', 'Lov']
+        else:
+            attrs = []
+            grid_info['projection'] = 'rotpole'
+            grid_info['corners'] = self.corners
+            grid_info['o_lat_p'] = 90 - lat.attributes['CenterLat'][0]
+            grid_info['o_lon_p'] = 180
+            grid_info['lon_0'] = lat.attributes['CenterLon'][0] - 360
+
+        for attr in attrs:
+            bm_arg = ncl_to_basemap[attr]
+            val = lat.attributes[attr]
+            val = val[0] if isinstance(val, np.ndarray) else val
+            grid_info[bm_arg] = val
+
+        print('GRID INFO')
+        for key, val in grid_info.items():
+            print(f'{key}: {val}')
+
+        return grid_info
 
     @property
     def ticks(self) -> int:
@@ -553,9 +609,7 @@ class profileData(UPPData):
             profile = profile[x, y]
         elif len(profile.shape) == 3:
             if one_lev:
-                lev = kwargs.get('vertical_index')
-                if lev is None:
-                    lev = self.get_level(field, level, var_spec)
+                lev = self.get_level(field, level, var_spec)
                 profile = profile[lev, x, y]
             else:
                 profile = profile[:, x, y]

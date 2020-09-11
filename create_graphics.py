@@ -302,7 +302,7 @@ def parallel_maps(cla, fhr, grib_path, level, spec, variable, workdir,
     m = maps.Map(
         airport_fn=AIRPORTS,
         ax=ax,
-        corners=field.corners,
+        grid_info=field.grid_info,
         )
 
     # Send all objects (map, field, contours, hatches) to a DataMap object
@@ -336,7 +336,10 @@ def parallel_maps(cla, fhr, grib_path, level, spec, variable, workdir,
 
     plt.close()
 
-    add_logo(png_path, (20, 645))
+    if cla.images[0] == 'GRLL0':
+        add_logo(png_path, (80, 880))
+    else:
+        add_logo(png_path, (20, 645))
 
 
 def parallel_skewt(cla, fhr, grib_path, site, workdir):

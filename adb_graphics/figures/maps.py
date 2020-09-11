@@ -50,8 +50,8 @@ class Map():
     def __init__(self, airport_fn, ax, **kwargs):
 
         self.ax = ax
-        self.corners = kwargs.get('corners', REGIONS[kwargs.get('region', 'hrrr')])
-        self.m = self._get_basemap(**kwargs.get('map_proj', {}))
+        self.grid_info = kwargs.get('grid_info', {})
+        self.m = self._get_basemap(**self.grid_info)
         self.airports = self.load_airports(airport_fn)
 
     def boundaries(self):
@@ -85,22 +85,29 @@ class Map():
                     markersize=4,
                     )
 
-    def _get_basemap(self, center_lat=39.0, center_lon=262.5, lat_1=38.5, lat_2=38.5):
+    def _get_basemap(self, **get_basemap_kwargs):
 
         ''' Wrapper around basemap creation '''
 
-        return Basemap(ax=self.ax,
-                       lat_0=center_lat,
-                       lat_1=lat_1,
-                       lat_2=lat_2,
-                       llcrnrlat=self.corners[0],
-                       llcrnrlon=self.corners[2],
-                       lon_0=center_lon,
-                       projection='lcc',
-                       resolution='l',
-                       urcrnrlat=self.corners[1],
-                       urcrnrlon=self.corners[3],
-                       )
+        basemap_args = dict(ax=self.ax,
+                            resolution='l',
+                            )
+        corners = get_basemap_kwargs.pop('corners', None)
+        if corners is not None:
+            basemap_args.update(dict(
+                llcrnrlat=corners[0],
+                llcrnrlon=corners[2],
+                urcrnrlat=corners[1],
+                urcrnrlon=corners[3],
+                ))
+
+        basemap_args.update(get_basemap_kwargs)
+
+        print('BASEMAP ARGS')
+        for k,v in basemap_args.items():
+            print(f'{k}: {v}')
+
+        return Basemap(**basemap_args)
 
     @staticmethod
     def load_airports(fn):

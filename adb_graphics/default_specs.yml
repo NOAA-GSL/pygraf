@@ -70,7 +70,7 @@
     clevs: !!python/object/apply:numpy.arange [5, 76, 5]
     cmap: NWSReflectivity
     colors: cref_colors
-    ncl_name: REFD_P0_L103_GLC0
+    ncl_name: REFD_P0_L103_{grid}
     ticks: 5
     title: 1 km agl Reflectivity
     unit: dBZ
@@ -80,7 +80,7 @@ acpcp: # Accumulated precipitation
     clevs: [0.01, 0.1, 0.25, 0.5, 1, 2, 3, 5, 10, 15, 20, 40]
     cmap: gist_ncar
     colors: accumulated_precip_colors
-    ncl_name: APCP_P8_L1_GLC0_acc{fhr}h
+    ncl_name: APCP_P8_L1_{grid}_acc{fhr}h
     ticks: 0
     transform:
       funcs: conversions.kgm2_to_in
@@ -90,7 +90,7 @@ acfrzr: # Run Total Freezing Rain
     clevs: [0.002, 0.01, 0.05, 0.1, 0.25, 0.5, 0.75, 1, 2]
     cmap: gist_ncar
     colors: pcp_colors
-    ncl_name: FROZR_P8_L1_GLC0_acc{fhr}h
+    ncl_name: FROZR_P8_L1_{grid}_acc{fhr}h
     ticks: 0
     transform:
       funcs: conversions.kgm2_to_in
@@ -114,17 +114,16 @@ cape:
         alpha: 0
         hatches: ['///', '']
         levels: [50, 1000]
-    ncl_name: CAPE_P0_2L108_GLC0
+    ncl_name: CAPE_P0_2L108_{grid}
     ticks: 0
     title: Most Unstable CAPE
     unit: J/kg
     vertical_index: 2
-    vertical_level_name: lv_SPDL4_l0
   mul: # Most Unstable Layer CAPE
     <<: *cape
     contours:
     hatches:
-    ncl_name: CAPE_P0_2L108_GLC0
+    ncl_name: CAPE_P0_2L108_{grid}
     title: Most Unstable Layer CAPE
     vertical_index: 1
   mx90mb: # Lowest 90 mb Mixed Layer CAPE
@@ -140,7 +139,7 @@ cape:
         hatches: ['///', '']
         levels: [-1000, -50]
     vertical_index: 0
-    ncl_name: CAPE_P0_2L108_GLC0
+    ncl_name: CAPE_P0_2L108_{grid}
     title: Lowest 90 mb Mixed Layer CAPE
   sfc:
     <<: *cape
@@ -154,22 +153,22 @@ cape:
         alpha: 0
         hatches: ['///', '']
         levels: [-1000, -50]
-    ncl_name: CAPE_P0_L1_GLC0
+    ncl_name: CAPE_P0_L1_{grid}
     title: Surface CAPE
 cell: # Storm cell motion
   ua:
-    ncl_name: USTM_P0_2L103_GLC0
+    ncl_name: USTM_P0_2L103_{grid}
     transform:
       funcs: [vector_magnitude, conversions.ms_to_kt]
       kwargs:
-        field2: VSTM_P0_2L103_GLC0
+        field2: VSTM_P0_2L103_{grid}
     unit: kt
 ceil: # Ceiling
   ua: &ceil
     clevs: [0, 0.1, 0.3, 0.5, 1, 2, 3, 5, 10, 15, 20, 30, 52]
     cmap: gist_ncar
     colors: ceil_colors
-    ncl_name: HGT_P0_L215_GLC0
+    ncl_name: HGT_P0_L215_{grid}
     ticks: 0
     title: Ceiling
     transform:
@@ -181,37 +180,34 @@ ceil: # Ceiling
 ceilexp: # Ceiling - experimental
   ua:
     <<: *ceil
-    ncl_name: CEIL_P0_GLC0
+    ncl_name: CEIL_P0_{grid}
     title: Ceiling (exp)
 ceilexp2: # Ceiling - experimental no.2
   ua:
     <<: *ceil
-    ncl_name: CEIL_P0_L2_GLC0
+    ncl_name: CEIL_P0_L2_{grid}
     title: Ceiling (exp-2)
 cin: # Surface Convective Inhibition
   mu:
     clevs: [-300, -200, -150, -100, -75, -50, -40, -30, -20, -10, -1]
     cmap: gist_ncar
     colors: cin_colors
-    ncl_name: CIN_P0_2L108_GLC0
+    ncl_name: CIN_P0_2L108_{grid}
     unit: J/kg
     vertical_index: 2
-    vertical_level_name: lv_SPDL4_l0
   mx90mb: # Lowest 90 mb Mixed Layer CIN
-    ncl_name: CIN_P0_2L108_GLC0
+    ncl_name: CIN_P0_2L108_{grid}
     title: 'ML CIN < -50'
     vertical_index: 0
-    vertical_level_name: lv_SPDL4_l0
   sfc: &sfc_cin
     clevs: [-300, -200, -150, -100, -75, -50, -40, -30, -20, -10, -1]
     cmap: gist_ncar
     colors: cin_colors
-    ncl_name: CIN_P0_L1_GLC0
+    ncl_name: CIN_P0_L1_{grid}
     ticks: 0
     title: Surface CIN
     unit: J/kg
     vertical_index: 2
-    vertical_level_name: lv_SPDL4_l0
   sfclt:
     <<: *sfc_cin
     title: Surface CIN < -50
@@ -220,7 +216,7 @@ cloudcover:
     clevs: [2, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95]
     cmap: gist_ncar
     colors: cldcov_colors
-    ncl_name: TCDC_P0_L211_GLC0
+    ncl_name: TCDC_P0_L211_{grid}
     ticks: 0
     title: PBL ... 1km Cloud Cover
     unit: '%'
@@ -229,33 +225,33 @@ cloudcover:
     clevs: [2, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95]
     cmap: gist_ncar
     colors: cldcov_colors
-    ncl_name: HCDC_P0_L234_GLC0
+    ncl_name: HCDC_P0_L234_{grid}
     ticks: 0
     title: High-Level Cloud Cover
     unit: '%'
   low:
     <<: *cld_cover
-    ncl_name: LCDC_P0_L214_GLC0
+    ncl_name: LCDC_P0_L214_{grid}
     title: Low-Level Cloud Cover
   mid:
     <<: *cld_cover
-    ncl_name: MCDC_P0_L224_GLC0
+    ncl_name: MCDC_P0_L224_{grid}
     title: Mid-Level Cloud Cover
   total:
     <<: *cld_cover
-    ncl_name: TCDC_P0_L10_GLC0
+    ncl_name: TCDC_P0_L10_{grid}
     title: Total Cloud Cover
 cref: # Composite reflectivity
   sfc:
     <<: *refl
-    ncl_name: REFC_P0_L10_GLC0
+    ncl_name: REFC_P0_L10_{grid}
     title: Composite Reflectivity
 cpofp: # Frozen Precipitation Percentage
   sfc:
     clevs: [-0.1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
     cmap: gist_ncar
     colors: frzn_colors
-    ncl_name: CPOFP_P0_L1_GLC0
+    ncl_name: CPOFP_P0_L1_{grid}
     ticks: 0
     title: Frozen Precip Percentage
     unit: '%'
@@ -264,7 +260,7 @@ ctop: # Cloud top height
     clevs: !!python/object/apply:numpy.arange [0, 61, 5]
     cmap: gist_ncar
     colors: ceil_colors
-    ncl_name: HGT_P0_L3_GLC0
+    ncl_name: HGT_P0_L3_{grid}
     ticks: 0
     title: Cloud Top Height
     transform: conversions.m_to_kft
@@ -274,7 +270,7 @@ dewp: # Dew point temperature
     clevs: [-60, -50, -40, -30, -20, -10, 0, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 66, 68, 70, 80, 90, 100, 110, 120]
     cmap: Carbone42_r
     colors: dewp_colors
-    ncl_name: DPT_P0_L103_GLC0
+    ncl_name: DPT_P0_L103_{grid}
     ticks: -4
     transform: conversions.k_to_f
     unit: F
@@ -284,7 +280,7 @@ echotop: # Echo Top
     clevs: !!python/object/apply:numpy.arange [4, 50, 3]
     cmap: NWSReflectivity
     colors: cref_colors
-    ncl_name: RETOP_P0_L3_GLC0
+    ncl_name: RETOP_P0_L3_{grid}
     ticks: 0
     title: Echo Top
     transform: conversions.m_to_kft
@@ -294,7 +290,7 @@ G113bt: # GOES-W Brightness temperature, water vapor (Ch 3)
     clevs: !!python/object/apply:numpy.arange [-80, 41, 1]
     cmap: WVCIMSS_r
     colors: goes_colors
-    ncl_name: SBT113_P0_L8_GLC0
+    ncl_name: SBT113_P0_L8_{grid}
     ticks: -10
     title: GOES-W Brightness Temperature, Water Vapor
     transform: conversions.k_to_c
@@ -302,18 +298,18 @@ G113bt: # GOES-W Brightness temperature, water vapor (Ch 3)
 G114bt: # GOES-W Brightness temperature, infrared (Ch 4)
   sat:
     <<: *goes_sat
-    ncl_name: SBT114_P0_L8_GLC0
+    ncl_name: SBT114_P0_L8_{grid}
     title: GOES-W Brightness Temperature, Infrared
     unit: ch 4
 G123bt: # GOES-E Brightness temperature, water vapor (Ch 3)
   sat:
     <<: *goes_sat
-    ncl_name: SBT123_P0_L8_GLC0
+    ncl_name: SBT123_P0_L8_{grid}
     title: GOES-E Brightness Temperature, Water Vapor
 G124bt: # GOES-E Brightness temperature, infrared (Ch 4)
   sat:
     <<: *goes_sat
-    ncl_name: SBT124_P0_L8_GLC0
+    ncl_name: SBT124_P0_L8_{grid}
     title: GOES-E Brightness Temperature, Infrared
     unit: ch 4
 gh: # Geopotential height
@@ -322,8 +318,8 @@ gh: # Geopotential height
     cmap: precipitation
     colors: terrain_colors
     ncl_name:
-      prs: HGT_P0_L100_GLC0
-      nat: HGT_P0_L105_GLC0
+      prs: HGT_P0_L100_{grid}
+      nat: HGT_P0_L105_{grid}
     ticks: 4
     transform: conversions.m_to_dm
     unit: dm
@@ -342,7 +338,7 @@ gh: # Geopotential height
     <<: *ua_gh
     clevs: !!python/object/apply:numpy.arange [0, 5000, 250]
     cmap: gist_earth
-    ncl_name: HGT_P0_L1_GLC0
+    ncl_name: HGT_P0_L1_{grid}
     ticks: 0
     transform: []
     unit: gpm
@@ -353,7 +349,7 @@ gust:
     clevs: !!python/object/apply:numpy.arange [5, 95, 5]
     cmap: gist_ncar
     colors: wind_colors
-    ncl_name: GUST_P0_L1_GLC0
+    ncl_name: GUST_P0_L1_{grid}
     ticks: 5
     transform: conversions.ms_to_kt
     unit: kt
@@ -362,121 +358,110 @@ hail: # Max 1h Hail diameter
     clevs: [0.01, 0.25, 0.50, 0.75, 1.0, 1.5, 2.0, 2.5, 3.0]
     cmap: gist_ncar
     colors: hail_colors
-    ncl_name: HAIL_P8_L104_GLC0_max1h
+    ncl_name: HAIL_P8_L104_{grid}_max1h
     ticks: 0
     title: Max 1h Hail/Graupel Diameter at Surface
     transform: conversions.m_to_in
     unit: in
   max: # total atmosphere
     <<: *hail
-    ncl_name: HAIL_P8_L10_GLC0_max1h
+    ncl_name: HAIL_P8_L10_{grid}_max1h
     title: Max 1h Hail/Graupel Diameter, Total Atm
 hailcast: # Max 1h Hail diameter
   maxsfc: # surface, from HAILCAST
     <<: *hail
-    ncl_name: HAIL_P8_L1_GLC0_max1h
+    ncl_name: HAIL_P8_L1_{grid}_max1h
     title: Max 1h Hail Diameterat Sfc from HAILCAST
 hlcy: # Helicity
   in16: &hlcy # Hourly updraft helicity over 1-6 km layer
     clevs: !!python/object/apply:numpy.arange [25, 301, 25]
     cmap: gist_ncar
     colors: hlcy_colors
-    ncl_name: UPHL_P0_2L103_GLC0
+    ncl_name: UPHL_P0_2L103_{grid}
     ticks: 25
     title: 1-6km Updraft Helicity
     unit: m2/s2
     vertical_index: 1
-    vertical_level_name: lv_HTGL6_l0
   in25: # Hourly updraft helicity over 2-5 km layer
     <<: *hlcy 
     clevs: !!python/object/apply:numpy.arange [25, 301, 25]
-    ncl_name: UPHL_P0_2L103_GLC0
+    ncl_name: UPHL_P0_2L103_{grid}
     title: 2-5km Updraft Helicity
     vertical_index: 0
   mn02: # Hourly minimum of updraft helicity over 0-2 km layer
     <<: *hlcy
     clevs: !!python/object/apply:numpy.arange [12.5, 150.5, 12.5]
-    ncl_name: VAR_0_7_200_P8_2L103_GLC0_min1h
+    ncl_name: VAR_0_7_200_P8_2L103_{grid}_min1h
     ticks: 12.5
     title: 0-2km Min Updraft Helicity (over prv hr)
     vertical_index: 0
-    vertical_level_name: lv_HTGL12_l0
   mn03: # Hourly minimum of updraft helicity over 0-3 km layer
     <<: *hlcy
     clevs: !!python/object/apply:numpy.arange [12.5, 150.5, 12.5]
-    ncl_name: VAR_0_7_200_P8_2L103_GLC0_min1h
+    ncl_name: VAR_0_7_200_P8_2L103_{grid}_min1h
     ticks: 12.5
     title: 0-3km Min Updraft Helicity (over prv hr)
     vertical_index: 1
-    vertical_level_name: lv_HTGL12_l0
   mn16: # Hourly minimum of updraft helicity over 1-6 km layer
     <<: *hlcy
     clevs: !!python/object/apply:numpy.arange [25, 301, 25]
-    ncl_name: VAR_0_7_200_P8_2L103_GLC0_min1h
+    ncl_name: VAR_0_7_200_P8_2L103_{grid}_min1h
     title: 1-6km Min Updraft Helicity (over prv hr)
     vertical_index: 3
-    vertical_level_name: lv_HTGL12_l0
   mn25: # Hourly minimum of updraft helicity over 2-5 km layer
     <<: *hlcy
     clevs: !!python/object/apply:numpy.arange [25, 301, 25]
-    ncl_name: VAR_0_7_200_P8_2L103_GLC0_min1h
+    ncl_name: VAR_0_7_200_P8_2L103_{grid}_min1h
     title: 2-5km Min Updraft Helicity (over prv hr)
     vertical_index: 2
-    vertical_level_name: lv_HTGL12_l0
   mx02: # Hourly maximum of updraft helicity over 0-2 km layer
     <<: *hlcy
     clevs: !!python/object/apply:numpy.arange [12.5, 150.5, 12.5]
-    ncl_name: MXUPHL_P8_2L103_GLC0_max1h
+    ncl_name: MXUPHL_P8_2L103_{grid}_max1h
     ticks: 12.5
     title: 0-2km Max Updraft Helicity (over prv hr)
     vertical_index: 0
-    vertical_level_name: lv_HTGL12_l1
   mx03: # Hourly maximum of updraft helicity over 0-3 km layer
     <<: *hlcy
     clevs: !!python/object/apply:numpy.arange [12.5, 150.5, 12.5]
-    ncl_name: MXUPHL_P8_2L103_GLC0_max1h
+    ncl_name: MXUPHL_P8_2L103_{grid}_max1h
     ticks: 12.5
     title: 0-3km Max Updraft Helicity (over prv hr)
     vertical_index: 1
-    vertical_level_name: lv_HTGL12_l0
   mx16: # Hourly maximum of updraft helicity over 1-6 km layer
     <<: *hlcy
     clevs: !!python/object/apply:numpy.arange [25, 301, 25]
-    ncl_name: MXUPHL_P8_2L103_GLC0_max1h
+    ncl_name: MXUPHL_P8_2L103_{grid}_max1h
     title: 1-6km Max Updraft Helicity (over prv hr)
     vertical_index: 3
-    vertical_level_name: lv_HTGL12_l0
   mx25: # Hourly maximum of updraft helicity over 2-5 km layer
     <<: *hlcy
     clevs: !!python/object/apply:numpy.arange [25, 301, 25]
-    ncl_name: MXUPHL_P8_2L103_GLC0_max1h
+    ncl_name: MXUPHL_P8_2L103_{grid}_max1h
     title: 2-5km Max Updraft Helicity (over prv hr)
     vertical_index: 2
-    vertical_level_name: lv_HTGL12_l0
   sr01: # 0-1 km Storm Relative Helicity
     <<: *hlcy
     clevs: [25, 50, 100, 150, 200, 250, 300, 400, 500, 600, 700, 800]
-    ncl_name: HLCY_P0_2L103_GLC0
+    ncl_name: HLCY_P0_2L103_{grid}
     unit: $m^2 / s^2$
     ticks: 0
     title: 0-1 km Storm Relative Helicity
     vertical_index: 0
-    vertical_level_name: lv_HTGL5_l0
   sr03: # 0-3 km Storm Relative Helicity
     <<: *hlcy
     clevs: [25, 50, 100, 150, 200, 250, 300, 400, 500, 600, 700, 800]
-    ncl_name: HLCY_P0_2L103_GLC0
+    ncl_name: HLCY_P0_2L103_{grid}
     unit: $m^2 / s^2$
     ticks: 0
     title: 0-3 km Storm Relative Helicity
     vertical_index: 1
-    vertical_level_name: lv_HTGL5_l0
 hpbl: # Height of Planetary Boundary Layer
   sfc: 
     clevs: [25, 50, 100, 200, 300, 500, 750, 1000, 1500, 2000, 2500, 3000, 4000, 5000]
     cmap: ir_rgbv
     colors: pbl_colors
-    ncl_name: HPBL_P0_L1_GLC0
+    ncl_name: HPBL_P0_L1_{grid}
     ticks: 0
     title: PBL Height
     unit: m
@@ -490,7 +475,7 @@ lcl: # Lifted condensation level
         colors: white
         levels: [1000, 100000]
         linewidths: 1.2
-    ncl_name: HGT_P0_L5_GLC0
+    ncl_name: HGT_P0_L5_{grid}
     ticks: -2
     title: Lifted Condensation Level Height
     unit: m agl
@@ -502,7 +487,7 @@ lhtfl: # Latent Heat Net Flux
     clevs: !!python/object/apply:numpy.arange [-100, 401, 25]
     cmap: Carbone42
     colors: heat_flux_colors
-    ncl_name: LHTFL_P0_L1_GLC0
+    ncl_name: LHTFL_P0_L1_{grid}
     ticks: 0
     title: Latent Heat Net Flux
     unit: W/m^2
@@ -511,17 +496,17 @@ li: # Lifted Index
     clevs: !!python/object/apply:numpy.arange [-15, 16]
     cmap: Spectral
     colors: lifted_index_colors
-    ncl_name: 4LFTX_P0_2L108_GLC0
+    ncl_name: 4LFTX_P0_2L108_{grid}
     ticks: 0
     title: Best Lifted Index (lowest 180 mb)
     unit: C
   sfc:
     <<: *lifted_index
-    ncl_name: LFTX_P0_2L100_GLC0
+    ncl_name: LFTX_P0_2L100_{grid}
     title: Surface Lifted Index
 lpl: # Lifted parcel level
   agl:
-    ncl_name: PLPL_P0_2L108_GLC0
+    ncl_name: PLPL_P0_2L108_{grid}
     title: Lifted Parcel Level AGL >50
     transform:
       funcs: [conversions.pa_to_hpa, field_diff, opposite]
@@ -530,7 +515,7 @@ lpl: # Lifted parcel level
         level2: sfc
     unit: hPa
   ua:
-    ncl_name: PLPL_P0_2L108_GLC0
+    ncl_name: PLPL_P0_2L108_{grid}
     transform: conversions.pa_to_hpa
     unit: hPa
 ltg3: # Lightning Threat (LTG1 ... LTG2)
@@ -538,21 +523,21 @@ ltg3: # Lightning Threat (LTG1 ... LTG2)
     clevs: [0.02, 0.5, 1.0, 1.5, 2.0, 2.5, 3, 4, 5, 6, 7, 8, 10, 12]
     cmap: NWSReflectivity
     colors: cref_colors
-    ncl_name: LTNG_P0_L10_GLC0
+    ncl_name: LTNG_P0_L10_{grid}
     ticks: 0
     title: Lightning Threat (comb of LTG1 and LTG2)
     unit: flashes / km^2 / 5 min
 mref: # Maximum reflectivity for past hour at 1 km AGL
   sfc:
     <<: *refl
-    ncl_name: MAXREF_P8_L103_GLC0_max1h
+    ncl_name: MAXREF_P8_L103_{grid}_max1h
     title: Max 1km agl Reflectivity (over prev hr)
 pres:
   sfc:
     clevs: !!python/object/apply:numpy.arange [650, 1051, 4]
     cmap: gist_ncar
     colors: ps_colors
-    ncl_name: PRES_P0_L1_GLC0
+    ncl_name: PRES_P0_L1_{grid}
     ticks: 20
     transform: conversions.pa_to_hpa
     unit: hPa
@@ -560,18 +545,18 @@ pres:
     clevs: !!python/object/apply:numpy.arange [650, 1051, 4]
     cmap: gist_ncar
     colors: ps_colors
-    ncl_name: MSLMA_P0_L101_GLC0
+    ncl_name: MSLMA_P0_L101_{grid}
     ticks: 20
     transform: conversions.pa_to_hpa
     unit: hPa
   ua:
-    ncl_name: PRES_P0_L105_GLC0
+    ncl_name: PRES_P0_L105_{grid}
 ptmp: # Potential temperature
   2m:
     clevs: !!python/object/apply:numpy.arange [210, 350, 5]
     cmap: jet
     colors: t_colors
-    ncl_name: POT_P0_L103_GLC0
+    ncl_name: POT_P0_L103_{grid}
     ticks: 10
     unit: K
     wind: 10m
@@ -580,29 +565,29 @@ pwtr: # Precipitable water
     clevs: !!python/object/apply:numpy.arange [4, 81, 4]
     cmap: gist_ncar
     colors: pw_colors
-    ncl_name: PWAT_P0_L200_GLC0
+    ncl_name: PWAT_P0_L200_{grid}
     ticks: 4
     unit: mm
 ref: # Maximum reflectivity for past hour at 1 km AGL
   m10:
     <<: *refl
-    ncl_name: REFD_P0_L20_GLC0
+    ncl_name: REFD_P0_L20_{grid}
     title: -10C Isothermal Reflectivity
   maxm10:
     <<: *refl
-    ncl_name: REFD_P8_L20_GLC0_max1h
+    ncl_name: REFD_P8_L20_{grid}_max1h
     title: Max 1h -10C Isothermal Reflectivity
 rh: # Relative Humidity
   2m: &rh
     clevs: [10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 100, 105]
     cmap: gist_ncar
     colors: rh_colors
-    ncl_name: RH_P0_L103_GLC0
+    ncl_name: RH_P0_L103_{grid}
     ticks: 10
     unit: '%'
   500mb: &rh_ua
     <<: *rh
-    ncl_name: RH_P0_L100_GLC0
+    ncl_name: RH_P0_L100_{grid}
     contours:
       pres_sfc:
         colors: 'k'
@@ -639,14 +624,14 @@ rh: # Relative Humidity
         levels: [0, 850]
   pw: # RH wrt Precipitable Water
     <<: *rh
-    ncl_name: RHPW_P0_L10_GLC0
+    ncl_name: RHPW_P0_L10_{grid}
     title: Relative Humidity wrt Precipitable Water
 rvil: # Radar-derived Vertically Integrated Liquid
   sfc: &vert_int_liq
     clevs: [0.05, 0.15, 0.76, 3.47, 6.92, 12, 31.6, 35, 40, 45, 50, 55, 60, 65, 70]
     cmap: NWSReflectivity
     colors: cref_colors
-    ncl_name: VIL_P0_L10_GLC0
+    ncl_name: VIL_P0_L10_{grid}
     ticks: 0
     title: Radar-derived Vertically Integrated Liquid
     unit: kg/m^2
@@ -655,30 +640,29 @@ shear:
     clevs: !!python/object/apply:numpy.arange [5, 91, 5]
     cmap: jet
     colors: shear_colors
-    ncl_name: VUCSH_P0_2L103_GLC0
+    ncl_name: VUCSH_P0_2L103_{grid}
     transform:
       funcs: vector_magnitude
       kwargs:
-        field2: VVCSH_P0_2L103_GLC0
+        field2: VVCSH_P0_2L103_{grid}
         one_lev: True
         vertical_index: 0
     ticks: 0
     unit: $s^{-1}$
     vertical_index: 0
-    vertical_level_name: lv_HTGL2_l1
   06km: # 0-6 km
     <<: *shear
     transform:
       funcs: vector_magnitude
       kwargs:
-        field2: VVCSH_P0_2L103_GLC0
+        field2: VVCSH_P0_2L103_{grid}
         one_lev: True
         vertical_index: 1
     vertical_index: 1
 shtfl: # Sensible Heat Net Flux
   sfc:
     <<: *heat_flux
-    ncl_name: SHTFL_P0_L1_GLC0
+    ncl_name: SHTFL_P0_L1_{grid}
     ticks: 0
     title: Sensible Heat Net Flux
     unit: W/m^2
@@ -687,7 +671,7 @@ soilm: # Soil Moisture Availability
     clevs: [0, 5, 15, 25, 35, 45, 55, 65, 75, 85, 95]
     cmap: Spectral
     colors: soilm_colors
-    ncl_name: MSTAV_P0_L106_GLC0
+    ncl_name: MSTAV_P0_L106_{grid}
     ticks: 0
     title: Soil Moisture Availability
     unit: "%"
@@ -696,7 +680,7 @@ soilt: # Soil Temperature
     clevs: !!python/object/apply:numpy.arange [240, 311, 10]
     cmap: gist_ncar
     colors: soilt_colors
-    ncl_name: TSOIL_P0_2L106_GLC0
+    ncl_name: TSOIL_P0_2L106_{grid}
     ticks: 0
     title: Soil Temperature at Sfc
     unit: K
@@ -730,7 +714,7 @@ soilw: # Soil Moisture
     clevs: !!python/object/apply:numpy.arange [0.0, 0.61, 0.1]
     cmap: gist_ncar
     colors: soilw_colors
-    ncl_name: SOILW_P0_2L106_GLC0
+    ncl_name: SOILW_P0_2L106_{grid}
     ticks: 0
     title: Soil Moisture at Sfc
     unit: fraction
@@ -764,19 +748,19 @@ solar: # Incoming Solar Radiation
     clevs: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100]
     cmap: gist_ncar
     colors: vort_colors
-    ncl_name: DSWRF_P0_L1_GLC0
+    ncl_name: DSWRF_P0_L1_{grid}
     ticks: 0
     title: Incoming Solar Radiation
     unit: W/m^2
 sphum: # Specific humidity
   ua:
-    ncl_name: SPFH_P0_L105_GLC0
+    ncl_name: SPFH_P0_L105_{grid}
 ssrun: # Storm Surface Runoff
   sfc: &precip
     clevs: [0.002, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 1.0, 2.0]
     cmap: gist_ncar
     colors: pcp_colors
-    ncl_name: SSRUN_P8_L1_GLC0_acc1h
+    ncl_name: SSRUN_P8_L1_{grid}_acc1h
     ticks: 0
     title: Storm Surface Runoff
     transform: conversions.kgm2_to_in
@@ -786,7 +770,7 @@ temp: # Temperature
     clevs: !!python/object/apply:numpy.arange [-16, 17, 2]
     cmap: seismic
     colors: centered_diff
-    ncl_name: TMP_P0_L103_GLC0 # 2m Temp
+    ncl_name: TMP_P0_L103_{grid} # 2m Temp
     ticks: 2
     title: 2m Temp - Skin Temp
     transform:
@@ -800,7 +784,7 @@ temp: # Temperature
     clevs: !!python/object/apply:numpy.arange [-60, 120, 10]
     cmap: jet
     colors: t_colors
-    ncl_name: TMP_P0_L103_GLC0
+    ncl_name: TMP_P0_L103_{grid}
     ticks: 10
     transform: conversions.k_to_f
     unit: F
@@ -822,8 +806,8 @@ temp: # Temperature
         hatches: ['...', '']
         levels: [0, 500]
     ncl_name:
-      prs: TMP_P0_L100_GLC0
-      nat: TMP_P0_L105_GLC0
+      prs: TMP_P0_L100_{grid}
+      nat: TMP_P0_L105_{grid}
     ticks: 5
     transform: conversions.k_to_c
     unit: C
@@ -844,8 +828,8 @@ temp: # Temperature
         hatches: ['...', '']
         levels: [0, 700]
     ncl_name:
-      prs: TMP_P0_L100_GLC0
-      nat: TMP_P0_L105_GLC0
+      prs: TMP_P0_L100_{grid}
+      nat: TMP_P0_L105_{grid}
     ticks: 5
     transform: conversions.k_to_c
     unit: C
@@ -880,7 +864,7 @@ temp: # Temperature
     clevs: !!python/object/apply:numpy.arange [-60, 120, 10]
     cmap: jet
     colors: t_colors
-    ncl_name: TMP_P0_L1_GLC0
+    ncl_name: TMP_P0_L1_{grid}
     ticks: 20
     transform: conversions.k_to_f
     unit: F
@@ -908,16 +892,16 @@ totp: # Hourly total precipitation
         levels: !!python/object/apply:numpy.arange [402, 601, 6]
         linewidths: 0.8
         linestyles: dashed
-    ncl_name: APCP_P8_L1_GLC0_acc1h
+    ncl_name: APCP_P8_L1_{grid}_acc1h
     title: 1 hr Total Precip
 u:
   10m:
-    ncl_name: UGRD_P0_L103_GLC0
+    ncl_name: UGRD_P0_L103_{grid}
     transform: conversions.ms_to_kt
   500mb: &ua_uwind
     ncl_name:
-      prs: UGRD_P0_L100_GLC0
-      nat: UGRD_P0_L105_GLC0
+      prs: UGRD_P0_L100_{grid}
+      nat: UGRD_P0_L105_{grid}
   700mb: *ua_uwind
   850mb: *ua_uwind
   925mb: *ua_uwind
@@ -928,7 +912,7 @@ ulwrf: # Upward Longwave Radiation Flux
     clevs: !!python/object/apply:numpy.arange [350, 601, 10]
     cmap: gist_ncar
     colors: radiation_colors
-    ncl_name: ULWRF_P0_L1_GLC0
+    ncl_name: ULWRF_P0_L1_{grid}
     ticks: 0
     title: Upward Longwave Radiation Flux, Surface
     unit: W/m^2
@@ -936,31 +920,31 @@ ulwrf: # Upward Longwave Radiation Flux
     clevs: !!python/object/apply:numpy.arange [80, 341, 2]
     cmap: ir_rgbv_r
     colors: radiation_mix_colors
-    ncl_name: ULWRF_P0_L8_GLC0
+    ncl_name: ULWRF_P0_L8_{grid}
     ticks: 20
     title: Outgoing Longwave Radiation Flux, Top of Atmosphere
     unit: W/m^2
 uswrf: # Upward Shortwave Radiation Flux
   sfc:
     <<: *radiation_flux
-    ncl_name: USWRF_P0_L1_GLC0
+    ncl_name: USWRF_P0_L1_{grid}
     title: Upward Shortwave Radiation Flux, Surface
   top: # Nominal top of atmosphere
     <<: *radiation_flux
     clevs: !!python/object/apply:numpy.arange [50, 851, 10]
     cmap: Greys_r
     colors: radiation_bw_colors
-    ncl_name: USWRF_P0_L8_GLC0
+    ncl_name: USWRF_P0_L8_{grid}
     ticks: 40
     title: Outgoing Shortwave Radiation Flux, Top of Atmosphere
 v:
   10m:
-    ncl_name: VGRD_P0_L103_GLC0
+    ncl_name: VGRD_P0_L103_{grid}
     transform: conversions.ms_to_kt
   500mb: &ua_vwind
     ncl_name:
-      prs: VGRD_P0_L100_GLC0
-      nat: VGRD_P0_L105_GLC0
+      prs: VGRD_P0_L100_{grid}
+      nat: VGRD_P0_L105_{grid}
     transform: conversions.ms_to_kt
   700mb: *ua_vwind
   850mb: *ua_vwind
@@ -970,24 +954,24 @@ v:
 vbdsf: # Incoming Direct Radiation
   sfc:
     <<: *incoming_radiation
-    ncl_name: VBDSF_P0_L1_GLC0
+    ncl_name: VBDSF_P0_L1_{grid}
     title: Incoming Direct Radiation
 vddsf: # Incoming Diffuse Radiation
   sfc:
     <<: *incoming_radiation
-    ncl_name: VDDSF_P0_L1_GLC0
+    ncl_name: VDDSF_P0_L1_{grid}
     title: Incoming Diffuse Radiation
 vil: # Vertically Integrated Liquid
   sfc:
     <<: *vert_int_liq
-    ncl_name: VAR_0_16_201_P0_L10_GLC0
+    ncl_name: VAR_0_16_201_P0_L10_{grid}
     title: Vertically Integrated Liquid
 vig: # Vertically-integrated graupel
   sfc:
     clevs: !!python/object/apply:numpy.arange [5, 91, 5]
     cmap: jet
     colors: graupel_colors
-    ncl_name: TCOLG_P8_L200_GLC0_max1h
+    ncl_name: TCOLG_P8_L200_{grid}_max1h
     ticks: 0
     title: Max Vertically Integrated Graupel (over previous hour)
     unit: mm
@@ -996,7 +980,7 @@ vis: # Visibility
     clevs: [0.0625, 0.125, 0.25, 0.5, 1, 1.5, 2, 3, 4, 5, 10, 30, 50]
     cmap: gist_ncar
     colors: vis_colors
-    ncl_name: VIS_P0_L1_GLC0
+    ncl_name: VIS_P0_L1_{grid}
     ticks: 0
     title: Sfc Visibility
     transform: conversions.m_to_mi
@@ -1009,7 +993,7 @@ vort: # Absolute vorticity
     contours:
       gh:
         colors: 'xkcd:light gray'
-    ncl_name: ABSV_P0_L100_GLC0
+    ncl_name: ABSV_P0_L100_{grid}
     ticks: 2
     transform: conversions.vort_scale
     unit: 1E-5/s
@@ -1021,7 +1005,7 @@ vvel: # Vertical velocity
     contours:
       gh:
         colors: grey
-    ncl_name: VVEL_P0_L100_GLC0
+    ncl_name: VVEL_P0_L100_{grid}
     ticks: 5
     transform: conversions.vvel_scale
     unit: -Pa/s * 10
@@ -1030,7 +1014,7 @@ vvel: # Vertical velocity
 #    cmap: nipy_spectral
     cmap: Spectral_r
     colors: mean_vvel_colors
-    ncl_name: DZDT_P8_2L104_GLC0_avg1h
+    ncl_name: DZDT_P8_2L104_{grid}_avg1h
     ticks: 0
     title: Mean Vertical Velocity, sigma layers 0.5-0.8
     unit: m/s
@@ -1039,7 +1023,7 @@ vvort: # Vertical vorticity
     clevs: !!python/object/apply:numpy.arange [0.0025, 0.0301, 0.0025]
     cmap: gist_ncar
     colors: vort_colors
-    ncl_name: RELV_P8_2L103_GLC0_max1h
+    ncl_name: RELV_P8_2L103_{grid}_max1h
     ticks: 0
     title: 0-1km Max Vertical Velocity (over prev hour)
     unit: 1/s
@@ -1052,7 +1036,7 @@ weasd: # Water equivalent of accumulated snow depth
     clevs: [0.01, 0.1, 0.3, 0.5, 1, 2, 3, 4, 5, 7.5, 10, 20]
     cmap: gist_ncar
     colors: accumulated_precip_colors
-    ncl_name: WEASD_P8_L1_GLC0_acc{fhr}h
+    ncl_name: WEASD_P8_L1_{grid}_acc{fhr}h
     ticks: 0
     title: Snow Water Equivalent
     transform:
