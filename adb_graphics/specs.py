@@ -242,6 +242,17 @@ class VarSpec(abc.ABC):
 
     @property
     @lru_cache()
+    def precip_colors_hourly(self) -> np.ndarray:
+
+        ''' Default color map for 1-Hr Precipitation '''
+
+        grays = cm.get_cmap('Greys', 6)([0, 2])
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          ([25, 50, 60, 70, 80, 85, 90, 100])
+        return np.concatenate((grays, ncar))
+
+    @property
+    @lru_cache()
     def ps_colors(self) -> np.ndarray:
 
         ''' Default color map for Surface Pressure '''
@@ -316,6 +327,17 @@ class VarSpec(abc.ABC):
                           (range(5, 15))
         ctable[9] = [1, 1, 1, 1]
         return ctable
+
+    @property
+    @lru_cache()
+    def snow_colors(self) -> np.ndarray:
+
+        ''' Default color map for Snow fields '''
+
+        grays = cm.get_cmap('Greys', 5)([0, 2])
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          ([15, 18, 20, 25, 50, 60, 70, 80, 85, 90, 100])
+        return np.concatenate((grays, ncar))
 
     @property
     @lru_cache()
