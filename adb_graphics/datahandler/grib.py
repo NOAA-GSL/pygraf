@@ -359,10 +359,6 @@ class fieldData(UPPData):
         lat = self.contents.variables[lat_var]
         lon = self.contents.variables[lon_var]
 
-        print('LAT ATTR')
-        for key, val in lat.attributes.items():
-            print(f'{key}: {val}')
-
         grid_info = {}
 
         if self.grid_suffix == 'GLC0':
@@ -383,10 +379,6 @@ class fieldData(UPPData):
             val = lat.attributes[attr]
             val = val[0] if isinstance(val, np.ndarray) else val
             grid_info[bm_arg] = val
-
-        print('GRID INFO')
-        for key, val in grid_info.items():
-            print(f'{key}: {val}')
 
         return grid_info
 

@@ -11,6 +11,8 @@ barbs, and descriptive annotation.
 from functools import lru_cache
 
 import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+import matplotlib.offsetbox as mpob
 from mpl_toolkits.basemap import Basemap
 import numpy as np
 
@@ -73,8 +75,12 @@ class Map():
 
         # Set the corners of the domain, either explicitly, or by tile label
         self.corners = kwargs.get('corners')
-        if self.corners is None:
+
+        if self.tile == 'full':
+            self.corners = self.grid_info.pop('corners')
+        else:
             self.corners = self.get_corners()
+            self.grid_info.pop('corners')
 
         self.m = self._get_basemap(**self.grid_info)
 
@@ -88,14 +94,14 @@ class Map():
         except ValueError:
             self.m.drawcounties(color='k',
                                 linewidth=0.4,
-                                zorder=10,
+                                zorder=2,
                                 )
         else:
             if self.tile != 'full':
                 self.m.drawcounties(antialiased=False,
                                     color='gray',
                                     linewidth=0.1,
-                                    zorder=10,
+                                    zorder=2,
                                     )
 
         self.m.drawstates()
@@ -133,7 +139,7 @@ class Map():
             ax=self.ax,
             resolution='i',
             )
-        corners = get_basemap_kwargs.pop('corners', None)
+        corners = self.corners
         if corners is not None:
             basemap_args.update(dict(
                 llcrnrlat=corners[0],
@@ -143,10 +149,6 @@ class Map():
                 ))
 
         basemap_args.update(get_basemap_kwargs)
-
-        print('BASEMAP ARGS')
-        for k,v in basemap_args.items():
-            print(f'{k}: {v}')
 
         return Basemap(**basemap_args)
 
@@ -193,6 +195,22 @@ class DataMap():
         self.contour_fields = contour_fields
         self.hatch_fields = hatch_fields
         self.map = map_
+
+
+    def add_logo(self, ax):
+
+        logo = mpimg.imread('static/noaa-logo-100x100.png')
+
+        imagebox = mpob.OffsetImage(logo)
+        ab = mpob.AnnotationBbox(
+            imagebox,
+            (0, 0),
+            box_alignment=(-0.2, -0.2),
+            frameon=False,
+            )
+
+        ax.add_artist(ab)
+
 
     def _colorbar(self, cc, ax):
 
@@ -292,6 +310,9 @@ class DataMap():
         if show:
             plt.tight_layout()
             plt.show()
+
+        self.add_logo(ax)
+
 
     def _draw_field(self, ax, field, func, **kwargs):
 
