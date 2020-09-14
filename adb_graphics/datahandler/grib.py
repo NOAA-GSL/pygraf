@@ -28,7 +28,6 @@ class GribFile():
         self.contents = self._load()
 
         self.filetype = filetype
-        self.grid_suffix = kwargs.get('grid_suffix', 'GLC0')
 
     def _load(self):
 
@@ -48,6 +47,13 @@ class GribFile():
 
         return field
 
+    @property
+    def grid_suffix(self):
+        ''' Return the suffix of the first variable in the file. This should
+        correspond to the grid tag. '''
+
+        var = list(self.contents.variables.keys())[0]
+        return var.split('_')[-1]
 
 class UPPData(GribFile, specs.VarSpec):
 
@@ -362,10 +368,15 @@ class fieldData(UPPData):
         grid_info = {}
 
         if self.grid_suffix == 'GLC0':
+            attrs =  ['Latin1', 'Latin2', 'Lov']
             grid_info['projection'] = 'lcc'
             grid_info['corners'] = self.corners
             grid_info['lat_0'] = 39.0
-            attrs =  ['Latin1', 'Latin2', 'Lov']
+        elif self.grid_suffix == 'GST0':
+            attrs = ['La1', 'Lo1', 'Lov']
+            grid_info['projection'] = 'stere'
+            grid_info['corners'] = self.corners
+            grid_info['lat_ts'] = lat.attributes['La1'][0]
         else:
             attrs = []
             grid_info['projection'] = 'rotpole'

@@ -1,5 +1,4 @@
 hourly:
-  grid_suffix: GRLL0
   variables:
 #    1hsnw:
 #      - sfc

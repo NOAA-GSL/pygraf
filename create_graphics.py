@@ -97,7 +97,7 @@ def load_images(arg):
     with open(image_file, 'r') as fn:
         images = yaml.load(fn, Loader=yaml.Loader)[image_set]
 
-    return [images.get('grid_suffix'), images.get('variables')]
+    return [image_file, images.get('variables')]
 
 def load_sites(arg):
 
@@ -264,7 +264,6 @@ def parallel_maps(cla, fhr, grib_path, level, spec, variable, workdir,
     field = grib.fieldData(
         fhr=fhr,
         filename=grib_path,
-        grid_suffix=cla.images[0],
         level=level,
         short_name=variable,
         )
@@ -283,7 +282,6 @@ def parallel_maps(cla, fhr, grib_path, level, spec, variable, workdir,
             contour_fields.append(grib.fieldData(
                 fhr=fhr,
                 filename=grib_path,
-                grid_suffix=cla.images[0],
                 level=lev,
                 contour_kwargs=contour_kwargs,
                 short_name=var,
@@ -298,7 +296,6 @@ def parallel_maps(cla, fhr, grib_path, level, spec, variable, workdir,
             hatch_fields.append(grib.fieldData(
                 fhr=fhr,
                 filename=grib_path,
-                grid_suffix=cla.images[0],
                 level=lev,
                 contour_kwargs=hatch_kwargs,
                 short_name=var,
@@ -366,7 +363,6 @@ def parallel_skewt(cla, fhr, grib_path, site, workdir):
         fhr=fhr,
         filename=grib_path,
         filetype=cla.file_type,
-        grid_suffix=cla.images[0],
         loc=site,
         max_plev=cla.max_plev,
         )

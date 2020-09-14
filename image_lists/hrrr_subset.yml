@@ -1,5 +1,4 @@
 hourly:
-  grid_suffix: GLC0
   variables:
 #    rh:
 #      - 2m
