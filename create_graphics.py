@@ -72,7 +72,7 @@ def generate_tile_list(arg_list):
     if not arg_list:
         return ['full']
 
-    rap_only = ('AK', 'AKZoom', 'CONUS', 'HI')
+    rap_only = ('AK', 'AKZoom', 'conus', 'HI')
     if 'all' in arg_list:
         all_list = ['full'] + list(maps.TILE_DEFS.keys())
         return [tile for tile in all_list if tile not in rap_only]
@@ -231,7 +231,7 @@ def parse_args():
         )
     map_group.add_argument(
         '--tiles',
-        choices=['full', 'all'] + list(maps.TILE_DEFS.keys()),
+        choices=['full', 'all', 'conus'] + list(maps.TILE_DEFS.keys()),
         default=['full'],
         help='The domains to plot. Choose from any of those listed. Special \
         choices: full is full model output domain, and all is the full domain, \
@@ -305,14 +305,10 @@ def parallel_maps(cla, fhr, grib_path, level, spec, variable, workdir,
 
     _, ax = plt.subplots(1, 1, figsize=(12, 12))
 
-
-    corners = field.corners if tile == 'full' else None
-
     # Generate a map object
     m = maps.Map(
         airport_fn=AIRPORTS,
         ax=ax,
-        corners=corners,
         grid_info=field.grid_info,
         tile=tile,
         )
@@ -491,7 +487,8 @@ if __name__ == '__main__':
     print((('-' * 80)+'\n') * 2)
 
     for name, val in CLARGS.__dict__.items():
-        print(f"{name:>15s}: {val}")
+        if name != 'specs':
+            print(f"{name:>15s}: {val}")
 
 
     graphics_driver(CLARGS)

@@ -22,19 +22,19 @@ import adb_graphics.utils as utils
 #     Order: [lower left lat, upper right lat, lower left lon, upper right lon]
 
 TILE_DEFS = {
-    'NC': [37, 49, -108, -86],
-    'NE': [36, 47.5, -91, -64.5],
-    'NW': [37, 52, -125, -104],
-    'SC': [25, 42, -106.5, -88],
-    'SE': [25, 37, -93.5, -74],
-    'SW': [24.5, 45, -122, -104],
+    'NC': [36, 51, -109, -85],
+    'NE': [36, 48, -91, -62],
+    'NW': [35, 52, -126, -102],
+    'SC': [24, 41, -107, -86],
+    'SE': [22, 37, -93.5, -72],
+    'SW': [24.5, 45, -122, -103],
     'ATL': [31.2, 35.8, -87.4, -79.8],
     'CA-NV': [30, 45, -124, -114],
     'CentralCA': [34.5, 40.5, -124, -118],
     'CHI-DET': [39, 44, -92, -83],
     'DCArea': [36.7, 40, -81, -72],
     'EastCO': [36.5, 41.5, -108, -101.8],
-    'GreatLakes': [37, 50, -95, -70],
+    'GreatLakes': [37, 50, -96, -70],
     'HI': [16.6, 24.6, -157.6, -157.5],
     'NYC-BOS': [40, 43, -78.5, -68.5],
     'SEA-POR': [43, 50, -125, -119],
@@ -74,7 +74,7 @@ class Map():
         self.tile = kwargs.get('tile', 'full')
         self.airports = self.load_airports(airport_fn)
 
-        if self.tile == 'full':
+        if self.tile in ['full', 'conus']:
             self.corners = self.grid_info.pop('corners')
         else:
             self.corners = self.get_corners()
@@ -100,7 +100,7 @@ class Map():
                                 zorder=2,
                                 )
         else:
-            if self.tile != 'full':
+            if self.tile not in ['full', 'conus']:
                 self.m.drawcounties(antialiased=False,
                                     color='gray',
                                     linewidth=0.1,
