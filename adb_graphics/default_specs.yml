@@ -86,7 +86,7 @@
     unit: dBZ
     vertical_level_name: lv_HTGL7
 acfrozr: # Run Total Graupel
-  sfc:
+  sfc: &graupel
     clevs: [0.002, 0.01, 0.05, 0.1, 0.25, 0.5, 0.75, 1, 2]
     cmap: gist_ncar
     colors: pcp_colors
@@ -97,18 +97,14 @@ acfrozr: # Run Total Graupel
     unit: in
 acfrzr: # Run Total Freezing Rain
   sfc:
-    clevs: [0.002, 0.01, 0.05, 0.1, 0.25, 0.5, 0.75, 1, 2]
-    cmap: gist_ncar
-    colors: pcp_colors
+    <<: *graupel
     ncl_name: FRZR_P8_L1_GLC0_acc
-    ticks: 0
-    transform: conversions.kgm2_to_in
-    unit: in
+    title: Run Total Freezing Rain
 acpcp: # Accumulated run total precipitation
   sfc:
     clevs: [0.01, 0.1, 0.25, 0.5, 1, 2, 3, 5, 10, 15, 20, 40]
     cmap: gist_ncar
-    colors: accumulated_precip_colors
+    colors: rainbow12_colors
     ncl_name: APCP_P8_L1_GLC0_acc{fhr}h
     ticks: 0
     transform: conversions.kgm2_to_in
@@ -117,7 +113,7 @@ acsnod: # Accumulated snow
   sfc: &snow
     clevs: [0.01, 0.1, 1, 2, 3, 4, 6, 8, 10, 12, 18, 24]
     cmap: gist_ncar
-    colors: accumulated_precip_colors
+    colors: rainbow12_colors
     ncl_name: ASNOW_P8_L1_GLC0_acc
     ticks: 0
     title: Run Total Accumulated Snow Depth - var dens
@@ -356,7 +352,7 @@ G124bt: # GOES-E Brightness temperature, infrared (Ch 4)
     unit: ch 4
 gh: # Geopotential height
   500mb: &ua_gh
-    clevs: !!python/object/apply:numpy.arange [550, 600, 5]
+    clevs: !!python/object/apply:numpy.arange [6, 990, 6]
     cmap: precipitation
     colors: terrain_colors
     ncl_name:
@@ -365,8 +361,6 @@ gh: # Geopotential height
     ticks: 4
     transform: conversions.m_to_dm
     unit: dm
-    vertical_index: 18
-    vertical_level_name: lv_ISBL0
   700mb:
     <<: *ua_gh
     clevs: !!python/object/apply:numpy.arange [201, 373, 3]
@@ -379,8 +373,6 @@ gh: # Geopotential height
   1000mb:
     <<: *ua_gh
     clevs: !!python/object/apply:numpy.arange [500, 600, 10]
-    vertical_index: 38
-    vertical_level_name: lv_ISBL0
   sfc:
     <<: *ua_gh
     clevs: !!python/object/apply:numpy.arange [0, 5000, 250]
@@ -423,7 +415,7 @@ hlcy: # Helicity
   in16: &hlcy # Hourly updraft helicity over 1-6 km layer
     clevs: !!python/object/apply:numpy.arange [25, 301, 25]
     cmap: gist_ncar
-    colors: hlcy_colors
+    colors: rainbow12_colors
     ncl_name: UPHL_P0_2L103_GLC0
     ticks: 25
     title: 1-6km Updraft Helicity
@@ -639,7 +631,7 @@ rh: # Relative Humidity
   2m: &rh
     clevs: [10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 100, 105]
     cmap: gist_ncar
-    colors: rh_colors
+    colors: rainbow12_colors
     ncl_name: RH_P0_L103_GLC0
     ticks: 10
     unit: '%'
