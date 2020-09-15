@@ -231,7 +231,7 @@ def parse_args():
         )
     map_group.add_argument(
         '--tiles',
-        choices=['full', 'all', 'conus'] + list(maps.TILE_DEFS.keys()),
+        choices=['full', 'all', 'conus', 'AK'] + list(maps.TILE_DEFS.keys()),
         default=['full'],
         help='The domains to plot. Choose from any of those listed. Special \
         choices: full is full model output domain, and all is the full domain, \

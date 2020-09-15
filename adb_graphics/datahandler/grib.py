@@ -156,7 +156,7 @@ class UPPData(GribFile, specs.VarSpec):
         levs = self.contents.variables[dim_name][::]
 
         # Requested level
-        lev_val, _ = self.numeric_level(level)
+        lev_val, _ = self.numeric_level(level=level)
 
         return int(np.argwhere(levs == lev_val))
 
@@ -352,7 +352,7 @@ class fieldData(UPPData):
                 Latin2='lat_1',
                 Latin1='lat_2',
                 Lov='lon_0',
-                La1='lat_1',
+                La1='lat_0',
                 La2='lat_2',
                 Lo1='lon_1',
                 Lo2='lon_2',
@@ -367,20 +367,19 @@ class fieldData(UPPData):
 
         grid_info = {}
 
-        if self.grid_suffix == 'GLC0':
+        grid_info['corners'] = self.corners
+        if self.grid_suffix in ['GLC0', 'GST0']:
             attrs =  ['Latin1', 'Latin2', 'Lov']
             grid_info['projection'] = 'lcc'
-            grid_info['corners'] = self.corners
             grid_info['lat_0'] = 39.0
         elif self.grid_suffix == 'GST0':
-            attrs = ['La1', 'Lo1', 'Lov']
+            attrs = ['La1']
             grid_info['projection'] = 'stere'
-            grid_info['corners'] = self.corners
             grid_info['lat_ts'] = lat.attributes['La1'][0]
+            grid_info['lon_0'] = lat.attributes['Lov'][0] - 360
         else:
             attrs = []
             grid_info['projection'] = 'rotpole'
-            grid_info['corners'] = self.corners
             grid_info['o_lat_p'] = 90 - lat.attributes['CenterLat'][0]
             grid_info['o_lon_p'] = 180
             grid_info['lon_0'] = lat.attributes['CenterLon'][0] - 360
@@ -390,6 +389,10 @@ class fieldData(UPPData):
             val = lat.attributes[attr]
             val = val[0] if isinstance(val, np.ndarray) else val
             grid_info[bm_arg] = val
+
+        print('GRID_INFO')
+        for k, v in grid_info.items():
+            print(f'{k}: {v}')
 
         return grid_info
 

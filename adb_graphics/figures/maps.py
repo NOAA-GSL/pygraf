@@ -74,7 +74,7 @@ class Map():
         self.tile = kwargs.get('tile', 'full')
         self.airports = self.load_airports(airport_fn)
 
-        if self.tile in ['full', 'conus']:
+        if self.tile in ['full', 'conus', 'AK',]:
             self.corners = self.grid_info.pop('corners')
         else:
             self.corners = self.get_corners()
@@ -100,7 +100,7 @@ class Map():
                                 zorder=2,
                                 )
         else:
-            if self.tile not in ['full', 'conus']:
+            if self.tile not in ['full', 'conus', 'AK']:
                 self.m.drawcounties(antialiased=False,
                                     color='gray',
                                     linewidth=0.1,
