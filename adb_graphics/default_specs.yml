@@ -104,26 +104,6 @@ acfrzr: # Run Total Freezing Rain
     ticks: 0
     transform: conversions.kgm2_to_in
     unit: in
-acp: # Accumulated 1 hr precipitation
-  sfc: &precip
-    clevs: [0.002, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 1.0, 2.0]
-    cmap: gist_ncar
-    colors: pcp_colors
-    contours:
-      pres_msl:
-        colors: red
-        linewidths: 0.8
-        levels: !!python/object/apply:numpy.arange [650, 1051, 2]
-      thick_500mb:
-        colors: blue
-        levels: !!python/object/apply:numpy.arange [402, 601, 6]
-        linewidths: 0.8
-        linestyles: dashed
-    ncl_name: APCP_P8_L1_GLC0_acc1h
-    ticks: 0
-    title: 1 hr Total Precip
-    transform: conversions.kgm2_to_in
-    unit: in
 acpcp: # Accumulated run total precipitation
   sfc:
     clevs: [0.01, 0.1, 0.25, 0.5, 1, 2, 3, 5, 10, 15, 20, 40]
@@ -376,7 +356,7 @@ G124bt: # GOES-E Brightness temperature, infrared (Ch 4)
     unit: ch 4
 gh: # Geopotential height
   500mb: &ua_gh
-    clevs: !!python/object/apply:numpy.arange [6, 990, 6]
+    clevs: !!python/object/apply:numpy.arange [550, 600, 5]
     cmap: precipitation
     colors: terrain_colors
     ncl_name:
@@ -385,6 +365,8 @@ gh: # Geopotential height
     ticks: 4
     transform: conversions.m_to_dm
     unit: dm
+    vertical_index: 18
+    vertical_level_name: lv_ISBL0
   700mb:
     <<: *ua_gh
     clevs: !!python/object/apply:numpy.arange [201, 373, 3]
@@ -396,6 +378,9 @@ gh: # Geopotential height
     clevs: !!python/object/apply:numpy.arange [3, 600, 3]
   1000mb:
     <<: *ua_gh
+    clevs: !!python/object/apply:numpy.arange [500, 600, 10]
+    vertical_index: 38
+    vertical_level_name: lv_ISBL0
   sfc:
     <<: *ua_gh
     clevs: !!python/object/apply:numpy.arange [0, 5000, 250]
@@ -835,8 +820,7 @@ sphum: # Specific humidity
   ua:
     ncl_name: SPFH_P0_L105_GLC0
 ssrun: # Storm Surface Runoff
-  sfc:
-    <<: *precip
+  sfc: &precip
     clevs: [0.002, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 1.0, 2.0]
     cmap: gist_ncar
     colors: pcp_colors
@@ -954,6 +938,7 @@ temp: # Temperature
 thick:
   500mb:
     <<: *ua_gh
+    title: 1000-500 Thick
     transform:
       funcs: [conversions.m_to_dm, field_diff]
       kwargs:
@@ -965,12 +950,12 @@ totp: # Hourly total precipitation
     contours:
       pres_msl:
         colors: red
-        linewidths: 0.8
+        linewidths: 0.4
         levels: !!python/object/apply:numpy.arange [650, 1051, 2]
       thick_500mb:
         colors: blue
         levels: !!python/object/apply:numpy.arange [402, 601, 6]
-        linewidths: 0.8
+        linewidths: 0.4
         linestyles: dashed
     ncl_name: APCP_P8_L1_GLC0_acc1h
     title: 1 hr Total Precip
