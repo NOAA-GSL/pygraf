@@ -72,8 +72,10 @@ def generate_tile_list(arg_list):
     if not arg_list:
         return ['full']
 
+    rap_only = ('AK', 'AKZoom', 'CONUS', 'HI')
     if 'all' in arg_list:
-        return ['full'] + list(maps.TILE_DEFS.keys())
+        all_list = ['full'] + list(maps.TILE_DEFS.keys())
+        return [tile for tile in all_list if tile not in rap_only]
 
     return arg_list
 
