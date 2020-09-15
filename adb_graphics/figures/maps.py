@@ -35,6 +35,7 @@ TILE_DEFS = {
     'DCArea': [36.7, 40, -81, -72],
     'EastCO': [36.5, 41.5, -108, -101.8],
     'GreatLakes': [37, 50, -95, -70],
+    'HI': [16.6, 24.6, -157.6, -157.5],
     'NYC-BOS': [40, 43, -78.5, -68.5],
     'SEA-POR': [43, 50, -125, -119],
     'SouthCA': [31, 37, -120, -114],
@@ -73,21 +74,23 @@ class Map():
         self.tile = kwargs.get('tile', 'full')
         self.airports = self.load_airports(airport_fn)
 
-        # Set the corners of the domain, either explicitly, or by tile label
-        self.corners = kwargs.get('corners')
-
         if self.tile == 'full':
             self.corners = self.grid_info.pop('corners')
         else:
             self.corners = self.get_corners()
             self.grid_info.pop('corners')
 
-        self.m = self._get_basemap(**self.grid_info)
+        # Some of Hawaii's smaller islands don't show up with a larger
+        # threshold.
+        area_thresh = 1000
+        if self.tile == 'HI':
+            area_thresh = 100
+
+        self.m = self._get_basemap(area_thresh=area_thresh, **self.grid_info)
 
     def boundaries(self):
 
         ''' Draws map boundaries - coasts, states, countries. '''
-
 
         try:
             self.m.drawcoastlines(linewidth=0.5)
@@ -103,7 +106,6 @@ class Map():
                                     linewidth=0.1,
                                     zorder=2,
                                     )
-
         self.m.drawstates()
         self.m.drawcountries()
 
@@ -135,7 +137,6 @@ class Map():
         ''' Wrapper around basemap creation '''
 
         basemap_args = dict(
-            area_thresh=1000,
             ax=self.ax,
             resolution='i',
             )
