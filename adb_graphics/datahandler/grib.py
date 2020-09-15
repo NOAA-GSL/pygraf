@@ -368,21 +368,23 @@ class fieldData(UPPData):
         grid_info = {}
 
         grid_info['corners'] = self.corners
-        if self.grid_suffix in ['GLC0', 'GST0']:
+
+        if self.grid_suffix in ['GLC0']:
             attrs =  ['Latin1', 'Latin2', 'Lov']
             grid_info['projection'] = 'lcc'
             grid_info['lat_0'] = 39.0
         elif self.grid_suffix == 'GST0':
-            attrs = ['La1']
+            attrs = ['Lov']
             grid_info['projection'] = 'stere'
-            grid_info['lat_ts'] = lat.attributes['La1'][0]
-            grid_info['lon_0'] = lat.attributes['Lov'][0] - 360
+            grid_info['lat_0'] = 90
+            grid_info['lat_ts'] = 90
+
         else:
             attrs = []
             grid_info['projection'] = 'rotpole'
+            grid_info['lon_0'] = lat.attributes['CenterLon'][0] - 360
             grid_info['o_lat_p'] = 90 - lat.attributes['CenterLat'][0]
             grid_info['o_lon_p'] = 180
-            grid_info['lon_0'] = lat.attributes['CenterLon'][0] - 360
 
         for attr in attrs:
             bm_arg = ncl_to_basemap[attr]
@@ -496,6 +498,13 @@ class fieldData(UPPData):
         u, v = [field_lambda(self.filename, level, var) for var in ['u', 'v']]
 
         return [component.values() for component in [u, v]]
+
+    @property
+    def wind_stride(self):
+
+        ''' Returns the wind stride associated with the field '''
+
+
 
     def windspeed(self) -> np.ndarray:
 
