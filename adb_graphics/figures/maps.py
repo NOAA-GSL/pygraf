@@ -28,6 +28,7 @@ TILE_DEFS = {
     'SC': [24, 41, -107, -86],
     'SE': [22, 37, -93.5, -72],
     'SW': [24.5, 45, -122, -103],
+    'AKZoom': [52, 73, -162, -132],
     'ATL': [31.2, 35.8, -87.4, -79.8],
     'CA-NV': [30, 45, -124, -114],
     'CentralCA': [34.5, 40.5, -124, -118],
@@ -391,17 +392,32 @@ class DataMap():
 
         u, v = self.field.wind(level)
 
-        # Set the stride of the barbs to be plotted with a masked array.
+        tile = self.map.tile
+
+        # Set the stride and size of the barbs to be plotted with a masked array.
+        if self.map.m.projection == 'lcc' and tile == 'full':
+            stride = 30
+            length = 5
+        elif tile == 'HI':
+            stride = 1
+            length = 4
+        elif len(tile) == 2 or tile in ['full', 'conus', 'GreatLakes', 'CA-NV']:
+            stride = 10
+            length = 4
+        else:
+            stride = 4
+            length = 4
+
         mask = np.ones_like(u)
-        mask[::30, ::35] = 0
+        mask[::stride, ::stride] = 0
 
         mu, mv = [np.ma.masked_array(c, mask=mask) for c in [u, v]]
         x, y = self._xy_mesh(self.field)
         self.map.m.barbs(x, y, mu, mv,
                          barbcolor='k',
                          flagcolor='k',
-                         length=6,
-                         linewidth=0.3,
+                         length=length,
+                         linewidth=0.2,
                          sizes={'spacing': 0.25},
                          )
 
