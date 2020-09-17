@@ -199,7 +199,10 @@ class DataMap():
         self.map = map_
 
 
-    def add_logo(self, ax):
+    @staticmethod
+    def add_logo(ax):
+
+        ''' Puts the NOAA logo at the bottom left of the matplotlib axes. '''
 
         logo = mpimg.imread('static/noaa-logo-100x100.png')
 

@@ -17,7 +17,6 @@ import time
 import zipfile
 
 import matplotlib.pyplot as plt
-from PIL import Image
 import yaml
 
 from adb_graphics.datahandler import grib
@@ -57,7 +56,7 @@ def create_maps(cla, fhr, grib_path, workdir):
                     msg = f'graphics: {variable} {level}'
                     raise errors.NoGraphicsDefinitionForVariable(msg)
 
-                args.append((cla, fhr, grib_path, level, spec,
+                args.append((fhr, grib_path, level, spec,
                              variable, workdir, tile))
 
     with Pool(processes=cla.nprocs) as pool:
@@ -240,7 +239,7 @@ def parse_args():
         )
     return parser.parse_args()
 
-def parallel_maps(cla, fhr, grib_path, level, spec, variable, workdir,
+def parallel_maps(fhr, grib_path, level, spec, variable, workdir,
                   tile='full'):
 
     # pylint: disable=too-many-arguments,too-many-locals
@@ -251,7 +250,6 @@ def parallel_maps(cla, fhr, grib_path, level, spec, variable, workdir,
 
     Input:
 
-      cla        command line arguments Namespace object
       fhr        forecast hour
       grib_path  the full path to the grib file
       level      the vertical level of the variable to be plotted

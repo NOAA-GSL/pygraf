@@ -23,11 +23,12 @@ class GribFile():
 
     ''' Wrappers and helper functions for interfacing with pyNIO.'''
 
-    def __init__(self, filename, filetype, **kwargs):
+    def __init__(self, filename, **kwargs):
+
+        # pylint: disable=unused-argument
+
         self.filename = filename
         self.contents = self._load()
-
-        self.filetype = filetype
 
     def _load(self):
 
@@ -73,9 +74,9 @@ class UPPData(GribFile, specs.VarSpec):
 
         # Parse kwargs first
         config = kwargs.get('config', 'adb_graphics/default_specs.yml')
-        filetype = kwargs.get('filetype', 'prs')
+        self.filetype = kwargs.get('filetype', 'prs')
 
-        GribFile.__init__(self, filename, filetype, **kwargs)
+        GribFile.__init__(self, filename, **kwargs)
         specs.VarSpec.__init__(self, config)
 
         self.spec = self.yml
@@ -347,30 +348,27 @@ class fieldData(UPPData):
 
         # Keys are grib names, values are Basemap argument names
         ncl_to_basemap = dict(
-                CenterLon='lon_0',
-                CenterLat='lat_0',
-                Latin2='lat_1',
-                Latin1='lat_2',
-                Lov='lon_0',
-                La1='lat_0',
-                La2='lat_2',
-                Lo1='lon_1',
-                Lo2='lon_2',
-                )
+            CenterLon='lon_0',
+            CenterLat='lat_0',
+            Latin2='lat_1',
+            Latin1='lat_2',
+            Lov='lon_0',
+            La1='lat_0',
+            La2='lat_2',
+            Lo1='lon_1',
+            Lo2='lon_2',
+            )
 
         # Last coordinate listed should be latitude or longitude
-        lat_var, lon_var = self.field.coordinates.split()
+        lat_var, _ = self.field.coordinates.split()
 
         # Get the latitude variable
         lat = self.contents.variables[lat_var]
-        lon = self.contents.variables[lon_var]
 
         grid_info = {}
-
         grid_info['corners'] = self.corners
-
         if self.grid_suffix in ['GLC0']:
-            attrs =  ['Latin1', 'Latin2', 'Lov']
+            attrs = ['Latin1', 'Latin2', 'Lov']
             grid_info['projection'] = 'lcc'
             grid_info['lat_0'] = 39.0
         elif self.grid_suffix == 'GST0':
@@ -378,7 +376,6 @@ class fieldData(UPPData):
             grid_info['projection'] = 'stere'
             grid_info['lat_0'] = 90
             grid_info['lat_ts'] = 90
-
         else:
             attrs = []
             grid_info['projection'] = 'rotpole'
