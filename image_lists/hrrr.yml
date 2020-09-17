@@ -55,17 +55,10 @@ hourly:
       - ua
     dewp:
       - 2m
-    ectp:
+    echotop:
       - sfc
     flru:
       - sfc
-    hail:
-      - maxsfc
-      - max
-    hailcast:
-      - maxsfc
-    gust:
-      - 10m
     G113bt:
       - sat
     G114bt:
@@ -74,6 +67,13 @@ hourly:
       - sat
     G124bt:
       - sat
+    gust:
+      - 10m
+    hail:
+      - maxsfc
+      - max
+    hailcast:
+      - maxsfc
     hlcy:
       - esbl
       - in16
@@ -86,6 +86,8 @@ hourly:
       - mx03
       - mx16
       - sfc
+      - sr01
+      - sr03
     hlcytot:
       - mn02
       - mn03
@@ -101,11 +103,12 @@ hourly:
       - esbl
     hvyacp:
       - esbl
-    li:
-      - best
     lcl:
       - sfc
     lhtfl:
+      - sfc
+    li:
+      - best
       - sfc
     ltg1:
       - sfc
@@ -119,7 +122,7 @@ hourly:
       - sfc
     pchg:
       - sfc
-    ptemp:
+    ptmp:
       - 2m
     ptyp:
       - sfc
@@ -136,10 +139,11 @@ hourly:
       - sfc
     rvil:
       - sfc
-    s1shr:
-      - sfc
     sfcp:
       - sfc
+    shear:
+      - 01km
+      - 06km
     shtfl:
       - sfc
     slw:
@@ -177,10 +181,10 @@ hourly:
       - sfc
     ulwrf:
       - sfc
-      - nta
+      - top
     uswrf:
       - sfc
-      - nta
+      - top
     vbdsf:
       - sfc
     vddsf:
@@ -195,6 +199,7 @@ hourly:
       - 500mb
     vvel:
       - 700mb
+      - mean
     vvort:
       - mx01
       - mx02

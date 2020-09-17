@@ -1,72 +1,149 @@
 hourly:
   variables:
-#    rh:
-#      - 2m
-#      - 850mb
-#    temp:
-#      - 2ds
-#      - 2m
-#      - 500mb
-#      - 700mb
-#      - 850mb
-#      - 925mb
-#      - sfc
-#    vort:
-#      - 500mb
-#    vvel:
-#      - 700mb
-#    hlcy:
-#      - in16
-#      - in25
-#      - mx02
-#      - mx03
-#      - mx16
-#    dewp:
-#      - 2m
-#    gust:
-#      - 10m
-#    vvort:
-#      - mx01
-#      - mx02
-#    cape:
-#      - sfc
-#      - mu
-#      - mul
-#      - mx90mb
-#    cin:
-#      - sfc
-#    cloudcover:
-#      - high
-#      - low
-#      - mid
-#      - total
-#    lcl:
-#      - sfc
-#    vil:
-#      - sfc
-#    soilt: &soilt_levs
-#      - 0cm
-#      - 1cm
-#      - 4cm
-#      - 10cm
-#      - 30cm
-#      - 60cm
-#      - 1m
-#      - 1.6m
-#      - 3m
-#    G113bt:
-#      - sat
-#    G114bt:
-#      - sat
-#    G123bt:
-#      - sat
-#    G124bt:
-#      - sat
+    1ref:
+      - sfc
+    acfrzr:
+      - sfc
+    acfrozr:
+      - sfc
+    acpcp:
+      - sfc
+    cape:
+      - sfc
+      - mu
+      - mul
+      - mx90mb
     ceil:
       - ua
-#    ceilexp:
-#      - ua
-#    ceilexp2:
-#      - ua
-#    ctop:
-#      - ua
+    ceilexp:
+      - ua
+    ceilexp2:
+      - ua
+    cin:
+      - sfc
+    cloudcover:
+      - high
+      - low
+      - mid
+      - total
+    cpofp:
+      - sfc
+    cref:
+      - esbl
+      - sfc
+    ctop:
+      - ua
+    dewp:
+      - 2m
+    echotop:
+      - sfc
+    G113bt:
+      - sat
+    G114bt:
+      - sat
+    G123bt:
+      - sat
+    G124bt:
+      - sat
+    gust:
+      - 10m
+    hail:
+      - maxsfc
+      - max
+    hailcast:
+      - maxsfc
+    hlcy:
+      - in16
+      - in25
+      - mn02
+      - mn03
+      - mn16
+      - mn25
+      - mx02
+      - mx03
+      - mx16
+      - mx25
+      - sr01
+      - sr03
+    lcl:
+      - sfc
+    lhtfl:
+      - sfc
+    li:
+      - best
+      - sfc
+    ltg3:
+      - sfc
+    mref:
+      - sfc
+    ptmp:
+      - 2m
+    pwtr:
+      - sfc
+    ref:
+      - m10
+      - maxm10
+    rh:
+      - 2m
+      - 850mb
+      - ua
+    rvil:
+      - sfc
+    shear:
+      - 01km
+      - 06km
+    shtfl:
+      - sfc
+    soilm:
+      - sfc
+    soilt: &soilt_levs
+      - 0cm
+      - 1cm
+      - 4cm
+      - 10cm
+      - 30cm
+      - 60cm
+      - 1m
+      - 1.6m
+      - 3m
+    soilw: *soilt_levs
+    solar:
+      - sfc
+    ssrun:
+      - sfc
+    temp:
+      - 2ds
+      - 2m
+      - 500mb
+      - 700mb
+      - 850mb
+      - 925mb
+      - sfc
+    totp:
+      - sfc
+    ulwrf:
+      - sfc
+      - top
+    uswrf:
+      - sfc
+      - top
+    vbdsf:
+      - sfc
+    vddsf:
+      - sfc
+    vig:
+      - sfc
+    vil:
+      - sfc
+    vis:
+      - sfc
+    vort:
+      - 500mb
+    vvel:
+      - 700mb
+      - mean
+    vvort:
+      - mx01
+      - mx02
+    weasd:
+      - sfc
