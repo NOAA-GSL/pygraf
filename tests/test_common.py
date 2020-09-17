@@ -49,6 +49,7 @@ def test_conversion():
     assert np.array_equal(conversions.percent(a), a * 100)
     assert np.array_equal(conversions.vvel_scale(a), a * -10)
     assert np.array_equal(conversions.vort_scale(a), a / 1E-05)
+    assert np.array_equal(conversions.weasd_to_1hsnw(a), a * 10)
 
     functions = [
         conversions.k_to_c,
@@ -63,6 +64,7 @@ def test_conversion():
         conversions.percent,
         conversions.vvel_scale,
         conversions.vort_scale,
+        conversions.weasd_to_1hsnw,
         ]
 
     # Check that all functions return a np.ndarray given a collection, or single float

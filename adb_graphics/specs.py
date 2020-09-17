@@ -26,17 +26,6 @@ class VarSpec(abc.ABC):
         with open(config, 'r') as cfg:
             self.yml = yaml.load(cfg, Loader=yaml.Loader)
 
-    @property
-    @lru_cache()
-    def accumulated_precip_colors(self) -> np.ndarray:
-
-        ''' Default color map for Accumulated Precipitation '''
-
-        grays = cm.get_cmap('Greys', 6)([0, 3])
-        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
-                          ([18, 20, 25, 50, 60, 70, 80, 85, 90, 100, 120])
-        return np.concatenate((grays, ncar))
-
     def centered_diff(self):
 
         ''' Returns the colors specified by levels and cmap in default spec, but
@@ -179,17 +168,6 @@ class VarSpec(abc.ABC):
 
     @property
     @lru_cache()
-    def hlcy_colors(self) -> np.ndarray:
-
-        ''' Default color map for Helicity '''
-
-        grays = cm.get_cmap('Greys', 5)([0])
-        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
-                          ([15, 18, 20, 25, 50, 60, 70, 80, 85, 90, 100, 120])
-        return np.concatenate((grays, ncar))
-
-    @property
-    @lru_cache()
     def lcl_colors(self) -> np.ndarray:
 
         ''' Default color map for Lifted Condensation Level '''
@@ -297,9 +275,9 @@ class VarSpec(abc.ABC):
 
     @property
     @lru_cache()
-    def rh_colors(self) -> np.ndarray:
+    def rainbow12_colors(self) -> np.ndarray:
 
-        ''' Default color map for Relative Humidity '''
+        ''' Default color map for ACPCP, ACSNOD, HLCY, RH, and SNOD '''
 
         grays = cm.get_cmap('Greys', 2)([0])
         ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
@@ -316,6 +294,17 @@ class VarSpec(abc.ABC):
                           (range(5, 15))
         ctable[9] = [1, 1, 1, 1]
         return ctable
+
+    @property
+    @lru_cache()
+    def snow_colors(self) -> np.ndarray:
+
+        ''' Default color map for Snow fields '''
+
+        grays = cm.get_cmap('Greys', 5)([0, 2])
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          ([15, 18, 20, 25, 50, 60, 70, 80, 85, 90, 100])
+        return np.concatenate((grays, ncar))
 
     @property
     @lru_cache()
