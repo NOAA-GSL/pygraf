@@ -74,7 +74,6 @@ def percent(field: np.ndarray, **kwargs) -> np.ndarray:
 
 def vvel_scale(field: np.ndarray, **kwargs) -> np.ndarray:
 
-
     ''' Scale vertical velocity for plotting  '''
 
     return np.asarray(field) * -10
@@ -84,3 +83,9 @@ def vort_scale(field: np.ndarray, **kwargs) -> np.ndarray:
     ''' Scale vorticity for plotting  '''
 
     return np.asarray(field) / 1E-05
+
+def weasd_to_1hsnw(field: np.ndarray, **kwargs) -> np.ndarray:
+
+    ''' Conversion from snow wter equiv to snow (10:1 ratio) '''
+
+    return np.asarray(field) * 10.

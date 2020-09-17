@@ -144,7 +144,7 @@ class UPPData(GribFile, specs.VarSpec):
         levs = self.contents.variables[dim_name][::]
 
         # Requested level
-        lev_val, _ = self.numeric_level(level)
+        lev_val, _ = self.numeric_level(level=level)
 
         # The index of the requested level
         lev = spec.get('vertical_index')
