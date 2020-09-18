@@ -292,6 +292,25 @@ class fieldData(UPPData):
         self.level = level
         self.contour_kwargs = kwargs.get('contour_kwargs', {})
 
+    def aviation_flight_rules(self, values, **kwargs):
+        # pylint: disable=unused-argument
+
+        '''
+        Generates a field of Aviation Flight Rules from Ceil and Vis
+        '''
+
+        ceil = values
+        vis = self.values(name='vis', level='sfc')
+
+        flru = np.where((ceil > 1.) & (ceil < 3.), 1.01, 0.0)
+        flru = np.where((vis > 3.) & (vis < 5.), 1.01, flru)
+        flru = np.where((ceil > 0.5) & (ceil < 1.), 2.01, flru)
+        flru = np.where((vis > 1.) & (vis < 3.), 2.01, flru)
+        flru = np.where((ceil > 0.0) & (ceil < 0.5), 3.01, flru)
+        flru = np.where((vis < 1.), 3.01, flru)
+
+        return flru
+
     @property
     def cmap(self):
 

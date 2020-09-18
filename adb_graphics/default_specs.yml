@@ -323,6 +323,20 @@ echotop: # Echo Top
     title: Echo Top
     transform: conversions.m_to_kft
     unit: kft
+flru: # Aviation Flight Rules
+  sfc:
+    clevs: [0.0, 1.0, 2.0, 3.0, 4.0]
+    cmap: gist_ncar
+    colors: flru_colors
+    ncl_name: HGT_P0_L215_GLC0
+    ticks: 1
+    title: Aviation Flight Rules
+    transform:
+      funcs: [field_diff, conversions.m_to_kft, aviation_flight_rules]
+      kwargs:
+        variable2: gh
+        level2: sfc
+    unit: " "
 G113bt: # GOES-W Brightness temperature, water vapor (Ch 3)
   sat: &goes_sat
     clevs: !!python/object/apply:numpy.arange [-80, 41, 1]
