@@ -292,7 +292,7 @@ class fieldData(UPPData):
         self.level = level
         self.contour_kwargs = kwargs.get('contour_kwargs', {})
 
-    def aviation_flight_rules(self, values, **kwargs):
+    def aviation_flight_rules(self, values, **kwargs) -> np.ndarray:
         # pylint: disable=unused-argument
 
         '''
