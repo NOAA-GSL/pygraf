@@ -207,6 +207,10 @@ class DataMap():
                             shrink=1.0,
                             ticks=ticks,
                             )
+
+        if self.field.short_name == 'flru':
+            ticks = [label.rjust(30) for label in ['VFR', 'MVFR', 'IFR', 'LIFR']]
+
         cbar.ax.set_xticklabels(ticks, fontsize=18)
 
     @utils.timer

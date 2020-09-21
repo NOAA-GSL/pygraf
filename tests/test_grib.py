@@ -53,6 +53,7 @@ def test_fieldData(prsfile):
     assert isinstance(field.ticks, int)
     assert isinstance(field.units, str)
     assert isinstance(field.values(), np.ndarray)
+    assert isinstance(field.aviation_flight_rules(field.values()), np.ndarray)
     assert isinstance(field.wind(True), list)
     assert len(field.corners) == 4
     assert len(field.wind(True)) == 2
