@@ -389,10 +389,6 @@ class fieldData(UPPData):
             val = val[0] if isinstance(val, np.ndarray) else val
             grid_info[bm_arg] = val
 
-        print('GRID_INFO')
-        for k, v in grid_info.items():
-            print(f'{k}: {v}')
-
         return grid_info
 
     @property
