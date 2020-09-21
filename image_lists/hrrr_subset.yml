@@ -1,7 +1,5 @@
 hourly:
   variables:
-    1ref:
-      - sfc
     acfrzr:
       - sfc
     acfrozr:
@@ -29,7 +27,6 @@ hourly:
     cpofp:
       - sfc
     cref:
-      - esbl
       - sfc
     ctop:
       - ua
@@ -86,7 +83,6 @@ hourly:
     rh:
       - 2m
       - 850mb
-      - ua
     rvil:
       - sfc
     shear:
