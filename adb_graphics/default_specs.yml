@@ -1133,6 +1133,7 @@ weasd: # Water equivalent of accumulated snow depth
 wspeed: # Wind Speed
   10m: &wspeed
     clevs: !!python/object/apply:numpy.arange [5, 95, 5]
+    cmap: gist_ncar
     colors: wind_colors
     ncl_name: UGRD_P0_L103_GLC0
     ticks: 5
@@ -1192,6 +1193,7 @@ wspeed: # Wind Speed
     transform: conversions.ms_to_kt
   mdn: # Hourly Maximum Downdraft Velocity
     clevs: [-40, -35, -30, -25, -22.5, -20, -17.5, -15, -12.5, -10, -7.5, -5, -2.5, -2, -1.5, -1, -0.5]
+    cmap: jet
     colors: mdn_colors
     ncl_name: MAXDVV_P8_2L108_GLC0_max1h
     ticks: 0
@@ -1199,6 +1201,7 @@ wspeed: # Wind Speed
     unit: m/s
   mup: # Hourly Maximum Updraft Velocity
     clevs: [0.5, 1, 1.5, 2, 2.5, 5, 7.5, 10, 12.5, 15, 17.5, 20, 22.5, 25, 30, 35, 40]
+    cmap: jet
     colors: mup_colors
     ncl_name: MAXUVV_P8_2L108_GLC0_max1h
     ticks: 0
