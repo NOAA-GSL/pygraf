@@ -190,6 +190,26 @@ class VarSpec(abc.ABC):
 
     @property
     @lru_cache()
+    def mdn_colors(self) -> np.ndarray:
+
+        ''' Default color map for Max Downdraft '''
+
+        grays = cm.get_cmap('Greys', 2)([0])
+        others = cm.get_cmap('jet', 18)(range(18, 1, -1), alpha=0.6)
+        return np.concatenate((others, grays))
+    @property
+    @lru_cache()
+
+    def mup_colors(self) -> np.ndarray:
+
+        ''' Default color map for Max Updraft '''
+
+        grays = cm.get_cmap('Greys', 2)([0])
+        others = cm.get_cmap('jet', 18)(range(1, 18, 1), alpha=0.6)
+        return np.concatenate((grays, others))
+
+    @property
+    @lru_cache()
     def mean_vvel_colors(self) -> np.ndarray:
 
         ''' Default color map for Mean Vertical Velocity '''
@@ -394,7 +414,16 @@ class VarSpec(abc.ABC):
 
         ''' Default color map for Wind Speed '''
 
-        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
-                          ([21, 27, 46, 62, 69, 77, 83, 95, 102, \
-                          119, 129, 17, 19, 21, 27, 46, 62, 69, 77])
-        return ncar
+        low = cm.get_cmap('gist_ncar', 129)(range(129, 109, -5))
+        high = cm.get_cmap('gist_ncar', 129)(range(18, 103, 6))
+        return np.concatenate((low, high))
+
+    @property
+    @lru_cache()
+    def wind_colors_high(self) -> np.ndarray:
+
+        ''' Default color map for High Wind Speed '''
+
+        low = cm.get_cmap('gist_ncar', 129)(range(129, 108, -7))
+        high = cm.get_cmap('gist_ncar', 129)(range(18, 95, 7))
+        return np.concatenate((low, high))
