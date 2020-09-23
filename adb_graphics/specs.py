@@ -200,16 +200,6 @@ class VarSpec(abc.ABC):
 
     @property
     @lru_cache()
-    def mup_colors(self) -> np.ndarray:
-
-        ''' Default color map for Max Updraft '''
-
-        grays = cm.get_cmap('Greys', 2)([0])
-        others = cm.get_cmap(self.vspec.get('cmap'), 18)(range(1, 18, 1), alpha=0.6)
-        return np.concatenate((grays, others))
-
-    @property
-    @lru_cache()
     def mean_vvel_colors(self) -> np.ndarray:
 
         ''' Default color map for Mean Vertical Velocity '''
@@ -217,6 +207,16 @@ class VarSpec(abc.ABC):
         ctable = cm.get_cmap(self.vspec.get('cmap'), 128)(range(0, 114, 6))
         ctable[9] = [1, 1, 1, 1]
         return ctable
+
+    @property
+    @lru_cache()
+    def mup_colors(self) -> np.ndarray:
+
+        ''' Default color map for Max Updraft '''
+
+        grays = cm.get_cmap('Greys', 2)([0])
+        others = cm.get_cmap(self.vspec.get('cmap'), 18)(range(1, 18, 1), alpha=0.6)
+        return np.concatenate((grays, others))
 
     @property
     @lru_cache()
