@@ -13,6 +13,7 @@ from functools import lru_cache
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import matplotlib.offsetbox as mpob
+import matplotlib.patches as mpatches
 from mpl_toolkits.basemap import Basemap
 import numpy as np
 
@@ -301,11 +302,34 @@ class DataMap():
         # correspond to a full field of contours.
         if self.hatch_fields:
             for field in self.hatch_fields:
-                self._draw_field(ax=ax,
-                                 field=field,
-                                 func=self.map.m.contourf,
-                                 **field.contour_kwargs,
-                                 )
+                colors = field.contour_kwargs.pop('colors')
+
+                cf = self._draw_field(ax=ax,
+                                      field=field,
+                                      func=self.map.m.contourf,
+                                      **field.contour_kwargs,
+                                      )
+
+                # For each level, we set the color of its hatch
+                for i, collection in enumerate(cf.collections):
+                    collection.set_edgecolor(colors[i % len(colors)])
+                    collection.set_facecolor(['None'])
+                    collection.set_linewidth(0.1)
+
+                # Create legend for precip type field
+                if self.field.short_name == 'ptyp':
+                    snow_patch = mpatches.Patch(edgecolor='blue', facecolor='lightgrey', \
+                                                label='Snow', hatch='----')
+                    frzr_patch = mpatches.Patch(edgecolor='red', facecolor='lightgrey', \
+                                                label='Freezing Rain', hatch='\\\\\\\\')
+                    rain_patch = mpatches.Patch(edgecolor='green', facecolor='lightgrey', \
+                                                label='Rain', hatch='|||')
+                    icep_patch = mpatches.Patch(edgecolor='purple', facecolor='lightgrey', \
+                                                label='Ice Pellets', hatch='////')
+                    legend = plt.legend(handles=[snow_patch, frzr_patch, rain_patch, icep_patch], \
+                                        loc=[0.25, 0.03])
+                    legend.get_frame().set_facecolor('lightgrey')
+
 
         # Add wind barbs, if requested
         add_wind = self.field.vspec.get('wind', False)

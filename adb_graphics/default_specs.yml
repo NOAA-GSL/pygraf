@@ -221,6 +221,12 @@ ceilexp2: # Ceiling - experimental no.2
     <<: *ceil
     ncl_name: CEIL_P0_L2_{grid}
     title: Ceiling (exp-2)
+cfrzr: # Categorical Freezing Rain
+  sfc:
+    ncl_name: CFRZR_P0_L1_GLC0
+cicep: # Categorical Ice Pellets
+  sfc:
+    ncl_name: CFRZR_P0_L1_GLC0
 cin: # Surface Convective Inhibition
   mu:
     clevs: [-300, -200, -150, -100, -75, -50, -40, -30, -20, -10, -1]
@@ -289,6 +295,12 @@ cpofp: # Frozen Precipitation Percentage
     ticks: 0
     title: Frozen Precip Percentage
     unit: '%'
+crain: # Categorical Rain
+  sfc:
+    ncl_name: CRAIN_P0_L1_GLC0
+csnow: # Categorical Snow
+  sfc:
+    ncl_name: CSNOW_P0_L1_GLC0
 ctop: # Cloud top height
   ua:
     clevs: !!python/object/apply:numpy.arange [0, 61, 5]
@@ -609,6 +621,50 @@ ptmp: # Potential temperature
     ticks: 10
     unit: K
     wind: 10m
+ptyp: # Hourly total precipitation
+  sfc:
+    clevs: [0.002, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 1.0, 2.0]
+    cmap: gist_ncar
+    colors: pcp_colors
+    contours:
+      csnow_sfc:
+        colors: blue
+        levels: [0, 1]
+        linewidths: 0.2
+      crain_sfc:
+        colors: green
+        levels: [0, 1]
+        linewidths: 0.2
+      cfrzr_sfc:
+        colors: purple
+        levels: [0, 1]
+        linewidths: 0.5
+      cicep_sfc:
+        colors: red
+        levels: [0, 1]
+        linewidths: 0.5
+    hatches:
+      crain_sfc:
+        colors: ['', 'green']
+        hatches: ['', '|||', '|||']
+        levels: [0.0, 0.5, 1.0]
+      csnow_sfc:
+        colors: ['', 'blue']
+        hatches: ['', '---', '---']
+        levels: [0, 0.9, 1.1]
+      cfrzr_sfc:
+        colors: ['', 'purple']
+        hatches: ['', '///', '///']
+        levels: [0, 0.5, 1.0]
+      cicep_sfc:
+        colors: ['', 'red']
+        hatches: ['', '\\\\', '\\\\']
+        levels: [0, 0.5, 1.0]
+    ncl_name: APCP_P8_L1_GLC0_acc1h
+    ticks: 0
+    title: 1 hr Total Precip, Precip Type
+    transform: conversions.kgm2_to_in
+    unit: in
 pwtr: # Precipitable water
   sfc:
     clevs: !!python/object/apply:numpy.arange [4, 81, 4]
