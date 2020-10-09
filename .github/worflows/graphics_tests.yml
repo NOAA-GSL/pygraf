@@ -1,0 +1,22 @@
+name: graphics_tests
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+jobs:
+  test_graphics:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: conda-incubater/setup-miniconda@v1
+        with:
+          activate-environment: pygraf
+          environment-file: environment.yml
+          python-version: 3.8.2
+      - run: pylint *
+      - run: pylint abd_graphics
+      - run: pylint tests
+      - run: python -m pytest --nat-file tests/data/wrfnat_hrconus_07.grib2 --prs-file tests/data/wrfprs_hrconus_07.grib2
