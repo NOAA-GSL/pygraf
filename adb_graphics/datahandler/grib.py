@@ -362,17 +362,19 @@ class fieldData(UPPData):
             level      the level of the alternate field to use
         '''
 
-
         level = level if level else self.level
+        
+        ncl_name = kwargs.get('ncl_name', '')
+        ncl_name = ncl_name.format(fhr=self.fhr, grid=self.grid_suffix)
 
-        if name is None:
+        if name is None and not ncl_name:
             field = self.field
             spec = self.vspec
         else:
-            spec = self.spec.get(name, {}).get(level)
-            if not spec:
+            spec = self.spec.get(name, {}).get(level, {})
+            if not spec and name is not None:
                 raise errors.NoGraphicsDefinitionForVariable(name, level)
-            field = self.get_field(self.ncl_name(spec))
+            field = self.get_field(ncl_name or self.ncl_name(spec))
 
         if len(field.shape) == 2:
             vals = field[::]
@@ -387,7 +389,7 @@ class fieldData(UPPData):
 
         return vals
 
-    def vector_magnitude(self, field1, field2, vertical_index=0, **kwargs):
+    def vector_magnitude(self, field1, field2, level=None, vertical_index=None, **kwargs):
 
         # pylint: disable=unused-argument
 
@@ -398,10 +400,18 @@ class fieldData(UPPData):
         '''
 
         if isinstance(field1, str):
-            field1 = self.get_field(field1)[vertical_index]
+            field1 = self.values(
+                level=level,
+                ncl_name=field1,
+                **kwargs,
+                )
 
         if isinstance(field2, str):
-            field2 = self.get_field(field2)[vertical_index]
+            field2 = self.values(
+                level=level,
+                ncl_name=field2,
+                **kwargs,
+                )
 
         return conversions.magnitude(field1, field2)
 

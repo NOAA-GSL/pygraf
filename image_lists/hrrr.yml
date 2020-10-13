@@ -214,3 +214,13 @@ hourly:
       - ua
     ctop:
       - ua
+    wspeed:
+      - 10m
+      - 80m
+      - 850mb
+      - 250mb
+      - max
+      - mdn
+      - mup
+    wpwr:
+      - 80m
