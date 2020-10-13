@@ -208,7 +208,7 @@ hourly:
       - esbl
     weasd:
       - sfc
-    wind:
+    wspeed:
       - 10m
       - 80m
       - 850mb

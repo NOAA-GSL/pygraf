@@ -69,11 +69,6 @@ def test_fieldData(prsfile):
     assert isinstance(diff, np.ndarray)
     assert not np.any(diff)
 
-    # Windspeed
-    windspeed = field.windspeed()
-    u_wind, v_wind = field.wind(True)
-    assert np.array_equal(windspeed, np.sqrt(u_wind**2 + v_wind**2))
-
     # Test transform
     assert np.array_equal(field.get_transform('conversions.k_to_f', field.values()), \
                           (field.values() - 273.15) * 9/5 +32)
