@@ -17,7 +17,6 @@ import time
 import zipfile
 
 import matplotlib.pyplot as plt
-from PIL import Image
 import yaml
 
 from adb_graphics.datahandler import grib
@@ -28,20 +27,6 @@ import adb_graphics.utils as utils
 
 
 AIRPORTS = 'static/Airports_locs.txt'
-
-
-def add_logo(fpath, position):
-
-    ''' Add the NOAA logo to a PNG image file, fpath '''
-
-    logo_file = 'static/noaa-logo-100x100.png'
-    logo_image = Image.open(logo_file)
-
-    image = Image.open(fpath)
-    image.paste(logo_image,
-                position,
-                logo_image)
-    image.save(fpath)
 
 def create_skewt(cla, fhr, grib_path, workdir):
 
@@ -86,8 +71,10 @@ def generate_tile_list(arg_list):
     if not arg_list:
         return ['full']
 
+    rap_only = ('AK', 'AKZoom', 'conus', 'HI')
     if 'all' in arg_list:
-        return ['full'] + list(maps.TILE_DEFS.keys())
+        all_list = ['full'] + list(maps.TILE_DEFS.keys())
+        return [tile for tile in all_list if tile not in rap_only]
 
     return arg_list
 
@@ -243,7 +230,7 @@ def parse_args():
         )
     map_group.add_argument(
         '--tiles',
-        choices=['full', 'all'] + list(maps.TILE_DEFS.keys()),
+        choices=['full', 'all', 'conus', 'AK'] + list(maps.TILE_DEFS.keys()),
         default=['full'],
         help='The domains to plot. Choose from any of those listed. Special \
         choices: full is full model output domain, and all is the full domain, \
@@ -316,14 +303,11 @@ def parallel_maps(fhr, grib_path, level, spec, variable, workdir,
 
     _, ax = plt.subplots(1, 1, figsize=(12, 12))
 
-
-    corners = field.corners if tile == 'full' else None
-
     # Generate a map object
     m = maps.Map(
         airport_fn=AIRPORTS,
         ax=ax,
-        corners=corners,
+        grid_info=field.grid_info,
         tile=tile,
         )
 
@@ -358,9 +342,6 @@ def parallel_maps(fhr, grib_path, level, spec, variable, workdir,
         )
 
     plt.close()
-
-    add_logo(png_path, (20, 645))
-
 
 def parallel_skewt(cla, fhr, grib_path, site, workdir):
 
@@ -399,7 +380,6 @@ def parallel_skewt(cla, fhr, grib_path, site, workdir):
         )
     plt.close()
 
-    add_logo(png_path, (125, 875))
 
 @utils.timer
 def graphics_driver(cla):
@@ -505,7 +485,8 @@ if __name__ == '__main__':
     print((('-' * 80)+'\n') * 2)
 
     for name, val in CLARGS.__dict__.items():
-        print(f"{name:>15s}: {val}")
+        if name != 'specs':
+            print(f"{name:>15s}: {val}")
 
 
     graphics_driver(CLARGS)

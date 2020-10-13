@@ -1,29 +1,79 @@
 hourly:
   variables:
-    rh:
-      - 2m
-      - 850mb
-      - ua
-    temp:
-      - 2ds
-      - 2m
-      - 500mb
-      - 700mb
-      - 850mb
-      - 925mb
+    1hsm:
       - sfc
-    wind:
+    1hsnw:
+      - sfc
+    1ref:
+      - sfc
+    3hsm:
+      - sfc
+    6kshr:
+      - sfc
+    acfrzr:
+      - sfc
+    acfrozr:
+      - sfc
+    acpcp:
+      - sfc
+    acsnod:
+      - sfc
+    acp:
+      - esbl
+      - esblmn
+      - sfc
+    acsnw:
+      - esbl
+      - esblmn
+      - sfc
+    blcc:
+      - sfc
+    cape:
+      - sfc
+      - mu
+      - mul
+      - mx90mb
+    ceil:
+      - ua
+    ceilexp:
+      - ua
+    ceilexp2:
+      - ua
+    cin:
+      - sfc
+    cloudcover:
+      - high
+      - low
+      - mid
+      - total
+    cpofp:
+      - sfc
+    cref:
+      - esbl
+      - sfc
+    ctop:
+      - ua
+    dewp:
+      - 2m
+    echotop:
+      - sfc
+    flru:
+      - sfc
+    G113bt:
+      - sat
+    G114bt:
+      - sat
+    G123bt:
+      - sat
+    G124bt:
+      - sat
+    gust:
       - 10m
-      - 80m
-      - 850mb
-      - 250mb
+    hail:
+      - maxsfc
       - max
-      - mdn
-      - mup
-    vort:
-      - 500mb
-    vvel:
-      - 700mb
+    hailcast:
+      - maxsfc
     hlcy:
       - esbl
       - in16
@@ -36,6 +86,8 @@ hourly:
       - mx03
       - mx16
       - sfc
+      - sr01
+      - sr03
     hlcytot:
       - mn02
       - mn03
@@ -45,92 +97,18 @@ hourly:
       - mx03
       - mx16
       - mx25
-    dewp:
-      - 2m
-    gust:
-      - 10m
-    ptemp:
-      - 2m
-    wchg:
-      - 80m
-      - esbl
-    wpwr:
-      - 80m
-    pwtr:
-      - sfc
-    acp:
-      - esbl
-      - esblmn
-      - sfc
-    acsnw:
-      - esbl
-      - esblmn
-      - sfc
-    hvyacp:
-      - esbl
-    hvy1snw:
-      - esbl
-    cref:
-      - esbl
-      - sfc
-    totp:
-      - esbl
-      - esblmn
-      - sfc
-    vvort:
-      - mx01
-      - mx02
-    1hsm:
-      - sfc
-    1hsnw:
-      - sfc
-    1ref:
-      - sfc
-    3hsm:
-      - sfc
-    6kshr:
-      - sfc
-    acsnod:
-      - sfc
-    acpcp:
-      - sfc
-    acfrzr:
-      - sfc
-    acfrozr:
-      - sfc
-    blcc:
-      - sfc
-    li:
-      - best
-    cape:
-      - sfc
-      - mu
-      - mul
-      - mx90mb
-    cin:
-      - sfc
-    cloudcover:
-      - high
-      - low
-      - mid
-      - total
-    cpofp:
-      - sfc
-    ectp:
-      - sfc
-    flru:
-      - sfc
-    hail:
-      - maxsfc
-    hailcast:
-      - maxsfc
-    hail:
-      - max
     hpbl:
       - sfc
+    hvy1snw:
+      - esbl
+    hvyacp:
+      - esbl
     lcl:
       - sfc
     lhtfl:
+      - sfc
+    li:
+      - best
       - sfc
     ltg1:
       - sfc
@@ -144,16 +122,28 @@ hourly:
       - sfc
     pchg:
       - sfc
+    ptmp:
+      - 2m
     ptyp:
       - sfc
+    pwtr:
+      - sfc
+    ref:
+      - m10
+      - maxm10
+    rh:
+      - 2m
+      - 850mb
+      - ua
     rhpw:
       - sfc
     rvil:
       - sfc
-    s1shr:
-      - sfc
     sfcp:
       - sfc
+    shear:
+      - 01km
+      - 06km
     shtfl:
       - sfc
     slw:
@@ -161,28 +151,6 @@ hourly:
     snod:
       - sfc
     soilm:
-      - sfc
-    solar:
-      - sfc
-    ssrun:
-      - sfc
-    ulwrf:
-      - sfc
-      - nta
-    uswrf:
-      - sfc
-      - nta
-    vbdsf:
-      - sfc
-    vddsf:
-      - sfc
-    vig:
-      - sfc
-    vis:
-      - sfc
-    vil:
-      - sfc
-    weasd:
       - sfc
     soilt: &soilt_levs
       - 0cm
@@ -195,25 +163,51 @@ hourly:
       - 1.6m
       - 3m
     soilw: *soilt_levs
-    ref:
-      - m10
-      - maxm10
-    G113bt:
-      - sat
-    G114bt:
-      - sat
-    G123bt:
-      - sat
-    G124bt:
-      - sat
-    ceil:
-      - ua
-    ceilexp:
-      - ua
-    ceilexp2:
-      - ua
-    ctop:
-      - ua
+    solar:
+      - sfc
+    ssrun:
+      - sfc
+    temp:
+      - 2ds
+      - 2m
+      - 500mb
+      - 700mb
+      - 850mb
+      - 925mb
+      - sfc
+    totp:
+      - esbl
+      - esblmn
+      - sfc
+    ulwrf:
+      - sfc
+      - top
+    uswrf:
+      - sfc
+      - top
+    vbdsf:
+      - sfc
+    vddsf:
+      - sfc
+    vig:
+      - sfc
+    vil:
+      - sfc
+    vis:
+      - sfc
+    vort:
+      - 500mb
+    vvel:
+      - 700mb
+      - mean
+    vvort:
+      - mx01
+      - mx02
+    wchg:
+      - 80m
+      - esbl
+    weasd:
+      - sfc
     wspeed:
       - 10m
       - 80m

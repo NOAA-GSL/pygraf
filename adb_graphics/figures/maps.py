@@ -11,6 +11,8 @@ barbs, and descriptive annotation.
 from functools import lru_cache
 
 import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+import matplotlib.offsetbox as mpob
 from mpl_toolkits.basemap import Basemap
 import numpy as np
 
@@ -20,19 +22,21 @@ import adb_graphics.utils as utils
 #     Order: [lower left lat, upper right lat, lower left lon, upper right lon]
 
 TILE_DEFS = {
-    'NC': [37, 49, -108, -86],
-    'NE': [36, 47.5, -91, -64.5],
-    'NW': [37, 52, -125, -104],
-    'SC': [25, 42, -106.5, -88],
-    'SE': [25, 37, -93.5, -74],
-    'SW': [24.5, 45, -122, -104],
+    'NC': [36, 51, -109, -85],
+    'NE': [36, 48, -91, -62],
+    'NW': [35, 52, -126, -102],
+    'SC': [24, 41, -107, -86],
+    'SE': [22, 37, -93.5, -72],
+    'SW': [24.5, 45, -122, -103],
+    'AKZoom': [52, 73, -162, -132],
     'ATL': [31.2, 35.8, -87.4, -79.8],
     'CA-NV': [30, 45, -124, -114],
     'CentralCA': [34.5, 40.5, -124, -118],
     'CHI-DET': [39, 44, -92, -83],
     'DCArea': [36.7, 40, -81, -72],
     'EastCO': [36.5, 41.5, -108, -101.8],
-    'GreatLakes': [37, 50, -95, -70],
+    'GreatLakes': [37, 50, -96, -70],
+    'HI': [16.6, 24.6, -157.6, -157.5],
     'NYC-BOS': [40, 43, -78.5, -68.5],
     'SEA-POR': [43, 50, -125, -119],
     'SouthCA': [31, 37, -120, -114],
@@ -67,36 +71,42 @@ class Map():
     def __init__(self, airport_fn, ax, **kwargs):
 
         self.ax = ax
+        self.grid_info = kwargs.get('grid_info', {})
         self.tile = kwargs.get('tile', 'full')
         self.airports = self.load_airports(airport_fn)
 
-        # Set the corners of the domain, either explicitly, or by tile label
-        self.corners = kwargs.get('corners')
-        if self.corners is None:
+        if self.tile in ['full', 'conus', 'AK',]:
+            self.corners = self.grid_info.pop('corners')
+        else:
             self.corners = self.get_corners()
+            self.grid_info.pop('corners')
 
-        self.m = self._get_basemap(**kwargs.get('map_proj', {}))
+        # Some of Hawaii's smaller islands don't show up with a larger
+        # threshold.
+        area_thresh = 1000
+        if self.tile == 'HI':
+            area_thresh = 100
+
+        self.m = self._get_basemap(area_thresh=area_thresh, **self.grid_info)
 
     def boundaries(self):
 
         ''' Draws map boundaries - coasts, states, countries. '''
-
 
         try:
             self.m.drawcoastlines(linewidth=0.5)
         except ValueError:
             self.m.drawcounties(color='k',
                                 linewidth=0.4,
-                                zorder=10,
+                                zorder=2,
                                 )
         else:
-            if self.tile != 'full':
+            if self.tile not in ['full', 'conus', 'AK']:
                 self.m.drawcounties(antialiased=False,
                                     color='gray',
                                     linewidth=0.1,
-                                    zorder=10,
+                                    zorder=2,
                                     )
-
         self.m.drawstates()
         self.m.drawcountries()
 
@@ -123,23 +133,26 @@ class Map():
                     markersize=4,
                     )
 
-    def _get_basemap(self, center_lat=39.0, center_lon=262.5, lat_1=38.5, lat_2=38.5):
+    def _get_basemap(self, **get_basemap_kwargs):
 
         ''' Wrapper around basemap creation '''
 
-        return Basemap(area_thresh=1000,
-                       ax=self.ax,
-                       lat_0=center_lat,
-                       lat_1=lat_1,
-                       lat_2=lat_2,
-                       llcrnrlat=self.corners[0],
-                       llcrnrlon=self.corners[2],
-                       lon_0=center_lon,
-                       projection='lcc',
-                       resolution='i',
-                       urcrnrlat=self.corners[1],
-                       urcrnrlon=self.corners[3],
-                       )
+        basemap_args = dict(
+            ax=self.ax,
+            resolution='i',
+            )
+        corners = self.corners
+        if corners is not None:
+            basemap_args.update(dict(
+                llcrnrlat=corners[0],
+                llcrnrlon=corners[2],
+                urcrnrlat=corners[1],
+                urcrnrlon=corners[3],
+                ))
+
+        basemap_args.update(get_basemap_kwargs)
+
+        return Basemap(**basemap_args)
 
     def get_corners(self):
 
@@ -185,6 +198,25 @@ class DataMap():
         self.hatch_fields = hatch_fields
         self.map = map_
 
+
+    @staticmethod
+    def add_logo(ax):
+
+        ''' Puts the NOAA logo at the bottom left of the matplotlib axes. '''
+
+        logo = mpimg.imread('static/noaa-logo-100x100.png')
+
+        imagebox = mpob.OffsetImage(logo)
+        ab = mpob.AnnotationBbox(
+            imagebox,
+            (0, 0),
+            box_alignment=(-0.2, -0.2),
+            frameon=False,
+            )
+
+        ax.add_artist(ab)
+
+
     def _colorbar(self, cc, ax):
 
         ''' Internal method that plots the color bar for a contourf field.
@@ -207,6 +239,10 @@ class DataMap():
                             shrink=1.0,
                             ticks=ticks,
                             )
+
+        if self.field.short_name == 'flru':
+            ticks = [label.rjust(30) for label in ['VFR', 'MVFR', 'IFR', 'LIFR']]
+
         cbar.ax.set_xticklabels(ticks, fontsize=18)
 
     @utils.timer
@@ -284,6 +320,9 @@ class DataMap():
             plt.tight_layout()
             plt.show()
 
+        self.add_logo(ax)
+
+
     def _draw_field(self, ax, field, func, **kwargs):
 
         '''
@@ -360,17 +399,32 @@ class DataMap():
 
         u, v = self.field.wind(level)
 
-        # Set the stride of the barbs to be plotted with a masked array.
+        tile = self.map.tile
+
+        # Set the stride and size of the barbs to be plotted with a masked array.
+        if self.map.m.projection == 'lcc' and tile == 'full':
+            stride = 30
+            length = 5
+        elif tile == 'HI':
+            stride = 1
+            length = 4
+        elif len(tile) == 2 or tile in ['full', 'conus', 'GreatLakes', 'CA-NV']:
+            stride = 10
+            length = 4
+        else:
+            stride = 4
+            length = 4
+
         mask = np.ones_like(u)
-        mask[::30, ::35] = 0
+        mask[::stride, ::stride] = 0
 
         mu, mv = [np.ma.masked_array(c, mask=mask) for c in [u, v]]
         x, y = self._xy_mesh(self.field)
         self.map.m.barbs(x, y, mu, mv,
                          barbcolor='k',
                          flagcolor='k',
-                         length=6,
-                         linewidth=0.3,
+                         length=length,
+                         linewidth=0.2,
                          sizes={'spacing': 0.25},
                          )
 

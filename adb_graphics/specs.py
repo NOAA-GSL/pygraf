@@ -113,6 +113,16 @@ class VarSpec(abc.ABC):
 
     @property
     @lru_cache()
+    def flru_colors(self) -> np.ndarray:
+
+        ''' Default color map for Ceiling '''
+
+        ctable = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          ([50, 15, 90, 120])
+        return ctable
+
+    @property
+    @lru_cache()
     def frzn_colors(self) -> np.ndarray:
 
         ''' Default color map for Frozen Precip % '''

@@ -23,11 +23,12 @@ class GribFile():
 
     ''' Wrappers and helper functions for interfacing with pyNIO.'''
 
-    def __init__(self, filename, filetype):
+    def __init__(self, filename, **kwargs):
+
+        # pylint: disable=unused-argument
+
         self.filename = filename
         self.contents = self._load()
-
-        self.filetype = filetype
 
     def _load(self):
 
@@ -47,6 +48,13 @@ class GribFile():
 
         return field
 
+    @property
+    def grid_suffix(self):
+        ''' Return the suffix of the first variable in the file. This should
+        correspond to the grid tag. '''
+
+        var = list(self.contents.variables.keys())[0]
+        return var.split('_')[-1]
 
 class UPPData(GribFile, specs.VarSpec):
 
@@ -66,9 +74,9 @@ class UPPData(GribFile, specs.VarSpec):
 
         # Parse kwargs first
         config = kwargs.get('config', 'adb_graphics/default_specs.yml')
-        filetype = kwargs.get('filetype', 'prs')
+        self.filetype = kwargs.get('filetype', 'prs')
 
-        GribFile.__init__(self, filename, filetype)
+        GribFile.__init__(self, filename, **kwargs)
         specs.VarSpec.__init__(self, config)
 
         self.spec = self.yml
@@ -138,6 +146,11 @@ class UPPData(GribFile, specs.VarSpec):
 
         ''' Returns the value of the level to for a 3D array '''
 
+        # The index of the requested level
+        lev = spec.get('vertical_index')
+        if lev is not None:
+            return lev
+
         # Follow convention of fieldData objects for getting vertical level
         dim_name = spec.get('vertical_level_name',
                             field.dimensions[0])
@@ -146,12 +159,7 @@ class UPPData(GribFile, specs.VarSpec):
         # Requested level
         lev_val, _ = self.numeric_level(level=level)
 
-        # The index of the requested level
-        lev = spec.get('vertical_index')
-        if lev is None:
-            lev = int(np.argwhere(levs == lev_val))
-
-        return lev
+        return int(np.argwhere(levs == lev_val))
 
     def get_transform(self, transforms, val):
 
@@ -209,7 +217,7 @@ class UPPData(GribFile, specs.VarSpec):
         name = spec.get('ncl_name')
         if isinstance(name, dict):
             name = name.get(self.filetype)
-        return name.format(fhr=self.fhr)
+        return name.format(fhr=self.fhr, grid=self.grid_suffix)
 
     def numeric_level(self, index_match=True, level=None):
 
@@ -292,6 +300,25 @@ class fieldData(UPPData):
         self.level = level
         self.contour_kwargs = kwargs.get('contour_kwargs', {})
 
+    def aviation_flight_rules(self, values, **kwargs) -> np.ndarray:
+        # pylint: disable=unused-argument
+
+        '''
+        Generates a field of Aviation Flight Rules from Ceil and Vis
+        '''
+
+        ceil = values
+        vis = self.values(name='vis', level='sfc')
+
+        flru = np.where((ceil > 1.) & (ceil < 3.), 1.01, 0.0)
+        flru = np.where((vis > 3.) & (vis < 5.), 1.01, flru)
+        flru = np.where((ceil > 0.5) & (ceil < 1.), 2.01, flru)
+        flru = np.where((vis > 1.) & (vis < 3.), 2.01, flru)
+        flru = np.where((ceil > 0.0) & (ceil < 0.5), 3.01, flru)
+        flru = np.where((vis < 1.), 3.01, flru)
+
+        return flru
+
     @property
     def cmap(self):
 
@@ -332,6 +359,56 @@ class fieldData(UPPData):
 
         lat, lon = self.latlons()
         return [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
+
+    @property
+    def grid_info(self):
+
+        ''' Returns a dict that includes the grid info for the full grid. '''
+
+        # Keys are grib names, values are Basemap argument names
+        ncl_to_basemap = dict(
+            CenterLon='lon_0',
+            CenterLat='lat_0',
+            Latin2='lat_1',
+            Latin1='lat_2',
+            Lov='lon_0',
+            La1='lat_0',
+            La2='lat_2',
+            Lo1='lon_1',
+            Lo2='lon_2',
+            )
+
+        # Last coordinate listed should be latitude or longitude
+        lat_var, _ = self.field.coordinates.split()
+
+        # Get the latitude variable
+        lat = self.contents.variables[lat_var]
+
+        grid_info = {}
+        grid_info['corners'] = self.corners
+        if self.grid_suffix in ['GLC0']:
+            attrs = ['Latin1', 'Latin2', 'Lov']
+            grid_info['projection'] = 'lcc'
+            grid_info['lat_0'] = 39.0
+        elif self.grid_suffix == 'GST0':
+            attrs = ['Lov']
+            grid_info['projection'] = 'stere'
+            grid_info['lat_0'] = 90
+            grid_info['lat_ts'] = 90
+        else:
+            attrs = []
+            grid_info['projection'] = 'rotpole'
+            grid_info['lon_0'] = lat.attributes['CenterLon'][0] - 360
+            grid_info['o_lat_p'] = 90 - lat.attributes['CenterLat'][0]
+            grid_info['o_lon_p'] = 180
+
+        for attr in attrs:
+            bm_arg = ncl_to_basemap[attr]
+            val = lat.attributes[attr]
+            val = val[0] if isinstance(val, np.ndarray) else val
+            grid_info[bm_arg] = val
+
+        return grid_info
 
     @property
     def ticks(self) -> int:
@@ -538,7 +615,7 @@ class profileData(UPPData):
 
         # Set the NCL name from the specs section, unless otherwise specified
         ncl_name = kwargs.get('ncl_name') or self.ncl_name(var_spec)
-        ncl_name = ncl_name.format(fhr=self.fhr)
+        ncl_name = ncl_name.format(fhr=self.fhr, grid=self.grid_suffix)
 
         if not ncl_name:
             raise errors.NoGraphicsDefinitionForVariable(
@@ -555,9 +632,7 @@ class profileData(UPPData):
             profile = profile[x, y]
         elif len(profile.shape) == 3:
             if one_lev:
-                lev = kwargs.get('vertical_index')
-                if lev is None:
-                    lev = self.get_level(field, level, var_spec)
+                lev = self.get_level(field, level, var_spec)
                 profile = profile[lev, x, y]
             else:
                 profile = profile[:, x, y]
