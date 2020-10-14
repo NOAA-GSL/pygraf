@@ -21,7 +21,7 @@ jobs:
       - shell: bash -l {0}
         run: pylint *.py
       - shell: bash -l {0}
-        run: pylint abd_graphics
+        run: pylint adb_graphics
       - shell: bash -l {0}
         run: pylint tests
       - shell: bash -l {0}
