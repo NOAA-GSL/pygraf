@@ -440,7 +440,7 @@ class fieldData(UPPData):
         '''
 
         level = level if level else self.level
-        
+
         ncl_name = kwargs.get('ncl_name', '')
         ncl_name = ncl_name.format(fhr=self.fhr, grid=self.grid_suffix)
 
