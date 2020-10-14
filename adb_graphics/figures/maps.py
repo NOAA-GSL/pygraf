@@ -316,20 +316,17 @@ class DataMap():
                     collection.set_facecolor(['None'])
                     collection.set_linewidth(0.1)
 
-                # Create legend for precip type field
-                if self.field.short_name == 'ptyp':
-                    snow_patch = mpatches.Patch(edgecolor='blue', facecolor='lightgrey', \
-                                                label='Snow', hatch='----')
-                    frzr_patch = mpatches.Patch(edgecolor='red', facecolor='lightgrey', \
-                                                label='Freezing Rain', hatch='\\\\\\\\')
-                    rain_patch = mpatches.Patch(edgecolor='green', facecolor='lightgrey', \
-                                                label='Rain', hatch='|||')
-                    icep_patch = mpatches.Patch(edgecolor='purple', facecolor='lightgrey', \
-                                                label='Ice Pellets', hatch='////')
-                    legend = plt.legend(handles=[snow_patch, frzr_patch, rain_patch, icep_patch], \
-                                        loc=[0.25, 0.03])
-                    legend.get_frame().set_facecolor('lightgrey')
-
+            # Create legend for precip type field
+            if self.field.short_name == 'ptyp':
+                plt.legend(handles=[mpatches.Patch(edgecolor='blue', facecolor='lightgrey', \
+                                                   label='Snow', hatch='----'), \
+                                    mpatches.Patch(edgecolor='red', facecolor='lightgrey', \
+                                                   label='Freezing Rain', hatch='\\\\\\\\'), \
+                                    mpatches.Patch(edgecolor='green', facecolor='lightgrey', \
+                                                   label='Rain', hatch='|||'), \
+                                    mpatches.Patch(edgecolor='purple', facecolor='lightgrey', \
+                                                   label='Ice Pellets', hatch='////')], \
+                                    loc=[0.25, 0.03])
 
         # Add wind barbs, if requested
         add_wind = self.field.vspec.get('wind', False)
