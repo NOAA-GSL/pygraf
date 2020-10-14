@@ -17,8 +17,12 @@ jobs:
         with:
           activate-environment: pygraf
           environment-file: environment.yml
-          default_threads: 8
-      - run: pylint *.py
-      - run: pylint abd_graphics
-      - run: pylint tests
-      - run: python -m pytest --nat-file tests/data/wrfnat_hrconus_07.grib2 --prs-file tests/data/wrfprs_hrconus_07.grib2
+          condarc-file: .condarc
+      - shell: bash -l {0}
+        run: pylint *.py
+      - shell: bash -l {0}
+        run: pylint abd_graphics
+      - shell: bash -l {0}
+        run: pylint tests
+      - shell: bash -l {0}
+        run: python -m pytest --nat-file tests/data/wrfnat_hrconus_07.grib2 --prs-file tests/data/wrfprs_hrconus_07.grib2
