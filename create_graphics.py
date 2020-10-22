@@ -33,7 +33,10 @@ def create_skewt(cla, fhr, grib_path, workdir):
     ''' Generate arguments for parallel processing of Skew T graphics,
     and generate a pool of workers to complete the tasks. '''
 
-    args = [(cla, fhr, grib_path, site, workdir) for site in cla.sites]
+    # Create the file object to load the contents
+    gribfile = grib.GribFile(grib_path)
+
+    args = [(cla, fhr, gribfile.contents, site, workdir) for site in cla.sites]
 
     with Pool(processes=cla.nprocs) as pool:
         pool.starmap(parallel_skewt, args)
@@ -44,6 +47,9 @@ def create_maps(cla, fhr, grib_path, workdir):
     generate a pool of workers to complete the task. '''
 
     args = []
+
+    # Create the file object to load the contents
+    gribfile = grib.GribFile(grib_path)
 
     for tile in cla.tiles:
         for variable, levels in cla.images[1].items():
@@ -56,7 +62,7 @@ def create_maps(cla, fhr, grib_path, workdir):
                     msg = f'graphics: {variable} {level}'
                     raise errors.NoGraphicsDefinitionForVariable(msg)
 
-                args.append((fhr, grib_path, level, spec,
+                args.append((fhr, gribfile.contents, level, spec,
                              variable, workdir, tile))
 
     with Pool(processes=cla.nprocs) as pool:
@@ -239,7 +245,7 @@ def parse_args():
         )
     return parser.parse_args()
 
-def parallel_maps(fhr, grib_path, level, spec, variable, workdir,
+def parallel_maps(fhr, ds, level, spec, variable, workdir,
                   tile='full'):
 
     # pylint: disable=too-many-arguments,too-many-locals
@@ -251,7 +257,7 @@ def parallel_maps(fhr, grib_path, level, spec, variable, workdir,
     Input:
 
       fhr        forecast hour
-      grib_path  the full path to the grib file
+      ds         xarray dataset from the grib file
       level      the vertical level of the variable to be plotted
                  corresponding to a key in the specs file
       spec       the dictionary of specifications for the given variable
@@ -262,8 +268,8 @@ def parallel_maps(fhr, grib_path, level, spec, variable, workdir,
 
     # Object to be plotted on the map in filled contours.
     field = grib.fieldData(
+        ds=ds,
         fhr=fhr,
-        filename=grib_path,
         level=level,
         short_name=variable,
         )
@@ -280,8 +286,8 @@ def parallel_maps(fhr, grib_path, level, spec, variable, workdir,
                 var, lev = contour, level
 
             contour_fields.append(grib.fieldData(
+                ds=ds,
                 fhr=fhr,
-                filename=grib_path,
                 level=lev,
                 contour_kwargs=contour_kwargs,
                 short_name=var,
@@ -294,8 +300,8 @@ def parallel_maps(fhr, grib_path, level, spec, variable, workdir,
         for hatch, hatch_kwargs in hatches.items():
             var, lev = hatch.split('_')
             hatch_fields.append(grib.fieldData(
+                ds=ds,
                 fhr=fhr,
-                filename=grib_path,
                 level=lev,
                 contour_kwargs=hatch_kwargs,
                 short_name=var,
@@ -343,7 +349,7 @@ def parallel_maps(fhr, grib_path, level, spec, variable, workdir,
 
     plt.close()
 
-def parallel_skewt(cla, fhr, grib_path, site, workdir):
+def parallel_skewt(cla, fhr, ds, site, workdir):
 
     '''
     Function that creates a single SkewT plot. Can be used in parallel.
@@ -356,8 +362,8 @@ def parallel_skewt(cla, fhr, grib_path, site, workdir):
     '''
 
     skew = skewt.SkewTDiagram(
+        ds=ds,
         fhr=fhr,
-        filename=grib_path,
         filetype=cla.file_type,
         loc=site,
         max_plev=cla.max_plev,
@@ -433,8 +439,6 @@ def graphics_driver(cla):
             print(f'Output graphics directory: {workdir}')
             print()
             print((('-' * 80)+'\n') * 2)
-
-
 
             if cla.graphic_type == 'skewts':
                 create_skewt(cla, fhr, grib_path, workdir)
