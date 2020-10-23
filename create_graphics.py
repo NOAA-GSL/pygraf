@@ -17,7 +17,9 @@ import time
 import zipfile
 
 import matplotlib.pyplot as plt
+import pickle
 import yaml
+import xarray as xr
 
 from adb_graphics.datahandler import grib
 import adb_graphics.errors as errors
@@ -27,6 +29,14 @@ import adb_graphics.utils as utils
 
 
 AIRPORTS = 'static/Airports_locs.txt'
+
+def is_picklable(obj):
+  try:
+    pickle.dumps(obj)
+
+  except TypeError:
+    return False
+  return True
 
 def create_skewt(cla, fhr, grib_path, workdir):
 
@@ -38,6 +48,7 @@ def create_skewt(cla, fhr, grib_path, workdir):
 
     args = [(cla, fhr, gribfile.contents, site, workdir) for site in cla.sites]
 
+    print(f'Queueing {len(args)} Skew Ts')
     with Pool(processes=cla.nprocs) as pool:
         pool.starmap(parallel_skewt, args)
 
@@ -46,12 +57,12 @@ def create_maps(cla, fhr, grib_path, workdir):
     ''' Generate arguments for parallel processing of plan-view maps and
     generate a pool of workers to complete the task. '''
 
-    args = []
 
     # Create the file object to load the contents
     gribfile = grib.GribFile(grib_path)
 
     for tile in cla.tiles:
+        args = []
         for variable, levels in cla.images[1].items():
             for level in levels:
 
@@ -65,8 +76,9 @@ def create_maps(cla, fhr, grib_path, workdir):
                 args.append((fhr, gribfile.contents, level, spec,
                              variable, workdir, tile))
 
-    with Pool(processes=cla.nprocs) as pool:
-        pool.starmap(parallel_maps, args)
+        print(f'Queueing {len(args)} maps')
+        with Pool(processes=cla.nprocs) as pool:
+            pool.starmap(parallel_maps, args)
 
 def generate_tile_list(arg_list):
 
