@@ -38,6 +38,7 @@ class GribFile():
         #return Nio.open_file(self.filename, format="grib2") # pylint: disable=c-extension-no-member
         return xr.open_dataset(self.filename,
                                engine='pynio',
+                               lock=False,
                                backend_kwargs=dict(format="grib2"),
                                )
 
@@ -150,8 +151,8 @@ class UPPData(specs.VarSpec):
 
         # Follow convention of fieldData objects for getting vertical level
         dim_name = spec.get('vertical_level_name',
-                            field.dimensions[0])
-        levs = self.ds.coords[field.dimensions[0]].values
+                            list(field.dims)[0])
+        levs = self.ds[dim_name].values
 
         # Requested level
         lev_val, _ = self.numeric_level(level=level)
@@ -385,7 +386,7 @@ class fieldData(UPPData):
             )
 
         # Last coordinate listed should be latitude or longitude
-        lat_var, _ = list(self.field.coords)
+        lat_var, _ = list(self.field.coords)[-2:]
 
         # Get the latitude variable
         lat = self.ds[lat_var]
@@ -404,8 +405,8 @@ class fieldData(UPPData):
         else:
             attrs = []
             grid_info['projection'] = 'rotpole'
-            grid_info['lon_0'] = lat.attributes['CenterLon'][0] - 360
-            grid_info['o_lat_p'] = 90 - lat.attributes['CenterLat'][0]
+            grid_info['lon_0'] = lat.attrs['CenterLon'][0] - 360
+            grid_info['o_lat_p'] = 90 - lat.attrs['CenterLat'][0]
             grid_info['o_lon_p'] = 180
 
         for attr in attrs:
@@ -432,8 +433,6 @@ class fieldData(UPPData):
 
         return self.vspec.get('unit', self.field.units)
 
-
-    @lru_cache()
     def values(self, level=None, name=None, **kwargs) -> np.ndarray:
 
         '''
@@ -446,6 +445,8 @@ class fieldData(UPPData):
         '''
 
         level = level if level else self.level
+
+        vertical_index = kwargs.get('vertical_index')
 
         ncl_name = kwargs.get('ncl_name', '')
         ncl_name = ncl_name.format(fhr=self.fhr, grid=self.grid_suffix)
@@ -463,7 +464,7 @@ class fieldData(UPPData):
             vals = field[::]
         elif len(field.shape) == 3:
 
-            lev = self.get_level(field, level, spec)
+            lev = vertical_index if vertical_index is not None else self.get_level(field, level, spec)
             vals = field[lev, :, :]
 
         transforms = spec.get('transform')
@@ -486,6 +487,7 @@ class fieldData(UPPData):
             field1 = self.values(
                 level=level,
                 ncl_name=field1,
+                vertical_index=vertical_index,
                 **kwargs,
                 )
 
@@ -493,6 +495,7 @@ class fieldData(UPPData):
             field2 = self.values(
                 level=level,
                 ncl_name=field2,
+                vertical_index=vertical_index,
                 **kwargs,
                 )
 
@@ -518,7 +521,7 @@ class fieldData(UPPData):
 
         # Create fieldData objects for u, v components
         field_lambda = lambda ds, level, var: fieldData(
-            ds=ds
+            ds=ds,
             fhr=self.fhr,
             level=level,
             short_name=var,

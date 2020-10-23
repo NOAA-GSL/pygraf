@@ -40,7 +40,7 @@ class SkewTDiagram(grib.profileData):
     be included.
     '''
 
-    def __init__(self, filename, loc, **kwargs):
+    def __init__(self, ds, loc, **kwargs):
 
         # Initialize on the temperature field since we need to gather
         # field-specific data from this object, e.g. dates, lat, lon, etc.
