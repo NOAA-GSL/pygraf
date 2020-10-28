@@ -464,7 +464,9 @@ class fieldData(UPPData):
             vals = field[::]
         elif len(field.shape) == 3:
 
-            lev = vertical_index if vertical_index is not None else self.get_level(field, level, spec)
+            lev = vertical_index
+            if vertical_index is None:
+                lev = self.get_level(field, level, spec)
             vals = field[lev, :, :]
 
         transforms = spec.get('transform')

@@ -18,7 +18,6 @@ import zipfile
 
 import matplotlib.pyplot as plt
 import yaml
-import xarray as xr
 
 from adb_graphics.datahandler import grib
 import adb_graphics.errors as errors
@@ -78,18 +77,16 @@ def create_zip(png_files, zipf):
 
     while True:
         if not os.path.exists(f'{zipf}._lock'):
-           fd = open(f'{zipf}._lock', 'w')
-           with zipfile.ZipFile(zipf, 'a', zipfile.ZIP_DEFLATED) as zfile:
-               for png_file in png_files:
-                   zfile.write(png_file, os.path.basename(png_file))
-                   os.remove(png_file)
-           fd.close()
-           os.remove(f'{zipf}._lock')
-           break
-
-        else:
-            # Wait before trying to obtain the lock on the file
-            time.sleep(5)
+            fd = open(f'{zipf}._lock', 'w')
+            with zipfile.ZipFile(zipf, 'a', zipfile.ZIP_DEFLATED) as zfile:
+                for png_file in png_files:
+                    zfile.write(png_file, os.path.basename(png_file))
+                    os.remove(png_file)
+            fd.close()
+            os.remove(f'{zipf}._lock')
+            break
+        # Wait before trying to obtain the lock on the file
+        time.sleep(5)
 
 def generate_tile_list(arg_list):
 
