@@ -11,13 +11,12 @@ mpl.use('Agg')
 import argparse
 import copy
 import glob
-from multiprocessing import Pool
+from multiprocessing import Pool, Process
 import os
 import time
 import zipfile
 
 import matplotlib.pyplot as plt
-import pickle
 import yaml
 import xarray as xr
 
@@ -29,14 +28,6 @@ import adb_graphics.utils as utils
 
 
 AIRPORTS = 'static/Airports_locs.txt'
-
-def is_picklable(obj):
-  try:
-    pickle.dumps(obj)
-
-  except TypeError:
-    return False
-  return True
 
 def create_skewt(cla, fhr, grib_path, workdir):
 
@@ -79,6 +70,26 @@ def create_maps(cla, fhr, grib_path, workdir):
         print(f'Queueing {len(args)} maps')
         with Pool(processes=cla.nprocs) as pool:
             pool.starmap(parallel_maps, args)
+
+
+def create_zip(png_files, zipf):
+
+    ''' Create a zip file. Use a locking mechanism -- write a lock file to disk. '''
+
+    while True:
+        if not os.path.exists(f'{zipf}._lock'):
+           fd = open(f'{zipf}._lock', 'w')
+           with zipfile.ZipFile(zipf, 'a', zipfile.ZIP_DEFLATED) as zfile:
+               for png_file in png_files:
+                   zfile.write(png_file, os.path.basename(png_file))
+                   os.remove(png_file)
+           fd.close()
+           os.remove(f'{zipf}._lock')
+           break
+
+        else:
+            # Wait before trying to obtain the lock on the file
+            time.sleep(5)
 
 def generate_tile_list(arg_list):
 
@@ -457,15 +468,15 @@ def graphics_driver(cla):
             else:
                 create_maps(cla, fhr, grib_path, workdir)
 
-            # Zip png files and remove the originals
+            # Zip png files and remove the originals in a subprocess
             if zipf:
-                png_files = glob.glob(os.path.join(workdir, '*.png'))
-                with zipfile.ZipFile(zipf, 'a', zipfile.ZIP_DEFLATED) as zfile:
-                    for png_file in png_files:
-                        zfile.write(png_file, os.path.basename(png_file))
-                        os.remove(png_file)
-                # Directory is empty now -- rmdir is fine.
-                os.rmdir(workdir)
+                png_files = glob.glob(os.path.join(workdir, f'*f{fhr:03d}.png'))
+
+                zip_proc = Process(group=None,
+                                   target=create_zip,
+                                   args=(png_files, zipf),
+                                   )
+                zip_proc.start()
 
             # Keep track of last time we did something useful
             timer_end = time.time()
