@@ -617,6 +617,7 @@ class profileData(UPPData):
             name = self.short_name
 
         one_lev = kwargs.get('one_lev', False)
+        vertical_index = kwargs.get('vertical_index')
 
         # Retrive the location for the profile
         x, y = self.get_xypoint()
@@ -643,7 +644,9 @@ class profileData(UPPData):
             profile = profile[x, y]
         elif len(profile.shape) == 3:
             if one_lev:
-                lev = self.get_level(field, level, var_spec)
+                lev = vertical_index
+                if vertical_index is None:
+                    lev = self.get_level(field, level, var_spec)
                 profile = profile[lev, x, y]
             else:
                 profile = profile[:, x, y]

@@ -78,12 +78,20 @@ def create_zip(png_files, zipf):
     while True:
         if not os.path.exists(f'{zipf}._lock'):
             fd = open(f'{zipf}._lock', 'w')
-            with zipfile.ZipFile(zipf, 'a', zipfile.ZIP_DEFLATED) as zfile:
-                for png_file in png_files:
-                    zfile.write(png_file, os.path.basename(png_file))
-                    os.remove(png_file)
-            fd.close()
-            os.remove(f'{zipf}._lock')
+            print(f'Writing to zip file for files like: {png_files[0][-10:]}')
+
+            try:
+                with zipfile.ZipFile(zipf, 'a', zipfile.ZIP_DEFLATED) as zfile:
+                    for png_file in png_files:
+                        if os.path.exists(png_file):
+                            zfile.write(png_file, os.path.basename(png_file))
+                            os.remove(png_file)
+            except:
+                print(f'Error on writing zip file!')
+                raise
+            finally:
+                fd.close()
+                os.remove(f'{zipf}._lock')
             break
         # Wait before trying to obtain the lock on the file
         time.sleep(5)
@@ -425,8 +433,6 @@ def graphics_driver(cla):
     if cla.zip_dir:
         os.makedirs(cla.zip_dir, exist_ok=True)
         zipf = os.path.join(cla.zip_dir, 'files.zip')
-        if os.path.exists(zipf):
-            os.remove(zipf)
 
     fcst_hours = copy.deepcopy(cla.fcst_hour)
 
@@ -467,13 +473,14 @@ def graphics_driver(cla):
 
             # Zip png files and remove the originals in a subprocess
             if zipf:
-                png_files = glob.glob(os.path.join(workdir, f'*f{fhr:03d}.png'))
+                png_files = glob.glob(os.path.join(workdir, f'*{fhr:02d}.png'))
 
                 zip_proc = Process(group=None,
                                    target=create_zip,
                                    args=(png_files, zipf),
                                    )
                 zip_proc.start()
+                zip_proc.join()
 
             # Keep track of last time we did something useful
             timer_end = time.time()
@@ -509,7 +516,7 @@ if __name__ == '__main__':
     print((('-' * 80)+'\n') * 2)
 
     for name, val in CLARGS.__dict__.items():
-        if name != 'specs':
+        if name not in ['specs', 'sites']:
             print(f"{name:>15s}: {val}")
 
 
