@@ -89,7 +89,7 @@ def create_zip(png_files, zipf):
                     for png_file in png_files:
                         if os.path.exists(png_file):
                             zfile.write(png_file, os.path.basename(png_file))
-            except:
+            except: # pylint: disable=bare-except
                 print(f'Error on writing zip file! {sys.exc_info()[0]}')
                 count += 1
                 if count >= retry:
