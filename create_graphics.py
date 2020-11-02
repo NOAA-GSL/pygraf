@@ -13,6 +13,7 @@ import copy
 import glob
 from multiprocessing import Pool, Process
 import os
+import sys
 import time
 import zipfile
 
@@ -75,9 +76,12 @@ def create_zip(png_files, zipf):
 
     ''' Create a zip file. Use a locking mechanism -- write a lock file to disk. '''
 
+    lock_file = f'{zipf}._lock'
+    retry = 2
+    count = 0
     while True:
-        if not os.path.exists(f'{zipf}._lock'):
-            fd = open(f'{zipf}._lock', 'w')
+        if not os.path.exists(lock_file):
+            fd = open(lock_file, 'w')
             print(f'Writing to zip file for files like: {png_files[0][-10:]}')
 
             try:
@@ -85,13 +89,20 @@ def create_zip(png_files, zipf):
                     for png_file in png_files:
                         if os.path.exists(png_file):
                             zfile.write(png_file, os.path.basename(png_file))
-                            os.remove(png_file)
             except:
-                print(f'Error on writing zip file!')
-                raise
+                print(f'Error on writing zip file! {sys.exc_info()[0]}')
+                count += 1
+                if count >= retry:
+                    raise
+            else:
+                # When zipping is successful, remove png_files
+                for png_file in png_files:
+                    if os.path.exists(png_file):
+                        os.remove(png_file)
             finally:
                 fd.close()
-                os.remove(f'{zipf}._lock')
+                if os.path.exists(lock_file):
+                    os.remove(lock_file)
             break
         # Wait before trying to obtain the lock on the file
         time.sleep(5)
