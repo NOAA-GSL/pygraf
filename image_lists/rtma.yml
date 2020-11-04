@@ -1,0 +1,185 @@
+hourly:
+  variables:
+    1hsnw:
+      - sfc
+    1hsm:
+      - sfc
+    1ref:
+      - 1000m
+    3hsm:
+      - sfc
+    acfrozr:
+      - sfc
+    acfrzr:
+      - sfc
+    acp:
+      - sfc
+    acpcp:
+      - sfc
+    acsnod:
+      - sfc
+    acsnw:
+      - sfc
+    cape:
+      - mu
+      - mul
+      - mx90mb
+      - sfc
+    ceil:
+      - ua
+    ceilexp:
+      - ua
+    ceilexp2:
+      - ua
+    cin:
+      - sfc
+    cloudcover:
+      - bndylay
+      - high
+      - low
+      - mid
+      - total
+    cpofp:
+      - sfc
+    cref:
+      - sfc
+    ctop:
+      - ua
+    dewp:
+      - 2m
+    echotop:
+      - sfc
+    flru:
+      - sfc
+    G113bt:
+      - sat
+    G114bt:
+      - sat
+    G123bt:
+      - sat
+    G124bt:
+      - sat
+    gust:
+      - 10m
+    hail:
+      - max
+      - maxsfc
+    hailcast:
+      - maxsfc
+    hlcy:
+      - in16
+      - in25
+      - mn02
+      - mn03
+      - mn16
+      - mnsfc
+      - mx02
+      - mx03
+      - mx16
+      - sr01
+      - sr03
+      - sfc
+    hpbl:
+      - sfc
+    lcl:
+      - sfc
+    lhtfl:
+      - sfc
+    li:
+      - sfc
+      - best
+    ltg3:
+      - sfc
+    mnvv:
+      - sfc
+    mref:
+      - sfc
+    ptmp:
+      - 2m
+    ptyp:
+      - sfc
+    pwtr:
+      - sfc
+    ref:
+      - m10
+      - maxm10
+    rh:
+      - 2m
+      - 850mb
+      - ua
+    rhpw:
+      - sfc
+    rvil:
+      - sfc
+    sfcp:
+      - sfc
+    shear:
+      - 01km
+      - 06km
+    shtfl:
+      - sfc
+    snod:
+      - sfc
+    soilm:
+      - sfc
+    soilt: &soilt_levs
+      - 0cm
+      - 1cm
+      - 4cm
+      - 10cm
+      - 30cm
+      - 60cm
+      - 1m
+      - 1.6m
+      - 3m
+    soilw: *soilt_levs
+    solar:
+      - sfc
+    ssrun:
+      - sfc
+    temp:
+      - 2ds
+      - 2m
+      - 500mb
+      - 700mb
+      - 850mb
+      - 925mb
+      - sfc
+    totp:
+      - sfc
+    ulwrf:
+      - sfc
+      - top
+    uswrf:
+      - sfc
+      - top
+    vbdsf:
+      - sfc
+    vddsf:
+      - sfc
+    vig:
+      - sfc
+    vil:
+      - sfc
+    vis:
+      - sfc
+    vort:
+      - 500mb
+    vvel:
+      - 700mb
+    vvort:
+      - mx01
+      - mx02
+    weasd:
+      - sfc
+    wspeed:
+      - 10m
+      - 80m
+      - 250mb
+      - 850mb
+      - max
+      - mdn
+      - mup
+    wpwr:
+      - 80m
+
