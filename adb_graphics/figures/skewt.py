@@ -28,7 +28,7 @@ class SkewTDiagram(grib.profileData):
 
     Input:
 
-      filename         the full path to the grib file
+      ds               xarray dataset from grib file
       loc              the entire line entry of the sites file.
 
     Key word arguments:
@@ -40,12 +40,12 @@ class SkewTDiagram(grib.profileData):
     be included.
     '''
 
-    def __init__(self, filename, loc, **kwargs):
+    def __init__(self, ds, loc, **kwargs):
 
         # Initialize on the temperature field since we need to gather
         # field-specific data from this object, e.g. dates, lat, lon, etc.
 
-        super().__init__(filename=filename,
+        super().__init__(ds=ds,
                          loc=loc,
                          short_name='temp',
                          **kwargs,
@@ -62,7 +62,7 @@ class SkewTDiagram(grib.profileData):
             # Magic to get the desired number of decimals to appear.
             decimals = items.get('decimals', 0)
             value = items['data']
-            value = int(value) if decimals == 0 else round(value, decimals)
+            value = int(value) if decimals == 0 else value.round(decimals=decimals)
 
             # Sure would have been nice to use a variable in the f string to
             # denote the format per variable.
@@ -157,7 +157,6 @@ class SkewTDiagram(grib.profileData):
 
         self._plot_hodograph(skew)
         self._add_thermo_inset(skew)
-        self.contents.close()
 
     def _plot_hodograph(self, skew):
 

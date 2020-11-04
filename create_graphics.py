@@ -11,8 +11,9 @@ mpl.use('Agg')
 import argparse
 import copy
 import glob
-from multiprocessing import Pool
+from multiprocessing import Pool, Process
 import os
+import sys
 import time
 import zipfile
 
@@ -33,8 +34,12 @@ def create_skewt(cla, fhr, grib_path, workdir):
     ''' Generate arguments for parallel processing of Skew T graphics,
     and generate a pool of workers to complete the tasks. '''
 
-    args = [(cla, fhr, grib_path, site, workdir) for site in cla.sites]
+    # Create the file object to load the contents
+    gribfile = grib.GribFile(grib_path)
 
+    args = [(cla, fhr, gribfile.contents, site, workdir) for site in cla.sites]
+
+    print(f'Queueing {len(args)} Skew Ts')
     with Pool(processes=cla.nprocs) as pool:
         pool.starmap(parallel_skewt, args)
 
@@ -43,9 +48,12 @@ def create_maps(cla, fhr, grib_path, workdir):
     ''' Generate arguments for parallel processing of plan-view maps and
     generate a pool of workers to complete the task. '''
 
-    args = []
+
+    # Create the file object to load the contents
+    gribfile = grib.GribFile(grib_path)
 
     for tile in cla.tiles:
+        args = []
         for variable, levels in cla.images[1].items():
             for level in levels:
 
@@ -56,11 +64,48 @@ def create_maps(cla, fhr, grib_path, workdir):
                     msg = f'graphics: {variable} {level}'
                     raise errors.NoGraphicsDefinitionForVariable(msg)
 
-                args.append((fhr, grib_path, level, spec,
+                args.append((fhr, gribfile.contents, level, spec,
                              variable, workdir, tile))
 
-    with Pool(processes=cla.nprocs) as pool:
-        pool.starmap(parallel_maps, args)
+        print(f'Queueing {len(args)} maps')
+        with Pool(processes=cla.nprocs) as pool:
+            pool.starmap(parallel_maps, args)
+
+
+def create_zip(png_files, zipf):
+
+    ''' Create a zip file. Use a locking mechanism -- write a lock file to disk. '''
+
+    lock_file = f'{zipf}._lock'
+    retry = 2
+    count = 0
+    while True:
+        if not os.path.exists(lock_file):
+            fd = open(lock_file, 'w')
+            print(f'Writing to zip file for files like: {png_files[0][-10:]}')
+
+            try:
+                with zipfile.ZipFile(zipf, 'a', zipfile.ZIP_DEFLATED) as zfile:
+                    for png_file in png_files:
+                        if os.path.exists(png_file):
+                            zfile.write(png_file, os.path.basename(png_file))
+            except: # pylint: disable=bare-except
+                print(f'Error on writing zip file! {sys.exc_info()[0]}')
+                count += 1
+                if count >= retry:
+                    raise
+            else:
+                # When zipping is successful, remove png_files
+                for png_file in png_files:
+                    if os.path.exists(png_file):
+                        os.remove(png_file)
+            finally:
+                fd.close()
+                if os.path.exists(lock_file):
+                    os.remove(lock_file)
+            break
+        # Wait before trying to obtain the lock on the file
+        time.sleep(5)
 
 def generate_tile_list(arg_list):
 
@@ -239,7 +284,7 @@ def parse_args():
         )
     return parser.parse_args()
 
-def parallel_maps(fhr, grib_path, level, spec, variable, workdir,
+def parallel_maps(fhr, ds, level, spec, variable, workdir,
                   tile='full'):
 
     # pylint: disable=too-many-arguments,too-many-locals
@@ -251,7 +296,7 @@ def parallel_maps(fhr, grib_path, level, spec, variable, workdir,
     Input:
 
       fhr        forecast hour
-      grib_path  the full path to the grib file
+      ds         xarray dataset from the grib file
       level      the vertical level of the variable to be plotted
                  corresponding to a key in the specs file
       spec       the dictionary of specifications for the given variable
@@ -262,8 +307,8 @@ def parallel_maps(fhr, grib_path, level, spec, variable, workdir,
 
     # Object to be plotted on the map in filled contours.
     field = grib.fieldData(
+        ds=ds,
         fhr=fhr,
-        filename=grib_path,
         level=level,
         short_name=variable,
         )
@@ -280,8 +325,8 @@ def parallel_maps(fhr, grib_path, level, spec, variable, workdir,
                 var, lev = contour, level
 
             contour_fields.append(grib.fieldData(
+                ds=ds,
                 fhr=fhr,
-                filename=grib_path,
                 level=lev,
                 contour_kwargs=contour_kwargs,
                 short_name=var,
@@ -294,8 +339,8 @@ def parallel_maps(fhr, grib_path, level, spec, variable, workdir,
         for hatch, hatch_kwargs in hatches.items():
             var, lev = hatch.split('_')
             hatch_fields.append(grib.fieldData(
+                ds=ds,
                 fhr=fhr,
-                filename=grib_path,
                 level=lev,
                 contour_kwargs=hatch_kwargs,
                 short_name=var,
@@ -343,7 +388,7 @@ def parallel_maps(fhr, grib_path, level, spec, variable, workdir,
 
     plt.close()
 
-def parallel_skewt(cla, fhr, grib_path, site, workdir):
+def parallel_skewt(cla, fhr, ds, site, workdir):
 
     '''
     Function that creates a single SkewT plot. Can be used in parallel.
@@ -356,8 +401,8 @@ def parallel_skewt(cla, fhr, grib_path, site, workdir):
     '''
 
     skew = skewt.SkewTDiagram(
+        ds=ds,
         fhr=fhr,
-        filename=grib_path,
         filetype=cla.file_type,
         loc=site,
         max_plev=cla.max_plev,
@@ -399,8 +444,6 @@ def graphics_driver(cla):
     if cla.zip_dir:
         os.makedirs(cla.zip_dir, exist_ok=True)
         zipf = os.path.join(cla.zip_dir, 'files.zip')
-        if os.path.exists(zipf):
-            os.remove(zipf)
 
     fcst_hours = copy.deepcopy(cla.fcst_hour)
 
@@ -434,22 +477,21 @@ def graphics_driver(cla):
             print()
             print((('-' * 80)+'\n') * 2)
 
-
-
             if cla.graphic_type == 'skewts':
                 create_skewt(cla, fhr, grib_path, workdir)
             else:
                 create_maps(cla, fhr, grib_path, workdir)
 
-            # Zip png files and remove the originals
+            # Zip png files and remove the originals in a subprocess
             if zipf:
-                png_files = glob.glob(os.path.join(workdir, '*.png'))
-                with zipfile.ZipFile(zipf, 'a', zipfile.ZIP_DEFLATED) as zfile:
-                    for png_file in png_files:
-                        zfile.write(png_file, os.path.basename(png_file))
-                        os.remove(png_file)
-                # Directory is empty now -- rmdir is fine.
-                os.rmdir(workdir)
+                png_files = glob.glob(os.path.join(workdir, f'*{fhr:02d}.png'))
+
+                zip_proc = Process(group=None,
+                                   target=create_zip,
+                                   args=(png_files, zipf),
+                                   )
+                zip_proc.start()
+                zip_proc.join()
 
             # Keep track of last time we did something useful
             timer_end = time.time()
@@ -485,7 +527,7 @@ if __name__ == '__main__':
     print((('-' * 80)+'\n') * 2)
 
     for name, val in CLARGS.__dict__.items():
-        if name != 'specs':
+        if name not in ['specs', 'sites']:
             print(f"{name:>15s}: {val}")
 
 

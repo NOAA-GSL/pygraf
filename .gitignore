@@ -4,4 +4,6 @@ __pycache__
 *.grib2
 *.grib
 .DS_STORE
-
+*.ipynb
+*.log
+*.out

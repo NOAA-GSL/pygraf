@@ -12,7 +12,7 @@ from string import digits, ascii_letters
 
 from matplotlib import cm
 import numpy as np
-import Nio
+import xarray as xr
 
 from .. import conversions
 from .. import errors
@@ -35,48 +35,33 @@ class GribFile():
         ''' Internal method that opens the grib file. Returns a grib message
         iterator. '''
 
-        return Nio.open_file(self.filename, format="grib2") # pylint: disable=c-extension-no-member
+        #return Nio.open_file(self.filename, format="grib2") # pylint: disable=c-extension-no-member
+        return xr.open_dataset(self.filename,
+                               engine='pynio',
+                               lock=False,
+                               backend_kwargs=dict(format="grib2"),
+                               )
 
-    def get_field(self, ncl_name):
-
-        ''' Given an ncl_name, return the NioVariable object. '''
-
-        try:
-            field = self.contents.variables[ncl_name]
-        except KeyError:
-            raise errors.GribReadError(f'{ncl_name}')
-
-        return field
-
-    @property
-    def grid_suffix(self):
-        ''' Return the suffix of the first variable in the file. This should
-        correspond to the grid tag. '''
-
-        var = list(self.contents.variables.keys())[0]
-        return var.split('_')[-1]
-
-class UPPData(GribFile, specs.VarSpec):
+class UPPData(specs.VarSpec):
 
     '''
     Class provides interface for accessing field  data from UPP in
     Grib2 format.
 
     Input:
-        filename:    Path to grib file.
+        ds:          xarray dataset from grib file
         short_name:  name of variable corresponding to entry in specs configuration
 
     Keyword Arguments:
         config:      path to a user-specified configuration file
     '''
 
-    def __init__(self, filename, short_name, **kwargs):
+    def __init__(self, ds, short_name, **kwargs):
 
         # Parse kwargs first
         config = kwargs.get('config', 'adb_graphics/default_specs.yml')
         self.filetype = kwargs.get('filetype', 'prs')
 
-        GribFile.__init__(self, filename, **kwargs)
         specs.VarSpec.__init__(self, config)
 
         self.spec = self.yml
@@ -84,6 +69,8 @@ class UPPData(GribFile, specs.VarSpec):
         self.level = 'ua'
 
         self.fhr = str(kwargs['fhr'])
+
+        self.ds = ds
 
     @property
     def anl_dt(self) -> datetime.datetime:
@@ -142,6 +129,17 @@ class UPPData(GribFile, specs.VarSpec):
 
         return values - self.values(name=variable2, level=level2)
 
+    def get_field(self, ncl_name):
+
+        ''' Given an ncl_name, return the NioVariable object. '''
+
+        try:
+            field = self.ds[ncl_name]
+        except KeyError:
+            raise errors.GribReadError(f'{ncl_name}')
+
+        return field
+
     def get_level(self, field, level, spec):
 
         ''' Returns the value of the level to for a 3D array '''
@@ -153,8 +151,8 @@ class UPPData(GribFile, specs.VarSpec):
 
         # Follow convention of fieldData objects for getting vertical level
         dim_name = spec.get('vertical_level_name',
-                            field.dimensions[0])
-        levs = self.contents.variables[dim_name][::]
+                            list(field.dims)[0])
+        levs = self.ds[dim_name].values
 
         # Requested level
         lev_val, _ = self.numeric_level(level=level)
@@ -196,12 +194,21 @@ class UPPData(GribFile, specs.VarSpec):
                 val = utils.get_func(transform)(val, **transform_kwargs)
         return val
 
+    @property
+    def grid_suffix(self):
+        ''' Return the suffix of the first variable in the file. This should
+        correspond to the grid tag. '''
+
+        var = list(self.ds.keys())[0]
+        return var.split('_')[-1]
+
+
     def latlons(self):
 
         ''' Returns the set of latitudes and longitudes '''
 
-        return [self.contents.variables[var][::] for var in \
-                self.field.coordinates.split()]
+        return [self.ds.coords[c].values for c in \
+                list(self.ds.coords)[-2:]]
 
     @property
     def lev_descriptor(self):
@@ -285,17 +292,17 @@ class fieldData(UPPData):
     Grib2 format.
 
     Input:
-        filename:    Path to grib file.
+        ds:          xarray dataset from grib file
         level:       level corresponding to entry in specs configuration
-        name      :  name of variable corresponding to entry in specs configuration
+        name:        name of variable corresponding to entry in specs configuration
 
     Keyword Arguments:
         config:      path to a user-specified configuration file
     '''
 
-    def __init__(self, filename, level, short_name, **kwargs):
+    def __init__(self, ds, level, short_name, **kwargs):
 
-        super().__init__(filename, short_name, **kwargs)
+        super().__init__(ds, short_name, **kwargs)
 
         self.level = level
         self.contour_kwargs = kwargs.get('contour_kwargs', {})
@@ -379,10 +386,10 @@ class fieldData(UPPData):
             )
 
         # Last coordinate listed should be latitude or longitude
-        lat_var, _ = self.field.coordinates.split()
+        lat_var, _ = list(self.field.coords)[-2:]
 
         # Get the latitude variable
-        lat = self.contents.variables[lat_var]
+        lat = self.ds[lat_var]
 
         grid_info = {}
         grid_info['corners'] = self.corners
@@ -398,13 +405,13 @@ class fieldData(UPPData):
         else:
             attrs = []
             grid_info['projection'] = 'rotpole'
-            grid_info['lon_0'] = lat.attributes['CenterLon'][0] - 360
-            grid_info['o_lat_p'] = 90 - lat.attributes['CenterLat'][0]
+            grid_info['lon_0'] = lat.attrs['CenterLon'][0] - 360
+            grid_info['o_lat_p'] = 90 - lat.attrs['CenterLat'][0]
             grid_info['o_lon_p'] = 180
 
         for attr in attrs:
             bm_arg = ncl_to_basemap[attr]
-            val = lat.attributes[attr]
+            val = lat.attrs[attr]
             val = val[0] if isinstance(val, np.ndarray) else val
             grid_info[bm_arg] = val
 
@@ -426,8 +433,6 @@ class fieldData(UPPData):
 
         return self.vspec.get('unit', self.field.units)
 
-
-    @lru_cache()
     def values(self, level=None, name=None, **kwargs) -> np.ndarray:
 
         '''
@@ -440,6 +445,8 @@ class fieldData(UPPData):
         '''
 
         level = level if level else self.level
+
+        vertical_index = kwargs.get('vertical_index')
 
         ncl_name = kwargs.get('ncl_name', '')
         ncl_name = ncl_name.format(fhr=self.fhr, grid=self.grid_suffix)
@@ -457,7 +464,9 @@ class fieldData(UPPData):
             vals = field[::]
         elif len(field.shape) == 3:
 
-            lev = self.get_level(field, level, spec)
+            lev = vertical_index
+            if vertical_index is None:
+                lev = self.get_level(field, level, spec)
             vals = field[lev, :, :]
 
         transforms = spec.get('transform')
@@ -480,6 +489,7 @@ class fieldData(UPPData):
             field1 = self.values(
                 level=level,
                 ncl_name=field1,
+                vertical_index=vertical_index,
                 **kwargs,
                 )
 
@@ -487,6 +497,7 @@ class fieldData(UPPData):
             field2 = self.values(
                 level=level,
                 ncl_name=field2,
+                vertical_index=vertical_index,
                 **kwargs,
                 )
 
@@ -511,13 +522,13 @@ class fieldData(UPPData):
             return False
 
         # Create fieldData objects for u, v components
-        field_lambda = lambda fn, level, var: fieldData(
+        field_lambda = lambda ds, level, var: fieldData(
+            ds=ds,
             fhr=self.fhr,
-            filename=fn,
             level=level,
             short_name=var,
             )
-        u, v = [field_lambda(self.filename, level, var) for var in ['u', 'v']]
+        u, v = [field_lambda(self.ds, level, var) for var in ['u', 'v']]
 
         return [component.values() for component in [u, v]]
 
@@ -530,7 +541,7 @@ class profileData(UPPData):
 
     Input:
 
-      filename     full path to grib file
+      ds           xarray dataset from grib file
       loc          single entry from sites file. Use the first 31 spaces to get
                    site_code, site_num, lat, lon. Past 31 spaces is the site's
                    long name.
@@ -542,9 +553,9 @@ class profileData(UPPData):
 
     '''
 
-    def __init__(self, filename, loc, short_name, **kwargs):
+    def __init__(self, ds, loc, short_name, **kwargs):
 
-        super().__init__(filename, short_name, **kwargs)
+        super().__init__(ds, short_name, **kwargs)
 
         # The first 31 columns are space delimted
         self.site_code, _, self.site_num, lat, lon = \
@@ -606,6 +617,7 @@ class profileData(UPPData):
             name = self.short_name
 
         one_lev = kwargs.get('one_lev', False)
+        vertical_index = kwargs.get('vertical_index')
 
         # Retrive the location for the profile
         x, y = self.get_xypoint()
@@ -624,7 +636,7 @@ class profileData(UPPData):
                 )
 
         # Get the full 2- or 3-D field
-        field = self.contents.variables[ncl_name]
+        field = self.ds[ncl_name]
 
         profile = field[::]
         lev = 0
@@ -632,7 +644,9 @@ class profileData(UPPData):
             profile = profile[x, y]
         elif len(profile.shape) == 3:
             if one_lev:
-                lev = self.get_level(field, level, var_spec)
+                lev = vertical_index
+                if vertical_index is None:
+                    lev = self.get_level(field, level, var_spec)
                 profile = profile[lev, x, y]
             else:
                 profile = profile[:, x, y]
