@@ -128,7 +128,11 @@ class UPPData(specs.VarSpec):
         ''' Subtracts the values from variable2 from self.field. '''
 
         return values - self.values(name=variable2, level=level2)
+    
+#    def field_mean(self, values, variable2, level2, variable3, level3, **kwargs) -> np.ndarray:
+    def field_mean(self, values, variable, levels, **kwargs) -> np.ndarray:
 
+<<<<<<< Updated upstream
     def get_field(self, ncl_name):
 
         ''' Given an ncl_name, return the NioVariable object. '''
@@ -140,6 +144,26 @@ class UPPData(specs.VarSpec):
 
         return field
 
+=======
+        # pylint: disable=unused-argument
+
+        ''' Returns the mean of the values. '''
+
+#        return (values + self.values(name=variable2, level=level2) + self.values(name=variable3, level=level3)) / 3.
+        sum = values * 0.
+        print('levels = ',levels)
+        for level in levels:
+            print("variable = ",variable)
+#            print(values)
+            print("level = ",level)
+            print(self.values(name=variable, level=level))
+            sum = sum + self.values(name=variable, level=level)
+            
+        print("len(levels) = ",len(levels))    
+        
+        return sum / len(levels)
+    
+>>>>>>> Stashed changes
     def get_level(self, field, level, spec):
 
         ''' Returns the value of the level to for a 3D array '''
@@ -246,7 +270,7 @@ class UPPData(specs.VarSpec):
 
         if index_match:
             lev_val = lev_val / 100. if lev_unit == 'cm' else lev_val
-            lev_val = lev_val * 100. if lev_unit in ['mb', 'mxmb'] else lev_val
+            lev_val = lev_val * 100. if lev_unit in ['mb', 'mxmb', 'mbmn'] else lev_val
             lev_val = lev_val * 1000. if lev_unit in ['km', 'mx', 'sr'] else lev_val
 
         return lev_val, lev_unit
@@ -445,16 +469,20 @@ class fieldData(UPPData):
         '''
 
         level = level if level else self.level
+        print('in values: level = ',level)
 
         vertical_index = kwargs.get('vertical_index')
 
         ncl_name = kwargs.get('ncl_name', '')
         ncl_name = ncl_name.format(fhr=self.fhr, grid=self.grid_suffix)
 
+        print('ncl_name = ',ncl_name)
         if name is None and not ncl_name:
+            print('leg 1')
             field = self.field
             spec = self.vspec
         else:
+            print('leg 2')
             spec = self.spec.get(name, {}).get(level, {})
             if not spec and name is not None:
                 raise errors.NoGraphicsDefinitionForVariable(name, level)
@@ -470,6 +498,7 @@ class fieldData(UPPData):
             vals = field[lev, :, :]
 
         transforms = spec.get('transform')
+        print('transforms = ',transforms)
         if transforms:
             vals = self.get_transform(transforms, vals)
 
