@@ -248,6 +248,7 @@ class DataMap():
 
     @utils.timer
     def draw(self, show=False):
+    # pylint: disable=too-many-locals
 
         ''' Main method for creating the plot. Set show=True to display the
         figure from the command line. '''
@@ -301,8 +302,13 @@ class DataMap():
         # Levels should be included in the settings dict here since they don't
         # correspond to a full field of contours.
         if self.hatch_fields:
+            handles = []
             for field in self.hatch_fields:
-                colors = field.contour_kwargs.pop('colors')
+                colors = field.contour_kwargs.get('colors', 'k')
+                hatches = field.contour_kwargs.get('hatches', '----')
+                labels = field.contour_kwargs.get('labels', 'XXXX')
+                handles.append(mpatches.Patch(edgecolor=colors[-1], facecolor='lightgrey', \
+                               label=labels[-1], hatch=hatches[-1]))
 
                 cf = self._draw_field(ax=ax,
                                       field=field,
@@ -318,15 +324,7 @@ class DataMap():
 
             # Create legend for precip type field
             if self.field.short_name == 'ptyp':
-                plt.legend(handles=[mpatches.Patch(edgecolor='blue', facecolor='lightgrey', \
-                                                   label='Snow', hatch='----'), \
-                                    mpatches.Patch(edgecolor='red', facecolor='lightgrey', \
-                                                   label='Freezing Rain', hatch='\\\\\\\\'), \
-                                    mpatches.Patch(edgecolor='green', facecolor='lightgrey', \
-                                                   label='Rain', hatch='|||'), \
-                                    mpatches.Patch(edgecolor='purple', facecolor='lightgrey', \
-                                                   label='Ice Pellets', hatch='////')], \
-                                    loc=[0.25, 0.03])
+                plt.legend(handles=handles, loc=[0.25, 0.03])
 
         # Add wind barbs, if requested
         add_wind = self.field.vspec.get('wind', False)
@@ -342,7 +340,6 @@ class DataMap():
             plt.show()
 
         self.add_logo(ax)
-
 
     def _draw_field(self, ax, field, func, **kwargs):
 

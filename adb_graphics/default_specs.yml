@@ -223,10 +223,10 @@ ceilexp2: # Ceiling - experimental no.2
     title: Ceiling (exp-2)
 cfrzr: # Categorical Freezing Rain
   sfc:
-    ncl_name: CFRZR_P0_L1_GLC0
+    ncl_name: CFRZR_P0_L1_{grid}
 cicep: # Categorical Ice Pellets
   sfc:
-    ncl_name: CFRZR_P0_L1_GLC0
+    ncl_name: CFRZR_P0_L1_{grid}
 cin: # Surface Convective Inhibition
   mu:
     clevs: [-300, -200, -150, -100, -75, -50, -40, -30, -20, -10, -1]
@@ -297,10 +297,10 @@ cpofp: # Frozen Precipitation Percentage
     unit: '%'
 crain: # Categorical Rain
   sfc:
-    ncl_name: CRAIN_P0_L1_GLC0
+    ncl_name: CRAIN_P0_L1_{grid}
 csnow: # Categorical Snow
   sfc:
-    ncl_name: CSNOW_P0_L1_GLC0
+    ncl_name: CSNOW_P0_L1_{grid}
 ctop: # Cloud top height
   ua:
     clevs: !!python/object/apply:numpy.arange [0, 61, 5]
@@ -645,20 +645,24 @@ ptyp: # Hourly total precipitation
         linewidths: 0.5
     hatches:
       crain_sfc:
-        colors: ['', 'green']
-        hatches: ['', '|||', '|||']
-        levels: [0.0, 0.5, 1.0]
+        colors: ['green']
+        hatches: ['', '|||']
+        labels: ['Rain']
+        levels: [0., 0.1, 1.0]
       csnow_sfc:
-        colors: ['', 'blue']
-        hatches: ['', '---', '---']
+        colors: ['blue']
+        hatches: ['', '---']
+        labels: ['Snow']
         levels: [0, 0.9, 1.1]
       cfrzr_sfc:
-        colors: ['', 'purple']
-        hatches: ['', '///', '///']
+        colors: ['purple']
+        hatches: ['', '///']
+        labels: ['Freezing Rain']
         levels: [0, 0.5, 1.0]
       cicep_sfc:
-        colors: ['', 'red']
-        hatches: ['', '\\\\', '\\\\']
+        colors: ['red']
+        hatches: ['', '\\\\']
+        labels: ['Ice Pellets']
         levels: [0, 0.5, 1.0]
     ncl_name: APCP_P8_L1_GLC0_acc1h
     ticks: 0
