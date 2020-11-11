@@ -661,22 +661,22 @@ ptyp: # Hourly total precipitation
         linewidths: 0.5
     hatches:
       crain_sfc:
-        colors: ['green']
+        colors: [green]
         hatches: ['', '|||']
         labels: ['Rain']
         levels: [0., 0.1, 1.0]
       csnow_sfc:
-        colors: ['blue']
+        colors: [blue]
         hatches: ['', '---']
         labels: ['Snow']
         levels: [0, 0.9, 1.1]
       cfrzr_sfc:
-        colors: ['purple']
+        colors: [purple]
         hatches: ['', '///']
         labels: ['Freezing Rain']
         levels: [0, 0.5, 1.0]
       cicep_sfc:
-        colors: ['red']
+        colors: [red]
         hatches: ['', '\\\\']
         labels: ['Ice Pellets']
         levels: [0, 0.5, 1.0]
@@ -720,7 +720,6 @@ rh: # Relative Humidity
         linewidths: 0.6
     hatches:
       pres_sfc:
-#        alpha: 0
         hatches: ['...', '']
         levels: [0, 500]
   700mb:
@@ -732,7 +731,6 @@ rh: # Relative Humidity
         linewidths: 0.6
     hatches:
       pres_sfc:
-#        alpha: 0
         hatches: ['...', '']
         levels: [0, 700]
   850mb:
@@ -931,7 +929,6 @@ temp: # Temperature
         colors: grey
     hatches:
       pres_sfc:
-#        alpha: 0
         hatches: ['...', '']
         levels: [0, 500]
     ncl_name:
@@ -953,7 +950,6 @@ temp: # Temperature
         colors: grey
     hatches:
       pres_sfc:
-        alpha: 0
         hatches: ['...', '']
         levels: [0, 700]
     ncl_name:
@@ -973,7 +969,6 @@ temp: # Temperature
         linewidths: 0.6
     hatches:
       pres_sfc:
-#        alpha: 0
         hatches: ['...', '']
         levels: [0, 850]
   925mb:
@@ -986,7 +981,6 @@ temp: # Temperature
         linewidths: 0.6
     hatches:
       pres_sfc:
-#        alpha: 0
         hatches: ['...', '']
         levels: [0, 925]
   sfc:

@@ -247,8 +247,7 @@ class DataMap():
         cbar.ax.set_xticklabels(ticks, fontsize=18)
 
     @utils.timer
-    def draw(self, show=False):
-    # pylint: disable=too-many-locals
+    def draw(self, show=False): # pylint: disable=too-many-locals
 
         ''' Main method for creating the plot. Set show=True to display the
         figure from the command line. '''
@@ -297,7 +296,6 @@ class DataMap():
                         print(f'Cannot add contour labels to map for {self.field.short_name} \
                                 {self.field.level}')
 
-
         # Add hatched fields, if requested
         # Levels should be included in the settings dict here since they don't
         # correspond to a full field of contours.
@@ -317,8 +315,8 @@ class DataMap():
                                       )
 
                 # For each level, we set the color of its hatch
-                for i, collection in enumerate(cf.collections):
-                    collection.set_edgecolor(colors[i % len(colors)])
+                for collection in cf.collections:
+                    collection.set_edgecolor(colors)
                     collection.set_facecolor(['None'])
                     collection.set_linewidth(0.1)
 
