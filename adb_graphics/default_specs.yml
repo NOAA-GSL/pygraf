@@ -145,7 +145,7 @@ cape:
         linewidths: 0.6
     hatches:
       lpl_agl:
-        alpha: 0
+        alpha: 0.3
         hatches: ['///', '']
         levels: [50, 1000]
     ncl_name: CAPE_P0_2L108_{grid}
@@ -156,20 +156,36 @@ cape:
   mul: # Most Unstable Layer CAPE
     <<: *cape
     contours:
+      cape:
+        colors: white
+        levels: [1000, 100000]
+        linewidths: 1.2
+      lpl_agl:
+        colors: 'k'
+        levels: [50, 1000]
+        linewidths: 0.6
     hatches:
+      lpl_agl:
+        alpha: 0.3
+        hatches: ['///', '']
+        levels: [50, 1000]
     ncl_name: CAPE_P0_2L108_{grid}
     title: Most Unstable Layer CAPE
     vertical_index: 1
   mx90mb: # Lowest 90 mb Mixed Layer CAPE
     <<: *cape
     contours:
+      cape:
+        colors: white
+        levels: [1000, 100000]
+        linewidths: 1.2
       cin:
         colors: 'k'
         levels: [-1000, -50]
         linewidths: 0.6
     hatches:
       cin_mx90mb:
-        alpha: 0
+        alpha: 0.3
         hatches: ['///', '']
         levels: [-1000, -50]
     vertical_index: 0
@@ -184,7 +200,7 @@ cape:
         linewidths: 0.6
     hatches:
       cin_sfclt:
-        alpha: 0
+        alpha: 0.3
         hatches: ['///', '']
         levels: [-1000, -50]
     ncl_name: CAPE_P0_L1_{grid}
@@ -704,7 +720,7 @@ rh: # Relative Humidity
         linewidths: 0.6
     hatches:
       pres_sfc:
-        alpha: 0
+#        alpha: 0
         hatches: ['...', '']
         levels: [0, 500]
   700mb:
@@ -716,7 +732,7 @@ rh: # Relative Humidity
         linewidths: 0.6
     hatches:
       pres_sfc:
-        alpha: 0
+#        alpha: 0
         hatches: ['...', '']
         levels: [0, 700]
   850mb:
@@ -728,7 +744,6 @@ rh: # Relative Humidity
         linewidths: 0.6
     hatches:
       pres_sfc:
-        alpha: 0
         hatches: ['...', '']
         levels: [0, 850]
   pw: # RH wrt Precipitable Water
@@ -916,7 +931,7 @@ temp: # Temperature
         colors: grey
     hatches:
       pres_sfc:
-        alpha: 0
+#        alpha: 0
         hatches: ['...', '']
         levels: [0, 500]
     ncl_name:
@@ -958,7 +973,7 @@ temp: # Temperature
         linewidths: 0.6
     hatches:
       pres_sfc:
-        alpha: 0
+#        alpha: 0
         hatches: ['...', '']
         levels: [0, 850]
   925mb:
@@ -971,7 +986,7 @@ temp: # Temperature
         linewidths: 0.6
     hatches:
       pres_sfc:
-        alpha: 0
+#        alpha: 0
         hatches: ['...', '']
         levels: [0, 925]
   sfc:
