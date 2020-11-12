@@ -145,8 +145,8 @@ cape:
         linewidths: 0.6
     hatches:
       lpl_agl:
-        alpha: 0
-        hatches: ['///', '']
+        alpha: 0.3
+        hatches: ['', '///']
         levels: [50, 1000]
     ncl_name: CAPE_P0_2L108_{grid}
     ticks: 0
@@ -156,21 +156,37 @@ cape:
   mul: # Most Unstable Layer CAPE
     <<: *cape
     contours:
+      cape:
+        colors: white
+        levels: [1000, 100000]
+        linewidths: 1.2
+      lpl_agl:
+        colors: 'k'
+        levels: [50, 1000]
+        linewidths: 0.6
     hatches:
+      lpl_agl:
+        alpha: 0.3
+        hatches: ['', '///']
+        levels: [50, 1000]
     ncl_name: CAPE_P0_2L108_{grid}
     title: Most Unstable Layer CAPE
     vertical_index: 1
   mx90mb: # Lowest 90 mb Mixed Layer CAPE
     <<: *cape
     contours:
+      cape:
+        colors: white
+        levels: [1000, 100000]
+        linewidths: 1.2
       cin:
         colors: 'k'
         levels: [-1000, -50]
         linewidths: 0.6
     hatches:
       cin_mx90mb:
-        alpha: 0
-        hatches: ['///', '']
+        alpha: 0.3
+        hatches: ['', '///']
         levels: [-1000, -50]
     vertical_index: 0
     ncl_name: CAPE_P0_2L108_{grid}
@@ -184,8 +200,8 @@ cape:
         linewidths: 0.6
     hatches:
       cin_sfclt:
-        alpha: 0
-        hatches: ['///', '']
+        alpha: 0.3
+        hatches: ['', '///']
         levels: [-1000, -50]
     ncl_name: CAPE_P0_L1_{grid}
     title: Surface CAPE
@@ -221,6 +237,12 @@ ceilexp2: # Ceiling - experimental no.2
     <<: *ceil
     ncl_name: CEIL_P0_L2_{grid}
     title: Ceiling (exp-2)
+cfrzr: # Categorical Freezing Rain
+  sfc:
+    ncl_name: CFRZR_P0_L1_{grid}
+cicep: # Categorical Ice Pellets
+  sfc:
+    ncl_name: CFRZR_P0_L1_{grid}
 cin: # Surface Convective Inhibition
   mu:
     clevs: [-300, -200, -150, -100, -75, -50, -40, -30, -20, -10, -1]
@@ -289,6 +311,12 @@ cpofp: # Frozen Precipitation Percentage
     ticks: 0
     title: Frozen Precip Percentage
     unit: '%'
+crain: # Categorical Rain
+  sfc:
+    ncl_name: CRAIN_P0_L1_{grid}
+csnow: # Categorical Snow
+  sfc:
+    ncl_name: CSNOW_P0_L1_{grid}
 ctop: # Cloud top height
   ua:
     clevs: !!python/object/apply:numpy.arange [0, 61, 5]
@@ -611,6 +639,61 @@ ptmp: # Potential temperature
     ticks: 10
     unit: K
     wind: 10m
+ptyp: # Hourly total precipitation
+  sfc:
+    clevs: [0.002, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 1.0, 2.0]
+    cmap: gist_ncar
+    colors: pcp_colors
+    contours:
+      crain_sfc:
+        colors: green
+        levels: [0, 1]
+        linewidths: 0.2
+      csnow_sfc:
+        colors: blue
+        levels: [0, 1]
+        linewidths: 0.2
+      cfrzr_sfc:
+        colors: purple
+        levels: [0, 1]
+        linewidths: 0.5
+      cicep_sfc:
+        colors: red
+        levels: [0, 1]
+        linewidths: 0.5
+    hatches:
+      # python causes an error using contourf with the
+      # option "extend='both'" for 3-char string colors
+      # ('red', 'tan', etc.), so leave in lists
+      crain_sfc:
+        colors: [green]
+        hatches: ['', '|||']
+        labels: Rain
+        levels: [0, 1]
+        linewidths: 0.1
+      csnow_sfc:
+        colors: [blue]
+        hatches: ['', '---']
+        labels: Snow
+        levels: [0, 1]
+        linewidths: 0.1
+      cfrzr_sfc:
+        colors: [purple]
+        hatches: ['', '///']
+        labels: Freezing Rain
+        levels: [0, 1]
+        linewidths: 0.2
+      cicep_sfc:
+        colors: [red]
+        hatches: ['', '\\\\']
+        labels: Ice Pellets
+        levels: [0, 1]
+        linewidths: 0.2
+    ncl_name: APCP_P8_L1_GLC0_acc1h
+    ticks: 0
+    title: 1 hr Total Precip, Precip Type
+    transform: conversions.kgm2_to_in
+    unit: in
 pwtr: # Precipitable water
   sfc:
     clevs: !!python/object/apply:numpy.arange [4, 81, 4]
@@ -646,8 +729,7 @@ rh: # Relative Humidity
         linewidths: 0.6
     hatches:
       pres_sfc:
-        alpha: 0
-        hatches: ['...', '']
+        hatches: ['', '...']
         levels: [0, 500]
   700mb:
     <<: *rh_ua
@@ -658,8 +740,7 @@ rh: # Relative Humidity
         linewidths: 0.6
     hatches:
       pres_sfc:
-        alpha: 0
-        hatches: ['...', '']
+        hatches: ['', '...']
         levels: [0, 700]
   850mb:
     <<: *rh_ua
@@ -670,8 +751,7 @@ rh: # Relative Humidity
         linewidths: 0.6
     hatches:
       pres_sfc:
-        alpha: 0
-        hatches: ['...', '']
+        hatches: ['', '...']
         levels: [0, 850]
   pw: # RH wrt Precipitable Water
     <<: *rh
@@ -858,8 +938,7 @@ temp: # Temperature
         colors: grey
     hatches:
       pres_sfc:
-        alpha: 0
-        hatches: ['...', '']
+        hatches: ['', '...']
         levels: [0, 500]
     ncl_name:
       prs: TMP_P0_L100_{grid}
@@ -880,8 +959,7 @@ temp: # Temperature
         colors: grey
     hatches:
       pres_sfc:
-        alpha: 0
-        hatches: ['...', '']
+        hatches: ['', '...']
         levels: [0, 700]
     ncl_name:
       prs: TMP_P0_L100_{grid}
@@ -900,8 +978,7 @@ temp: # Temperature
         linewidths: 0.6
     hatches:
       pres_sfc:
-        alpha: 0
-        hatches: ['...', '']
+        hatches: ['', '...']
         levels: [0, 850]
   925mb:
     <<: *ua_temp
@@ -913,8 +990,7 @@ temp: # Temperature
         linewidths: 0.6
     hatches:
       pres_sfc:
-        alpha: 0
-        hatches: ['...', '']
+        hatches: ['', '...']
         levels: [0, 925]
   sfc:
     clevs: !!python/object/apply:numpy.arange [-60, 120, 10]

@@ -13,6 +13,7 @@ from functools import lru_cache
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import matplotlib.offsetbox as mpob
+import matplotlib.patches as mpatches
 from mpl_toolkits.basemap import Basemap
 import numpy as np
 
@@ -246,7 +247,7 @@ class DataMap():
         cbar.ax.set_xticklabels(ticks, fontsize=18)
 
     @utils.timer
-    def draw(self, show=False):
+    def draw(self, show=False): # pylint: disable=too-many-locals
 
         ''' Main method for creating the plot. Set show=True to display the
         figure from the command line. '''
@@ -295,17 +296,35 @@ class DataMap():
                         print(f'Cannot add contour labels to map for {self.field.short_name} \
                                 {self.field.level}')
 
-
         # Add hatched fields, if requested
         # Levels should be included in the settings dict here since they don't
         # correspond to a full field of contours.
         if self.hatch_fields:
+            handles = []
             for field in self.hatch_fields:
-                self._draw_field(ax=ax,
-                                 field=field,
-                                 func=self.map.m.contourf,
-                                 **field.contour_kwargs,
-                                 )
+                colors = field.contour_kwargs.get('colors', 'k')
+                hatches = field.contour_kwargs.get('hatches', '----')
+                labels = field.contour_kwargs.get('labels', 'XXXX')
+                linewidths = field.contour_kwargs.get('linewidths', 0.1)
+                handles.append(mpatches.Patch(edgecolor=colors[-1], facecolor='lightgrey', \
+                               label=labels, hatch=hatches[-1]))
+
+                cf = self._draw_field(ax=ax,
+                                      extend='both',
+                                      field=field,
+                                      func=self.map.m.contourf,
+                                      **field.contour_kwargs,
+                                      )
+
+                # For each level, we set the color of its hatch
+                for collection in cf.collections:
+                    collection.set_edgecolor(colors)
+                    collection.set_facecolor(['None'])
+                    collection.set_linewidth(linewidths)
+
+            # Create legend for precip type field
+            if self.field.short_name == 'ptyp':
+                plt.legend(handles=handles, loc=[0.25, 0.03])
 
         # Add wind barbs, if requested
         add_wind = self.field.vspec.get('wind', False)
@@ -321,7 +340,6 @@ class DataMap():
             plt.show()
 
         self.add_logo(ax)
-
 
     def _draw_field(self, ax, field, func, **kwargs):
 
