@@ -1,5 +1,7 @@
 hourly:
   variables:
+    1ref:
+      - 1000m
     acfrzr:
       - sfc
     acfrozr:
