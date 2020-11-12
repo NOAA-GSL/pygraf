@@ -660,28 +660,31 @@ ptyp: # Hourly total precipitation
         levels: [0, 1]
         linewidths: 0.5
     hatches:
+      # python causes an error using contourf with the
+      # option "extend='both'" for 3-char string colors
+      # ('red', 'tan', etc.), so leave in lists
       crain_sfc:
         colors: [green]
         hatches: ['', '|||']
-        labels: [Rain]
+        labels: Rain
         levels: [0, 1]
         linewidths: 0.1
       csnow_sfc:
         colors: [blue]
         hatches: ['', '---']
-        labels: [Snow]
+        labels: Snow
         levels: [0, 1]
         linewidths: 0.1
       cfrzr_sfc:
         colors: [purple]
         hatches: ['', '///']
-        labels: [Freezing Rain]
+        labels: Freezing Rain
         levels: [0, 1]
         linewidths: 0.2
       cicep_sfc:
         colors: [red]
         hatches: ['', '\\\\']
-        labels: [Ice Pellets]
+        labels: Ice Pellets
         levels: [0, 1]
         linewidths: 0.2
     ncl_name: APCP_P8_L1_GLC0_acc1h

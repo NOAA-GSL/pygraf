@@ -307,7 +307,7 @@ class DataMap():
                 labels = field.contour_kwargs.get('labels', 'XXXX')
                 linewidths = field.contour_kwargs.get('linewidths', 0.1)
                 handles.append(mpatches.Patch(edgecolor=colors[-1], facecolor='lightgrey', \
-                               label=labels[-1], hatch=hatches[-1]))
+                               label=labels, hatch=hatches[-1]))
 
                 cf = self._draw_field(ax=ax,
                                       extend='both',
