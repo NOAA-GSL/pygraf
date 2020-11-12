@@ -309,6 +309,7 @@ class DataMap():
                                label=labels[-1], hatch=hatches[-1]))
 
                 cf = self._draw_field(ax=ax,
+                                      extend='both',
                                       field=field,
                                       func=self.map.m.contourf,
                                       **field.contour_kwargs,

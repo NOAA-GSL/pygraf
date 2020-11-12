@@ -146,7 +146,7 @@ cape:
     hatches:
       lpl_agl:
         alpha: 0.3
-        hatches: ['///', '']
+        hatches: ['', '///']
         levels: [50, 1000]
     ncl_name: CAPE_P0_2L108_{grid}
     ticks: 0
@@ -167,7 +167,7 @@ cape:
     hatches:
       lpl_agl:
         alpha: 0.3
-        hatches: ['///', '']
+        hatches: ['', '///']
         levels: [50, 1000]
     ncl_name: CAPE_P0_2L108_{grid}
     title: Most Unstable Layer CAPE
@@ -186,7 +186,7 @@ cape:
     hatches:
       cin_mx90mb:
         alpha: 0.3
-        hatches: ['///', '']
+        hatches: ['', '///']
         levels: [-1000, -50]
     vertical_index: 0
     ncl_name: CAPE_P0_2L108_{grid}
@@ -201,7 +201,7 @@ cape:
     hatches:
       cin_sfclt:
         alpha: 0.3
-        hatches: ['///', '']
+        hatches: ['', '///']
         levels: [-1000, -50]
     ncl_name: CAPE_P0_L1_{grid}
     title: Surface CAPE
@@ -663,23 +663,23 @@ ptyp: # Hourly total precipitation
       crain_sfc:
         colors: [green]
         hatches: ['', '|||']
-        labels: ['Rain']
-        levels: [0., 0.1, 1.0]
+        labels: [Rain]
+        levels: [0, 1]
       csnow_sfc:
         colors: [blue]
         hatches: ['', '---']
-        labels: ['Snow']
-        levels: [0, 0.9, 1.1]
+        labels: [Snow]
+        levels: [0, 1]
       cfrzr_sfc:
         colors: [purple]
         hatches: ['', '///']
-        labels: ['Freezing Rain']
-        levels: [0, 0.5, 1.0]
+        labels: [Freezing Rain]
+        levels: [0, 1]
       cicep_sfc:
         colors: [red]
         hatches: ['', '\\\\']
-        labels: ['Ice Pellets']
-        levels: [0, 0.5, 1.0]
+        labels: [Ice Pellets]
+        levels: [0, 1]
     ncl_name: APCP_P8_L1_GLC0_acc1h
     ticks: 0
     title: 1 hr Total Precip, Precip Type
@@ -720,7 +720,7 @@ rh: # Relative Humidity
         linewidths: 0.6
     hatches:
       pres_sfc:
-        hatches: ['...', '']
+        hatches: ['', '...']
         levels: [0, 500]
   700mb:
     <<: *rh_ua
@@ -731,7 +731,7 @@ rh: # Relative Humidity
         linewidths: 0.6
     hatches:
       pres_sfc:
-        hatches: ['...', '']
+        hatches: ['', '...']
         levels: [0, 700]
   850mb:
     <<: *rh_ua
@@ -742,7 +742,7 @@ rh: # Relative Humidity
         linewidths: 0.6
     hatches:
       pres_sfc:
-        hatches: ['...', '']
+        hatches: ['', '...']
         levels: [0, 850]
   pw: # RH wrt Precipitable Water
     <<: *rh
@@ -929,7 +929,7 @@ temp: # Temperature
         colors: grey
     hatches:
       pres_sfc:
-        hatches: ['...', '']
+        hatches: ['', '...']
         levels: [0, 500]
     ncl_name:
       prs: TMP_P0_L100_{grid}
@@ -950,7 +950,7 @@ temp: # Temperature
         colors: grey
     hatches:
       pres_sfc:
-        hatches: ['...', '']
+        hatches: ['', '...']
         levels: [0, 700]
     ncl_name:
       prs: TMP_P0_L100_{grid}
@@ -969,7 +969,7 @@ temp: # Temperature
         linewidths: 0.6
     hatches:
       pres_sfc:
-        hatches: ['...', '']
+        hatches: ['', '...']
         levels: [0, 850]
   925mb:
     <<: *ua_temp
@@ -981,7 +981,7 @@ temp: # Temperature
         linewidths: 0.6
     hatches:
       pres_sfc:
-        hatches: ['...', '']
+        hatches: ['', '...']
         levels: [0, 925]
   sfc:
     clevs: !!python/object/apply:numpy.arange [-60, 120, 10]
