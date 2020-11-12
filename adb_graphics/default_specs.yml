@@ -643,12 +643,12 @@ ptyp: # Hourly total precipitation
     cmap: gist_ncar
     colors: pcp_colors
     contours:
-      csnow_sfc:
-        colors: blue
-        levels: [0, 1]
-        linewidths: 0.2
       crain_sfc:
         colors: green
+        levels: [0, 1]
+        linewidths: 0.2
+      csnow_sfc:
+        colors: blue
         levels: [0, 1]
         linewidths: 0.2
       cfrzr_sfc:
