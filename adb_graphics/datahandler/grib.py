@@ -128,19 +128,19 @@ class UPPData(specs.VarSpec):
         ''' Subtracts the values from variable2 from self.field. '''
 
         return values - self.values(name=variable2, level=level2)
-    
+
     def field_mean(self, values, variable, levels, **kwargs) -> np.ndarray:
 
         # pylint: disable=unused-argument
 
         ''' Returns the mean of the values. '''
 
-        sum = np.zeros_like(values)
+        fsum = np.zeros_like(values)
         for level in levels:
-            sum = sum + self.values(name=variable, level=level)
-            
-        return sum / len(levels)
-    
+            fsum = fsum + self.values(name=variable, level=level)
+
+        return fsum / len(levels)
+
     def get_field(self, ncl_name):
 
         ''' Given an ncl_name, return the NioVariable object. '''

@@ -779,12 +779,13 @@ rh: # Relative Humidity
         levels: [0, 850]
   mean: # Mean RH 850mb to 500mb
     <<: *rh_ua
-    title: Mean 850-500mb Relative Humidity
+    title: Mean 850-500mb Relative Humidity, 700mb Wind
     transform: 
       funcs: field_mean
       kwargs:
         variable: rh
         levels: [500mb, 525mb, 550mb, 575mb, 600mb, 625mb, 650mb, 675mb, 700mb, 725mb, 750mb, 775mb, 800mb, 825mb, 850mb]
+    wind: 700mb
   pw: # RH wrt Precipitable Water
     <<: *rh
     ncl_name: RHPW_P0_L10_{grid}
