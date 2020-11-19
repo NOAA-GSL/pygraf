@@ -131,9 +131,8 @@ hourly:
     rh:
       - 2m
       - 850mb
+      - pw
       - ua
-    rhpw:
-      - sfc
     rvil:
       - sfc
     sfcp:
@@ -207,9 +206,9 @@ hourly:
       - sfc
     wspeed:
       - 10m
+      - 250mb
       - 80m
       - 850mb
-      - 250mb
       - max
       - mdn
       - mup

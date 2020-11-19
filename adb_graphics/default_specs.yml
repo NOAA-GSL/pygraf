@@ -275,11 +275,6 @@ cloudcover:
     <<: *cld_cover
     ncl_name: TCDC_P0_L10_{grid}
     title: Total Cloud Cover
-cref: # Composite reflectivity
-  sfc:
-    <<: *refl
-    ncl_name: REFC_P0_L10_{grid}
-    title: Composite Reflectivity
 cpofp: # Frozen Precipitation Percentage
   sfc:
     clevs: [-0.1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
@@ -289,6 +284,11 @@ cpofp: # Frozen Precipitation Percentage
     ticks: 0
     title: Frozen Precip Percentage
     unit: '%'
+cref: # Composite reflectivity
+  sfc:
+    <<: *refl
+    ncl_name: REFC_P0_L10_{grid}
+    title: Composite Reflectivity
 ctop: # Cloud top height
   ua:
     clevs: !!python/object/apply:numpy.arange [0, 61, 5]
@@ -1029,11 +1029,6 @@ vddsf: # Incoming Diffuse Radiation
     <<: *incoming_radiation
     ncl_name: VDDSF_P0_L1_{grid}
     title: Incoming Diffuse Radiation
-vil: # Vertically Integrated Liquid
-  sfc:
-    <<: *vert_int_liq
-    ncl_name: VAR_0_16_201_P0_L10_{grid}
-    title: Vertically Integrated Liquid
 vig: # Vertically-integrated graupel
   sfc:
     clevs: !!python/object/apply:numpy.arange [5, 91, 5]
@@ -1043,6 +1038,11 @@ vig: # Vertically-integrated graupel
     ticks: 0
     title: Max Vertically Integrated Graupel (over previous hour)
     unit: mm
+vil: # Vertically Integrated Liquid
+  sfc:
+    <<: *vert_int_liq
+    ncl_name: VAR_0_16_201_P0_L10_{grid}
+    title: Vertically Integrated Liquid
 vis: # Visibility
   sfc:
     clevs: [0.0625, 0.125, 0.25, 0.5, 1, 1.5, 2, 3, 4, 5, 10, 30, 50]
