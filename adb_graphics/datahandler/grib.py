@@ -135,7 +135,7 @@ class UPPData(specs.VarSpec):
 
         ''' Returns the mean of the values. '''
 
-        sum = values * 0.
+        sum = np.zeros_like(values)
         for level in levels:
             sum = sum + self.values(name=variable, level=level)
             
