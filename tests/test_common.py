@@ -131,6 +131,7 @@ class TestDefaultSpecs():
             'colors': self.is_a_color,
             'contours': self.is_a_contour_dict,
             'hatches': self.is_a_contourf_dict,
+            'labels': self.is_a_contourf_dict,
             'ncl_name': True,
             'ticks': self.is_number,
             'title': self.is_string,
@@ -306,7 +307,7 @@ class TestDefaultSpecs():
         arguments. '''
 
         args = ['X', 'Y', 'Z', 'levels',
-                'corner_mask', 'colors', 'alpha', 'cmap', 'norm', 'vmin',
+                'corner_mask', 'colors', 'alpha', 'cmap', 'labels', 'norm', 'vmin',
                 'vmax', 'origin', 'extent', 'locator', 'extend', 'xunits',
                 'yunits', 'antialiased', 'nchunk', 'linewidths',
                 'hatches']
