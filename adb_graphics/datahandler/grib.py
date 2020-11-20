@@ -167,9 +167,6 @@ class UPPData(specs.VarSpec):
         levs = self.ds[dim_name].values
 
         # Requested level
-        if level == 'mean':
-            lev = 0
-            return lev
         lev_val, _ = self.numeric_level(level=level)
 
         return int(np.argwhere(levs == lev_val))

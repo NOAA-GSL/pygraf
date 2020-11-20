@@ -786,6 +786,7 @@ rh: # Relative Humidity
         variable: rh
         levels: [500mb, 525mb, 550mb, 575mb, 600mb, 625mb, 650mb, 675mb, 700mb, 725mb, 750mb, 775mb, 800mb, 825mb, 850mb]
     wind: 700mb
+    vertical_index: 0 # Not used in mean computation, but is used to initialize new array for summing levels
   pw: # RH wrt Precipitable Water
     <<: *rh
     ncl_name: RHPW_P0_L10_{grid}
