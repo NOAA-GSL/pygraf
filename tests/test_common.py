@@ -349,7 +349,7 @@ class TestDefaultSpecs():
         allowed_levels = [
             'agl',     # above ground level
             'best',    # Best
-            'blcc',    # boundary layer cld cover
+            'bndylay', # boundary layer cld cover
             'esbl',    # ???
             'esblmn',  # ???
             'high',    # high clouds
