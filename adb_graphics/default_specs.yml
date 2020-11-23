@@ -298,6 +298,10 @@ cloudcover:
     ncl_name: TCDC_P0_L10_{grid}
     title: Total Cloud Cover
 cref: # Composite reflectivity
+  esbl:
+    <<: *refl
+    ncl_name: REFC_P0_L10_{grid}
+    title: Ensemble Composite Reflectivity
   sfc:
     <<: *refl
     ncl_name: REFC_P0_L10_{grid}

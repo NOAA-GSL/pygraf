@@ -284,11 +284,13 @@ class UPPData(specs.VarSpec):
 
     @property
     def grid_suffix(self):
-        ''' Return the suffix of the first variable in the file. This should
-        correspond to the grid tag. '''
+        ''' Return the suffix of the first variable with 4 sections (split on _)
+        in the file. This should correspond to the grid tag. '''
 
-        var = list(self.ds.keys())[0]
-        return var.split('_')[-1]
+        for var in self.ds.keys():
+            vsplit = var.split('_')
+            if len(vsplit) == 4:
+                return vsplit[-1]
 
 
     def latlons(self):
@@ -768,3 +770,83 @@ class profileData(UPPData):
                 )
 
         return conversions.magnitude(field1, field2)
+
+class timeLaggedData(UPPData):
+
+    '''
+    Class provides interface for accessing time lagged fields (2D plan view)
+    data from UPP in Grib2 format.
+
+    Input:
+        ds:          xarray dataset from full set of grib files
+        fcst_hours   list of forecast hours to include
+        level:       level corresponding to entry in specs configuration, likely
+                     esbl or total
+        name:        name of variable corresponding to entry in specs configuration
+
+    Keyword Arguments:
+        config:      path to a user-specified configuration file
+    '''
+
+    def __init__(self, ds, fcst_hours, level, short_name, **kwargs):
+
+        super().__init__(ds, short_name, **kwargs)
+
+        self.level = level
+        self.contour_kwargs = kwargs.get('contour_kwargs', {})
+
+        self.fcst_hours = fcst_hours
+
+    @property
+    def valid_dt(self) -> datetime.datetime:
+
+        ''' Returns a datetime object corresponding to the forecast hour's valid
+        time as set in the Grib file. '''
+
+        deltas = [datetime.timedelta(hours=int(hr)) for hr in self.fcst_hours]
+        return [self.anl_dt + delta for delta in deltas]
+
+    def values(self, level=None, name=None, **kwargs) -> np.ndarray:
+
+        '''
+        Returns the numpy array of values at the requested level for the
+        variable after applying any unit conversion to the original data.
+
+        Optional Input:
+            name       the name of a field other than defined in self
+            level      the level of the alternate field to use
+        '''
+
+        level = level if level else self.level
+
+        vertical_index = kwargs.get('vertical_index')
+
+        ncl_name = kwargs.get('ncl_name', '')
+        ncl_name = ncl_name.format(grid=self.grid_suffix)
+
+        if name is None and not ncl_name:
+            field = self.field
+            spec = self.vspec
+        else:
+            spec = self.spec.get(name, {}).get(level, {})
+            if not spec and name is not None:
+                raise errors.NoGraphicsDefinitionForVariable(name, level)
+            field = self.get_field(ncl_name or self.ncl_name(spec))
+
+
+        # 3D Variables have shape (fcst_hour, ygrid_0, xgrid_0)
+        vals = field.sel(fcst_hour=self.fcst_hours)
+
+        # Need to choose vertical level
+        if len(field.shape) == 4:
+
+            lev = vertical_index
+            if vertical_index is None:
+                lev = self.get_level(field, level, spec)
+            vals = vals[:,lev, :, :]
+
+        transforms = spec.get('transform')
+        if transforms:
+            vals = self.get_transform(transforms, vals)
+
+        return vals
