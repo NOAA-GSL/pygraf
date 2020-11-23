@@ -35,12 +35,100 @@ class GribFile():
         ''' Internal method that opens the grib file. Returns a grib message
         iterator. '''
 
-        #return Nio.open_file(self.filename, format="grib2") # pylint: disable=c-extension-no-member
         return xr.open_dataset(self.filename,
                                engine='pynio',
                                lock=False,
                                backend_kwargs=dict(format="grib2"),
                                )
+
+class GribFiles():
+
+    ''' Class for loading in a set of grib files and combining them over
+    forecast hours. '''
+
+    def __init__(self, filenames, filetype):
+
+        '''
+        Arguments:
+
+          filenames   dict containing list of files names for the 0h and 1h
+                      forecast lead times ('01fcst'), and all the free forecast
+                      hours after that ('free_fcst').
+          filetype    key to use for dict when setting variable_names
+
+        '''
+        self.filenames = filenames
+        self.filetype = filetype
+        self.contents = self._load()
+
+
+    def _load(self):
+
+        ''' Load the set of files into a single XArray structure. '''
+
+        all_leads = []
+
+        # 0h and 1h Forecast
+        all_leads.append(xr.open_mfdataset(
+            self.filenames['01fcst'],
+            backend_kwargs=dict(format="grib2"),
+            combine='nested',
+            compat='override',
+            concat_dim='fcst_hour',
+            coords='minimal',
+            data_vars=self.variable_names,
+            engine='pynio',
+            lock=False,
+            ).rename_vars(self.variable_names))
+
+        #
+        all_leads.append(xr.open_mfdataset(
+            self.filenames['free_fcst'],
+            backend_kwargs=dict(format="grib2"),
+            combine='nested',
+            compat='override',
+            coords='minimal',
+            concat_dim='fcst_hour',
+            data_vars=self.variable_names.values(),
+            engine='pynio',
+            lock=False,
+            ))
+
+        return xr.combine_nested(all_leads,
+                                 compat='override',
+                                 concat_dim='fcst_hour',
+                                 coords='minimal',
+                                 data_vars='minimal',
+                                )
+
+    @property
+    def variable_names(self):
+
+        '''
+        Defines the variable name transitions that need to happen for each
+        model to combine along forecast hours. 
+
+        Keys are original variable names, values are the updated variable names.
+
+        Choosing to update the 0 and 1 hour forecast variables to the longer
+        lead times for efficiency's sake.
+        '''
+
+        names = {
+            'hrrrx': {
+                'REFC_P0_L10_GLC0': 'REFC_P0_L10_GLC0',
+                'MXUPHL_P8_2L103_GLC0_max': 'MXUPHL_P8_2L103_GLC0_max1h',
+                'UGRD_P0_L103_GLC0': 'UGRD_P0_L103_GLC0', 
+                'VGRD_P0_L103_GLC0': 'VGRD_P0_L103_GLC0',
+                'WEASD_P8_L1_GLC0_acc': 'WEASD_P8_L1_GLC0_acc1h',
+                'APCP_P8_L1_GLC0_acc': 'APCP_P8_L1_GLC0_acc1h',
+                'PRES_P0_L1_GLC0': 'PRES_P0_L1_GLC0',
+                'VAR_0_7_200_P8_2L103_GLC0_min': 'VAR_0_7_200_P8_2L103_GLC0_min1h',
+                }
+            }
+
+        return names[self.filetype]
+
 
 class UPPData(specs.VarSpec):
 
