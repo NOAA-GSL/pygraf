@@ -129,6 +129,18 @@ class UPPData(specs.VarSpec):
 
         return values - self.values(name=variable2, level=level2)
 
+    def field_mean(self, values, variable, levels, **kwargs) -> np.ndarray:
+
+        # pylint: disable=unused-argument
+
+        ''' Returns the mean of the values. '''
+
+        fsum = np.zeros_like(values)
+        for level in levels:
+            fsum = fsum + self.values(name=variable, level=level)
+
+        return fsum / len(levels)
+
     def get_field(self, ncl_name):
 
         ''' Given an ncl_name, return the NioVariable object. '''

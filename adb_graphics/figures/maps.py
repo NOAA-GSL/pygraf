@@ -380,7 +380,7 @@ class DataMap():
         if self.hatch_fields:
             cf = self.hatch_fields[0]
             not_labeled.extend([h.short_name for h in self.hatch_fields])
-            if cf not in ['pres']:
+            if not any(list(set(cf.short_name).intersection(['pres']))):
                 title = cf.vspec.get('title', cf.field.long_name)
                 contoured.append(f'{title} ({cf.units}, hatched)')
 
@@ -403,7 +403,11 @@ class DataMap():
 
         # Two lines for shaded data (top), and contoured data (bottom)
         title = f.vspec.get('title', f.field.long_name)
-        plt.title(f"{title} ({f.units}, shaded)\n {contoured}",
+        if f.vspec.get('print_units', True):
+            units = f'({f.units}, shaded)'
+        else:
+            units = f''
+        plt.title(f"{title} {units}\n {contoured}",
                   loc='right',
                   fontsize=16,
                   )

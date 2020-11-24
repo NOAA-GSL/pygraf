@@ -731,6 +731,20 @@ rh: # Relative Humidity
       pres_sfc:
         hatches: ['', '...']
         levels: [0, 500]
+  525mb:
+    <<: *rh_ua
+  550mb:
+    <<: *rh_ua
+  575mb:
+    <<: *rh_ua
+  600mb:
+    <<: *rh_ua
+  625mb:
+    <<: *rh_ua
+  650mb:
+    <<: *rh_ua
+  675mb:
+    <<: *rh_ua
   700mb:
     <<: *rh_ua
     contours:
@@ -742,6 +756,16 @@ rh: # Relative Humidity
       pres_sfc:
         hatches: ['', '...']
         levels: [0, 700]
+  725mb:
+    <<: *rh_ua
+  750mb:
+    <<: *rh_ua
+  775mb:
+    <<: *rh_ua
+  800mb:
+    <<: *rh_ua
+  825mb:
+    <<: *rh_ua
   850mb:
     <<: *rh_ua
     contours:
@@ -753,6 +777,17 @@ rh: # Relative Humidity
       pres_sfc:
         hatches: ['', '...']
         levels: [0, 850]
+  mean: # Mean RH 850mb to 500mb
+    <<: *rh
+    print_units: false
+    title: Mean 850-500mb Relative Humidity (%, shaded), 700mb Wind (kt)
+    transform: 
+      funcs: field_mean
+      kwargs:
+        variable: rh
+        levels: [500mb, 525mb, 550mb, 575mb, 600mb, 625mb, 650mb, 675mb, 700mb, 725mb, 750mb, 775mb, 800mb, 825mb, 850mb]
+    vertical_index: 0 # Not used in mean computation, but is used to initialize new array for summing levels
+    wind: 700mb
   pw: # RH wrt Precipitable Water
     <<: *rh
     ncl_name: RHPW_P0_L10_{grid}
