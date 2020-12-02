@@ -268,7 +268,7 @@ cin: # Surface Convective Inhibition
     <<: *sfc_cin
     title: Surface CIN < -50
 cloudcover:
-  blcc: &cld_cover # PBL ... 1 km Cloud Cover
+  bndylay: &cld_cover # PBL ... 1 km Cloud Cover
     clevs: [2, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95]
     cmap: gist_ncar
     colors: cldcov_colors
@@ -297,11 +297,6 @@ cloudcover:
     <<: *cld_cover
     ncl_name: TCDC_P0_L10_{grid}
     title: Total Cloud Cover
-cref: # Composite reflectivity
-  sfc:
-    <<: *refl
-    ncl_name: REFC_P0_L10_{grid}
-    title: Composite Reflectivity
 cpofp: # Frozen Precipitation Percentage
   sfc:
     clevs: [-0.1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
@@ -314,6 +309,11 @@ cpofp: # Frozen Precipitation Percentage
 crain: # Categorical Rain
   sfc:
     ncl_name: CRAIN_P0_L1_{grid}
+cref: # Composite reflectivity
+  sfc:
+    <<: *refl
+    ncl_name: REFC_P0_L10_{grid}
+    title: Composite Reflectivity
 csnow: # Categorical Snow
   sfc:
     ncl_name: CSNOW_P0_L1_{grid}
@@ -1140,11 +1140,6 @@ vddsf: # Incoming Diffuse Radiation
     <<: *incoming_radiation
     ncl_name: VDDSF_P0_L1_{grid}
     title: Incoming Diffuse Radiation
-vil: # Vertically Integrated Liquid
-  sfc:
-    <<: *vert_int_liq
-    ncl_name: VAR_0_16_201_P0_L10_{grid}
-    title: Vertically Integrated Liquid
 vig: # Vertically-integrated graupel
   sfc:
     clevs: !!python/object/apply:numpy.arange [5, 91, 5]
@@ -1154,6 +1149,11 @@ vig: # Vertically-integrated graupel
     ticks: 0
     title: Max Vertically Integrated Graupel (over previous hour)
     unit: mm
+vil: # Vertically Integrated Liquid
+  sfc:
+    <<: *vert_int_liq
+    ncl_name: VAR_0_16_201_P0_L10_{grid}
+    title: Vertically Integrated Liquid
 vis: # Visibility
   sfc:
     clevs: [0.0625, 0.125, 0.25, 0.5, 1, 1.5, 2, 3, 4, 5, 10, 30, 50]

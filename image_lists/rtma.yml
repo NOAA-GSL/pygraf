@@ -1,29 +1,11 @@
 hourly:
   variables:
-    1hsnw:
-      - sfc
-    1hsm:
-      - sfc
+#    1hsm:
+#      - sfc
     1ref:
       - 1000m
-    3hsm:
-      - sfc
-    acfrozr:
-      - sfc
-    acfrzr:
-      - sfc
-    acp:
-      - esbl
-      - esblmn
-      - sfc
-    acpcp:
-      - sfc
-    acsnod:
-      - sfc
-    acsnw:
-      - esbl
-      - esblmn
-      - sfc
+#    3hsm:
+#      - sfc
     cape:
       - mu
       - mul
@@ -33,12 +15,11 @@ hourly:
       - ua
     ceilexp:
       - ua
-    ceilexp2:
-      - ua
+#    ceilexp2:
+#      - ua
     cin:
       - sfc
     cloudcover:
-      - bndylay
       - high
       - low
       - mid
@@ -46,7 +27,6 @@ hourly:
     cpofp:
       - sfc
     cref:
-      - esbl
       - sfc
     ctop:
       - ua
@@ -66,40 +46,13 @@ hourly:
       - sat
     gust:
       - 10m
-    hail:
-      - max
-      - maxsfc
-    hailcast:
-      - maxsfc
     hlcy:
-      - esbl
       - in16
       - in25
-      - mn02
-      - mn03
-      - mn16
-      - mnsfc
-      - mx02
-      - mx03
-      - mx16
-      - sfc
       - sr01
       - sr03
-    hlcytot:
-      - mn02
-      - mn03
-      - mn16
-      - mn25
-      - mx02
-      - mx03
-      - mx16
-      - mx25
     hpbl:
       - sfc
-    hvy1snw:
-      - esbl
-    hvyacp:
-      - esbl
     lcl:
       - sfc
     lhtfl:
@@ -107,61 +60,40 @@ hourly:
     li:
       - best
       - sfc
-    ltg1:
-      - sfc
-    ltg2:
-      - sfc
     ltg3:
       - sfc
-    mnvv:
-      - sfc
+#    mnvv:
+#      - sfc
     mref:
       - sfc
-    pchg:
+    pres:
+      - msl
       - sfc
     ptmp:
       - 2m
-    ptyp:
-      - sfc
+#    ptyp:
+#      - sfc
     pwtr:
       - sfc
     ref:
       - m10
-      - maxm10
     rh:
       - 2m
       - 850mb
-      - mean
+#      - ua
       - pw
     rvil:
-      - sfc
-    sfcp:
       - sfc
     shear:
       - 01km
       - 06km
     shtfl:
       - sfc
-    slw:
-      - sfc
     snod:
       - sfc
     soilm:
       - sfc
-    soilt: &soilt_levs
-      - 0cm
-      - 1cm
-      - 4cm
-      - 10cm
-      - 30cm
-      - 60cm
-      - 1m
-      - 1.6m
-      - 3m
-    soilw: *soilt_levs
     solar:
-      - sfc
-    ssrun:
       - sfc
     temp:
       - 2ds
@@ -170,10 +102,6 @@ hourly:
       - 700mb
       - 850mb
       - 925mb
-      - sfc
-    totp:
-      - esbl
-      - esblmn
       - sfc
     ulwrf:
       - sfc
@@ -185,8 +113,6 @@ hourly:
       - sfc
     vddsf:
       - sfc
-    vig:
-      - sfc
     vil:
       - sfc
     vis:
@@ -195,22 +121,13 @@ hourly:
       - 500mb
     vvel:
       - 700mb
-      - mean
-    vvort:
-      - mx01
-      - mx02
-    wchg:
-      - 80m
-      - esbl
     weasd:
       - sfc
     wspeed:
       - 10m
+      - 80m
       - 250mb
-      - 80m
       - 850mb
-      - max
-      - mdn
-      - mup
-    wpwr:
-      - 80m
+#    wpwr:
+#      - 80m
+
