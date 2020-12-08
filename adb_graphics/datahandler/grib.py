@@ -417,6 +417,30 @@ class fieldData(UPPData):
 
         return grid_info
 
+    def supercooled_liquid_water(self, values) -> np.ndarray:
+
+        '''
+        Generates a field of Supercooled Liquid Water
+        '''
+
+        slw = values
+        t = self.values(name='temp', level='925mb')
+        cmr = self.values(name='clwmr', level='925mb')
+        rmr = self.values(name='rwmr', level='925mb')
+
+        dp = 5000. # temorary val for pressure level thickness
+        g = 9.81 # gravity
+        slw2 = np.where((t < 0.0), cmr+rmr, 0.0)
+        slw = dp / g * slw2
+
+        print(f'min and max of t: {np.min(t)}, {np.max(t)}')
+        print(f'min and max of cmr: {np.min(cmr)}, {np.max(cmr)}')
+        print(f'min and max of rmr: {np.min(rmr)}, {np.max(rmr)}')
+        print(f'min and max of slw2: {np.min(slw2)}, {np.max(slw2)}')
+        print(f'min and max of slw: {np.min(slw)}, {np.max(slw)}')
+
+        return slw
+
     @property
     def ticks(self) -> int:
 
