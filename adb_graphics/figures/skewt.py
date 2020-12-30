@@ -62,7 +62,7 @@ class SkewTDiagram(grib.profileData):
             # Magic to get the desired number of decimals to appear.
             decimals = items.get('decimals', 0)
             value = items['data']
-            value = int(value) if decimals == 0 else value.round(decimals=decimals)
+            value = int(value) if decimals == 0 else value.round(decimals=decimals).values
 
             # Sure would have been nice to use a variable in the f string to
             # denote the format per variable.
