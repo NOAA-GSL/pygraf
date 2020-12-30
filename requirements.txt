@@ -1,8 +1,13 @@
+matplotlib
+numpy
+pyproj
+pyshp
+OWSLib
+Pillow
 basemap
 basemap-data-hires
-pynio
-matplotlib
 metpy
+pynio
 pylint
 pytest
 pyyaml
