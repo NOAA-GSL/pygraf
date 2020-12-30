@@ -1,0 +1,8 @@
+basemap
+basemap-data-hires
+pynio
+matplotlib
+metpy
+pylint
+pytest
+pyyaml
