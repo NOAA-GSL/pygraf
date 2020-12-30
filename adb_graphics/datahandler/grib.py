@@ -297,8 +297,9 @@ class UPPData(specs.VarSpec):
 
         ''' Returns the set of latitudes and longitudes '''
 
-        return [self.ds.coords[c].values for c in \
-                list(self.ds.coords)[-2:]]
+        coords = sorted([c for c in list(self.ds.coords) if any(ele in c for ele in ['lat',
+            'lon'])])
+        return [self.ds.coords[c].values for c in coords]
 
     @property
     def lev_descriptor(self):
@@ -771,7 +772,7 @@ class profileData(UPPData):
 
         return conversions.magnitude(field1, field2)
 
-class timeLaggedData(UPPData):
+class timeLaggedData(fieldData):
 
     '''
     Class provides interface for accessing time lagged fields (2D plan view)
@@ -790,7 +791,7 @@ class timeLaggedData(UPPData):
 
     def __init__(self, ds, fcst_hours, level, short_name, **kwargs):
 
-        super().__init__(ds, short_name, **kwargs)
+        super().__init__(ds, level, short_name, **kwargs)
 
         self.level = level
         self.contour_kwargs = kwargs.get('contour_kwargs', {})
