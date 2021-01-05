@@ -1,0 +1,80 @@
+hourly:
+  variables:
+    1hsnw:
+      - sfc
+    1ref:
+      - 1000m
+    acpcp:
+      - sfc
+    cape:
+      - mu
+      - mul
+      - mx90mb
+      - sfc
+    ceil:
+      - ua
+    cin:
+      - sfc
+    cloudcover:
+      - high
+      - low
+      - mid
+      - total
+    cref:
+      - sfc
+    ctop:
+      - ua
+    dewp:
+      - 2m
+    flru:
+      - sfc
+    gust:
+      - 10m
+    hlcy:
+      - sr01
+      - sr03
+    lcl:
+      - sfc
+    lhtfl:
+      - sfc
+    li:
+      - best
+    pres:
+      - sfc
+    pwtr:
+      - sfc
+    rh:
+      - 2m
+      - 850mb
+    rvil:
+      - sfc
+    shtfl:
+      - sfc
+    solar:
+      - sfc
+    temp:
+      - 2m
+      - 500mb
+      - 700mb
+      - 850mb
+      - 925mb
+      - sfc
+    totp:
+      - sfc
+    ulwrf:
+      - sfc
+    uswrf:
+      - sfc
+    vil:
+      - sfc
+    vis:
+      - sfc
+    vvel:
+      - 700mb
+    weasd:
+      - sfc
+    wspeed:
+      - 10m
+      - 80m
+      - 250mb
+      - 850mb
