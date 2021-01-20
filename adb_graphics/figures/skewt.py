@@ -404,14 +404,14 @@ class SkewTDiagram(grib.profileData):
                 'level': 'sr01',
                 'variable': 'hlcy',
                 },
-            'shr06': { # 0-6 km Shear
-                'level': '06km',
-                'variable': 'shear',
-                },
-            'shr01': { # 0-1 km Shear
-                'level': '01km',
-                'variable': 'shear',
-                },
+            #'shr06': { # 0-6 km Shear
+            #    'level': '06km',
+            #    'variable': 'shear',
+            #    },
+            #'shr01': { # 0-1 km Shear
+            #    'level': '01km',
+            #    'variable': 'shear',
+            #    },
             'cell': { # Cell motion
                 },
             'pwtr': { # Precipitable water

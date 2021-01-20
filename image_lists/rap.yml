@@ -1,4 +1,5 @@
 hourly:
+  model: rap
   variables:
     1hsnw:
       - sfc

@@ -1,4 +1,5 @@
 hourly:
+  model: rtma
   variables:
 #    1hsm:
 #      - sfc

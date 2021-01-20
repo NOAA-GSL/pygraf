@@ -84,7 +84,6 @@
     ticks: 5
     title: 1 km agl Reflectivity
     unit: dBZ
-    vertical_level_name: lv_HTGL7
 acfrozr: # Run Total Graupel
   sfc: &graupel
     clevs: [0.002, 0.01, 0.05, 0.1, 0.25, 0.5, 0.75, 1, 2]
@@ -295,7 +294,7 @@ cloudcover:
     title: Mid-Level Cloud Cover
   total:
     <<: *cld_cover
-    ncl_name: TCDC_P0_L10_{grid}
+    ncl_name: TCDC_P0_L{level_type}_{grid}
     title: Total Cloud Cover
 cpofp: # Frozen Precipitation Percentage
   sfc:
@@ -312,7 +311,7 @@ crain: # Categorical Rain
 cref: # Composite reflectivity
   sfc:
     <<: *refl
-    ncl_name: REFC_P0_L10_{grid}
+    ncl_name: REFC_P0_L{level_type}_{grid}
     title: Composite Reflectivity
 csnow: # Categorical Snow
   sfc:
@@ -624,7 +623,9 @@ pres:
     clevs: !!python/object/apply:numpy.arange [650, 1051, 4]
     cmap: gist_ncar
     colors: ps_colors
-    ncl_name: MSLMA_P0_L101_{grid}
+    ncl_name:
+      hrrr: MSLMA_P0_L101_{grid}
+      rrfs: PRMSL_P0_L101_{grid}
     ticks: 20
     transform: conversions.pa_to_hpa
     unit: hPa
@@ -797,7 +798,7 @@ rvil: # Radar-derived Vertically Integrated Liquid
     clevs: [0.05, 0.15, 0.76, 3.47, 6.92, 12, 31.6, 35, 40, 45, 50, 55, 60, 65, 70]
     cmap: NWSReflectivity
     colors: cref_colors
-    ncl_name: VIL_P0_L10_{grid}
+    ncl_name: VIL_P0_L{level_type}_{grid}
     ticks: 0
     title: Radar-derived Vertically Integrated Liquid
     unit: kg/m^2
@@ -996,13 +997,6 @@ temp: # Temperature
       pres_sfc:
         hatches: ['', '...']
         levels: [0, 700]
-    ncl_name:
-      prs: TMP_P0_L100_{grid}
-      nat: TMP_P0_L105_{grid}
-    ticks: 5
-    transform: conversions.k_to_c
-    unit: C
-    wind: True
   850mb:
     <<: *ua_temp
     clevs: !!python/object/apply:numpy.arange [-40, 40, 2.5]

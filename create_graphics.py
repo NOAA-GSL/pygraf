@@ -52,6 +52,7 @@ def create_maps(cla, fhr, grib_path, workdir):
     # Create the file object to load the contents
     gribfile = grib.GribFile(grib_path)
 
+    model = cla.images[0]
     for tile in cla.tiles:
         args = []
         for variable, levels in cla.images[1].items():
@@ -64,7 +65,7 @@ def create_maps(cla, fhr, grib_path, workdir):
                     msg = f'graphics: {variable} {level}'
                     raise errors.NoGraphicsDefinitionForVariable(msg)
 
-                args.append((fhr, gribfile.contents, level, spec,
+                args.append((fhr, gribfile.contents, level, model, spec,
                              variable, workdir, tile))
 
         print(f'Queueing {len(args)} maps')
@@ -143,7 +144,7 @@ def load_images(arg):
     with open(image_file, 'r') as fn:
         images = yaml.load(fn, Loader=yaml.Loader)[image_set]
 
-    return [image_file, images.get('variables')]
+    return [images.get('model'), images.get('variables')]
 
 def load_sites(arg):
 
@@ -284,7 +285,7 @@ def parse_args():
         )
     return parser.parse_args()
 
-def parallel_maps(fhr, ds, level, spec, variable, workdir,
+def parallel_maps(fhr, ds, level, model, spec, variable, workdir,
                   tile='full'):
 
     # pylint: disable=too-many-arguments,too-many-locals
@@ -299,6 +300,7 @@ def parallel_maps(fhr, ds, level, spec, variable, workdir,
       ds         xarray dataset from the grib file
       level      the vertical level of the variable to be plotted
                  corresponding to a key in the specs file
+      model      model name: rap, hrrr, rrfs, rtma
       spec       the dictionary of specifications for the given variable
                  and level
       variable   the name of the variable section in the specs file
@@ -310,6 +312,7 @@ def parallel_maps(fhr, ds, level, spec, variable, workdir,
         ds=ds,
         fhr=fhr,
         level=level,
+        model=model,
         short_name=variable,
         )
 
@@ -328,6 +331,7 @@ def parallel_maps(fhr, ds, level, spec, variable, workdir,
                 ds=ds,
                 fhr=fhr,
                 level=lev,
+                model=model,
                 contour_kwargs=contour_kwargs,
                 short_name=var,
                 ))
@@ -342,6 +346,7 @@ def parallel_maps(fhr, ds, level, spec, variable, workdir,
                 ds=ds,
                 fhr=fhr,
                 level=lev,
+                model=model,
                 contour_kwargs=hatch_kwargs,
                 short_name=var,
                 ))

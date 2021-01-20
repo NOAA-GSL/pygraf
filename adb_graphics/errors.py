@@ -11,6 +11,13 @@ class FieldNotUnique(Error):
 class GribReadError(Error):
     '''Exception raised when there is an error reading the grib file.'''
 
+    def __init__(self, name, message="was not found"):
+        self.name = name
+        self.message = message
+
+    def __str__(self):
+        return f'"{self.name}" {self.message}'
+
 class NoGraphicsDefinitionForVariable(Error):
     '''Exception raised when there is no configuration for the variable.'''
 
