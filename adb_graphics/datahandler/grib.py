@@ -177,8 +177,7 @@ class UPPData(specs.VarSpec):
         # Requested level
         lev_val, _ = self.numeric_level(level=level)
 
-        print(f'levs/lev_val: {levs} {lev_val} {np.argwhere(levs == lev_val)}')
-        return int(np.argwhere(levs == lev_val)[0])
+        return int(np.argwhere(levs == lev_val))
 
     def get_transform(self, transforms, val):
 
@@ -503,7 +502,10 @@ class fieldData(UPPData):
             vals = field[::]
 
         elif len(field.shape) == 3:
-            lev = vertical_index or self.get_level(field, level, spec)
+
+            lev = vertical_index
+            if lev is None:
+                lev = self.get_level(field, level, spec)
             vals = field[lev, :, :]
 
         transforms = spec.get('transform')
