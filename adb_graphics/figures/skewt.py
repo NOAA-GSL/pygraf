@@ -62,7 +62,8 @@ class SkewTDiagram(grib.profileData):
             # Magic to get the desired number of decimals to appear.
             decimals = items.get('decimals', 0)
             value = items['data']
-            value = int(value) if decimals == 0 else value.round(decimals=decimals).values
+            if value != '--':
+                value = int(value) if decimals == 0 else value.round(decimals=decimals).values
 
             # Sure would have been nice to use a variable in the f string to
             # denote the format per variable.
@@ -404,14 +405,14 @@ class SkewTDiagram(grib.profileData):
                 'level': 'sr01',
                 'variable': 'hlcy',
                 },
-            #'shr06': { # 0-6 km Shear
-            #    'level': '06km',
-            #    'variable': 'shear',
-            #    },
-            #'shr01': { # 0-1 km Shear
-            #    'level': '01km',
-            #    'variable': 'shear',
-            #    },
+            'shr06': { # 0-6 km Shear
+                'level': '06km',
+                'variable': 'shear',
+                },
+            'shr01': { # 0-1 km Shear
+                'level': '01km',
+                'variable': 'shear',
+                },
             'cell': { # Cell motion
                 },
             'pwtr': { # Precipitable water
@@ -429,11 +430,17 @@ class SkewTDiagram(grib.profileData):
             if not spec:
                 raise errors.NoGraphicsDefinitionForVariable(varname, lev)
 
-            tmp = self.values(level=lev, name=varname, one_lev=True)
+            try:
+                tmp = self.values(level=lev, name=varname, one_lev=True)
 
-            transforms = spec.get('transform')
-            if transforms:
-                tmp = self.get_transform(transforms, tmp)
+
+                transforms = spec.get('transform')
+                if transforms:
+                    tmp = self.get_transform(transforms, tmp)
+
+            except KeyError:
+
+                tmp = '--'
 
             thermo[var]['data'] = tmp
             thermo[var]['units'] = spec.get('unit')

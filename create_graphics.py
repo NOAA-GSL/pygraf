@@ -400,7 +400,8 @@ def parallel_skewt(cla, fhr, ds, site, workdir):
     Input:
 
       cla        command line arguments Namespace object
-      grib_path  the full path to the grib file
+      ds         the XArray dataset
+      fhr        the forecast hour integer
       site       the string representation of the site from the sites file
       workdir    output directory
     '''
