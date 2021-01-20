@@ -64,12 +64,6 @@ class UPPData(specs.VarSpec):
         self.model = kwargs.get('model')
         self.filetype = kwargs.get('filetype', 'prs')
 
-        if self.filetype == 'prs':
-            self.level_type = 10
-            if self.model == 'rrfs':
-                self.level_type = 200
-        else:
-            self.level_type = 105
 
         specs.VarSpec.__init__(self, config)
 
@@ -236,6 +230,18 @@ class UPPData(specs.VarSpec):
         ''' Returns the descriptor for the variable's level type. '''
 
         return self.field.level_type
+
+    @property
+    def level_type(self):
+
+        ''' Returns a Grib2 code for type of level. 10 is used for
+        entire atmosphere in HRRR, while 200 is used in RRFS. '''
+
+        if self.filetype == 'prs':
+            if self.model == 'rrfs':
+                return 200
+            return 10
+        return 105
 
     def ncl_name(self, spec: dict):
 
@@ -486,7 +492,7 @@ class fieldData(UPPData):
 
         if name is None and not ncl_name:
 
-            # Use field and spec from the current object 
+            # Use field and spec from the current object
             field = self.field
             spec = self.vspec
 
