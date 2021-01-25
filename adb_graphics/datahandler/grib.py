@@ -58,9 +58,12 @@ class UPPData(specs.VarSpec):
 
     def __init__(self, ds, short_name, **kwargs):
 
+
         # Parse kwargs first
         config = kwargs.get('config', 'adb_graphics/default_specs.yml')
+        self.model = kwargs.get('model')
         self.filetype = kwargs.get('filetype', 'prs')
+
 
         specs.VarSpec.__init__(self, config)
 
@@ -146,10 +149,9 @@ class UPPData(specs.VarSpec):
         ''' Given an ncl_name, return the NioVariable object. '''
 
         try:
-            field = self.ds[ncl_name]
+            field = self.ds[ncl_name.format(level_type=self.level_type)]
         except KeyError:
             raise errors.GribReadError(f'{ncl_name}')
-
         return field
 
     def get_level(self, field, level, spec):
@@ -229,14 +231,34 @@ class UPPData(specs.VarSpec):
 
         return self.field.level_type
 
+    @property
+    def level_type(self):
+
+        ''' Returns a Grib2 code for type of level. 10 is used for
+        entire atmosphere in HRRR, while 200 is used in RRFS. '''
+
+        if self.filetype == 'prs':
+            if self.model == 'rrfs':
+                return 200
+            return 10
+        return 105
+
     def ncl_name(self, spec: dict):
 
-        ''' Get the ncl_name from the specified dict. '''
+        ''' Get the ncl_name from the specified spec dict. '''
 
         name = spec.get('ncl_name')
+
         if isinstance(name, dict):
-            name = name.get(self.filetype)
-        return name.format(fhr=self.fhr, grid=self.grid_suffix)
+            if self.model in name.keys():
+                name = name.get(self.model)
+            else:
+                name = name.get(self.filetype)
+        # The level_type for the entire atmosphere could be L10 or L200. Thanks
+        # Grib2! Handle that in "try" statement when reading file.
+        return name.format(fhr=self.fhr,
+                           grid=self.grid_suffix,
+                           level_type=self.level_type)
 
     def numeric_level(self, index_match=True, level=None):
 
@@ -453,7 +475,11 @@ class fieldData(UPPData):
 
         Optional Input:
             name       the name of a field other than defined in self
-            level      the level of the alternate field to use
+            level      the desired level of the named field
+
+        Keyword Args:
+            ncl_name        the NCL-assigned Grib2 name
+            vertical_index  the index (int) of the desired vertical level
         '''
 
         level = level if level else self.level
@@ -463,10 +489,16 @@ class fieldData(UPPData):
         ncl_name = kwargs.get('ncl_name', '')
         ncl_name = ncl_name.format(fhr=self.fhr, grid=self.grid_suffix)
 
+
         if name is None and not ncl_name:
+
+            # Use field and spec from the current object
             field = self.field
             spec = self.vspec
+
         else:
+
+            # Get the spec dict and ncl_name for the given variable name
             spec = self.spec.get(name, {}).get(level, {})
             if not spec and name is not None:
                 raise errors.NoGraphicsDefinitionForVariable(name, level)
@@ -474,10 +506,11 @@ class fieldData(UPPData):
 
         if len(field.shape) == 2:
             vals = field[::]
+
         elif len(field.shape) == 3:
 
             lev = vertical_index
-            if vertical_index is None:
+            if lev is None:
                 lev = self.get_level(field, level, spec)
             vals = field[lev, :, :]
 

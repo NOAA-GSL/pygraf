@@ -1,4 +1,5 @@
 hourly:
+  model: hrrr
   variables:
     1hsnw:
       - sfc
