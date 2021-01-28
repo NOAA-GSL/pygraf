@@ -308,6 +308,7 @@ clwmr: # Cloud water Mixing Ratio
     ncl_name: CLWMR_P0_L100_{grid}
   925mb:
     ncl_name: CLWMR_P0_L100_{grid}
+#    ncl_name: CLWMR_P0_L105_GLC0  # wrfnat test
 cref: # Composite reflectivity
   sfc:
     <<: *refl
@@ -788,6 +789,7 @@ rwmr: # Rain Mixing Ratio
     ncl_name: RWMR_P0_L100_{grid}
   925mb:
     ncl_name: RWMR_P0_L100_{grid}
+#    ncl_name: RWMR_P0_L105_GLC0 # wrfnat test
 shear:
   01km: &shear # 0-1 km
     clevs: !!python/object/apply:numpy.arange [5, 91, 5]
@@ -1024,6 +1026,7 @@ temp: # Temperature
       pres_sfc:
         hatches: ['', '...']
         levels: [0, 925]
+#    ncl_name: TMP_P0_L105_GLC0 # 2m Temp - wrfnat test
   sfc:
     clevs: !!python/object/apply:numpy.arange [-60, 120, 10]
     cmap: jet

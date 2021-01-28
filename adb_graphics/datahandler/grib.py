@@ -423,19 +423,15 @@ class fieldData(UPPData):
         Generates a field of Supercooled Liquid Water
         '''
 
-        slw = values
-        t = self.values(name='temp', level='925mb')
-        cmr = self.values(name='clwmr', level='925mb')
-        rmr = self.values(name='rwmr', level='925mb')
+        t = self.values(name='temp', level='850mb', one_lev=False)
+        cmr = self.values(name='clwmr', level='850mb', one_lev=False)
+        rmr = self.values(name='rwmr', level='850mb', one_lev=False)
 
         dp = 5000. # temorary val for pressure level thickness
         g = 9.81 # gravity
         slw2 = np.where((t < 0.0), cmr+rmr, 0.0)
-        slw = dp / g * slw2
-
-        print(f'min and max of t: {np.min(t)}, {np.max(t)}')
-        print(f'min and max of cmr: {np.min(cmr)}, {np.max(cmr)}')
-        print(f'min and max of rmr: {np.min(rmr)}, {np.max(rmr)}')
+        slw = dp / g * np.sum(slw2, axis=0)
+        print(f'in supercooled_liquid_water: slw = {slw}')
         print(f'min and max of slw2: {np.min(slw2)}, {np.max(slw2)}')
         print(f'min and max of slw: {np.min(slw)}, {np.max(slw)}')
 
@@ -465,11 +461,13 @@ class fieldData(UPPData):
 
         Optional Input:
             name       the name of a field other than defined in self
+            one_lev    bool flag. if True, get the single level of the variable
             level      the level of the alternate field to use
         '''
 
         level = level if level else self.level
 
+        one_lev = kwargs.get('one_lev', True)
         vertical_index = kwargs.get('vertical_index')
 
         ncl_name = kwargs.get('ncl_name', '')
@@ -487,11 +485,13 @@ class fieldData(UPPData):
         if len(field.shape) == 2:
             vals = field[::]
         elif len(field.shape) == 3:
-
-            lev = vertical_index
-            if vertical_index is None:
-                lev = self.get_level(field, level, spec)
-            vals = field[lev, :, :]
+            if one_lev:
+                lev = vertical_index
+                if vertical_index is None:
+                    lev = self.get_level(field, level, spec)
+                vals = field[lev, :, :]
+            else:
+                vals = field[:, :, :]
 
         transforms = spec.get('transform')
         if transforms:
