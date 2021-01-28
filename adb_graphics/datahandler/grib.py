@@ -427,13 +427,10 @@ class fieldData(UPPData):
         cmr = self.values(name='clwmr', level='850mb', one_lev=False)
         rmr = self.values(name='rwmr', level='850mb', one_lev=False)
 
-        dp = 5000. # temorary val for pressure level thickness
+        dp = 2500. # temorary val for pressure level thickness
         g = 9.81 # gravity
         slw2 = np.where((t < 0.0), cmr+rmr, 0.0)
         slw = dp / g * np.sum(slw2, axis=0)
-        print(f'in supercooled_liquid_water: slw = {slw}')
-        print(f'min and max of slw2: {np.min(slw2)}, {np.max(slw2)}')
-        print(f'min and max of slw: {np.min(slw)}, {np.max(slw)}')
 
         return slw
 
