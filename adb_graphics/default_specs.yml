@@ -298,15 +298,7 @@ cloudcover:
     ncl_name: TCDC_P0_L10_{grid}
     title: Total Cloud Cover
 clwmr: # Cloud water Mixing Ratio
-  300mb:
-    ncl_name: CLWMR_P0_L100_{grid}
-  500mb:
-    ncl_name: CLWMR_P0_L100_{grid}
-  700mb:
-    ncl_name: CLWMR_P0_L100_{grid}
   850mb:
-    ncl_name: CLWMR_P0_L100_{grid}
-  925mb:
     ncl_name: CLWMR_P0_L100_{grid}
 #    ncl_name: CLWMR_P0_L105_GLC0  # wrfnat test
 cref: # Composite reflectivity
@@ -779,15 +771,7 @@ rvil: # Radar-derived Vertically Integrated Liquid
     title: Radar-derived Vertically Integrated Liquid
     unit: kg/m^2
 rwmr: # Rain Mixing Ratio
-  300mb:
-    ncl_name: RWMR_P0_L100_{grid}
-  500mb:
-    ncl_name: RWMR_P0_L100_{grid}
-  700mb:
-    ncl_name: RWMR_P0_L100_{grid}
   850mb:
-    ncl_name: RWMR_P0_L100_{grid}
-  925mb:
     ncl_name: RWMR_P0_L100_{grid}
 #    ncl_name: RWMR_P0_L105_GLC0 # wrfnat test
 shear:
