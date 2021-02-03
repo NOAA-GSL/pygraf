@@ -417,7 +417,7 @@ class fieldData(UPPData):
 
         return grid_info
 
-    def supercooled_liquid_water(self, values) -> np.ndarray:
+    def supercooled_liquid_water(self, values, **kwargs) -> np.ndarray:
 
         # pylint: disable=unused-argument
 
@@ -425,14 +425,25 @@ class fieldData(UPPData):
         Generates a field of Supercooled Liquid Water
         '''
 
-        t = self.values(name='temp', level='850mb', one_lev=False)
-        cmr = self.values(name='clwmr', level='850mb', one_lev=False)
-        rmr = self.values(name='rwmr', level='850mb', one_lev=False)
+        ps = self.values(name='pres', level='sfc') * 100. # convert back to Pa
+        p = self.values(name='pres', level='ua', one_lev=False)
+        t = self.values(name='temp', level='ua', one_lev=False)
+        cmr = self.values(name='clwmr', level='ua', one_lev=False)
+        rmr = self.values(name='rwmr', level='ua', one_lev=False)
 
-        dp = 2500. # temorary val for pressure level thickness
         g = 9.81 # gravity
-        slw2 = np.where((t < 0.0), cmr+rmr, 0.0)
-        slw = dp / g * np.sum(slw2, axis=0)
+        slw = ps * 0.
+
+        nlevs = np.shape(p)[0]
+        for n in range(nlevs):
+            if n == 0:
+                dp = 2 * (ps[:, :] - p[n, :, :])
+                Pm = ps - dp
+            else:
+                dp = 2 * (Pm[:, :] - p[n, :, :])
+                Pm = Pm - dp
+            slw2 = np.where((t[n, :, :] < 0.0), cmr[n, :, :]+rmr[n, :, :], 0.0)
+            slw = slw + dp / g * slw2
 
         return slw
 

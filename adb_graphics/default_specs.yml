@@ -298,9 +298,8 @@ cloudcover:
     ncl_name: TCDC_P0_L10_{grid}
     title: Total Cloud Cover
 clwmr: # Cloud water Mixing Ratio
-  850mb:
-    ncl_name: CLWMR_P0_L100_{grid}
-#    ncl_name: CLWMR_P0_L105_GLC0  # wrfnat test
+  ua:
+    ncl_name: CLWMR_P0_L105_{grid}  # wrfnat
 cref: # Composite reflectivity
   sfc:
     <<: *refl
@@ -771,9 +770,8 @@ rvil: # Radar-derived Vertically Integrated Liquid
     title: Radar-derived Vertically Integrated Liquid
     unit: kg/m^2
 rwmr: # Rain Mixing Ratio
-  850mb:
-    ncl_name: RWMR_P0_L100_{grid}
-#    ncl_name: RWMR_P0_L105_GLC0 # wrfnat test
+  ua:
+    ncl_name: RWMR_P0_L105_{grid} # wrfnat
 shear:
   01km: &shear # 0-1 km
     clevs: !!python/object/apply:numpy.arange [5, 91, 5]
@@ -1010,7 +1008,6 @@ temp: # Temperature
       pres_sfc:
         hatches: ['', '...']
         levels: [0, 925]
-#    ncl_name: TMP_P0_L105_GLC0 # 2m Temp - wrfnat test
   sfc:
     clevs: !!python/object/apply:numpy.arange [-60, 120, 10]
     cmap: jet
@@ -1022,6 +1019,9 @@ temp: # Temperature
     wind: False
   ua:
     <<: *ua_temp
+    ncl_name:
+      prs: TMP_P0_L100_{grid}
+      nat: TMP_P0_L105_{grid}
 thick:
   500mb:
     <<: *ua_gh
