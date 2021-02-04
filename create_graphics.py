@@ -64,7 +64,7 @@ def create_maps(cla, fhr, grib_path, workdir):
                     msg = f'graphics: {variable} {level}'
                     raise errors.NoGraphicsDefinitionForVariable(msg)
 
-                args.append((fhr, gribfile.contents, level, spec,
+                args.append((cla, fhr, gribfile.contents, level, spec,
                              variable, workdir, tile))
 
         print(f'Queueing {len(args)} maps')
@@ -284,7 +284,7 @@ def parse_args():
         )
     return parser.parse_args()
 
-def parallel_maps(fhr, ds, level, spec, variable, workdir,
+def parallel_maps(cla, fhr, ds, level, spec, variable, workdir,
                   tile='full'):
 
     # pylint: disable=too-many-arguments,too-many-locals
@@ -309,6 +309,7 @@ def parallel_maps(fhr, ds, level, spec, variable, workdir,
     field = grib.fieldData(
         ds=ds,
         fhr=fhr,
+        filetype=cla.file_type,
         level=level,
         short_name=variable,
         )

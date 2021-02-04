@@ -299,7 +299,9 @@ cloudcover:
     title: Total Cloud Cover
 clwmr: # Cloud water Mixing Ratio
   ua:
-    ncl_name: CLWMR_P0_L105_{grid}  # wrfnat
+    ncl_name: 
+      nat: CLWMR_P0_L105_{grid}
+      prs: CLWMR_P0_L101_{grid}
 cref: # Composite reflectivity
   sfc:
     <<: *refl
@@ -632,7 +634,9 @@ pres:
     transform: conversions.pa_to_hpa
     unit: hPa
   ua:
-    ncl_name: PRES_P0_L105_{grid}
+    ncl_name:
+      nat: PRES_P0_L105_{grid}
+      prs: PRES_P0_L101_{grid}
 ptmp: # Potential temperature
   2m:
     clevs: !!python/object/apply:numpy.arange [210, 350, 5]
@@ -771,7 +775,9 @@ rvil: # Radar-derived Vertically Integrated Liquid
     unit: kg/m^2
 rwmr: # Rain Mixing Ratio
   ua:
-    ncl_name: RWMR_P0_L105_{grid} # wrfnat
+    ncl_name:
+      nat: RWMR_P0_L105_{grid}
+      prs: RWMR_P0_L101_{grid}
 shear:
   01km: &shear # 0-1 km
     clevs: !!python/object/apply:numpy.arange [5, 91, 5]
@@ -1019,9 +1025,6 @@ temp: # Temperature
     wind: False
   ua:
     <<: *ua_temp
-    ncl_name:
-      prs: TMP_P0_L100_{grid}
-      nat: TMP_P0_L105_{grid}
 thick:
   500mb:
     <<: *ua_gh
