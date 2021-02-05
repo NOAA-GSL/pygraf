@@ -301,11 +301,6 @@ clwmr: # Cloud water Mixing Ratio
     ncl_name: 
       nat: CLWMR_P0_L105_{grid}
       prs: CLWMR_P0_L100_{grid}
-cref: # Composite reflectivity
-  sfc:
-    <<: *refl
-    ncl_name: REFC_P0_L10_{grid}
-    title: Composite Reflectivity
 cpofp: # Frozen Precipitation Percentage
   sfc:
     clevs: [-0.1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
@@ -640,8 +635,7 @@ pres:
     transform: conversions.pa_to_hpa
     unit: hPa
   ua:
-    ncl_name:
-      nat: PRES_P0_L105_{grid}
+    ncl_name: PRES_P0_L105_{grid}
 ptmp: # Potential temperature
   2m:
     clevs: !!python/object/apply:numpy.arange [210, 350, 5]

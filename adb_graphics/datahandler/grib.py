@@ -457,27 +457,40 @@ class fieldData(UPPData):
 
         '''
         Generates a field of Supercooled Liquid Water
+
+        This method uses wrfnat data to find regions where
+        cloud and rain moisture are in below-freezing temps.
+
+        Because pressures represent mid-layer values, the calculation
+        works from the surface and (1) computes the depth of a pressure layer,
+        and (2) computes supercooled liquid water for the layer and sums the
+        columns, and (3) uses the layer depth to find the pressure at the
+        next sigma level.
+
+        The process is iterative to the topof the atmosphere.
         '''
 
-        ps = self.values(name='pres', level='sfc') * 100. # convert back to Pa
-        p = self.values(name='pres', level='ua', one_lev=False)
-        t = self.values(name='temp', level='ua', one_lev=False)
-        cmr = self.values(name='clwmr', level='ua', one_lev=False)
-        rmr = self.values(name='rwmr', level='ua', one_lev=False)
+        pres_sfc = self.values(name='pres', level='sfc') * 100. # convert back to Pa
+        pres_nat_lev = self.values(name='pres', level='ua', one_lev=False)
+        temp = self.values(name='temp', level='ua', one_lev=False)
+        cloud_mixing_ratio = self.values(name='clwmr', level='ua', one_lev=False)
+        rain_mixing_ratio = self.values(name='rwmr', level='ua', one_lev=False)
 
-        g = 9.81 # gravity
-        slw = ps * 0.
+        gravity = 9.81
+        slw = pres_sfc * 0. # start with array of zero values
 
-        nlevs = np.shape(p)[0]
+        nlevs = np.shape(pres_nat_lev)[0] # determine number of vertical levels
         for n in range(nlevs):
             if n == 0:
-                dp = 2 * (ps[:, :] - p[n, :, :])
-                Pm = ps - dp
+                pres_layer = 2 * (pres_sfc[:, :] - pres_nat_lev[n, :, :])  # layer depth
+                pres_sigma = pres_sfc - pres_layer        # pressure at next sigma level
             else:
-                dp = 2 * (Pm[:, :] - p[n, :, :])
-                Pm = Pm - dp
-            slw2 = np.where((t[n, :, :] < 0.0), cmr[n, :, :]+rmr[n, :, :], 0.0)
-            slw = slw + dp / g * slw2
+                pres_layer = 2 * (pres_sigma[:, :] - pres_nat_lev[n, :, :]) # layer depth
+                pres_sigma = pres_sigma - pres_layer       # pressure at next sigma level
+            # compute supercooled water in layer and add to previous values
+            supercool_locs = np.where((temp[n, :, :] < 0.0), \
+                             cloud_mixing_ratio[n, :, :]+rain_mixing_ratio[n, :, :], 0.0)
+            slw = slw + pres_layer / gravity * supercool_locs
 
         return slw
 
