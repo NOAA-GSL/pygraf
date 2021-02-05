@@ -1,174 +1,111 @@
 hourly:
   model: hrrr
   variables:
-    1hsnw:
+#    ptyp:
+#      - sfc
+#    rvil:
+#      - sfc
+    slw:
       - sfc
-    1ref:
-      - 1000m
-    acfrozr:
-      - sfc
-    acfrzr:
-      - sfc
-    acpcp:
-      - sfc
-    acsnod:
-      - sfc
-    acsnw:
-      - sfc
-    cape:
-      - mu
-      - mul
-      - mx90mb
-      - sfc
-    ceil:
-      - ua
-    ceilexp:
-      - ua
-    ceilexp2:
-      - ua
-    cin:
-      - sfc
-    cloudcover:
-      - bndylay
-      - high
-      - low
-      - mid
-      - total
-    cpofp:
-      - sfc
-    cref:
-      - sfc
-    ctop:
-      - ua
-    dewp:
-      - 2m
-    echotop:
-      - sfc
-    flru:
-      - sfc
-    G113bt:
-      - sat
-    G114bt:
-      - sat
-    G123bt:
-      - sat
-    G124bt:
-      - sat
-    gust:
-      - 10m
-    hail:
-      - max
-      - maxsfc
-    hailcast:
-      - maxsfc
-    hlcy:
-      - in16
-      - in25
-      - mn02
-      - mn03
-      - mn16
-      - mn25
-      - mx02
-      - mx03
-      - mx16
-      - mx25
-      - sr01
-      - sr03
-    hpbl:
-      - sfc
-    lcl:
-      - sfc
-    lhtfl:
-      - sfc
-    li:
-      - best
-      - sfc
-    ltg3:
-      - sfc
-    mref:
-      - sfc
-    pres:
-      - msl
-      - sfc
-    ptmp:
-      - 2m
-    pwtr:
-      - sfc
-    ref:
-      - m10
-      - maxm10
-    rh:
-      - 2m
-      - 850mb
-      - mean
-      - pw
-    rvil:
-      - sfc
-    shear:
-      - 01km
-      - 06km
-    shtfl:
-      - sfc
-    snod:
-      - sfc
-    soilm:
-      - sfc
-    soilt: &soilt_levs
-      - 0cm
-      - 1cm
-      - 4cm
-      - 10cm
-      - 30cm
-      - 60cm
-      - 1m
-      - 1.6m
-      - 3m
-    soilw: *soilt_levs
-    solar:
-      - sfc
-    ssrun:
-      - sfc
-    temp:
-      - 2ds
-      - 2m
-      - 500mb
-      - 700mb
-      - 850mb
-      - 925mb
-      - sfc
-    totp:
-      - sfc
-    ulwrf:
-      - sfc
-      - top
-    uswrf:
-      - sfc
-      - top
-    vbdsf:
-      - sfc
-    vddsf:
-      - sfc
-    vig:
-      - sfc
-    vil:
-      - sfc
-    vis:
-      - sfc
-    vort:
-      - 500mb
-    vvel:
-      - 700mb
-      - mean
-    vvort:
-      - mx01
-      - mx02
-    weasd:
-      - sfc
-    wspeed:
-      - 10m
-      - 80m
-      - 250mb
-      - 850mb
-      - max
-      - mdn
-      - mup
+#    ssrun:
+#      - sfc
+#    flru:
+#      - sfc
+#    totp:
+#      - sfc
+#    wspeed:
+#      - 250mb
+#    acpcp:
+#      - sfc
+#    gh:
+#      - 500mb
+#      - 1000mb
+#    thick:
+#      - 500mb
+#    ceil:
+#      - ua
+#    u:
+#      - 10m
+#    v:
+#      - 10m
+#    acsnw:
+#      - sfc
+#    acsnod:
+#      - sfc
+#    weasd:
+#      - sfc
+#    rh:
+#      - 2m
+#      - 500mb
+#      - 700mb
+#      - 850mb
+#    temp:
+#      - 2ds
+#      - 2m
+#      - 500mb
+#      - 700mb
+#      - 850mb
+#      - 925mb
+#      - sfc
+#    vort:
+#      - 500mb
+#    vvel:
+#      - 700mb
+#    hlcy:
+#      - sr03
+#      - in16
+#      - in25
+#      - mx02
+#      - mx03
+#      - mx16
+#    dewp:
+#      - 2m
+#    gust:
+#      - 10m
+#    vvort:
+#      - mx01
+#      - mx02
+#    cape:
+#      - sfc
+#      - mu
+#      - mul
+#      - mx90mb
+#    cin:
+#      - sfc
+#    cloudcover:
+#      - high
+#      - low
+#      - mid
+#      - total
+#    lcl:
+#      - sfc
+#    vil:
+#      - sfc
+#    soilt: &soilt_levs
+#      - 0cm
+#      - 1cm
+#      - 4cm
+#      - 10cm
+#      - 30cm
+#      - 60cm
+#      - 1m
+#      - 1.6m
+#      - 3m
+#    G113bt:
+#      - sat
+#    G114bt:
+#      - sat
+#    G123bt:
+#      - sat
+#    G124bt:
+#      - sat
+#    ceil:
+#      - ua
+#    ceilexp:
+#      - ua
+#    ceilexp2:
+#      - ua
+#    ctop:
+#      - ua
+#    solar:
+#      - sfc
