@@ -84,7 +84,6 @@
     ticks: 5
     title: 1 km agl Reflectivity
     unit: dBZ
-    vertical_level_name: lv_HTGL7
 acfrozr: # Run Total Graupel
   sfc: &graupel
     clevs: [0.002, 0.01, 0.05, 0.1, 0.25, 0.5, 0.75, 1, 2]
@@ -268,7 +267,7 @@ cin: # Surface Convective Inhibition
     <<: *sfc_cin
     title: Surface CIN < -50
 cloudcover:
-  blcc: &cld_cover # PBL ... 1 km Cloud Cover
+  bndylay: &cld_cover # PBL ... 1 km Cloud Cover
     clevs: [2, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95]
     cmap: gist_ncar
     colors: cldcov_colors
@@ -295,7 +294,7 @@ cloudcover:
     title: Mid-Level Cloud Cover
   total:
     <<: *cld_cover
-    ncl_name: TCDC_P0_L10_{grid}
+    ncl_name: TCDC_P0_L{level_type}_{grid}
     title: Total Cloud Cover
 clwmr: # Cloud water Mixing Ratio
   ua:
@@ -319,6 +318,11 @@ cpofp: # Frozen Precipitation Percentage
 crain: # Categorical Rain
   sfc:
     ncl_name: CRAIN_P0_L1_{grid}
+cref: # Composite reflectivity
+  sfc:
+    <<: *refl
+    ncl_name: REFC_P0_L{level_type}_{grid}
+    title: Composite Reflectivity
 csnow: # Categorical Snow
   sfc:
     ncl_name: CSNOW_P0_L1_{grid}
@@ -629,7 +633,9 @@ pres:
     clevs: !!python/object/apply:numpy.arange [650, 1051, 4]
     cmap: gist_ncar
     colors: ps_colors
-    ncl_name: MSLMA_P0_L101_{grid}
+    ncl_name:
+      hrrr: MSLMA_P0_L101_{grid}
+      rrfs: PRMSL_P0_L101_{grid}
     ticks: 20
     transform: conversions.pa_to_hpa
     unit: hPa
@@ -738,6 +744,20 @@ rh: # Relative Humidity
       pres_sfc:
         hatches: ['', '...']
         levels: [0, 500]
+  525mb:
+    <<: *rh_ua
+  550mb:
+    <<: *rh_ua
+  575mb:
+    <<: *rh_ua
+  600mb:
+    <<: *rh_ua
+  625mb:
+    <<: *rh_ua
+  650mb:
+    <<: *rh_ua
+  675mb:
+    <<: *rh_ua
   700mb:
     <<: *rh_ua
     contours:
@@ -749,6 +769,16 @@ rh: # Relative Humidity
       pres_sfc:
         hatches: ['', '...']
         levels: [0, 700]
+  725mb:
+    <<: *rh_ua
+  750mb:
+    <<: *rh_ua
+  775mb:
+    <<: *rh_ua
+  800mb:
+    <<: *rh_ua
+  825mb:
+    <<: *rh_ua
   850mb:
     <<: *rh_ua
     contours:
@@ -760,6 +790,17 @@ rh: # Relative Humidity
       pres_sfc:
         hatches: ['', '...']
         levels: [0, 850]
+  mean: # Mean RH 850mb to 500mb
+    <<: *rh
+    print_units: false
+    title: Mean 850-500mb Relative Humidity (%, shaded), 700mb Wind (kt)
+    transform: 
+      funcs: field_mean
+      kwargs:
+        variable: rh
+        levels: [500mb, 525mb, 550mb, 575mb, 600mb, 625mb, 650mb, 675mb, 700mb, 725mb, 750mb, 775mb, 800mb, 825mb, 850mb]
+    vertical_index: 0 # Not used in mean computation, but is used to initialize new array for summing levels
+    wind: 700mb
   pw: # RH wrt Precipitable Water
     <<: *rh
     ncl_name: RHPW_P0_L10_{grid}
@@ -769,7 +810,7 @@ rvil: # Radar-derived Vertically Integrated Liquid
     clevs: [0.05, 0.15, 0.76, 3.47, 6.92, 12, 31.6, 35, 40, 45, 50, 55, 60, 65, 70]
     cmap: NWSReflectivity
     colors: cref_colors
-    ncl_name: VIL_P0_L10_{grid}
+    ncl_name: VIL_P0_L{level_type}_{grid}
     ticks: 0
     title: Radar-derived Vertically Integrated Liquid
     unit: kg/m^2
@@ -983,13 +1024,6 @@ temp: # Temperature
       pres_sfc:
         hatches: ['', '...']
         levels: [0, 700]
-    ncl_name:
-      prs: TMP_P0_L100_{grid}
-      nat: TMP_P0_L105_{grid}
-    ticks: 5
-    transform: conversions.k_to_c
-    unit: C
-    wind: True
   850mb:
     <<: *ua_temp
     clevs: !!python/object/apply:numpy.arange [-40, 40, 2.5]
@@ -1127,11 +1161,6 @@ vddsf: # Incoming Diffuse Radiation
     <<: *incoming_radiation
     ncl_name: VDDSF_P0_L1_{grid}
     title: Incoming Diffuse Radiation
-vil: # Vertically Integrated Liquid
-  sfc:
-    <<: *vert_int_liq
-    ncl_name: VAR_0_16_201_P0_L10_{grid}
-    title: Vertically Integrated Liquid
 vig: # Vertically-integrated graupel
   sfc:
     clevs: !!python/object/apply:numpy.arange [5, 91, 5]
@@ -1141,6 +1170,11 @@ vig: # Vertically-integrated graupel
     ticks: 0
     title: Max Vertically Integrated Graupel (over previous hour)
     unit: mm
+vil: # Vertically Integrated Liquid
+  sfc:
+    <<: *vert_int_liq
+    ncl_name: VAR_0_16_201_P0_L10_{grid}
+    title: Vertically Integrated Liquid
 vis: # Visibility
   sfc:
     clevs: [0.0625, 0.125, 0.25, 0.5, 1, 1.5, 2, 3, 4, 5, 10, 30, 50]

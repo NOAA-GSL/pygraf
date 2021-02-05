@@ -1,38 +1,35 @@
 hourly:
+  model: hrrr
   variables:
-    1hsm:
-      - sfc
     1hsnw:
       - sfc
+    1hsm:
+      - sfc
     1ref:
-      - sfc
+      - 1000m
     3hsm:
-      - sfc
-    6kshr:
-      - sfc
-    acfrzr:
       - sfc
     acfrozr:
       - sfc
-    acpcp:
-      - sfc
-    acsnod:
+    acfrzr:
       - sfc
     acp:
       - esbl
       - esblmn
       - sfc
+    acpcp:
+      - sfc
+    acsnod:
+      - sfc
     acsnw:
       - esbl
       - esblmn
       - sfc
-    blcc:
-      - sfc
     cape:
-      - sfc
       - mu
       - mul
       - mx90mb
+      - sfc
     ceil:
       - ua
     ceilexp:
@@ -42,6 +39,7 @@ hourly:
     cin:
       - sfc
     cloudcover:
+      - bndylay
       - high
       - low
       - mid
@@ -70,8 +68,8 @@ hourly:
     gust:
       - 10m
     hail:
-      - maxsfc
       - max
+      - maxsfc
     hailcast:
       - maxsfc
     hlcy:
@@ -134,9 +132,8 @@ hourly:
     rh:
       - 2m
       - 850mb
-      - ua
-    rhpw:
-      - sfc
+      - mean
+      - pw
     rvil:
       - sfc
     sfcp:
@@ -210,9 +207,9 @@ hourly:
       - sfc
     wspeed:
       - 10m
+      - 250mb
       - 80m
       - 850mb
-      - 250mb
       - max
       - mdn
       - mup

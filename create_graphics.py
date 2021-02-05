@@ -52,6 +52,7 @@ def create_maps(cla, fhr, grib_path, workdir):
     # Create the file object to load the contents
     gribfile = grib.GribFile(grib_path)
 
+    model = cla.images[0]
     for tile in cla.tiles:
         args = []
         for variable, levels in cla.images[1].items():
@@ -65,6 +66,7 @@ def create_maps(cla, fhr, grib_path, workdir):
                     raise errors.NoGraphicsDefinitionForVariable(msg)
 
                 args.append((cla, fhr, gribfile.contents, level, spec,
+                args.append((fhr, gribfile.contents, level, model, spec,
                              variable, workdir, tile))
 
         print(f'Queueing {len(args)} maps')
@@ -143,7 +145,7 @@ def load_images(arg):
     with open(image_file, 'r') as fn:
         images = yaml.load(fn, Loader=yaml.Loader)[image_set]
 
-    return [image_file, images.get('variables')]
+    return [images.get('model'), images.get('variables')]
 
 def load_sites(arg):
 
@@ -299,6 +301,7 @@ def parallel_maps(cla, fhr, ds, level, spec, variable, workdir,
       ds         xarray dataset from the grib file
       level      the vertical level of the variable to be plotted
                  corresponding to a key in the specs file
+      model      model name: rap, hrrr, rrfs, rtma
       spec       the dictionary of specifications for the given variable
                  and level
       variable   the name of the variable section in the specs file
@@ -311,6 +314,7 @@ def parallel_maps(cla, fhr, ds, level, spec, variable, workdir,
         fhr=fhr,
         filetype=cla.file_type,
         level=level,
+        model=model,
         short_name=variable,
         )
 
@@ -329,6 +333,7 @@ def parallel_maps(cla, fhr, ds, level, spec, variable, workdir,
                 ds=ds,
                 fhr=fhr,
                 level=lev,
+                model=model,
                 contour_kwargs=contour_kwargs,
                 short_name=var,
                 ))
@@ -343,6 +348,7 @@ def parallel_maps(cla, fhr, ds, level, spec, variable, workdir,
                 ds=ds,
                 fhr=fhr,
                 level=lev,
+                model=model,
                 contour_kwargs=hatch_kwargs,
                 short_name=var,
                 ))
@@ -396,7 +402,8 @@ def parallel_skewt(cla, fhr, ds, site, workdir):
     Input:
 
       cla        command line arguments Namespace object
-      grib_path  the full path to the grib file
+      ds         the XArray dataset
+      fhr        the forecast hour integer
       site       the string representation of the site from the sites file
       workdir    output directory
     '''
