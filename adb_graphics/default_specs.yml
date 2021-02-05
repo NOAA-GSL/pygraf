@@ -301,7 +301,7 @@ clwmr: # Cloud water Mixing Ratio
   ua:
     ncl_name: 
       nat: CLWMR_P0_L105_{grid}
-      prs: CLWMR_P0_L101_{grid}
+      prs: CLWMR_P0_L100_{grid}
 cref: # Composite reflectivity
   sfc:
     <<: *refl
@@ -636,7 +636,6 @@ pres:
   ua:
     ncl_name:
       nat: PRES_P0_L105_{grid}
-      prs: PRES_P0_L101_{grid}
 ptmp: # Potential temperature
   2m:
     clevs: !!python/object/apply:numpy.arange [210, 350, 5]
@@ -777,7 +776,7 @@ rwmr: # Rain Mixing Ratio
   ua:
     ncl_name:
       nat: RWMR_P0_L105_{grid}
-      prs: RWMR_P0_L101_{grid}
+      prs: RWMR_P0_L100_{grid}
 shear:
   01km: &shear # 0-1 km
     clevs: !!python/object/apply:numpy.arange [5, 91, 5]
