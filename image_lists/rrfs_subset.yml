@@ -1,16 +1,10 @@
 hourly:
-  model: rap
+  model: rrfs
   variables:
     1hsnw:
       - sfc
-    acp:
-      - sfc
-    acsnw:
-      - sfc
-    acfrozr:
-      - sfc
-    acfrzr:
-      - sfc
+    1ref:
+      - 1000m
     acpcp:
       - sfc
     cape:
@@ -18,11 +12,7 @@ hourly:
       - mul
       - mx90mb
       - sfc
-    cctop:
-      - ua
     ceil:
-      - ua
-    ctop:
       - ua
     cin:
       - sfc
@@ -33,51 +23,37 @@ hourly:
       - total
     cref:
       - sfc
+    ctop:
+      - ua
     dewp:
       - 2m
-    ectp:
-      - sfc
     flru:
       - sfc
     gust:
       - 10m
-    hpbl:
+    hlcy:
+      - sr01
+      - sr03
+    lcl:
       - sfc
     lhtfl:
       - sfc
-    ltng:
-      - sfc
-    pchg:
-      - sfc
-    ptemp:
-      - 2m
-    ptyp:
+    li:
+      - best
+    pres:
       - sfc
     pwtr:
       - sfc
     rh:
       - 2m
       - 850mb
-      - mean
-    rhpw:
-      - sfc
     rvil:
       - sfc
     shtfl:
       - sfc
-    snod:
-      - sfc
-    soilt: &soilt_levs
-      - 1cm
-      - 4cm
-      - 10cm
-    soilw:
-      <<: *soilt_levs
-      - 0cm
     solar:
       - sfc
     temp:
-      - 2ds
       - 2m
       - 500mb
       - 700mb
@@ -88,27 +64,16 @@ hourly:
       - sfc
     ulwrf:
       - sfc
-      - nta
     uswrf:
-      - sfc
-      - nta
-    vil:
       - sfc
     vis:
       - sfc
-    vort:
-      - 500mb
     vvel:
       - 700mb
-    wchg:
-      - 80m
-    wind:
-      - 10m
-      - 80m
-      - 850mb
-      - 250mb
-    wmag:
-      - 250mb
-      - 850mb
     weasd:
       - sfc
+    wspeed:
+      - 10m
+      - 80m
+      - 250mb
+      - 850mb
