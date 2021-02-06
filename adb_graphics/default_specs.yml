@@ -296,6 +296,11 @@ cloudcover:
     <<: *cld_cover
     ncl_name: TCDC_P0_L{level_type}_{grid}
     title: Total Cloud Cover
+clwmr: # Cloud water Mixing Ratio
+  ua:
+    ncl_name: 
+      nat: CLWMR_P0_L105_{grid}
+      prs: CLWMR_P0_L100_{grid}
 cpofp: # Frozen Precipitation Percentage
   sfc:
     clevs: [-0.1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
@@ -802,6 +807,11 @@ rvil: # Radar-derived Vertically Integrated Liquid
     ticks: 0
     title: Radar-derived Vertically Integrated Liquid
     unit: kg/m^2
+rwmr: # Rain Mixing Ratio
+  ua:
+    ncl_name:
+      nat: RWMR_P0_L105_{grid}
+      prs: RWMR_P0_L100_{grid}
 shear:
   01km: &shear # 0-1 km
     clevs: !!python/object/apply:numpy.arange [5, 91, 5]
@@ -833,6 +843,16 @@ shtfl: # Sensible Heat Net Flux
     ticks: 0
     title: Sensible Heat Net Flux
     unit: W/m^2
+slw: # Supercooled Liquid Water
+  sfc:
+    clevs: [0.05, 0.1, 0.2, .3, .4, .5, .75, 1., 1.25, 1.5, 2., 3., 4., 5., 6.]
+    cmap: NWSReflectivity
+    colors: cref_colors
+    ncl_name: VIL_P0_L10_{grid}
+    ticks: 0
+    title: Supercooled Liquid Water
+    transform: supercooled_liquid_water
+    unit: kg/m^2
 snod: # Snow Depth
   sfc:
     <<: *snow
