@@ -146,9 +146,12 @@ class UPPData(specs.VarSpec):
 
     def __init__(self, ds, short_name, **kwargs):
 
+
         # Parse kwargs first
         config = kwargs.get('config', 'adb_graphics/default_specs.yml')
+        self.model = kwargs.get('model')
         self.filetype = kwargs.get('filetype', 'prs')
+
 
         specs.VarSpec.__init__(self, config)
 
@@ -217,15 +220,26 @@ class UPPData(specs.VarSpec):
 
         return values - self.values(name=variable2, level=level2)
 
+    def field_mean(self, values, variable, levels, **kwargs) -> np.ndarray:
+
+        # pylint: disable=unused-argument
+
+        ''' Returns the mean of the values. '''
+
+        fsum = np.zeros_like(values)
+        for level in levels:
+            fsum = fsum + self.values(name=variable, level=level)
+
+        return fsum / len(levels)
+
     def get_field(self, ncl_name):
 
         ''' Given an ncl_name, return the NioVariable object. '''
 
         try:
-            field = self.ds[ncl_name]
+            field = self.ds[ncl_name.format(level_type=self.level_type)]
         except KeyError:
             raise errors.GribReadError(f'{ncl_name}')
-
         return field
 
     def get_level(self, field, level, spec):
@@ -308,14 +322,34 @@ class UPPData(specs.VarSpec):
 
         return self.field.level_type
 
+    @property
+    def level_type(self):
+
+        ''' Returns a Grib2 code for type of level. 10 is used for
+        entire atmosphere in HRRR, while 200 is used in RRFS. '''
+
+        if self.filetype == 'prs':
+            if self.model == 'rrfs':
+                return 200
+            return 10
+        return 105
+
     def ncl_name(self, spec: dict):
 
-        ''' Get the ncl_name from the specified dict. '''
+        ''' Get the ncl_name from the specified spec dict. '''
 
         name = spec.get('ncl_name')
+
         if isinstance(name, dict):
-            name = name.get(self.filetype)
-        return name.format(fhr=self.fhr, grid=self.grid_suffix)
+            if self.model in name.keys():
+                name = name.get(self.model)
+            else:
+                name = name.get(self.filetype)
+        # The level_type for the entire atmosphere could be L10 or L200. Thanks
+        # Grib2! Handle that in "try" statement when reading file.
+        return name.format(fhr=self.fhr,
+                           grid=self.grid_suffix,
+                           level_type=self.level_type)
 
     def numeric_level(self, index_match=True, level=None):
 
@@ -508,6 +542,49 @@ class fieldData(UPPData):
 
         return grid_info
 
+    def supercooled_liquid_water(self, values, **kwargs) -> np.ndarray:
+
+        # pylint: disable=unused-argument
+
+        '''
+        Generates a field of Supercooled Liquid Water
+
+        This method uses wrfnat data to find regions where
+        cloud and rain moisture are in below-freezing temps.
+
+        Because pressures represent mid-layer values, the calculation
+        works from the surface and (1) computes the depth of a pressure layer,
+        and (2) computes supercooled liquid water for the layer and sums the
+        columns, and (3) uses the layer depth to find the pressure at the
+        next sigma level.
+
+        The process is iterative to the topof the atmosphere.
+        '''
+
+        pres_sfc = self.values(name='pres', level='sfc') * 100. # convert back to Pa
+        pres_nat_lev = self.values(name='pres', level='ua', one_lev=False)
+        temp = self.values(name='temp', level='ua', one_lev=False)
+        cloud_mixing_ratio = self.values(name='clwmr', level='ua', one_lev=False)
+        rain_mixing_ratio = self.values(name='rwmr', level='ua', one_lev=False)
+
+        gravity = 9.81
+        slw = pres_sfc * 0. # start with array of zero values
+
+        nlevs = np.shape(pres_nat_lev)[0] # determine number of vertical levels
+        for n in range(nlevs):
+            if n == 0:
+                pres_layer = 2 * (pres_sfc[:, :] - pres_nat_lev[n, :, :])  # layer depth
+                pres_sigma = pres_sfc - pres_layer        # pressure at next sigma level
+            else:
+                pres_layer = 2 * (pres_sigma[:, :] - pres_nat_lev[n, :, :]) # layer depth
+                pres_sigma = pres_sigma - pres_layer       # pressure at next sigma level
+            # compute supercooled water in layer and add to previous values
+            supercool_locs = np.where((temp[n, :, :] < 0.0), \
+                             cloud_mixing_ratio[n, :, :]+rain_mixing_ratio[n, :, :], 0.0)
+            slw = slw + pres_layer / gravity * supercool_locs
+
+        return slw
+
     @property
     def ticks(self) -> int:
 
@@ -532,20 +609,32 @@ class fieldData(UPPData):
 
         Optional Input:
             name       the name of a field other than defined in self
-            level      the level of the alternate field to use
+            level      the desired level of the named field
+
+        Keyword Args:
+            ncl_name        the NCL-assigned Grib2 name
+            one_lev    bool flag. if True, get the single level of the variable
+            vertical_index  the index (int) of the desired vertical level
         '''
 
         level = level if level else self.level
 
+        one_lev = kwargs.get('one_lev', True)
         vertical_index = kwargs.get('vertical_index')
 
         ncl_name = kwargs.get('ncl_name', '')
         ncl_name = ncl_name.format(fhr=self.fhr, grid=self.grid_suffix)
 
+
         if name is None and not ncl_name:
+
+            # Use field and spec from the current object
             field = self.field
             spec = self.vspec
+
         else:
+
+            # Get the spec dict and ncl_name for the given variable name
             spec = self.spec.get(name, {}).get(level, {})
             if not spec and name is not None:
                 raise errors.NoGraphicsDefinitionForVariable(name, level)
@@ -553,12 +642,15 @@ class fieldData(UPPData):
 
         if len(field.shape) == 2:
             vals = field[::]
-        elif len(field.shape) == 3:
 
-            lev = vertical_index
-            if vertical_index is None:
-                lev = self.get_level(field, level, spec)
-            vals = field[lev, :, :]
+        elif len(field.shape) == 3:
+            if one_lev:
+                lev = vertical_index
+                if vertical_index is None:
+                    lev = self.get_level(field, level, spec)
+                vals = field[lev, :, :]
+            else:
+                vals = field[:, :, :]
 
         transforms = spec.get('transform')
         if transforms:

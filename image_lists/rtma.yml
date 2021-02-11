@@ -1,29 +1,23 @@
 hourly:
-  model: rap
+  model: rtma
   variables:
-    1hsnw:
-      - sfc
-    acp:
-      - sfc
-    acsnw:
-      - sfc
-    acfrozr:
-      - sfc
-    acfrzr:
-      - sfc
-    acpcp:
-      - sfc
+#    1hsm:
+#      - sfc
+    1ref:
+      - 1000m
+#    3hsm:
+#      - sfc
     cape:
       - mu
       - mul
       - mx90mb
       - sfc
-    cctop:
-      - ua
     ceil:
       - ua
-    ctop:
+    ceilexp:
       - ua
+#    ceilexp2:
+#      - ua
     cin:
       - sfc
     cloudcover:
@@ -31,49 +25,75 @@ hourly:
       - low
       - mid
       - total
+    cpofp:
+      - sfc
     cref:
       - sfc
+    ctop:
+      - ua
     dewp:
       - 2m
-    ectp:
+    echotop:
       - sfc
     flru:
       - sfc
+    G113bt:
+      - sat
+    G114bt:
+      - sat
+    G123bt:
+      - sat
+    G124bt:
+      - sat
     gust:
       - 10m
+    hlcy:
+      - in16
+      - in25
+      - sr01
+      - sr03
     hpbl:
+      - sfc
+    lcl:
       - sfc
     lhtfl:
       - sfc
-    ltng:
+    li:
+      - best
       - sfc
-    pchg:
+    ltg3:
       - sfc
-    ptemp:
+#    mnvv:
+#      - sfc
+    mref:
+      - sfc
+    pres:
+      - msl
+      - sfc
+    ptmp:
       - 2m
-    ptyp:
-      - sfc
+#    ptyp:
+#      - sfc
     pwtr:
       - sfc
+    ref:
+      - m10
     rh:
       - 2m
       - 850mb
-      - mean
-    rhpw:
-      - sfc
+#      - ua
+      - pw
     rvil:
       - sfc
+    shear:
+      - 01km
+      - 06km
     shtfl:
       - sfc
     snod:
       - sfc
-    soilt: &soilt_levs
-      - 1cm
-      - 4cm
-      - 10cm
-    soilw:
-      <<: *soilt_levs
-      - 0cm
+    soilm:
+      - sfc
     solar:
       - sfc
     temp:
@@ -84,14 +104,16 @@ hourly:
       - 850mb
       - 925mb
       - sfc
-    totp:
-      - sfc
     ulwrf:
       - sfc
-      - nta
+      - top
     uswrf:
       - sfc
-      - nta
+      - top
+    vbdsf:
+      - sfc
+    vddsf:
+      - sfc
     vil:
       - sfc
     vis:
@@ -100,15 +122,13 @@ hourly:
       - 500mb
     vvel:
       - 700mb
-    wchg:
-      - 80m
-    wind:
-      - 10m
-      - 80m
-      - 850mb
-      - 250mb
-    wmag:
-      - 250mb
-      - 850mb
     weasd:
       - sfc
+    wspeed:
+      - 10m
+      - 80m
+      - 250mb
+      - 850mb
+#    wpwr:
+#      - 80m
+

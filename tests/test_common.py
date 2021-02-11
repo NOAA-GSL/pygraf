@@ -133,6 +133,7 @@ class TestDefaultSpecs():
             'hatches': self.is_a_contourf_dict,
             'labels': self.is_a_contourf_dict,
             'ncl_name': True,
+            'print_units': True,
             'ticks': self.is_number,
             'title': self.is_string,
             'transform': self.check_transform,
@@ -349,7 +350,7 @@ class TestDefaultSpecs():
         allowed_levels = [
             'agl',     # above ground level
             'best',    # Best
-            'blcc',    # boundary layer cld cover
+            'bndylay', # boundary layer cld cover
             'esbl',    # ???
             'esblmn',  # ???
             'high',    # high clouds
