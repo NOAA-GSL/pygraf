@@ -67,32 +67,41 @@ class GribFiles():
         ''' Load the set of files into a single XArray structure. '''
 
         all_leads = []
+        var_names = self.variable_names
 
-        # 0h and 1h Forecast
-        all_leads.append(xr.open_mfdataset(
-            self.filenames['01fcst'],
-            backend_kwargs=dict(format="grib2"),
-            combine='nested',
-            compat='override',
-            concat_dim='fcst_hour',
-            coords='minimal',
-            data_vars=self.variable_names,
-            engine='pynio',
-            lock=False,
-            ).rename_vars(self.variable_names))
+        # 0h and 1h forecast variables are named like the keys in var_names,
+        # while the free forecast hours are named like the values in var_names.
+        # Need to do a bit of cleanup to get them into a single datastructure.
+        names = {
+            '01fcst': var_names,
+            'free_fcst': var_names.values(),
+            }
 
-        #
-        all_leads.append(xr.open_mfdataset(
-            self.filenames['free_fcst'],
-            backend_kwargs=dict(format="grib2"),
-            combine='nested',
-            compat='override',
-            coords='minimal',
-            concat_dim='fcst_hour',
-            data_vars=self.variable_names.values(),
-            engine='pynio',
-            lock=False,
-            ))
+        for fcst_type, vnames in names.items():
+
+            open_kwargs = dict(
+                backend_kwargs=dict(format="grib2"),
+                combine='nested',
+                compat='override',
+                concat_dim='fcst_hour',
+                coords='minimal',
+                data_vars=vnames,
+                engine='pynio',
+                lock=False,
+                )
+
+            if fcst_type == '01fcst':
+                if self.filenames.get(fcst_type):
+                    # Rename variables to match free forecast variables
+                    all_leads.append(xr.open_mfdataset(
+                        self.filenames[fcst_type],
+                        **open_kwargs,
+                        ).rename_vars(vnames))
+            else:
+                all_leads.append(xr.open_mfdataset(
+                    self.filenames[fcst_type],
+                    **open_kwargs,
+                    ))
 
         return xr.combine_nested(all_leads,
                                  compat='override',
