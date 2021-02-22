@@ -46,11 +46,14 @@ class GribFiles():
     ''' Class for loading in a set of grib files and combining them over
     forecast hours. '''
 
-    def __init__(self, filenames, filetype):
+    def __init__(self, coord_dims filenames, filetype):
 
         '''
         Arguments:
 
+          coord_dims  dict containing the name of the dimension to
+                      concat (key), and a list of its values (value).
+                        Ex: {'fhr': [2, 3, 4]}
           filenames   dict containing list of files names for the 0h and 1h
                       forecast lead times ('01fcst'), and all the free forecast
                       hours after that ('free_fcst').
@@ -59,6 +62,7 @@ class GribFiles():
         '''
         self.filenames = filenames
         self.filetype = filetype
+        self.coord_dims = coord_dims
         self.contents = self._load()
 
 
@@ -83,7 +87,7 @@ class GribFiles():
                 backend_kwargs=dict(format="grib2"),
                 combine='nested',
                 compat='override',
-                concat_dim='fcst_hour',
+                concat_dim=self.coord_dims.keys()[0],
                 coords='minimal',
                 data_vars=vnames,
                 engine='pynio',
@@ -103,12 +107,14 @@ class GribFiles():
                     **open_kwargs,
                     ))
 
-        return xr.combine_nested(all_leads,
-                                 compat='override',
-                                 concat_dim='fcst_hour',
-                                 coords='minimal',
-                                 data_vars='minimal',
+        ret = xr.combine_nested(all_leads,
+                                compat='override',
+                                concat_dim=self.coord_dims.keys()[0],
+                                coords='minimal',
+                                data_vars='minimal',
                                 )
+
+        return ret.assign_coords(self.coord_dims)
 
     @property
     def variable_names(self):
@@ -873,15 +879,18 @@ class profileData(UPPData):
 
         return conversions.magnitude(field1, field2)
 
-class timeLaggedData(fieldData):
+class multiDimFieldData(fieldData):
 
     '''
-    Class provides interface for accessing time lagged fields (2D plan view)
-    data from UPP in Grib2 format.
+    Class provides interface for accessing multi-dimensional fields (2D plan view)
+    data from UPP in Grib2 format. This could be time-lagged or standard
+    ensembles, all forecast lead times for a single cycle, or all cycles
+    at a given forecast time.
 
     Input:
+        concat_dim:  the name of dimension that has been used for
+                     combining files
         ds:          xarray dataset from full set of grib files
-        fcst_hours   list of forecast hours to include
         level:       level corresponding to entry in specs configuration, likely
                      esbl or total
         name:        name of variable corresponding to entry in specs configuration
@@ -890,14 +899,13 @@ class timeLaggedData(fieldData):
         config:      path to a user-specified configuration file
     '''
 
-    def __init__(self, ds, fcst_hours, level, short_name, **kwargs):
+    def __init__(self, concat_dim, ds, level, short_name, **kwargs):
 
         super().__init__(ds, level, short_name, **kwargs)
 
         self.level = level
+        self.concat_dim = concat_dim
         self.contour_kwargs = kwargs.get('contour_kwargs', {})
-
-        self.fcst_hours = fcst_hours
 
     @property
     def valid_dt(self) -> datetime.datetime:
@@ -936,10 +944,11 @@ class timeLaggedData(fieldData):
             field = self.get_field(ncl_name or self.ncl_name(spec))
 
 
-        # 3D Variables have shape (fcst_hour, ygrid_0, xgrid_0)
+        # 3D Variables have shape (concat_dim, ygrid_0, xgrid_0)
         vals = field.sel(fcst_hour=self.fcst_hours)
 
-        # Need to choose vertical level
+        # Need to choose vertical level for 4D variables that have shape
+        #   (concat_dim, level, ygrid_0, xgrid_0)
         if len(field.shape) == 4:
 
             lev = vertical_index
