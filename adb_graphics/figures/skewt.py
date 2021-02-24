@@ -53,6 +53,17 @@ class SkewTDiagram(grib.profileData):
 
         self.max_plev = kwargs.get('max_plev', 0)
 
+    def _add_hydrometeors(self, hydro_subplot):
+
+        profiles = self.atmo_profiles # dictionary
+        pres = profiles.get('pres').get('data')
+        clwmr = profiles.get('clwmr').get('data') * 1000.
+        rwmr = profiles.get('rwmr').get('data') * 1000.
+
+        # Pressure vs specific humidity
+        hydro_subplot.plot(clwmr, pres, 'blue', linewidth=1.5)
+        hydro_subplot.plot(rwmr, pres, 'green', linewidth=1.5)
+
     def _add_thermo_inset(self, skew):
 
         # Build up the text that goes in the thermo-dyniamics box
@@ -106,8 +117,14 @@ class SkewTDiagram(grib.profileData):
                 'transform': 'hectoPa',
                 'units': units.Pa,
                 },
+            'clwmr': {
+                'units': units.dimensionless,
+                },
             'gh': {
                 'units': units.gpm,
+                },
+            'rwmr': {
+                'units': units.dimensionless,
                 },
             'sphum': {
                 'units': units.dimensionless,
@@ -150,7 +167,7 @@ class SkewTDiagram(grib.profileData):
         ''' Calls the private methods for creating each component of the SkewT
         Diagram. '''
 
-        skew = self._setup_diagram()
+        skew, hydro_subplot = self._setup_diagram()
         self._title()
         self._plot_profile(skew)
         self._plot_wind_barbs(skew)
@@ -158,6 +175,7 @@ class SkewTDiagram(grib.profileData):
 
         self._plot_hodograph(skew)
         self._add_thermo_inset(skew)
+        self._add_hydrometeors(hydro_subplot)
 
     def _plot_hodograph(self, skew):
 
@@ -260,7 +278,10 @@ class SkewTDiagram(grib.profileData):
 
         # Create a new figure. The dimensions here give a good aspect ratio.
         fig = plt.figure(figsize=(12, 12))
-        skew = SkewT(fig, rotation=45, aspect=85)
+        gs = plt.GridSpec(4, 5)
+
+        skew = SkewT(fig, rotation=45, aspect=85, subplot=gs[:, :-1])
+        print(skew.ax.yaxis)
 
         # Set the range covered by the x and y axes.
         skew.ax.set_ylim(1050, self.max_plev)
@@ -337,7 +358,15 @@ class SkewTDiagram(grib.profileData):
                           labels=mixing_lines * 1000,
                           )
 
-        return skew
+        hydro_subplot = fig.add_subplot(gs[:, -1], sharey=skew.ax)
+        hydro_subplot.set_xlim(0.0001, 10.0)
+        hydro_subplot.set_xscale("log")
+        hydro_subplot.yaxis.tick_right()
+        hydro_subplot.set_aspect(23) # completely arbitrary
+
+        plt.grid(which='major', axis='both')
+
+        return skew, hydro_subplot
 
     @property
     @lru_cache()
@@ -455,21 +484,30 @@ class SkewTDiagram(grib.profileData):
         vtime = self.date_to_str(self.valid_dt)
 
         # Top Left
-        plt.title(f"Analysis: {atime}\nFcst Hr: {self.fhr}",
-                  fontsize=16,
-                  loc='left',
-                  position=(0, 1.03),
-                  )
+#        plt.title(f"Analysis: {atime}\nFcst Hr: {self.fhr}",
+#                  fontsize=16,
+#                  loc='left',
+#                  position=(0, 1.03),
+#                  )
+        plt.suptitle(f"Analysis: {atime}\nFcst Hr: {self.fhr}",
+                     fontsize=16,
+                     ha='right')
 
         # Top Right
-        plt.title(f"Valid: {vtime}",
-                  fontsize=16,
-                  loc='right',
-                  position=(1, 1.03),
-                  )
+#        plt.title(f"Valid: {vtime}",
+#                  fontsize=16,
+#                  loc='right',
+#                  position=(1, 1.03),
+#                  )
+        plt.suptitle(f"Valid: {vtime}",
+                     fontsize=16,
+                     ha='left')
+
 
         # Center
         site = f"{self.site_code} {self.site_num} {self.site_name}"
         site_loc = f"{self.site_lat},  {self.site_lon}"
         site_title = f"{site} at nearest grid pt over land {site_loc}"
-        plt.title(site_title, loc='center', fontsize=12)
+#        plt.title(site_title, loc='center', fontsize=12)
+        plt.suptitle(f"Analysis: {atime}\nFcst Hr: {self.fhr}\n{site_title}\n\
+                     Valid: {vtime}", ha='center', fontsize=12)
