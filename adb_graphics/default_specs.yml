@@ -853,6 +853,11 @@ slw: # Supercooled Liquid Water
     title: Supercooled Liquid Water
     transform: supercooled_liquid_water
     unit: kg/m^2
+snmr: # Snow Mixing Ratio
+  ua:
+    ncl_name:
+      nat: SNMR_P0_L105_{grid}
+      prs: SNMR_P0_L100_{grid}
 snod: # Snow Depth
   sfc:
     <<: *snow

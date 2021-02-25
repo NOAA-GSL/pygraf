@@ -59,10 +59,20 @@ class SkewTDiagram(grib.profileData):
         pres = profiles.get('pres').get('data')
         clwmr = profiles.get('clwmr').get('data') * 1000.
         rwmr = profiles.get('rwmr').get('data') * 1000.
+        snmr = profiles.get('snmr').get('data') * 1000.
 
-        # Pressure vs specific humidity
-        hydro_subplot.plot(clwmr, pres, 'blue', linewidth=1.5)
-        hydro_subplot.plot(rwmr, pres, 'green', linewidth=1.5)
+        # set upper and lower limits for plot
+        clwmr = np.where((clwmr > 0.) & (clwmr < 1.5e-1), 1.e-4, clwmr)
+        rwmr = np.where((rwmr > 0.) & (rwmr < 1.2e-2), 1.e-4, rwmr)
+        snmr = np.where((snmr > 0.) & (snmr < 1.2e-2), 1.e-4, snmr)
+        clwmr = np.where((clwmr > 0.18), 10., clwmr)
+        rwmr = np.where((rwmr > 0.15), 10., rwmr)
+        snmr = np.where((snmr > 0.15), 10., snmr)
+
+        # Pressure vs mixing ratios
+        hydro_subplot.plot(clwmr, pres, 'bo', linewidth=1.5, markersize=8)
+        hydro_subplot.plot(rwmr, pres, 'gx', linewidth=1.5, markersize=8)
+        hydro_subplot.plot(snmr, pres, 'r+', linewidth=1.5, markersize=8)
 
     def _add_thermo_inset(self, skew):
 
@@ -124,6 +134,9 @@ class SkewTDiagram(grib.profileData):
                 'units': units.gpm,
                 },
             'rwmr': {
+                'units': units.dimensionless,
+                },
+            'snmr': {
                 'units': units.dimensionless,
                 },
             'sphum': {
