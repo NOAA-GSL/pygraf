@@ -12,6 +12,7 @@ import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FixedLocator
 from matplotlib.lines import Line2D
+import matplotlib.patches as mpatches
 import metpy.calc as mpcalc
 from metpy.plots import Hodograph, SkewT
 from metpy.units import units
@@ -58,21 +59,39 @@ class SkewTDiagram(grib.profileData):
         profiles = self.atmo_profiles # dictionary
         pres = profiles.get('pres').get('data')
         clwmr = profiles.get('clwmr').get('data') * 1000.
+        grle = profiles.get('grle').get('data') * 1000.
+        icmr = profiles.get('icmr').get('data') * 1000.
         rwmr = profiles.get('rwmr').get('data') * 1000.
         snmr = profiles.get('snmr').get('data') * 1000.
 
         # set upper and lower limits for plot
-        clwmr = np.where((clwmr > 0.) & (clwmr < 1.5e-1), 1.e-4, clwmr)
-        rwmr = np.where((rwmr > 0.) & (rwmr < 1.2e-2), 1.e-4, rwmr)
-        snmr = np.where((snmr > 0.) & (snmr < 1.2e-2), 1.e-4, snmr)
-        clwmr = np.where((clwmr > 0.18), 10., clwmr)
-        rwmr = np.where((rwmr > 0.15), 10., rwmr)
-        snmr = np.where((snmr > 0.15), 10., snmr)
+        clwmr = np.where((clwmr > 0.) & (clwmr < 1.e-4), 1.e-4, clwmr)
+        grle = np.where((grle > 0.) & (grle < 1.e-4), 1.e-4, grle)
+        icmr = np.where((icmr > 0.) & (icmr < 1.e-4), 1.e-4, icmr)
+        rwmr = np.where((rwmr > 0.) & (rwmr < 1.e-4), 1.e-4, rwmr)
+        snmr = np.where((snmr > 0.) & (snmr < 1.e-4), 1.e-4, snmr)
+
+        clwmr = np.where((clwmr > 10.), 10., clwmr)
+        grle = np.where((grle > 10.), 10., grle)
+        icmr = np.where((icmr > 10.), 10., icmr)
+        rwmr = np.where((rwmr > 10.), 10., rwmr)
+        snmr = np.where((snmr > 10.), 10., snmr)
 
         # Pressure vs mixing ratios
-        hydro_subplot.plot(clwmr, pres, 'bo', linewidth=1.5, markersize=8)
-        hydro_subplot.plot(rwmr, pres, 'gx', linewidth=1.5, markersize=8)
-        hydro_subplot.plot(snmr, pres, 'r+', linewidth=1.5, markersize=8)
+        hydro_subplot.plot(clwmr, pres, 'blue', marker="s", markersize=6, fillstyle="none")
+        hydro_subplot.plot(grle, pres, 'orange', marker="D", markersize=6, fillstyle="none")
+        hydro_subplot.plot(icmr, pres, 'red', marker="^", markersize=6, fillstyle="none")
+        hydro_subplot.plot(rwmr, pres, 'cyan', marker="o", markersize=6, fillstyle="none")
+        hydro_subplot.plot(snmr, pres, 'purple', marker="*", markersize=6, fillstyle="none")
+
+        # hydrometeor legend
+        handles = []
+        handles.append(mpatches.Patch(facecolor='none', edgecolor="purple", label="SNOW"))
+        handles.append(mpatches.Patch(facecolor='none', edgecolor="cyan", label="RAIN"))
+        handles.append(mpatches.Patch(facecolor='none', edgecolor="blue", label="CWAT"))
+        handles.append(mpatches.Patch(facecolor='none', edgecolor="orange", label="GRPL"))
+        handles.append(mpatches.Patch(facecolor='none', edgecolor="red", label="CICE"))
+        plt.legend(handles=handles, loc=[4.25, -0.8])
 
     def _add_thermo_inset(self, skew):
 
@@ -132,6 +151,12 @@ class SkewTDiagram(grib.profileData):
                 },
             'gh': {
                 'units': units.gpm,
+                },
+            'grle': {
+                'units': units.dimensionless,
+                },
+            'icmr': {
+                'units': units.dimensionless,
                 },
             'rwmr': {
                 'units': units.dimensionless,
@@ -294,7 +319,6 @@ class SkewTDiagram(grib.profileData):
         gs = plt.GridSpec(4, 5)
 
         skew = SkewT(fig, rotation=45, aspect=85, subplot=gs[:, :-1])
-        print(skew.ax.yaxis)
 
         # Set the range covered by the x and y axes.
         skew.ax.set_ylim(1050, self.max_plev)
@@ -515,7 +539,6 @@ class SkewTDiagram(grib.profileData):
         plt.suptitle(f"Valid: {vtime}",
                      fontsize=16,
                      ha='left')
-
 
         # Center
         site = f"{self.site_code} {self.site_num} {self.site_name}"
