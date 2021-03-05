@@ -56,41 +56,33 @@ class SkewTDiagram(grib.profileData):
 
     def _add_hydrometeors(self, hydro_subplot):
 
+        mixing_ratios = {'clwmr': {'color': 'blue', 'label': 'CWAT', 'marker': 's'},
+                         'grle': {'color': 'orange', 'label': 'GRPL', 'marker': 'D'},
+                         'icmr': {'color': 'red', 'label': 'CICE', 'marker': '^'},
+                         'rwmr': {'color': 'cyan', 'label': 'RAIN', 'marker': 'o'},
+                         'snmr': {'color': 'purple', 'label': 'SNOW', 'marker': '*'},
+                        }
+
         profiles = self.atmo_profiles # dictionary
         pres = profiles.get('pres').get('data')
-        clwmr = profiles.get('clwmr').get('data') * 1000.
-        grle = profiles.get('grle').get('data') * 1000.
-        icmr = profiles.get('icmr').get('data') * 1000.
-        rwmr = profiles.get('rwmr').get('data') * 1000.
-        snmr = profiles.get('snmr').get('data') * 1000.
-
-        # set upper and lower limits for plot
-        clwmr = np.where((clwmr > 0.) & (clwmr < 1.e-4), 1.e-4, clwmr)
-        grle = np.where((grle > 0.) & (grle < 1.e-4), 1.e-4, grle)
-        icmr = np.where((icmr > 0.) & (icmr < 1.e-4), 1.e-4, icmr)
-        rwmr = np.where((rwmr > 0.) & (rwmr < 1.e-4), 1.e-4, rwmr)
-        snmr = np.where((snmr > 0.) & (snmr < 1.e-4), 1.e-4, snmr)
-
-        clwmr = np.where((clwmr > 10.), 10., clwmr)
-        grle = np.where((grle > 10.), 10., grle)
-        icmr = np.where((icmr > 10.), 10., icmr)
-        rwmr = np.where((rwmr > 10.), 10., rwmr)
-        snmr = np.where((snmr > 10.), 10., snmr)
-
-        # Pressure vs mixing ratios
-        hydro_subplot.plot(clwmr, pres, 'blue', marker="s", markersize=6, fillstyle="none")
-        hydro_subplot.plot(grle, pres, 'orange', marker="D", markersize=6, fillstyle="none")
-        hydro_subplot.plot(icmr, pres, 'red', marker="^", markersize=6, fillstyle="none")
-        hydro_subplot.plot(rwmr, pres, 'cyan', marker="o", markersize=6, fillstyle="none")
-        hydro_subplot.plot(snmr, pres, 'purple', marker="*", markersize=6, fillstyle="none")
-
-        # hydrometeor legend
         handles = []
-        handles.append(mpatches.Patch(facecolor='none', edgecolor="purple", label="SNOW"))
-        handles.append(mpatches.Patch(facecolor='none', edgecolor="cyan", label="RAIN"))
-        handles.append(mpatches.Patch(facecolor='none', edgecolor="blue", label="CWAT"))
-        handles.append(mpatches.Patch(facecolor='none', edgecolor="orange", label="GRPL"))
-        handles.append(mpatches.Patch(facecolor='none', edgecolor="red", label="CICE"))
+
+        for mixr, settings in mixing_ratios.items():
+            profile = profiles.get(mixr).get('data') * 1000.
+            profile = np.where((profile > 0.) & (profile < 1.e-4), 1.e-4, profile)
+            profile = np.where((profile > 10.), 10., profile)
+
+            hydro_subplot.plot(profile, pres, settings.get('color'),
+                               marker=settings.get('marker'), markersize=6,
+                               fillstyle='none',
+                              )
+
+            handles.append(mpatches.Patch(facecolor='none',
+                                          edgecolor=settings.get('color'),
+                                          label=settings.get('label'),
+                                         )
+                          )
+
         plt.legend(handles=handles, loc=[4.25, -0.8])
 
     def _add_thermo_inset(self, skew):
@@ -402,6 +394,8 @@ class SkewTDiagram(grib.profileData):
         hydro_subplot.set_aspect(23) # completely arbitrary
 
         plt.grid(which='major', axis='both')
+        plt.xlabel("hydrometeors")
+        plt.ylabel("")
 
         return skew, hydro_subplot
 
@@ -521,29 +515,25 @@ class SkewTDiagram(grib.profileData):
         vtime = self.date_to_str(self.valid_dt)
 
         # Top Left
-#        plt.title(f"Analysis: {atime}\nFcst Hr: {self.fhr}",
-#                  fontsize=16,
-#                  loc='left',
-#                  position=(0, 1.03),
-#                  )
-        plt.suptitle(f"Analysis: {atime}\nFcst Hr: {self.fhr}",
-                     fontsize=16,
-                     ha='right')
+        plt.title(f"Analysis: {atime}\nFcst Hr: {self.fhr}",
+                  fontsize=16,
+                  loc='left',
+                  position=(-5.0, 1.03),
+                  )
 
         # Top Right
-#        plt.title(f"Valid: {vtime}",
-#                  fontsize=16,
-#                  loc='right',
-#                  position=(1, 1.03),
-#                  )
-        plt.suptitle(f"Valid: {vtime}",
-                     fontsize=16,
-                     ha='left')
+        plt.title(f"Valid: {vtime}",
+                  fontsize=16,
+                  loc='right',
+                  position=(1, 1.03),
+                  )
 
         # Center
         site = f"{self.site_code} {self.site_num} {self.site_name}"
         site_loc = f"{self.site_lat},  {self.site_lon}"
         site_title = f"{site} at nearest grid pt over land {site_loc}"
-#        plt.title(site_title, loc='center', fontsize=12)
-        plt.suptitle(f"Analysis: {atime}\nFcst Hr: {self.fhr}\n{site_title}\n\
-                     Valid: {vtime}", ha='center', fontsize=12)
+        plt.title(site_title,
+                  fontsize=12,
+                  loc='center',
+                  position=(-2.0, 1.0),
+                  )
