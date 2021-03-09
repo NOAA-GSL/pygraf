@@ -12,6 +12,7 @@ import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FixedLocator
 from matplotlib.lines import Line2D
+import matplotlib.patches as mpatches
 import metpy.calc as mpcalc
 from metpy.plots import Hodograph, SkewT
 from metpy.units import units
@@ -52,6 +53,37 @@ class SkewTDiagram(grib.profileData):
                          )
 
         self.max_plev = kwargs.get('max_plev', 0)
+
+    def _add_hydrometeors(self, hydro_subplot):
+
+        mixing_ratios = {'clwmr': {'color': 'blue', 'label': 'CWAT', 'marker': 's'},
+                         'grle': {'color': 'orange', 'label': 'GRPL', 'marker': 'D'},
+                         'icmr': {'color': 'red', 'label': 'CICE', 'marker': '^'},
+                         'rwmr': {'color': 'cyan', 'label': 'RAIN', 'marker': 'o'},
+                         'snmr': {'color': 'purple', 'label': 'SNOW', 'marker': '*'},
+                        }
+
+        profiles = self.atmo_profiles # dictionary
+        pres = profiles.get('pres').get('data')
+        handles = []
+
+        for mixr, settings in mixing_ratios.items():
+            profile = profiles.get(mixr).get('data') * 1000.
+            profile = np.where((profile > 0.) & (profile < 1.e-4), 1.e-4, profile)
+            profile = np.where((profile > 10.), 10., profile)
+
+            hydro_subplot.plot(profile, pres, settings.get('color'),
+                               marker=settings.get('marker'), markersize=6,
+                               fillstyle='none',
+                              )
+
+            handles.append(mpatches.Patch(facecolor='none',
+                                          edgecolor=settings.get('color'),
+                                          label=settings.get('label'),
+                                         )
+                          )
+
+        plt.legend(handles=handles, loc=[4.25, -0.8])
 
     def _add_thermo_inset(self, skew):
 
@@ -106,8 +138,23 @@ class SkewTDiagram(grib.profileData):
                 'transform': 'hectoPa',
                 'units': units.Pa,
                 },
+            'clwmr': {
+                'units': units.dimensionless,
+                },
             'gh': {
                 'units': units.gpm,
+                },
+            'grle': {
+                'units': units.dimensionless,
+                },
+            'icmr': {
+                'units': units.dimensionless,
+                },
+            'rwmr': {
+                'units': units.dimensionless,
+                },
+            'snmr': {
+                'units': units.dimensionless,
                 },
             'sphum': {
                 'units': units.dimensionless,
@@ -150,7 +197,7 @@ class SkewTDiagram(grib.profileData):
         ''' Calls the private methods for creating each component of the SkewT
         Diagram. '''
 
-        skew = self._setup_diagram()
+        skew, hydro_subplot = self._setup_diagram()
         self._title()
         self._plot_profile(skew)
         self._plot_wind_barbs(skew)
@@ -158,6 +205,7 @@ class SkewTDiagram(grib.profileData):
 
         self._plot_hodograph(skew)
         self._add_thermo_inset(skew)
+        self._add_hydrometeors(hydro_subplot)
 
     def _plot_hodograph(self, skew):
 
@@ -260,7 +308,9 @@ class SkewTDiagram(grib.profileData):
 
         # Create a new figure. The dimensions here give a good aspect ratio.
         fig = plt.figure(figsize=(12, 12))
-        skew = SkewT(fig, rotation=45, aspect=85)
+        gs = plt.GridSpec(4, 5)
+
+        skew = SkewT(fig, rotation=45, aspect=85, subplot=gs[:, :-1])
 
         # Set the range covered by the x and y axes.
         skew.ax.set_ylim(1050, self.max_plev)
@@ -337,7 +387,17 @@ class SkewTDiagram(grib.profileData):
                           labels=mixing_lines * 1000,
                           )
 
-        return skew
+        hydro_subplot = fig.add_subplot(gs[:, -1], sharey=skew.ax)
+        hydro_subplot.set_xlim(0.0001, 10.0)
+        hydro_subplot.set_xscale("log")
+        hydro_subplot.yaxis.tick_right()
+        hydro_subplot.set_aspect(23) # completely arbitrary
+
+        plt.grid(which='major', axis='both')
+        plt.xlabel("hydrometeors")
+        plt.ylabel("")
+
+        return skew, hydro_subplot
 
     @property
     @lru_cache()
@@ -458,7 +518,7 @@ class SkewTDiagram(grib.profileData):
         plt.title(f"Analysis: {atime}\nFcst Hr: {self.fhr}",
                   fontsize=16,
                   loc='left',
-                  position=(0, 1.03),
+                  position=(-5.0, 1.03),
                   )
 
         # Top Right
@@ -472,4 +532,8 @@ class SkewTDiagram(grib.profileData):
         site = f"{self.site_code} {self.site_num} {self.site_name}"
         site_loc = f"{self.site_lat},  {self.site_lon}"
         site_title = f"{site} at nearest grid pt over land {site_loc}"
-        plt.title(site_title, loc='center', fontsize=12)
+        plt.title(site_title,
+                  fontsize=12,
+                  loc='center',
+                  position=(-2.0, 1.0),
+                  )

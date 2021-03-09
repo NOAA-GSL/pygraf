@@ -427,6 +427,11 @@ gh: # Geopotential height
     unit: gpm
   ua:
     <<: *ua_gh
+grle: # Graupel
+  ua:
+    ncl_name:
+      nat: GRLE_P0_L105_{grid}
+      prs: GRLE_P0_L100_{grid}
 gust:
   10m:
     clevs: !!python/object/apply:numpy.arange [5, 95, 5]
@@ -548,6 +553,11 @@ hpbl: # Height of Planetary Boundary Layer
     ticks: 0
     title: PBL Height
     unit: m
+icmr: # Ice Water Mixing Ratio
+  ua:
+    ncl_name:
+      nat: ICMR_P0_L105_{grid}
+      prs: ICMR_P0_L100_{grid}
 lcl: # Lifted condensation level
   sfc: &lcl
     clevs: !!python/object/apply:numpy.arange [0, 5000, 250]
@@ -853,6 +863,11 @@ slw: # Supercooled Liquid Water
     title: Supercooled Liquid Water
     transform: supercooled_liquid_water
     unit: kg/m^2
+snmr: # Snow Mixing Ratio
+  ua:
+    ncl_name:
+      nat: SNMR_P0_L105_{grid}
+      prs: SNMR_P0_L100_{grid}
 snod: # Snow Depth
   sfc:
     <<: *snow
