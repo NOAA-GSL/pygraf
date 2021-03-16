@@ -160,23 +160,8 @@ class SkewTDiagram(grib.profileData):
                 'transform': 'hectoPa',
                 'units': units.Pa,
                 },
-            'clwmr': {
-                'units': units.dimensionless,
-                },
             'gh': {
                 'units': units.gpm,
-                },
-            'grle': {
-                'units': units.dimensionless,
-                },
-            'icmr': {
-                'units': units.dimensionless,
-                },
-            'rwmr': {
-                'units': units.dimensionless,
-                },
-            'snmr': {
-                'units': units.dimensionless,
                 },
             'sphum': {
                 'units': units.dimensionless,
