@@ -74,6 +74,15 @@ hourly:
       - mx25
       - sr01
       - sr03
+    hlcytot:
+      - mn02
+      - mn03
+      - mn16
+      - mn25
+      - mx02
+      - mx03
+      - mx16
+      - mx25
     hpbl:
       - sfc
     lcl:

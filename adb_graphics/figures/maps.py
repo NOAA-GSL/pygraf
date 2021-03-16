@@ -263,8 +263,7 @@ class DataMap():
                               func=self.map.m.contourf,
                               levels=self.field.clevs,
                               )
-        for i in cf:
-            self._colorbar(ax=ax, cc=i)
+        self._colorbar(ax=ax, cc=cf)
 
         not_labeled = [self.field.short_name]
         if self.hatch_fields:
@@ -362,10 +361,10 @@ class DataMap():
 
         x, y = self._xy_mesh(field)
 
-        return [func(x, y, field.values()[i, :, :],
+        return func(x, y, field.values()[::],
                     ax=ax,
                     **kwargs,
-                    ) for i in range(np.shape(field.values())[0])]
+                    )
 
     def _title(self):
 
@@ -373,7 +372,7 @@ class DataMap():
 
         f = self.field
         atime = f.date_to_str(f.anl_dt)
-        vtime = f.date_to_str(f.valid_dt[0])
+        vtime = f.date_to_str(f.valid_dt)
 
         # Create a descriptor string for the first hatched field, if one exists
         contoured = []

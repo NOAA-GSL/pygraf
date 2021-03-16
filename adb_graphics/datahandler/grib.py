@@ -46,7 +46,7 @@ class GribFiles():
     ''' Class for loading in a set of grib files and combining them over
     forecast hours. '''
 
-    def __init__(self, coord_dims filenames, filetype):
+    def __init__(self, coord_dims, filenames, filetype):
 
         '''
         Arguments:
@@ -65,12 +65,20 @@ class GribFiles():
         self.coord_dims = coord_dims
         self.contents = self._load()
 
+    def append(self, coord_dims, filenames):
 
-    def _load(self):
+        ''' Add a single new slice to existing data set. Must match coord_dims
+        and filetype of original dataset. Updates current contents of Object'''
+
+        self.coord_dims = self.coord_dims
+        self.contents = self._load(filenames)
+
+    def _load(self, filenames=None):
 
         ''' Load the set of files into a single XArray structure. '''
 
-        all_leads = []
+        all_leads = [] if filenames is None else [self.contents]
+        filenames = self.filenames if filenames is None else filenames
         var_names = self.variable_names
 
         # 0h and 1h forecast variables are named like the keys in var_names,
@@ -83,45 +91,58 @@ class GribFiles():
 
         for fcst_type, vnames in names.items():
 
-            open_kwargs = dict(
-                backend_kwargs=dict(format="grib2"),
-                combine='nested',
-                compat='override',
-                concat_dim=self.coord_dims.keys()[0],
-                coords='minimal',
-                data_vars=vnames,
-                engine='pynio',
-                lock=False,
-                )
+            if filenames.get(fcst_type):
+                for filename in filenames.get(fcst_type):
+                    print(f'Loading grib2 file: {fcst_type}, {filename}')
 
-            if fcst_type == '01fcst':
-                if self.filenames.get(fcst_type):
-                    # Rename variables to match free forecast variables
+                if fcst_type == '01fcst':
+                    if filenames.get(fcst_type):
+                        # Rename variables to match free forecast variables
+                        all_leads.append(xr.open_mfdataset(
+                            filenames[fcst_type],
+                            **self.open_kwargs(vnames),
+                            ).rename_vars(vnames))
+                else:
                     all_leads.append(xr.open_mfdataset(
-                        self.filenames[fcst_type],
-                        **open_kwargs,
-                        ).rename_vars(vnames))
-            else:
-                all_leads.append(xr.open_mfdataset(
-                    self.filenames[fcst_type],
-                    **open_kwargs,
-                    ))
+                        filenames[fcst_type],
+                        **self.open_kwargs(vnames),
+                        ))
+
+        concat_dim = list(self.coord_dims.keys())[0]
+
+        #for i, lead in enumerate(all_leads):
+        #    print(f'all_leads: {i} {lead.dims}')
+        #    if concat_dim not in lead.dims:
+        #        print(f'Expanding {i}')
+        #        all_leads[i] = lead.expand_dims(dim=concat_dim, axis=-1)
 
         ret = xr.combine_nested(all_leads,
                                 compat='override',
-                                concat_dim=self.coord_dims.keys()[0],
+                                concat_dim=list(self.coord_dims.keys())[0],
                                 coords='minimal',
                                 data_vars='minimal',
                                 )
 
-        return ret.assign_coords(self.coord_dims)
+        return ret
+
+    def open_kwargs(self, vnames):
+        return dict(
+            backend_kwargs=dict(format="grib2"),
+            combine='nested',
+            compat='override',
+            concat_dim=list(self.coord_dims.keys())[0],
+            coords='minimal',
+            data_vars=vnames,
+            engine='pynio',
+            lock=False,
+            )
 
     @property
     def variable_names(self):
 
         '''
         Defines the variable name transitions that need to happen for each
-        model to combine along forecast hours. 
+        model to combine along forecast hours.
 
         Keys are original variable names, values are the updated variable names.
 
@@ -130,7 +151,7 @@ class GribFiles():
         '''
 
         names = {
-            'hrrrx': {
+            'prs': {
                 'REFC_P0_L10_GLC0': 'REFC_P0_L10_GLC0',
                 'MXUPHL_P8_2L103_GLC0_max': 'MXUPHL_P8_2L103_GLC0_max1h',
                 'UGRD_P0_L103_GLC0': 'UGRD_P0_L103_GLC0', 
@@ -267,8 +288,9 @@ class UPPData(specs.VarSpec):
             return lev
 
         # Follow convention of fieldData objects for getting vertical level
-        dim_name = spec.get('vertical_level_name',
-                            list(field.dims)[0])
+        vertical_dim = [dim for dim in field.dims if 'lv' in dim]
+        dim_name = spec.get('vertical_level_name', vertical_dim[0])
+
         levs = self.ds[dim_name].values
 
         # Requested level
@@ -326,8 +348,8 @@ class UPPData(specs.VarSpec):
 
         ''' Returns the set of latitudes and longitudes '''
 
-        coords = sorted([c for c in list(self.ds.coords) if any(ele in c for ele in ['lat',
-            'lon'])])
+        coords = sorted([c for c in list(self.ds.coords) if 
+                        any(ele in c for ele in ['lat', 'lon'])])
         return [self.ds.coords[c].values for c in coords]
 
     @property
@@ -526,7 +548,7 @@ class fieldData(UPPData):
             )
 
         # Last coordinate listed should be latitude or longitude
-        lat_var, _ = list(self.field.coords)[-2:]
+        lat_var = [var for var in self.field.coords if 'lat' in var][0]
 
         # Get the latitude variable
         lat = self.ds[lat_var]
@@ -556,6 +578,12 @@ class fieldData(UPPData):
             grid_info[bm_arg] = val
 
         return grid_info
+
+    def run_total(self, values, **kwargs) -> np.ndarray:
+
+        # pylint: disable=unused-argument
+
+        return values.sum(dim='fcst_hr')
 
     def supercooled_liquid_water(self, values, **kwargs) -> np.ndarray:
 
@@ -628,7 +656,7 @@ class fieldData(UPPData):
 
         Keyword Args:
             ncl_name        the NCL-assigned Grib2 name
-            one_lev    bool flag. if True, get the single level of the variable
+            one_lev         bool flag. if True, get the single level of the variable
             vertical_index  the index (int) of the desired vertical level
         '''
 
@@ -655,17 +683,35 @@ class fieldData(UPPData):
                 raise errors.NoGraphicsDefinitionForVariable(name, level)
             field = self.get_field(ncl_name or self.ncl_name(spec))
 
-        if len(field.shape) == 2:
-            vals = field[::]
+        lev = vertical_index
+        vertical_dim = []
 
-        elif len(field.shape) == 3:
-            if one_lev:
-                lev = vertical_index
-                if vertical_index is None:
+        vals = field
+        if one_lev:
+
+            # Check if it's a 3D variable (lv in any dimension field)
+            vertical_dim = [dim for dim in field.dims if 'lv' in dim]
+
+            if vertical_dim: # Field has a vertical dimension
+
+                dim_name = spec.get('vertical_level_name', vertical_dim[0])
+                dim_name = vertical_dim[0]
+
+                if vertical_index is None: # No index is provided in kwargs
                     lev = self.get_level(field, level, spec)
-                vals = field[lev, :, :]
-            else:
-                vals = field[:, :, :]
+
+                try:
+                    vals = vals.isel(**{dim_name: lev})
+                except:
+                    print(f'Error for {vals.name} : {dim_name} {lev} \
+                            {level} {spec}')
+                    raise
+
+
+        # Select a single forecast hour (only if there are many)
+        if not spec.get('accumulate', False):
+            if 'fcst_hr' in vals.dims:
+                vals = vals.sel(**{'fcst_hr': int(self.fhr)})
 
         transforms = spec.get('transform')
         if transforms:
@@ -878,86 +924,3 @@ class profileData(UPPData):
                 )
 
         return conversions.magnitude(field1, field2)
-
-class multiDimFieldData(fieldData):
-
-    '''
-    Class provides interface for accessing multi-dimensional fields (2D plan view)
-    data from UPP in Grib2 format. This could be time-lagged or standard
-    ensembles, all forecast lead times for a single cycle, or all cycles
-    at a given forecast time.
-
-    Input:
-        concat_dim:  the name of dimension that has been used for
-                     combining files
-        ds:          xarray dataset from full set of grib files
-        level:       level corresponding to entry in specs configuration, likely
-                     esbl or total
-        name:        name of variable corresponding to entry in specs configuration
-
-    Keyword Arguments:
-        config:      path to a user-specified configuration file
-    '''
-
-    def __init__(self, concat_dim, ds, level, short_name, **kwargs):
-
-        super().__init__(ds, level, short_name, **kwargs)
-
-        self.level = level
-        self.concat_dim = concat_dim
-        self.contour_kwargs = kwargs.get('contour_kwargs', {})
-
-    @property
-    def valid_dt(self) -> datetime.datetime:
-
-        ''' Returns a datetime object corresponding to the forecast hour's valid
-        time as set in the Grib file. '''
-
-        deltas = [datetime.timedelta(hours=int(hr)) for hr in self.fcst_hours]
-        return [self.anl_dt + delta for delta in deltas]
-
-    def values(self, level=None, name=None, **kwargs) -> np.ndarray:
-
-        '''
-        Returns the numpy array of values at the requested level for the
-        variable after applying any unit conversion to the original data.
-
-        Optional Input:
-            name       the name of a field other than defined in self
-            level      the level of the alternate field to use
-        '''
-
-        level = level if level else self.level
-
-        vertical_index = kwargs.get('vertical_index')
-
-        ncl_name = kwargs.get('ncl_name', '')
-        ncl_name = ncl_name.format(grid=self.grid_suffix)
-
-        if name is None and not ncl_name:
-            field = self.field
-            spec = self.vspec
-        else:
-            spec = self.spec.get(name, {}).get(level, {})
-            if not spec and name is not None:
-                raise errors.NoGraphicsDefinitionForVariable(name, level)
-            field = self.get_field(ncl_name or self.ncl_name(spec))
-
-
-        # 3D Variables have shape (concat_dim, ygrid_0, xgrid_0)
-        vals = field.sel(fcst_hour=self.fcst_hours)
-
-        # Need to choose vertical level for 4D variables that have shape
-        #   (concat_dim, level, ygrid_0, xgrid_0)
-        if len(field.shape) == 4:
-
-            lev = vertical_index
-            if vertical_index is None:
-                lev = self.get_level(field, level, spec)
-            vals = vals[:,lev, :, :]
-
-        transforms = spec.get('transform')
-        if transforms:
-            vals = self.get_transform(transforms, vals)
-
-        return vals

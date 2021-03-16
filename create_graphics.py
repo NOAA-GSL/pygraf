@@ -43,14 +43,11 @@ def create_skewt(cla, fhr, grib_path, workdir):
     with Pool(processes=cla.nprocs) as pool:
         pool.starmap(parallel_skewt, args)
 
-def create_maps(cla, fhr, grib_path, workdir):
+def create_maps(cla, fhr, gribfiles, workdir):
 
     ''' Generate arguments for parallel processing of plan-view maps and
     generate a pool of workers to complete the task. '''
 
-
-    # Create the file object to load the contents
-    gribfile = grib.GribFile(grib_path)
 
     model = cla.images[0]
     for tile in cla.tiles:
@@ -65,7 +62,7 @@ def create_maps(cla, fhr, grib_path, workdir):
                     msg = f'graphics: {variable} {level}'
                     raise errors.NoGraphicsDefinitionForVariable(msg)
 
-                args.append((cla, fhr, gribfile.contents, level, model, spec,
+                args.append((cla, fhr, gribfiles.contents, level, model, spec,
                              variable, workdir, tile))
 
         print(f'Queueing {len(args)} maps')
@@ -107,6 +104,47 @@ def create_zip(png_files, zipf):
             break
         # Wait before trying to obtain the lock on the file
         time.sleep(5)
+
+def gather_gribfiles(cla, fhr, gribfile):
+
+    ''' Returns the appropriate gribfiles object for the type of graphics being
+    generated -- whether it's for a single forecast time or all forecast lead
+    times. '''
+
+    # We already checked that the current file exists and is old enough, so
+    # assume that the earlier ones are, too.
+
+    filenames = {'01fcst': [], 'free_fcst': []}
+
+    fcst_hours = [int(fhr)]
+    if cla.all_leads and gribfile is None:
+        fcst_hours = list(range(int(fhr) + 1))
+
+    for fcst_hour in fcst_hours:
+        filename = os.path.join(cla.data_root,
+                                cla.file_tmpl.format(FCST_TIME=fcst_hour))
+        if fcst_hour <=1:
+            filenames['01fcst'].append(filename)
+        else:
+            filenames['free_fcst'].append(filename)
+
+    if gribfile is None:
+
+        # Create a new GribFile object, include all hours, or just this one,
+        # depending on command line argument flag
+
+        gribfile = grib.GribFiles(
+                coord_dims={'fcst_hr': fcst_hours},
+                filenames=filenames,
+                filetype=cla.file_type,
+                )
+    else:
+
+        # Append a single forecast hour to the existing gribfile object.
+        coord_dims = {'fcst_hr': gribfile.coord_dims.get('fcst_hr').append(fhr)}
+        gribfile.append(coord_dims, filenames)
+
+    return gribfile
 
 def generate_tile_list(arg_list):
 
@@ -231,6 +269,11 @@ def parse_args():
 
     # Long args
     parser.add_argument(
+        '--all_leads',
+        action='store_true',
+        help='Use --all_leads to accumulate all forecast lead times.',
+        )
+    parser.add_argument(
         '--file_tmpl',
         default='wrfnat_hrconus_{FCST_TIME:02d}.grib2',
         help='File naming convention',
@@ -317,6 +360,12 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
         short_name=variable,
         )
 
+    try:
+        field.field
+    except errors.GribReadError:
+        print(f'Cannot find grib2 variable for {variable} at {level}. Skipping.')
+        return
+
     # Create a list of fieldData objects for each contour field requested
     # These will show up as line contours on the plot.
     contours = spec.get('contours')
@@ -370,7 +419,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
         map_=m,
         )
 
-    # Draw the mape
+    # Draw the map
     dm.draw(show=True)
 
     # Build the output path
@@ -457,6 +506,8 @@ def graphics_driver(cla):
     # Initialize a timer used for killing the program
     timer_end = time.time()
 
+    gribfiles = None
+
     # Allow this task to run concurrently with UPP by continuing to check for
     # new files as they become available.
     while fcst_hours:
@@ -487,7 +538,12 @@ def graphics_driver(cla):
             if cla.graphic_type == 'skewts':
                 create_skewt(cla, fhr, grib_path, workdir)
             else:
-                create_maps(cla, fhr, grib_path, workdir)
+                gribfiles = gather_gribfiles(cla, fhr, gribfiles)
+                create_maps(cla,
+                    fhr=fhr,
+                    gribfiles=gribfiles,
+                    workdir=workdir,
+                    )
 
             # Zip png files and remove the originals in a subprocess
             if zipf:
