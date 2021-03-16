@@ -11,8 +11,8 @@ import numpy as np
 import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FixedLocator
+import matplotlib.lines as mlines
 from matplotlib.lines import Line2D
-import matplotlib.patches as mpatches
 import metpy.calc as mpcalc
 from metpy.plots import Hodograph, SkewT
 from metpy.units import units
@@ -56,34 +56,56 @@ class SkewTDiagram(grib.profileData):
 
     def _add_hydrometeors(self, hydro_subplot):
 
-        mixing_ratios = {'clwmr': {'color': 'blue', 'label': 'CWAT', 'marker': 's'},
-                         'grle': {'color': 'orange', 'label': 'GRPL', 'marker': 'D'},
-                         'icmr': {'color': 'red', 'label': 'CICE', 'marker': '^'},
-                         'rwmr': {'color': 'cyan', 'label': 'RAIN', 'marker': 'o'},
-                         'snmr': {'color': 'purple', 'label': 'SNOW', 'marker': '*'},
-                        }
+        mixing_ratios = OrderedDict({
+            'clwmr': {'color': 'blue', 'label': 'CWAT', 'marker': 's', 'units': 'g/m2'},
+            'icmr': {'color': 'red', 'label': 'CICE', 'marker': '^', 'units': 'g/m2'},
+            'rwmr': {'color': 'cyan', 'label': 'RAIN', 'marker': 'o', 'units': 'g/m2'},
+            'snmr': {'color': 'purple', 'label': 'SNOW', 'marker': '*', 'units': 'g/m2'},
+            'grle': {'color': 'orange', 'label': 'GRPL', 'marker': 'D', 'units': 'g/m2'},
+            })
 
         profiles = self.atmo_profiles # dictionary
         pres = profiles.get('pres').get('data')
         handles = []
+        lines = ['Vert. Integrated Amt\n(Resolved, Total)']
 
         for mixr, settings in mixing_ratios.items():
-            profile = profiles.get(mixr).get('data') * 1000.
+            # Get the profile values
+            profile = np.asarray(self.values(name=mixr)) * 1000.
             profile = np.where((profile > 0.) & (profile < 1.e-4), 1.e-4, profile)
             profile = np.where((profile > 10.), 10., profile)
 
-            hydro_subplot.plot(profile, pres, settings.get('color'),
-                               marker=settings.get('marker'), markersize=6,
+            hydro_subplot.plot(profile, pres,
+                               settings.get('color'),
                                fillstyle='none',
+                               marker=settings.get('marker'),
+                               markersize=6,
                               )
 
-            handles.append(mpatches.Patch(facecolor='none',
-                                          edgecolor=settings.get('color'),
-                                          label=settings.get('label'),
+            # compute vertically integrated amount and add legend line
+            line = f"{settings.get('label'):<7s} {sum(profile):.3f} {settings.get('units')}"
+            lines.append(line)
+
+            handles.append(mlines.Line2D([], [],
+                                         color=settings.get('color'),
+                                         fillstyle='none',
+                                         label=settings.get('label'),
+                                         marker=settings.get('marker'),
+                                         markersize=8,
                                          )
                           )
 
-        plt.legend(handles=handles, loc=[4.25, -0.8])
+        plt.legend(handles=handles, loc=[4.3, -0.8])
+
+        contents = '\n'.join(lines)
+        # Draw the vertically integrated amounts box
+        hydro_subplot.text(0.08, 0.90, contents,
+                           bbox=dict(facecolor='white', edgecolor='black', alpha=0.7),
+                           fontproperties=fm.FontProperties(family='monospace'),
+                           size=8,
+                           transform=hydro_subplot.transAxes,
+                           verticalalignment='top',
+                           )
 
     def _add_thermo_inset(self, skew):
 
