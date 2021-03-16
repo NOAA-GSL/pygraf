@@ -123,7 +123,7 @@ def gather_gribfiles(cla, fhr, gribfile):
     for fcst_hour in fcst_hours:
         filename = os.path.join(cla.data_root,
                                 cla.file_tmpl.format(FCST_TIME=fcst_hour))
-        if fcst_hour <=1:
+        if fcst_hour <= 1:
             filenames['01fcst'].append(filename)
         else:
             filenames['free_fcst'].append(filename)
@@ -134,14 +134,14 @@ def gather_gribfiles(cla, fhr, gribfile):
         # depending on command line argument flag
 
         gribfile = grib.GribFiles(
-                coord_dims={'fcst_hr': fcst_hours},
-                filenames=filenames,
-                filetype=cla.file_type,
-                )
+            coord_dims={'fcst_hr': fcst_hours},
+            filenames=filenames,
+            filetype=cla.file_type,
+            )
     else:
 
         # Append a single forecast hour to the existing gribfile object.
-        coord_dims = {'fcst_hr': gribfile.coord_dims.get('fcst_hr').append(fhr)}
+        gribfile.coord_dims.get('fcst_hr').append(fhr)
         gribfile.append(filenames)
 
     return gribfile
@@ -540,10 +540,10 @@ def graphics_driver(cla):
             else:
                 gribfiles = gather_gribfiles(cla, fhr, gribfiles)
                 create_maps(cla,
-                    fhr=fhr,
-                    gribfiles=gribfiles,
-                    workdir=workdir,
-                    )
+                            fhr=fhr,
+                            gribfiles=gribfiles,
+                            workdir=workdir,
+                            )
 
             # Zip png files and remove the originals in a subprocess
             if zipf:

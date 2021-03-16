@@ -2,6 +2,9 @@
 #
 # Acceptable keys for a variable:
 #
+#   accumulate: bool to specify whether there should be multiple forecast hours
+#               present in the FieldData object
+#
 #   clevs: specifies the contour levels by one of the following methods
 #      - a list with no quotes
 #      - a numpy.arange specified as "!!python/object/apply:numpy.arange [list]"
@@ -24,7 +27,11 @@
 #            to be hatched, and may have a different level separated by an
 #            underscore, e.g. rh_850mb would hatch the 850mb level.
 #
+#   labels:  primarily used for the legend labels of hatched areas
+#
 #   ncl_name: the name of the variable as expected by NCL
+#
+#   print_units: bool for printing the units in the map title
 #
 #   ticks: the number of tick marks on the colorbar
 #

@@ -282,7 +282,9 @@ class UPPData(specs.VarSpec):
         if lev is not None:
             return lev
 
-        # Follow convention of fieldData objects for getting vertical level
+        # Determine the vertical dimension of the variable by looking through
+        # the field's dimensions for one that includes "lv". Use the first
+        # instance returned in the list.
         vertical_dim = [dim for dim in field.dims if 'lv' in dim]
         dim_name = spec.get('vertical_level_name', vertical_dim[0])
 
