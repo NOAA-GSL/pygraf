@@ -127,7 +127,7 @@ class SkewTDiagram(grib.profileData):
         contents = '\n'.join(lines)
 
         # Draw the text box
-        skew.ax.text(0.78, 0.98, contents,
+        skew.ax.text(0.75, 0.98, contents,
                      bbox=dict(facecolor='white', edgecolor='black', alpha=0.7),
                      fontproperties=fm.FontProperties(family='monospace'),
                      size=8,
