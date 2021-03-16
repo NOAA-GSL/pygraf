@@ -540,14 +540,14 @@ class SkewTDiagram(grib.profileData):
         plt.title(f"Analysis: {atime}\nFcst Hr: {self.fhr}",
                   fontsize=16,
                   loc='left',
-                  position=(-5.0, 1.03),
+                  position=(-4.8, 1.03),
                   )
 
         # Top Right
         plt.title(f"Valid: {vtime}",
                   fontsize=16,
                   loc='right',
-                  position=(1, 1.03),
+                  position=(-0.20, 1.03),
                   )
 
         # Center
@@ -557,5 +557,5 @@ class SkewTDiagram(grib.profileData):
         plt.title(site_title,
                   fontsize=12,
                   loc='center',
-                  position=(-2.0, 1.0),
+                  position=(-2.5, 1.0),
                   )
