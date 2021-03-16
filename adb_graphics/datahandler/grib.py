@@ -65,12 +65,11 @@ class GribFiles():
         self.coord_dims = coord_dims
         self.contents = self._load()
 
-    def append(self, coord_dims, filenames):
+    def append(self, filenames):
 
         ''' Add a single new slice to existing data set. Must match coord_dims
         and filetype of original dataset. Updates current contents of Object'''
 
-        self.coord_dims = self.coord_dims
         self.contents = self._load(filenames)
 
     def _load(self, filenames=None):
@@ -108,14 +107,6 @@ class GribFiles():
                         **self.open_kwargs(vnames),
                         ))
 
-        concat_dim = list(self.coord_dims.keys())[0]
-
-        #for i, lead in enumerate(all_leads):
-        #    print(f'all_leads: {i} {lead.dims}')
-        #    if concat_dim not in lead.dims:
-        #        print(f'Expanding {i}')
-        #        all_leads[i] = lead.expand_dims(dim=concat_dim, axis=-1)
-
         ret = xr.combine_nested(all_leads,
                                 compat='override',
                                 concat_dim=list(self.coord_dims.keys())[0],
@@ -126,6 +117,10 @@ class GribFiles():
         return ret
 
     def open_kwargs(self, vnames):
+
+        ''' Defines the key word arguments used by the various calls to XArray
+        open_mfdataset '''
+
         return dict(
             backend_kwargs=dict(format="grib2"),
             combine='nested',
@@ -154,7 +149,7 @@ class GribFiles():
             'prs': {
                 'REFC_P0_L10_GLC0': 'REFC_P0_L10_GLC0',
                 'MXUPHL_P8_2L103_GLC0_max': 'MXUPHL_P8_2L103_GLC0_max1h',
-                'UGRD_P0_L103_GLC0': 'UGRD_P0_L103_GLC0', 
+                'UGRD_P0_L103_GLC0': 'UGRD_P0_L103_GLC0',
                 'VGRD_P0_L103_GLC0': 'VGRD_P0_L103_GLC0',
                 'WEASD_P8_L1_GLC0_acc': 'WEASD_P8_L1_GLC0_acc1h',
                 'APCP_P8_L1_GLC0_acc': 'APCP_P8_L1_GLC0_acc1h',
@@ -335,6 +330,7 @@ class UPPData(specs.VarSpec):
 
     @property
     def grid_suffix(self):
+
         ''' Return the suffix of the first variable with 4 sections (split on _)
         in the file. This should correspond to the grid tag. '''
 
@@ -342,14 +338,15 @@ class UPPData(specs.VarSpec):
             vsplit = var.split('_')
             if len(vsplit) == 4:
                 return vsplit[-1]
+        return 'GRID NOT FOUND'
 
 
     def latlons(self):
 
         ''' Returns the set of latitudes and longitudes '''
 
-        coords = sorted([c for c in list(self.ds.coords) if 
-                        any(ele in c for ele in ['lat', 'lon'])])
+        coords = sorted([c for c in list(self.ds.coords) if
+                         any(ele in c for ele in ['lat', 'lon'])])
         return [self.ds.coords[c].values for c in coords]
 
     @property
@@ -581,7 +578,9 @@ class fieldData(UPPData):
 
     def run_total(self, values, **kwargs) -> np.ndarray:
 
-        # pylint: disable=unused-argument
+        ''' Sums over all the forecast lead times available. '''
+
+        # pylint: disable=unused-argument,no-self-use
 
         return values.sum(dim='fcst_hr')
 

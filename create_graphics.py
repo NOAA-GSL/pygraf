@@ -142,7 +142,7 @@ def gather_gribfiles(cla, fhr, gribfile):
 
         # Append a single forecast hour to the existing gribfile object.
         coord_dims = {'fcst_hr': gribfile.coord_dims.get('fcst_hr').append(fhr)}
-        gribfile.append(coord_dims, filenames)
+        gribfile.append(filenames)
 
     return gribfile
 
