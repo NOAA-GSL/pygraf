@@ -85,6 +85,7 @@ def create_zip(png_files, zipf):
             fd = open(lock_file, 'w')
             print(f'Writing to zip file for files like: {png_files[0][-10:]}')
 
+            print(f'trying zip file {zipf}')
             try:
                 with zipfile.ZipFile(zipf, 'a', zipfile.ZIP_DEFLATED) as zfile:
                     for png_file in png_files:
@@ -447,10 +448,13 @@ def graphics_driver(cla):
     '''
 
     # Create an empty zip file
-    zipf = None
-    if cla.zip_dir:
-        os.makedirs(cla.zip_dir, exist_ok=True)
-        zipf = os.path.join(cla.zip_dir, 'files.zip')
+    zipf = []
+    for tile in cla.tiles:
+        if cla.zip_dir:
+            tile_zip_dir = os.path.join(cla.zip_dir, tile)
+            os.makedirs(tile_zip_dir, exist_ok=True)
+            tile_zip_file = os.path.join(tile_zip_dir, 'files.zip')
+            zipf.append(tile_zip_file)				
 
     fcst_hours = copy.deepcopy(cla.fcst_hour)
 
@@ -490,15 +494,23 @@ def graphics_driver(cla):
                 create_maps(cla, fhr, grib_path, workdir)
 
             # Zip png files and remove the originals in a subprocess
-            if zipf:
-                png_files = glob.glob(os.path.join(workdir, f'*{fhr:02d}.png'))
+            i = 0
+            tile_strings = cla.tiles.copy()
+            tile_strings.reverse()
+            zipf_rev = zipf.copy()
+            zipf_rev.reverse()
+            while i < len(zipf_rev):
+                if tile_strings[i] == "full":
+                    tile_strings[i] = ""
+                png_files = glob.glob(os.path.join(workdir, f'*{tile_strings[i]}*{fhr:02d}.png'))
 
                 zip_proc = Process(group=None,
                                    target=create_zip,
-                                   args=(png_files, zipf),
+                                   args=(png_files, zipf_rev[i]),
                                    )
                 zip_proc.start()
                 zip_proc.join()
+                i = i + 1
 
             # Keep track of last time we did something useful
             timer_end = time.time()

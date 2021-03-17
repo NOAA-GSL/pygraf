@@ -81,7 +81,7 @@ hourly:
     rh:
       - 2m
       - 850mb
-#      - ua
+      - mean
       - pw
     rvil:
       - sfc
