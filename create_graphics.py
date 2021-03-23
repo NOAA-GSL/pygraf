@@ -376,8 +376,9 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
 
     # Build the output path
     png_suffix = level if level != 'ua' else ''
-    tile_label = f'_{tile}' if tile != 'full' else ''
+    tile_label = f'_{tile}_' # if tile != 'full' else ''
     png_file = f'{variable}{tile_label}{png_suffix}_f{fhr:03d}.png'
+    png_file = png_file.replace("__", "_")
     png_path = os.path.join(workdir, png_file)
 
     print('*' * 120)
@@ -448,13 +449,13 @@ def graphics_driver(cla):
     '''
 
     # Create an empty zip file
-    zipf = []
-    for tile in cla.tiles:
-        if cla.zip_dir:
+    if cla.zip_dir:
+        zipfiles = {}
+        for tile in cla.tiles:
             tile_zip_dir = os.path.join(cla.zip_dir, tile)
             os.makedirs(tile_zip_dir, exist_ok=True)
             tile_zip_file = os.path.join(tile_zip_dir, 'files.zip')
-            zipf.append(tile_zip_file)				
+            zipfiles[tile] = tile_zip_file
 
     fcst_hours = copy.deepcopy(cla.fcst_hour)
 
@@ -494,23 +495,15 @@ def graphics_driver(cla):
                 create_maps(cla, fhr, grib_path, workdir)
 
             # Zip png files and remove the originals in a subprocess
-            i = 0
-            tile_strings = cla.tiles.copy()
-            tile_strings.reverse()
-            zipf_rev = zipf.copy()
-            zipf_rev.reverse()
-            while i < len(zipf_rev):
-                if tile_strings[i] == "full":
-                    tile_strings[i] = ""
-                png_files = glob.glob(os.path.join(workdir, f'*{tile_strings[i]}*{fhr:02d}.png'))
-
+            for tile, zipf in zipfiles.items():
+                png_files = glob.glob(os.path.join(workdir, f'*_{tile}_*{fhr:02d}.png'))
+                png_files = [png_file.replace("__", "_") for png_file in png_files]
                 zip_proc = Process(group=None,
                                    target=create_zip,
-                                   args=(png_files, zipf_rev[i]),
+                                   args=(png_files, zipf),
                                    )
                 zip_proc.start()
                 zip_proc.join()
-                i = i + 1
 
             # Keep track of last time we did something useful
             timer_end = time.time()
