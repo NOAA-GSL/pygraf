@@ -1,5 +1,5 @@
 hourly:
-  model: rtma
+  model: hrrr
   variables:
 #    1hsm:
 #      - sfc
@@ -81,7 +81,7 @@ hourly:
     rh:
       - 2m
       - 850mb
-#      - ua
+      - mean
       - pw
     rvil:
       - sfc
