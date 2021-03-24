@@ -83,9 +83,8 @@ def create_zip(png_files, zipf):
     while True:
         if not os.path.exists(lock_file):
             fd = open(lock_file, 'w')
-            print(f'Writing to zip file for files like: {png_files[0][-10:]}')
+            print(f'Writing to zip file {zipf} for files like: {png_files[0][-10:]}')
 
-            print(f'trying zip file {zipf}')
             try:
                 with zipfile.ZipFile(zipf, 'a', zipfile.ZIP_DEFLATED) as zfile:
                     for png_file in png_files:
@@ -376,8 +375,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
 
     # Build the output path
     png_suffix = level if level != 'ua' else ''
-    tile_label = f'_{tile}_' # if tile != 'full' else ''
-    png_file = f'{variable}{tile_label}{png_suffix}_f{fhr:03d}.png'
+    png_file = f'{variable}_{tile}_{png_suffix}_f{fhr:03d}.png'
     png_file = png_file.replace("__", "_")
     png_path = os.path.join(workdir, png_file)
 
@@ -454,8 +452,7 @@ def graphics_driver(cla):
         for tile in cla.tiles:
             tile_zip_dir = os.path.join(cla.zip_dir, tile)
             os.makedirs(tile_zip_dir, exist_ok=True)
-            tile_zip_file = os.path.join(tile_zip_dir, 'files.zip')
-            zipfiles[tile] = tile_zip_file
+            zipfiles[tile] = os.path.join(tile_zip_dir, 'files.zip')
 
     fcst_hours = copy.deepcopy(cla.fcst_hour)
 
@@ -497,7 +494,6 @@ def graphics_driver(cla):
             # Zip png files and remove the originals in a subprocess
             for tile, zipf in zipfiles.items():
                 png_files = glob.glob(os.path.join(workdir, f'*_{tile}_*{fhr:02d}.png'))
-                png_files = [png_file.replace("__", "_") for png_file in png_files]
                 zip_proc = Process(group=None,
                                    target=create_zip,
                                    args=(png_files, zipf),
