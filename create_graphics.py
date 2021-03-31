@@ -204,6 +204,13 @@ def parse_args():
         type=int,
         )
     parser.add_argument(
+        '-m',
+        default='hrrr',
+        dest='model_name',
+        help='model_name used to plotting.',
+        type=str,
+        )
+    parser.add_argument(
         '-n',
         default=1,
         dest='nprocs',
@@ -413,6 +420,7 @@ def parallel_skewt(cla, fhr, ds, site, workdir):
         filetype=cla.file_type,
         loc=site,
         max_plev=cla.max_plev,
+        model_name=cla.model_name,
         )
     skew.create_diagram()
     outfile = f"skewt_{skew.site_code}_{skew.site_num}_f{fhr:02d}.png"

@@ -36,6 +36,7 @@ class SkewTDiagram(grib.profileData):
 
       fhr              forecast hour
       max_plev         maximum pressure level to plot in mb
+      model_name       model name to use for plotting
 
     Additional keyword arguments for the grib.profileData base class should also
     be included.
@@ -53,43 +54,95 @@ class SkewTDiagram(grib.profileData):
                          )
 
         self.max_plev = kwargs.get('max_plev', 0)
+        self.model_name = kwargs.get('model_name', 'Analysis')
 
-    def _add_hydrometeors(self, hydro_subplot):
-
+    def _add_hydrometeors(self, hydro_subplot): # pylint: disable=too-many-locals
         mixing_ratios = OrderedDict({
-            'clwmr': {'color': 'blue', 'label': 'CWAT', 'marker': 's', 'units': 'g/m2'},
-            'icmr': {'color': 'red', 'label': 'CICE', 'marker': '^', 'units': 'g/m2'},
-            'rwmr': {'color': 'cyan', 'label': 'RAIN', 'marker': 'o', 'units': 'g/m2'},
-            'snmr': {'color': 'purple', 'label': 'SNOW', 'marker': '*', 'units': 'g/m2'},
-            'grle': {'color': 'orange', 'label': 'GRPL', 'marker': 'D', 'units': 'g/m2'},
-            })
+            'clwmr': {
+                'color': 'blue',
+                'label': 'CWAT',
+                'marker': 's',
+                'scale': 1.0,
+                'units': 'g/m2'
+            },
+            'icmr': {
+                'color': 'red',
+                'label': 'CICE',
+                'marker': '^',
+                'scale': 10.0,
+                'units': 'g/m2'
+            },
+            'rwmr': {
+                'color': 'cyan',
+                'label': 'RAIN',
+                'marker': 'o',
+                'scale': 1.0,
+                'units': 'g/m2'
+            },
+            'snmr': {
+                'color': 'purple',
+                'label': 'SNOW',
+                'marker': '*',
+                'scale': 1.0,
+                'units': 'g/m2'
+            },
+            'grle': {
+                'color': 'orange',
+                'label': 'GRPL',
+                'marker': 'D',
+                'scale': 1.0,
+                'units': 'g/m2'
+            },
+        })
 
         profiles = self.atmo_profiles # dictionary
         pres = profiles.get('pres').get('data')
+        nlevs = len(pres)        # determine number of vertical levels
+        pres_sfc = pres[0]       # need correct surface pressure value!
         handles = []
+        gravity = 9.81           # m/s^2
+
         lines = ['Vert. Integrated Amt\n(Resolved, Total)']
 
         for mixr, settings in mixing_ratios.items():
             # Get the profile values
-            profile = np.asarray(self.values(name=mixr)) * 1000.
+            scale = settings.get('scale')
+            profile = np.asarray(self.values(name=mixr)) * 1000. * scale
+            mixr_total = 0.
+            for n in range(nlevs):
+                if n == 0:
+                    pres_layer = 2 * (pres_sfc - pres[n])  # layer depth
+                    pres_sigma = pres_sfc - pres_layer        # pressure at next sigma level
+                else:
+                    pres_layer = 2 * (pres_sigma - pres[n]) # layer depth
+                    pres_sigma = pres_sigma - pres_layer       # pressure at next sigma level
+                    mixr_total = mixr_total + pres_layer / gravity * profile[n]
+
+            # limit values to upper and lower values of lotting range
             profile = np.where((profile > 0.) & (profile < 1.e-4), 1.e-4, profile)
             profile = np.where((profile > 10.), 10., profile)
 
+            # plot line
             hydro_subplot.plot(profile, pres,
                                settings.get('color'),
                                fillstyle='none',
+                               linewidth=0.5,
                                marker=settings.get('marker'),
                                markersize=6,
                               )
 
             # compute vertically integrated amount and add legend line
-            line = f"{settings.get('label'):<7s} {sum(profile):.3f} {settings.get('units')}"
+            line = f"{settings.get('label'):<7s} {mixr_total.magnitude:>10.3f} {settings.get('units')}"
+            if scale != 1.0:
+                line = f"{settings.get('label'):<5s}(x{scale}) {mixr_total.magnitude:.3f} "\
+                       f"{settings.get('units')}"
             lines.append(line)
 
             handles.append(mlines.Line2D([], [],
                                          color=settings.get('color'),
                                          fillstyle='none',
                                          label=settings.get('label'),
+                                         linewidth=1.0,
                                          marker=settings.get('marker'),
                                          markersize=8,
                                          )
@@ -99,7 +152,7 @@ class SkewTDiagram(grib.profileData):
 
         contents = '\n'.join(lines)
         # Draw the vertically integrated amounts box
-        hydro_subplot.text(0.08, 0.90, contents,
+        hydro_subplot.text(0.02, 0.90, contents,
                            bbox=dict(facecolor='white', edgecolor='black', alpha=0.7),
                            fontproperties=fm.FontProperties(family='monospace'),
                            size=8,
@@ -522,7 +575,7 @@ class SkewTDiagram(grib.profileData):
         vtime = self.date_to_str(self.valid_dt)
 
         # Top Left
-        plt.title(f"Analysis: {atime}\nFcst Hr: {self.fhr}",
+        plt.title(f"{self.model_name}: {atime}\nFcst Hr: {self.fhr}",
                   fontsize=16,
                   loc='left',
                   position=(-4.8, 1.03),
