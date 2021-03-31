@@ -105,7 +105,7 @@ def create_zip(png_files, zipf):
         # Wait before trying to obtain the lock on the file
         time.sleep(5)
 
-def gather_gribfiles(cla, fhr, gribfile):
+def gather_gribfiles(cla, fhr, gribfiles):
 
     ''' Returns the appropriate gribfiles object for the type of graphics being
     generated -- whether it's for a single forecast time or all forecast lead
@@ -117,7 +117,7 @@ def gather_gribfiles(cla, fhr, gribfile):
     filenames = {'01fcst': [], 'free_fcst': []}
 
     fcst_hours = [int(fhr)]
-    if cla.all_leads and gribfile is None:
+    if cla.all_leads and gribfiles is None:
         fcst_hours = list(range(int(fhr) + 1))
 
     for fcst_hour in fcst_hours:
@@ -128,23 +128,23 @@ def gather_gribfiles(cla, fhr, gribfile):
         else:
             filenames['free_fcst'].append(filename)
 
-    if gribfile is None:
+    if gribfiles is None:
 
-        # Create a new GribFile object, include all hours, or just this one,
+        # Create a new GribFiles object, include all hours, or just this one,
         # depending on command line argument flag
 
-        gribfile = grib.GribFiles(
+        gribfiles = grib.GribFiles(
             coord_dims={'fcst_hr': fcst_hours},
             filenames=filenames,
             filetype=cla.file_type,
             )
     else:
 
-        # Append a single forecast hour to the existing gribfile object.
-        gribfile.coord_dims.get('fcst_hr').append(fhr)
-        gribfile.append(filenames)
+        # Append a single forecast hour to the existing GribFiles object.
+        gribfiles.coord_dims.get('fcst_hr').append(fhr)
+        gribfiles.append(filenames)
 
-    return gribfile
+    return gribfiles
 
 def generate_tile_list(arg_list):
 
