@@ -207,7 +207,7 @@ def parse_args():
         '-m',
         default='hrrr',
         dest='model_name',
-        help='model_name used to plotting.',
+        help='string to use in title of graphic.',
         type=str,
         )
     parser.add_argument(
