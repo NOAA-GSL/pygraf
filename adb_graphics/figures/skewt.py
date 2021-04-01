@@ -132,7 +132,8 @@ class SkewTDiagram(grib.profileData):
                               )
 
             # compute vertically integrated amount and add legend line
-            line = f"{settings.get('label'):<7s} {mixr_total.magnitude:>10.3f} {settings.get('units')}"
+            line = f"{settings.get('label'):<7s} {mixr_total.magnitude:>10.3f} "\
+                   f"{settings.get('units')}"
             if scale != 1.0:
                 line = f"{settings.get('label'):<5s}(x{scale}) {mixr_total.magnitude:.3f} "\
                        f"{settings.get('units')}"
