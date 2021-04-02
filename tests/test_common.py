@@ -126,6 +126,7 @@ class TestDefaultSpecs():
         default_specs.yml. '''
 
         return {
+            'accumulate': self.is_bool,
             'clevs': self.is_a_clev,
             'cmap': self.is_a_cmap,
             'colors': self.is_a_color,

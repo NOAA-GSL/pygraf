@@ -361,7 +361,7 @@ class DataMap():
 
         x, y = self._xy_mesh(field)
 
-        return func(x, y, field.values(),
+        return func(x, y, field.values()[::],
                     ax=ax,
                     **kwargs,
                     )

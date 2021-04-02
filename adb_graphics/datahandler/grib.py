@@ -35,12 +35,131 @@ class GribFile():
         ''' Internal method that opens the grib file. Returns a grib message
         iterator. '''
 
-        #return Nio.open_file(self.filename, format="grib2") # pylint: disable=c-extension-no-member
         return xr.open_dataset(self.filename,
                                engine='pynio',
                                lock=False,
                                backend_kwargs=dict(format="grib2"),
                                )
+
+class GribFiles():
+
+    ''' Class for loading in a set of grib files and combining them over
+    forecast hours. '''
+
+    def __init__(self, coord_dims, filenames, filetype):
+
+        '''
+        Arguments:
+
+          coord_dims  dict containing the name of the dimension to
+                      concat (key), and a list of its values (value).
+                        Ex: {'fhr': [2, 3, 4]}
+          filenames   dict containing list of files names for the 0h and 1h
+                      forecast lead times ('01fcst'), and all the free forecast
+                      hours after that ('free_fcst').
+          filetype    key to use for dict when setting variable_names
+
+        '''
+        self.filenames = filenames
+        self.filetype = filetype
+        self.coord_dims = coord_dims
+        self.contents = self._load()
+
+    def append(self, filenames):
+
+        ''' Add a single new slice to existing data set. Must match coord_dims
+        and filetype of original dataset. Updates current contents of Object'''
+
+        self.contents = self._load(filenames)
+
+    def _load(self, filenames=None):
+
+        ''' Load the set of files into a single XArray structure. '''
+
+        all_leads = [] if filenames is None else [self.contents]
+        filenames = self.filenames if filenames is None else filenames
+        var_names = self.variable_names
+
+        # 0h and 1h forecast variables are named like the keys in var_names,
+        # while the free forecast hours are named like the values in var_names.
+        # Need to do a bit of cleanup to get them into a single datastructure.
+        names = {
+            '01fcst': var_names,
+            'free_fcst': var_names.values(),
+            }
+
+        for fcst_type, vnames in names.items():
+
+            if filenames.get(fcst_type):
+                for filename in filenames.get(fcst_type):
+                    print(f'Loading grib2 file: {fcst_type}, {filename}')
+
+                if fcst_type == '01fcst':
+                    if filenames.get(fcst_type):
+                        # Rename variables to match free forecast variables
+                        all_leads.append(xr.open_mfdataset(
+                            filenames[fcst_type],
+                            **self.open_kwargs(vnames),
+                            ).rename_vars(vnames))
+                else:
+                    all_leads.append(xr.open_mfdataset(
+                        filenames[fcst_type],
+                        **self.open_kwargs(vnames),
+                        ))
+
+        ret = xr.combine_nested(all_leads,
+                                compat='override',
+                                concat_dim=list(self.coord_dims.keys())[0],
+                                coords='minimal',
+                                data_vars='minimal',
+                                )
+
+        return ret
+
+    def open_kwargs(self, vnames):
+
+        ''' Defines the key word arguments used by the various calls to XArray
+        open_mfdataset '''
+
+        return dict(
+            backend_kwargs=dict(format="grib2"),
+            combine='nested',
+            compat='override',
+            concat_dim=list(self.coord_dims.keys())[0],
+            coords='minimal',
+            data_vars=vnames,
+            engine='pynio',
+            lock=False,
+            )
+
+    @property
+    def variable_names(self):
+
+        '''
+        Defines the variable name transitions that need to happen for each
+        model to combine along forecast hours.
+
+        Keys are original variable names, values are the updated variable names.
+
+        Choosing to update the 0 and 1 hour forecast variables to the longer
+        lead times for efficiency's sake.
+        '''
+
+        names = {
+            'prs': {
+                'REFC_P0_L10_GLC0': 'REFC_P0_L10_GLC0',
+                'MXUPHL_P8_2L103_GLC0_max': 'MXUPHL_P8_2L103_GLC0_max1h',
+                'UGRD_P0_L103_GLC0': 'UGRD_P0_L103_GLC0',
+                'VGRD_P0_L103_GLC0': 'VGRD_P0_L103_GLC0',
+                'WEASD_P8_L1_GLC0_acc': 'WEASD_P8_L1_GLC0_acc1h',
+                'APCP_P8_L1_GLC0_acc': 'APCP_P8_L1_GLC0_acc1h',
+                'PRES_P0_L1_GLC0': 'PRES_P0_L1_GLC0',
+                'VAR_0_7_200_P8_2L103_GLC0_min': 'VAR_0_7_200_P8_2L103_GLC0_min1h',
+                }
+            }
+
+        return names[self.filetype]
+
 
 class UPPData(specs.VarSpec):
 
@@ -163,9 +282,12 @@ class UPPData(specs.VarSpec):
         if lev is not None:
             return lev
 
-        # Follow convention of fieldData objects for getting vertical level
-        dim_name = spec.get('vertical_level_name',
-                            list(field.dims)[0])
+        # Determine the vertical dimension of the variable by looking through
+        # the field's dimensions for one that includes "lv". Use the first
+        # instance returned in the list.
+        vertical_dim = [dim for dim in field.dims if 'lv' in dim]
+        dim_name = spec.get('vertical_level_name', vertical_dim[0])
+
         levs = self.ds[dim_name].values
 
         # Requested level
@@ -210,19 +332,24 @@ class UPPData(specs.VarSpec):
 
     @property
     def grid_suffix(self):
-        ''' Return the suffix of the first variable in the file. This should
-        correspond to the grid tag. '''
 
-        var = list(self.ds.keys())[0]
-        return var.split('_')[-1]
+        ''' Return the suffix of the first variable with 4 sections (split on _)
+        in the file. This should correspond to the grid tag. '''
+
+        for var in self.ds.keys():
+            vsplit = var.split('_')
+            if len(vsplit) == 4:
+                return vsplit[-1]
+        return 'GRID NOT FOUND'
 
 
     def latlons(self):
 
         ''' Returns the set of latitudes and longitudes '''
 
-        return [self.ds.coords[c].values for c in \
-                list(self.ds.coords)[-2:]]
+        coords = sorted([c for c in list(self.ds.coords) if
+                         any(ele in c for ele in ['lat', 'lon'])])
+        return [self.ds.coords[c].values for c in coords]
 
     @property
     def lev_descriptor(self):
@@ -420,7 +547,7 @@ class fieldData(UPPData):
             )
 
         # Last coordinate listed should be latitude or longitude
-        lat_var, _ = list(self.field.coords)[-2:]
+        lat_var = [var for var in self.field.coords if 'lat' in var][0]
 
         # Get the latitude variable
         lat = self.ds[lat_var]
@@ -450,6 +577,14 @@ class fieldData(UPPData):
             grid_info[bm_arg] = val
 
         return grid_info
+
+    def run_total(self, values, **kwargs) -> np.ndarray:
+
+        ''' Sums over all the forecast lead times available. '''
+
+        # pylint: disable=unused-argument,no-self-use
+
+        return values.sum(dim='fcst_hr')
 
     def supercooled_liquid_water(self, values, **kwargs) -> np.ndarray:
 
@@ -522,7 +657,7 @@ class fieldData(UPPData):
 
         Keyword Args:
             ncl_name        the NCL-assigned Grib2 name
-            one_lev    bool flag. if True, get the single level of the variable
+            one_lev         bool flag. if True, get the single level of the variable
             vertical_index  the index (int) of the desired vertical level
         '''
 
@@ -549,17 +684,35 @@ class fieldData(UPPData):
                 raise errors.NoGraphicsDefinitionForVariable(name, level)
             field = self.get_field(ncl_name or self.ncl_name(spec))
 
-        if len(field.shape) == 2:
-            vals = field[::]
+        lev = vertical_index
+        vertical_dim = []
 
-        elif len(field.shape) == 3:
-            if one_lev:
-                lev = vertical_index
-                if vertical_index is None:
+        vals = field
+        if one_lev:
+
+            # Check if it's a 3D variable (lv in any dimension field)
+            vertical_dim = [dim for dim in field.dims if 'lv' in dim]
+
+            if vertical_dim: # Field has a vertical dimension
+
+                dim_name = spec.get('vertical_level_name', vertical_dim[0])
+                dim_name = vertical_dim[0]
+
+                if vertical_index is None: # No index is provided in kwargs
                     lev = self.get_level(field, level, spec)
-                vals = field[lev, :, :]
-            else:
-                vals = field[:, :, :]
+
+                try:
+                    vals = vals.isel(**{dim_name: lev})
+                except:
+                    print(f'Error for {vals.name} : {dim_name} {lev} \
+                            {level} {spec}')
+                    raise
+
+
+        # Select a single forecast hour (only if there are many)
+        if not spec.get('accumulate', False):
+            if 'fcst_hr' in vals.dims:
+                vals = vals.sel(**{'fcst_hr': int(self.fhr)})
 
         transforms = spec.get('transform')
         if transforms:
