@@ -139,17 +139,20 @@ class SkewTDiagram(grib.profileData):
                        f"{settings.get('units')}"
             lines.append(line)
 
+            label = f"{settings.get('label'):<7s}"
+            if scale != 1.0:
+                label = f"{settings.get('label'):<5s}(x{scale})"
             handles.append(mlines.Line2D([], [],
                                          color=settings.get('color'),
                                          fillstyle='none',
-                                         label=settings.get('label'),
+                                         label=label,
                                          linewidth=1.0,
                                          marker=settings.get('marker'),
                                          markersize=8,
                                          )
                           )
 
-        plt.legend(handles=handles, loc=[4.3, -0.8])
+        plt.legend(handles=handles, loc=[4.2, -0.8])
 
         contents = '\n'.join(lines)
         # Draw the vertically integrated amounts box
