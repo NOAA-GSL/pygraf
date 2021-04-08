@@ -137,6 +137,7 @@ def gather_gribfiles(cla, fhr, gribfiles):
             coord_dims={'fcst_hr': fcst_hours},
             filenames=filenames,
             filetype=cla.file_type,
+            model=cla.images[0],
             )
     else:
 
@@ -556,14 +557,15 @@ def graphics_driver(cla):
                             )
 
             # Zip png files and remove the originals in a subprocess
-            for tile, zipf in zipfiles.items():
-                png_files = glob.glob(os.path.join(workdir, f'*_{tile}_*{fhr:02d}.png'))
-                zip_proc = Process(group=None,
-                                   target=create_zip,
-                                   args=(png_files, zipf),
-                                   )
-                zip_proc.start()
-                zip_proc.join()
+            if cla.zip_dir:
+                for tile, zipf in zipfiles.items():
+                    png_files = glob.glob(os.path.join(workdir, f'*_{tile}_*{fhr:02d}.png'))
+                    zip_proc = Process(group=None,
+                                       target=create_zip,
+                                       args=(png_files, zipf),
+                                       )
+                    zip_proc.start()
+                    zip_proc.join()
 
             # Keep track of last time we did something useful
             timer_end = time.time()
