@@ -11,7 +11,6 @@ from string import digits, ascii_letters
 
 from matplotlib import cm
 import numpy as np
-import xarray as xr
 
 from .. import conversions
 from .. import errors
@@ -149,7 +148,7 @@ class UPPData(specs.VarSpec):
             dim_name = [vertical_dim]
         else:
             dim_name = [var for var in self.ds.variables \
-                    if vertical_dim in var]
+                        if vertical_dim in var]
 
         # Requested level(s)
         lev_val, _ = self.numeric_level(level=level,
@@ -159,10 +158,10 @@ class UPPData(specs.VarSpec):
         levs = [self.ds[dim].values for dim in dim_name]
         if len(levs) == 2 and len(lev_val) == 2:
             levlist = [list(lev) for lev in levs]
-            for i, levset in enumerate(zip(*levlist)):
+            for index, levset in enumerate(zip(*levlist)):
                 print(f'LEVSET2: {levset, lev_val}')
                 if sorted(levset) == lev_val:
-                    return i
+                    return index
 
         if len(lev_val) == 1:
             try:
@@ -179,9 +178,11 @@ class UPPData(specs.VarSpec):
                 print(f"Could not find a level for {field.name} at {lev_val[0]} for \
                         {levarray}")
                 raise
+
             return index
 
-
+        msg = f'Length of lev_val ({len(lev_val)} or levs ({len(levs)}) bad!'
+        raise ValueError(msg)
 
         # Create a list of matching values from each requested dimension
         #idx = []
@@ -369,7 +370,8 @@ class UPPData(specs.VarSpec):
         ''' Returns the values of a given variable. '''
         ...
 
-    def vertical_dim(self, field):
+    @staticmethod
+    def vertical_dim(field):
 
         ''' Determine the vertical dimension of the variable by looking through
         the field's dimensions for one that includes "lv". Return the first
