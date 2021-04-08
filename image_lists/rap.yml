@@ -3,8 +3,6 @@ hourly:
   variables:
     1hsnw:
       - sfc
-    acp:
-      - sfc
     acsnw:
       - sfc
     acfrozr:
@@ -18,11 +16,7 @@ hourly:
       - mul
       - mx90mb
       - sfc
-    cctop:
-      - ua
     ceil:
-      - ua
-    ctop:
       - ua
     cin:
       - sfc
@@ -33,9 +27,11 @@ hourly:
       - total
     cref:
       - sfc
+    ctop:
+      - ua
     dewp:
       - 2m
-    ectp:
+    echotop:
       - sfc
     flru:
       - sfc
@@ -49,7 +45,7 @@ hourly:
       - sfc
     pchg:
       - sfc
-    ptemp:
+    ptmp:
       - 2m
     ptyp:
       - sfc
@@ -67,13 +63,15 @@ hourly:
       - sfc
     snod:
       - sfc
-    soilt: &soilt_levs
+    soilt:
       - 1cm
       - 4cm
       - 10cm
     soilw:
-      <<: *soilt_levs
       - 0cm
+      - 1cm
+      - 4cm
+      - 10cm
     solar:
       - sfc
     temp:
