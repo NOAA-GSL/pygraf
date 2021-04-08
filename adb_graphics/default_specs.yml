@@ -49,10 +49,6 @@
 #                        of 2D field when two or more fields are "stacked"
 #                        into a single 3D array.
 #
-#   vertical_level_name: name of variable in grib2 file that holds the level
-#                        (or bottom level of a layer) of 2D field when two or
-#                        more fields are "stacked" into a single 3D array.
-#
 #   wind: a boolean variable that switches on/off the wind barbs drawn from the
 #         wind at the same level, OR a string specifying the key for the desired
 #         wind level
@@ -357,7 +353,10 @@ echotop: # Echo Top
     clevs: !!python/object/apply:numpy.arange [4, 50, 3]
     cmap: NWSReflectivity
     colors: cref_colors
-    ncl_name: RETOP_P0_L3_{grid}
+    ncl_name: 
+      hrrr: RETOP_P0_L3_{grid}
+      rap: RETOP_P0_L3_{grid}
+      rrfs: RETOP_P0_L200_{grid}
     ticks: 0
     title: Echo Top
     transform: conversions.m_to_kft
@@ -477,84 +476,84 @@ hlcy: # Helicity
     cmap: gist_ncar
     colors: rainbow12_colors
     ncl_name: UPHL_P0_2L103_{grid}
+    split: True
     ticks: 25
     title: 1-6km Updraft Helicity
     unit: m2/s2
-    vertical_index: 1
   in25: # Hourly updraft helicity over 2-5 km layer
     <<: *hlcy
     clevs: !!python/object/apply:numpy.arange [25, 301, 25]
     ncl_name: UPHL_P0_2L103_{grid}
+    split: True
     title: 2-5km Updraft Helicity
-    vertical_index: 0
   mn02: &hlcy_mn02 # Hourly minimum of updraft helicity over 0-2 km layer
     <<: *hlcy
     clevs: !!python/object/apply:numpy.arange [12.5, 150.5, 12.5]
     ncl_name: VAR_0_7_200_P8_2L103_{grid}_min1h
+    split: True
     ticks: 12.5
     title: 0-2km Min Updraft Helicity (over prv hr)
-    vertical_index: 0
   mn03: &hlcy_mn03 # Hourly minimum of updraft helicity over 0-3 km layer
     <<: *hlcy
     clevs: !!python/object/apply:numpy.arange [12.5, 150.5, 12.5]
     ncl_name: VAR_0_7_200_P8_2L103_{grid}_min1h
+    split: True
     ticks: 12.5
     title: 0-3km Min Updraft Helicity (over prv hr)
-    vertical_index: 1
   mn16: &hlcy_mn16 # Hourly minimum of updraft helicity over 1-6 km layer
     <<: *hlcy
     clevs: !!python/object/apply:numpy.arange [25, 301, 25]
     ncl_name: VAR_0_7_200_P8_2L103_{grid}_min1h
+    split: True
     title: 1-6km Min Updraft Helicity (over prv hr)
-    vertical_index: 3
   mn25: &hlcy_mn25 # Hourly minimum of updraft helicity over 2-5 km layer
     <<: *hlcy
     clevs: !!python/object/apply:numpy.arange [25, 301, 25]
+    split: True
     ncl_name: VAR_0_7_200_P8_2L103_{grid}_min1h
     title: 2-5km Min Updraft Helicity (over prv hr)
-    vertical_index: 2
   mx02: &hlcy_mx02 # Hourly maximum of updraft helicity over 0-2 km layer
     <<: *hlcy
     clevs: !!python/object/apply:numpy.arange [12.5, 150.5, 12.5]
     ncl_name: MXUPHL_P8_2L103_{grid}_max1h
+    split: True
     ticks: 12.5
     title: 0-2km Max Updraft Helicity (over prv hr)
-    vertical_index: 0
   mx03: &hlcy_mx03 # Hourly maximum of updraft helicity over 0-3 km layer
     <<: *hlcy
     clevs: !!python/object/apply:numpy.arange [12.5, 150.5, 12.5]
     ncl_name: MXUPHL_P8_2L103_{grid}_max1h
+    split: True
     ticks: 12.5
     title: 0-3km Max Updraft Helicity (over prv hr)
-    vertical_index: 1
   mx16: &hlcy_mx16 # Hourly maximum of updraft helicity over 1-6 km layer
     <<: *hlcy
     clevs: !!python/object/apply:numpy.arange [25, 301, 25]
     ncl_name: MXUPHL_P8_2L103_{grid}_max1h
+    split: True
     title: 1-6km Max Updraft Helicity (over prv hr)
-    vertical_index: 3
   mx25: &hlcy_mx25 # Hourly maximum of updraft helicity over 2-5 km layer
     <<: *hlcy
     clevs: !!python/object/apply:numpy.arange [25, 301, 25]
     ncl_name: MXUPHL_P8_2L103_{grid}_max1h
+    split: True
     title: 2-5km Max Updraft Helicity (over prv hr)
-    vertical_index: 2
   sr01: # 0-1 km Storm Relative Helicity
     <<: *hlcy
     clevs: [25, 50, 100, 150, 200, 250, 300, 400, 500, 600, 700, 800]
     ncl_name: HLCY_P0_2L103_{grid}
     unit: $m^2 / s^2$
+    split: True
     ticks: 0
     title: 0-1 km Storm Relative Helicity
-    vertical_index: 0
   sr03: # 0-3 km Storm Relative Helicity
     <<: *hlcy
     clevs: [25, 50, 100, 150, 200, 250, 300, 400, 500, 600, 700, 800]
     ncl_name: HLCY_P0_2L103_{grid}
     unit: $m^2 / s^2$
+    split: True
     ticks: 0
     title: 0-3 km Storm Relative Helicity
-    vertical_index: 1
 hlcytot:
   mn02:
     <<: *hlcy_mn02
@@ -692,6 +691,7 @@ pres:
     colors: ps_colors
     ncl_name:
       hrrr: MSLMA_P0_L101_{grid}
+      rap: MSLMA_P0_L101_{grid}
       rrfs: PRMSL_P0_L101_{grid}
     ticks: 20
     transform: conversions.pa_to_hpa
@@ -865,7 +865,10 @@ rvil: # Radar-derived Vertically Integrated Liquid
     clevs: [0.05, 0.15, 0.76, 3.47, 6.92, 12, 31.6, 35, 40, 45, 50, 55, 60, 65, 70]
     cmap: NWSReflectivity
     colors: cref_colors
-    ncl_name: VIL_P0_L{level_type}_{grid}
+    ncl_name: 
+      hrrr: VIL_P0_L{level_type}_{grid}
+      rap: VIL_P0_L{level_type}_{grid}
+      rrfs: VIL_P0_L200_{grid}
     ticks: 0
     title: Radar-derived Vertically Integrated Liquid
     unit: kg/m^2
@@ -880,24 +883,24 @@ shear:
     cmap: jet
     colors: shear_colors
     ncl_name: VUCSH_P0_2L103_{grid}
+    split: True
     transform:
       funcs: vector_magnitude
       kwargs:
         field2: VVCSH_P0_2L103_{grid}
         one_lev: True
-        vertical_index: 0
+        split: True
     ticks: 0
     unit: $s^{-1}$
-    vertical_index: 0
   06km: # 0-6 km
     <<: *shear
+    split: True
     transform:
       funcs: vector_magnitude
       kwargs:
         field2: VVCSH_P0_2L103_{grid}
         one_lev: True
-        vertical_index: 1
-    vertical_index: 1
+        split: True
 shtfl: # Sensible Heat Net Flux
   sfc:
     <<: *heat_flux
@@ -930,7 +933,10 @@ soilm: # Soil Moisture Availability
     clevs: [0, 5, 15, 25, 35, 45, 55, 65, 75, 85, 95]
     cmap: Spectral
     colors: soilm_colors
-    ncl_name: MSTAV_P0_L106_{grid}
+    ncl_name:
+      hrrr: MSTAV_P0_L106_{grid}
+      rap: MSTAV_P0_L106_{grid}
+      rrfs: SOILM_P0_2L106_{grid}
     ticks: 0
     title: Soil Moisture Availability
     unit: "%"
@@ -943,7 +949,6 @@ soilt: # Soil Temperature
     ticks: 0
     title: Soil Temperature at Sfc
     unit: K
-    vertical_level_name: lv_DBLL10_l0
   1cm:
     <<: *soilt_levs
     title: Soil Temperature at 1cm
@@ -954,6 +959,9 @@ soilt: # Soil Temperature
     <<: *soilt_levs
     title: Soil Temperature at 10cm
   30cm:
+    <<: *soilt_levs
+    title: Soil Temperature at 30cm
+  40cm:
     <<: *soilt_levs
     title: Soil Temperature at 30cm
   60cm:
@@ -977,7 +985,6 @@ soilw: # Soil Moisture
     ticks: 0
     title: Soil Moisture at Sfc
     unit: fraction
-    vertical_level_name: lv_DBLL10_l0
   1cm:
     <<: *soilw_levs
     title: Soil Moisture at 1cm
@@ -990,6 +997,9 @@ soilw: # Soil Moisture
   30cm:
     <<: *soilw_levs
     title: Soil Moisture at 30cm
+  40cm:
+    <<: *soilw_levs
+    title: Soil Moisture at 40cm
   60cm:
     <<: *soilw_levs
     title: Soil Moisture at 60cm
@@ -1286,7 +1296,6 @@ vvort: # Vertical vorticity
     ticks: 0
     title: 0-1km Max Vertical Velocity (over prev hour)
     unit: 1/s
-    vertical_level_name: lv_HTGL11_l0
   mx02: # Hourly maximum of vertical vorticity over 0-2 km layer
     <<: *vvort 
     title: 0-2km Max Vertical Velocity (over prev hour)
