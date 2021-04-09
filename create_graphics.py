@@ -243,7 +243,7 @@ def parse_args():
         )
     parser.add_argument(
         '-m',
-        default='hrrr',
+        default='Unnamed Experiment',
         dest='model_name',
         help='string to use in title of graphic.',
         type=str,
