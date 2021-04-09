@@ -55,6 +55,7 @@ class GribFiles():
         self.filenames = filenames
         self.filetype = filetype
         self.coord_dims = coord_dims
+        self.grid_suffix = self._get_grid_suffix(filenames)
         self.contents = self._load()
 
 
@@ -64,6 +65,25 @@ class GribFiles():
         and filetype of original dataset. Updates current contents of Object'''
 
         self.contents = self._load(filenames)
+
+    def _get_grid_suffix(self, filenames):
+
+        ''' Return the suffix of the first variable with 4 sections (split on _)
+        in the file. This should correspond to the grid tag. '''
+
+        for files in filenames.values():
+            if files:
+                gfile = xr.open_dataset(files[0],
+                                        engine='pynio',
+                                        lock=False,
+                                        backend_kwargs=dict(format="grib2"),
+                                        )
+                for var in gfile.keys():
+                    vsplit = var.split('_')
+                    if len(vsplit) == 4:
+                        gfile.close()
+                        return vsplit[-1]
+        return 'GRID NOT FOUND'
 
     def _load(self, filenames=None):
 
@@ -138,34 +158,35 @@ class GribFiles():
         lead times for efficiency's sake.
         '''
 
+        grid = self.grid_suffix
         names = {
             'hrrr': {
-                'REFC_P0_L10_GLC0': 'REFC_P0_L10_GLC0',
-                'MXUPHL_P8_2L103_GLC0_max': 'MXUPHL_P8_2L103_GLC0_max1h',
-                'UGRD_P0_L103_GLC0': 'UGRD_P0_L103_GLC0',
-                'VGRD_P0_L103_GLC0': 'VGRD_P0_L103_GLC0',
-                'WEASD_P8_L1_GLC0_acc': 'WEASD_P8_L1_GLC0_acc1h',
-                'APCP_P8_L1_GLC0_acc': 'APCP_P8_L1_GLC0_acc1h',
-                'PRES_P0_L1_GLC0': 'PRES_P0_L1_GLC0',
-                'VAR_0_7_200_P8_2L103_GLC0_min': 'VAR_0_7_200_P8_2L103_GLC0_min1h',
+                f'REFC_P0_L10_{grid}': f'REFC_P0_L10_{grid}',
+                f'MXUPHL_P8_2L103_{grid}_max': f'MXUPHL_P8_2L103_{grid}_max1h',
+                f'UGRD_P0_L103_{grid}': f'UGRD_P0_L103_{grid}',
+                f'VGRD_P0_L103_{grid}': f'VGRD_P0_L103_{grid}',
+                f'WEASD_P8_L1_{grid}_acc': f'WEASD_P8_L1_{grid}_acc1h',
+                f'APCP_P8_L1_{grid}_acc': f'APCP_P8_L1_{grid}_acc1h',
+                f'PRES_P0_L1_{grid}': f'PRES_P0_L1_{grid}',
+                f'VAR_0_7_200_P8_2L103_{grid}_min': f'VAR_0_7_200_P8_2L103_{grid}_min1h',
                 },
             'rap': {
-                'REFC_P0_L10_GLC0': 'REFC_P0_L10_GLC0',
-                'UGRD_P0_L103_GLC0': 'UGRD_P0_L103_GLC0',
-                'VGRD_P0_L103_GLC0': 'VGRD_P0_L103_GLC0',
-                'WEASD_P8_L1_GLC0_acc': 'WEASD_P8_L1_GLC0_acc1h',
-                'APCP_P8_L1_GLC0_acc': 'APCP_P8_L1_GLC0_acc1h',
-                'PRES_P0_L1_GLC0': 'PRES_P0_L1_GLC0',
+                f'REFC_P0_L10_{grid}': f'REFC_P0_L10_{grid}',
+                f'UGRD_P0_L103_{grid}': f'UGRD_P0_L103_{grid}',
+                f'VGRD_P0_L103_{grid}': f'VGRD_P0_L103_{grid}',
+                f'WEASD_P8_L1_{grid}_acc': f'WEASD_P8_L1_{grid}_acc1h',
+                f'APCP_P8_L1_{grid}_acc': f'APCP_P8_L1_{grid}_acc1h',
+                f'PRES_P0_L1_{grid}': f'PRES_P0_L1_{grid}',
                 },
             'rrfs': {
-                'REFC_P0_L200_GLC0': 'REFC_P0_L200_GLC0',
-                'MXUPHL_P8_2L103_GLC0_max': 'MXUPHL_P8_2L103_GLC0_max1h',
-                'UGRD_P0_L103_GLC0': 'UGRD_P0_L103_GLC0',
-                'VGRD_P0_L103_GLC0': 'VGRD_P0_L103_GLC0',
-                'WEASD_P8_L1_GLC0_acc': 'WEASD_P8_L1_GLC0_acc1h',
-                'APCP_P8_L1_GLC0_acc': 'APCP_P8_L1_GLC0_acc1h',
-                'PRES_P0_L1_GLC0': 'PRES_P0_L1_GLC0',
-                'VAR_0_7_200_P8_2L103_GLC0_min': 'VAR_0_7_200_P8_2L103_GLC0_min1h',
+                f'REFC_P0_L200_{grid}': f'REFC_P0_L200_{grid}',
+                f'MXUPHL_P8_2L103_{grid}_max': f'MXUPHL_P8_2L103_{grid}_max1h',
+                f'UGRD_P0_L103_{grid}': f'UGRD_P0_L103_{grid}',
+                f'VGRD_P0_L103_{grid}': f'VGRD_P0_L103_{grid}',
+                f'WEASD_P8_L1_{grid}_acc': f'WEASD_P8_L1_{grid}_acc1h',
+                f'APCP_P8_L1_{grid}_acc': f'APCP_P8_L1_{grid}_acc1h',
+                f'PRES_P0_L1_{grid}': f'PRES_P0_L1_{grid}',
+                f'VAR_0_7_200_P8_2L103_{grid}_min': f'VAR_0_7_200_P8_2L103_{grid}_min1h',
                 },
             }
 
