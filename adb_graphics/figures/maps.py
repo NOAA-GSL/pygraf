@@ -178,6 +178,7 @@ class Map():
 
 
 class DataMap():
+    #pylint: disable=too-many-arguments
 
     '''
     Class that combines the input data and the chosen map to plot both together.
@@ -192,12 +193,13 @@ class DataMap():
 
     '''
 
-    def __init__(self, field, map_, contour_fields=None, hatch_fields=None):
+    def __init__(self, field, map_, contour_fields=None, hatch_fields=None, model_name=None):
 
         self.field = field
         self.contour_fields = contour_fields
         self.hatch_fields = hatch_fields
         self.map = map_
+        self.model_name = model_name
 
 
     @staticmethod
@@ -394,7 +396,7 @@ class DataMap():
         contoured = ', '.join(contoured)
 
         # Analysis time (top) and forecast hour (bottom) on the left
-        plt.title(f"Analysis: {atime}\nFcst Hr: {f.fhr}", loc='left', fontsize=16)
+        plt.title(f"{self.model_name}: {atime}\nFcst Hr: {f.fhr}", loc='left', fontsize=16)
 
         # Atmospheric level and unit in the high center
         level, lev_unit = f.numeric_level(index_match=False)
