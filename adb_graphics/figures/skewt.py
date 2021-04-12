@@ -57,7 +57,7 @@ class SkewTDiagram(grib.profileData):
         self.model_name = kwargs.get('model_name', 'Analysis')
 
     def _add_hydrometeors(self, hydro_subplot):
-    # pylint: disable=too-many-locals, consider-using-enumerate
+    # pylint: disable=too-many-locals
         mixing_ratios = OrderedDict({
             'clwmr': {
                 'color': 'blue',
@@ -142,11 +142,11 @@ class SkewTDiagram(grib.profileData):
                                    markersize=6,
                                   )
                 layer = False
-                for i in range(len(profile)):
-                    if ((profile[i] > 0.0 and temp[i].magnitude < 32.0) and not layer):
+                for i, profile_lev in enumerate(profile):
+                    if ((profile_lev > 0.0 and temp[i].magnitude < 32.0) and not layer):
                         layer = True
                         p_base = pres[i].magnitude
-                    elif ((profile[i] <= 0.0 or temp[i].magnitude > 32.0) and layer):
+                    elif ((profile_lev <= 0.0 or temp[i].magnitude > 32.0) and layer):
                         # Shade the supercooled water depth
                         p_top = pres[i-1].magnitude
                         rect = plt.Rectangle((0, p_top), 100, (p_base-p_top),\
