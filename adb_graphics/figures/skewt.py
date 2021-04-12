@@ -56,7 +56,8 @@ class SkewTDiagram(grib.profileData):
         self.max_plev = kwargs.get('max_plev', 0)
         self.model_name = kwargs.get('model_name', 'Analysis')
 
-    def _add_hydrometeors(self, hydro_subplot): # pylint: disable=too-many-locals
+    def _add_hydrometeors(self, hydro_subplot):
+    # pylint: disable=too-many-locals, consider-using-enumerate
         mixing_ratios = OrderedDict({
             'clwmr': {
                 'color': 'blue',
@@ -97,12 +98,14 @@ class SkewTDiagram(grib.profileData):
 
         profiles = self.atmo_profiles # dictionary
         pres = profiles.get('pres').get('data')
+        temp = profiles.get('temp').get('data')
         nlevs = len(pres)        # determine number of vertical levels
         pres_sfc = pres[0]       # need correct surface pressure value!
         handles = []
         gravity = 9.81           # m/s^2
 
-        lines = ['Vert. Integrated Amt\n(Resolved, Total)']
+        lines = ['Vert. Integrated Amt\n(Resolved, Total)\n'\
+                 +'(supercool layers shaded,\nwith filled markers)']
 
         for mixr, settings in mixing_ratios.items():
             # Get the profile values
@@ -130,6 +133,26 @@ class SkewTDiagram(grib.profileData):
                                marker=settings.get('marker'),
                                markersize=6,
                               )
+            if mixr in ['clwmr', 'rwmr']:
+                hydro_subplot.plot(profile[temp.magnitude < 32.0], pres[temp.magnitude < 32.0],
+                                   settings.get('color'),
+                                   fillstyle='full',
+                                   linewidth=0.5,
+                                   marker=settings.get('marker'),
+                                   markersize=6,
+                                  )
+                layer = False
+                for i in range(len(profile)):
+                    if ((profile[i] > 0.0 and temp[i].magnitude < 32.0) and not layer):
+                        layer = True
+                        p_base = pres[i].magnitude
+                    elif ((profile[i] <= 0.0 or temp[i].magnitude > 32.0) and layer):
+                        # Shade the supercooled water depth
+                        p_top = pres[i-1].magnitude
+                        rect = plt.Rectangle((0, p_top), 100, (p_base-p_top),\
+                                             facecolor=settings.get('color'), alpha=0.1)
+                        hydro_subplot.add_patch(rect)
+                        layer = False
 
             # compute vertically integrated amount and add legend line
             line = f"{settings.get('label'):<7s} {mixr_total.magnitude:>10.3f} "\
