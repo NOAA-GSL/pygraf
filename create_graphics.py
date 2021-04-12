@@ -245,7 +245,7 @@ def parse_args():
         )
     parser.add_argument(
         '-m',
-        default='hrrr',
+        default='Unnamed Experiment',
         dest='model_name',
         help='string to use in title of graphic.',
         type=str,
@@ -426,6 +426,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
         contour_fields=contour_fields,
         hatch_fields=hatch_fields,
         map_=m,
+        model_name=cla.model_name,
         )
 
     # Draw the map
