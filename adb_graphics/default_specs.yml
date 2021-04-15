@@ -607,7 +607,9 @@ hpbl: # Height of Planetary Boundary Layer
 icmr: # Ice Water Mixing Ratio
   ua:
     ncl_name:
-      nat: ICMR_P0_L105_{grid}
+      nat:
+        - ICMR_P0_L105_{grid}
+        - CIMIXR_P0_L105_{grid}
       prs: ICMR_P0_L100_{grid}
 lcl: # Lifted condensation level
   sfc: &lcl
@@ -890,6 +892,7 @@ shear:
         field2: VVCSH_P0_2L103_{grid}
         one_lev: True
         split: True
+        level: 01km
     ticks: 0
     unit: $s^{-1}$
   06km: # 0-6 km
@@ -901,6 +904,7 @@ shear:
         field2: VVCSH_P0_2L103_{grid}
         one_lev: True
         split: True
+        level: 06km
 shtfl: # Sensible Heat Net Flux
   sfc:
     <<: *heat_flux

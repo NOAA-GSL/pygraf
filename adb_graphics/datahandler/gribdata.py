@@ -131,7 +131,7 @@ class UPPData(specs.VarSpec):
             raise errors.GribReadError(f'{ncl_name}')
         return field
 
-    def get_level(self, field, level, spec):
+    def get_level(self, field, level, spec, **kwargs):
 
         ''' Returns the value of the level to for a 3D array '''
 
@@ -140,6 +140,7 @@ class UPPData(specs.VarSpec):
         if lev is not None:
             return lev
 
+        split = kwargs.get('split', spec.get('split'))
         vertical_dim = self.vertical_dim(field)
 
         # Create a list of dataset variables corresponding to the vertical
@@ -150,29 +151,34 @@ class UPPData(specs.VarSpec):
             dim_name = [var for var in self.ds.variables \
                         if vertical_dim in var]
 
-        # Requested level(s)
+        # numeric_level returns a list of length 1 (e.g. [500] for 500 mb) or of
+        # length 2 when split=True and it's like 0-6 km, so returns [0, 6000]
         lev_val, _ = self.numeric_level(level=level,
-                                        split=spec.get('split'),
+                                        split=split,
                                         )
 
+        # Get the values of the levels stored in the grib file
         levs = [self.ds[dim].values for dim in dim_name]
+
+        # For split-level variables, like 0-6km, find the matching index by
+        # looping through both the possible vertical level arrays.
         if len(levs) == 2 and len(lev_val) == 2:
             levlist = [list(lev) for lev in levs]
             for index, levset in enumerate(zip(*levlist)):
-                print(f'LEVSET2: {levset, lev_val}')
                 if sorted(levset) == lev_val:
                     return index
 
+        # For single-level variables, like 500mb, use the argwhere function to
+        # return the matching index
         if len(lev_val) == 1:
             try:
                 levarray = self.ds[dim_name[0]].values
                 index = np.argwhere(levarray == lev_val[0])
-                print(f'CHECK 0 dim: {dim_name[0]} {index} {index.size}')
 
                 if not index.size and len(dim_name) == 2:
                     levarray = self.ds[dim_name[1]].values
                     index = np.argwhere(levarray == lev_val[0])
-                    print(f'CHECK 1 dim: {dim_name[1]} {index}')
+
                 index = int(index)
             except:
                 print(f"Could not find a level for {field.name} at {lev_val[0]} for \
@@ -181,38 +187,10 @@ class UPPData(specs.VarSpec):
 
             return index
 
-        msg = f'Length of lev_val ({len(lev_val)} or levs ({len(levs)}) bad!'
+        # If neither of those cases worked out appropriately, raise an error.
+        msg = f'Length of lev_val ({len(lev_val)}) or levs ({len(levs)}) bad!' \
+                f' {level} {split} {levs} {field.name}'
         raise ValueError(msg)
-
-        # Create a list of matching values from each requested dimension
-        #idx = []
-        #for i, dim in enumerate(sorted(dim_name, reverse=True)):
-        #    try:
-        #    except:
-        #        print(f"Error retrieving levels for {field.name} using dimension \
-        #              {dim}")
-        #        raise
-        #    index = np.argwhere(levs == lev_val[i])
-        #    if index:
-        #        idx.append(index)
-
-        #if len(idx) == 12:
-        #    try:
-        #        ret = int(np.intersect1d(idx[0], idx[1]))
-        #    except:
-        #        print(f'IDX 2 for {field.name}: {idx} {lev_val} {levs}')
-        #        raise
-        #    return ret
-        #elif len(idx) == 1:
-        #    try:
-        #        ret = int(idx[0])
-        #    except:
-        #        print(f'IDX for {field.name}: {idx[0]} {lev_val} {levs}')
-        #        raise
-        #    return ret
-        #else:
-        #    print(f"Could not find a level for {field.name} at {lev_val} for {idx}")
-        #    raise ValueError
 
     def get_transform(self, transforms, val):
 
@@ -309,9 +287,23 @@ class UPPData(specs.VarSpec):
 
         # The level_type for the entire atmosphere could be L10 or L200. Thanks
         # Grib2! Handle that in "try" statement when reading file.
-        return name.format(fhr=self.fhr,
+
+        name = name if isinstance(name, list) else [name]
+
+        for try_name in name:
+            try_name = try_name.format(fhr=self.fhr,
                            grid=self.grid_suffix,
                            level_type=self.level_type)
+
+            try:
+                self.get_field(try_name)
+            except errors.GribReadError:
+                continue
+            else:
+                return try_name
+
+        msg = f'Could not find any of {name} in input file'
+        raise KeyError(msg)
 
     def numeric_level(self, index_match=True, level=None, split=None):
 
@@ -805,13 +797,14 @@ class profileData(UPPData):
 
         # Set the defaults here since this is an instance of an abstract method
         # level refers to the level key in the specs file.
-        level = level if level else 'ua'
+        level = level if level is not None else 'ua'
 
         if not name:
             name = self.short_name
 
         one_lev = kwargs.get('one_lev', False)
         vertical_index = kwargs.get('vertical_index')
+        split = kwargs.get('split')
 
         # Retrive the location for the profile
         x, y = self.get_xypoint()
@@ -840,7 +833,7 @@ class profileData(UPPData):
             if one_lev:
                 lev = vertical_index
                 if vertical_index is None:
-                    lev = self.get_level(field, level, var_spec)
+                    lev = self.get_level(field, level, var_spec, split=split)
                 profile = profile[lev, x, y]
             else:
                 profile = profile[:, x, y]
