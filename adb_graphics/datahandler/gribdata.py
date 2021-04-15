@@ -303,7 +303,7 @@ class UPPData(specs.VarSpec):
                 return try_name
 
         msg = f'Could not find any of {name} in input file'
-        raise KeyError(msg)
+        raise errors.GribReadError(msg)
 
     def numeric_level(self, index_match=True, level=None, split=None):
 
