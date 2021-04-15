@@ -133,14 +133,33 @@ class UPPData(specs.VarSpec):
 
     def get_level(self, field, level, spec, **kwargs):
 
-        ''' Returns the value of the level to for a 3D array '''
+        ''' Returns the value of the level to for a 3D array
+
+        Arguments:
+
+          field      dataset object for a given variable
+          level      string describing the level atmospheric level; corresponds
+                     to a key in default specs
+          spec       the specifications dictionary to use for the variable in
+                     question
+
+
+        Keyword Arguments:
+          split      bool sometimes passed in through transforms that indicates
+                     a level string should be split, e.g. 06km.
+
+
+        Return:
+
+          Integer value corresponding to the array index for the atmospheric
+          level.
+        '''
 
         # The index of the requested level
         lev = spec.get('vertical_index')
         if lev is not None:
             return lev
 
-        split = kwargs.get('split', spec.get('split'))
         vertical_dim = self.vertical_dim(field)
 
         # Create a list of dataset variables corresponding to the vertical
@@ -154,7 +173,7 @@ class UPPData(specs.VarSpec):
         # numeric_level returns a list of length 1 (e.g. [500] for 500 mb) or of
         # length 2 when split=True and it's like 0-6 km, so returns [0, 6000]
         lev_val, _ = self.numeric_level(level=level,
-                                        split=split,
+                                        split=kwargs.get('split', spec.get('split')),
                                         )
 
         # Get the values of the levels stored in the grib file
@@ -164,32 +183,32 @@ class UPPData(specs.VarSpec):
         # looping through both the possible vertical level arrays.
         if len(levs) == 2 and len(lev_val) == 2:
             levlist = [list(lev) for lev in levs]
-            for index, levset in enumerate(zip(*levlist)):
+            for lev, levset in enumerate(zip(*levlist)):
                 if sorted(levset) == lev_val:
-                    return index
+                    return lev
 
         # For single-level variables, like 500mb, use the argwhere function to
         # return the matching index
         if len(lev_val) == 1:
             try:
                 levarray = self.ds[dim_name[0]].values
-                index = np.argwhere(levarray == lev_val[0])
+                lev = np.argwhere(levarray == lev_val[0])
 
-                if not index.size and len(dim_name) == 2:
+                if not lev.size and len(dim_name) == 2:
                     levarray = self.ds[dim_name[1]].values
-                    index = np.argwhere(levarray == lev_val[0])
+                    lev = np.argwhere(levarray == lev_val[0])
 
-                index = int(index)
+                lev = int(lev)
             except:
                 print(f"Could not find a level for {field.name} at {lev_val[0]} for \
                         {levarray}")
                 raise
 
-            return index
+            return lev
 
         # If neither of those cases worked out appropriately, raise an error.
         msg = f'Length of lev_val ({len(lev_val)}) or levs ({len(levs)}) bad!' \
-                f' {level} {split} {levs} {field.name}'
+                f' {level} {levs} {field.name}'
         raise ValueError(msg)
 
     def get_transform(self, transforms, val):
@@ -292,8 +311,8 @@ class UPPData(specs.VarSpec):
 
         for try_name in name:
             try_name = try_name.format(fhr=self.fhr,
-                           grid=self.grid_suffix,
-                           level_type=self.level_type)
+                                       grid=self.grid_suffix,
+                                       level_type=self.level_type)
 
             try:
                 self.get_field(try_name)
@@ -792,6 +811,8 @@ class profileData(UPPData):
         Keyword Args:
             ncl_name         the NCL name of the variable to be retrieved
             one_lev          bool flag. if True, get the single level of the variable
+            split            bool flag. if True, level string numbers are split
+                             into a list, e.g. used to get [0, 6000] from 06km
             vertical_index   the index of the required level
         '''
 

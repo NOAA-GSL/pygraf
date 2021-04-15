@@ -66,7 +66,8 @@ class GribFiles():
 
         self.contents = self._load(filenames)
 
-    def _get_grid_suffix(self, filenames):
+    @staticmethod
+    def _get_grid_suffix(filenames):
 
         ''' Return the suffix of the first variable with 4 sections (split on _)
         in the file. This should correspond to the grid tag. '''

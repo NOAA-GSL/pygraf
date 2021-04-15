@@ -94,7 +94,12 @@ def test_profileData(natfile):
 
     nat_ds = gribfile.GribFile(natfile)
     loc = ' BNA   9999 99999  36.12  86.69  597 Nashville, TN\n'
-    profile = gribdata.profileData(nat_ds.contents, fhr=2, filetype='nat', loc=loc, short_name='temp')
+    profile = gribdata.profileData(nat_ds.contents,
+                                   fhr=2,
+                                   filetype='nat',
+                                   loc=loc,
+                                   short_name='temp',
+                                   )
 
     assert isinstance(profile.get_xypoint(), tuple)
     assert isinstance(profile.values(), xarray.DataArray)
