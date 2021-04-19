@@ -20,7 +20,8 @@ import zipfile
 import matplotlib.pyplot as plt
 import yaml
 
-from adb_graphics.datahandler import grib
+from adb_graphics.datahandler import gribfile
+from adb_graphics.datahandler import gribdata
 import adb_graphics.errors as errors
 from adb_graphics.figures import maps
 from adb_graphics.figures import skewt
@@ -35,9 +36,9 @@ def create_skewt(cla, fhr, grib_path, workdir):
     and generate a pool of workers to complete the tasks. '''
 
     # Create the file object to load the contents
-    gribfile = grib.GribFile(grib_path)
+    gfile = gribfile.GribFile(grib_path)
 
-    args = [(cla, fhr, gribfile.contents, site, workdir) for site in cla.sites]
+    args = [(cla, fhr, gfile.contents, site, workdir) for site in cla.sites]
 
     print(f'Queueing {len(args)} Skew Ts')
     with Pool(processes=cla.nprocs) as pool:
@@ -133,10 +134,11 @@ def gather_gribfiles(cla, fhr, gribfiles):
         # Create a new GribFiles object, include all hours, or just this one,
         # depending on command line argument flag
 
-        gribfiles = grib.GribFiles(
+        gribfiles = gribfile.GribFiles(
             coord_dims={'fcst_hr': fcst_hours},
             filenames=filenames,
             filetype=cla.file_type,
+            model=cla.images[0],
             )
     else:
 
@@ -358,7 +360,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
     '''
 
     # Object to be plotted on the map in filled contours.
-    field = grib.fieldData(
+    field = gribdata.fieldData(
         ds=ds,
         fhr=fhr,
         filetype=cla.file_type,
@@ -384,7 +386,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
             else:
                 var, lev = contour, level
 
-            contour_fields.append(grib.fieldData(
+            contour_fields.append(gribdata.fieldData(
                 ds=ds,
                 fhr=fhr,
                 level=lev,
@@ -399,7 +401,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
     if hatches is not None:
         for hatch, hatch_kwargs in hatches.items():
             var, lev = hatch.split('_')
-            hatch_fields.append(grib.fieldData(
+            hatch_fields.append(gribdata.fieldData(
                 ds=ds,
                 fhr=fhr,
                 level=lev,

@@ -7,16 +7,17 @@ import numpy as np
 from matplotlib import colors as mcolors
 import xarray
 
-import adb_graphics.datahandler.grib as grib
+import adb_graphics.datahandler.gribdata as gribdata
+import adb_graphics.datahandler.gribfile as gribfile
 
 def test_UPPData(natfile, prsfile):
 
     ''' Test the UPPData class methods on both types of input files. '''
 
-    nat_ds = grib.GribFile(natfile)
-    prs_ds = grib.GribFile(prsfile)
+    nat_ds = gribfile.GribFile(natfile)
+    prs_ds = gribfile.GribFile(prsfile)
 
-    class UPP(grib.UPPData):
+    class UPP(gribdata.UPPData):
 
         ''' Test class needed to define the values as an abstract class '''
 
@@ -48,8 +49,8 @@ def test_fieldData(prsfile):
 
     ''' Test the fieldData class methods on a prs file'''
 
-    prs_ds = grib.GribFile(prsfile)
-    field = grib.fieldData(prs_ds.contents, fhr=2, level='500mb', short_name='temp')
+    prs_ds = gribfile.GribFile(prsfile)
+    field = gribdata.fieldData(prs_ds.contents, fhr=2, level='500mb', short_name='temp')
 
     assert isinstance(field.cmap, mcolors.Colormap)
     assert isinstance(field.colors, np.ndarray)
@@ -77,7 +78,7 @@ def test_fieldData(prsfile):
     assert np.array_equal(field.get_transform('conversions.k_to_f', field.values()), \
                           (field.values() - 273.15) * 9/5 +32)
 
-    field2 = grib.fieldData(prs_ds.contents, fhr=2, level='ua', short_name='ceil')
+    field2 = gribdata.fieldData(prs_ds.contents, fhr=2, level='ua', short_name='ceil')
     transforms = field2.vspec.get('transform')
     assert np.array_equal(field2.get_transform(transforms, field2.values()), \
                           field2.field_diff(field2.values(), variable2='gh', level2='sfc') / 304.8)
@@ -91,9 +92,14 @@ def test_profileData(natfile):
 
     ''' Test the profileData class methods on a nat file'''
 
-    nat_ds = grib.GribFile(natfile)
+    nat_ds = gribfile.GribFile(natfile)
     loc = ' BNA   9999 99999  36.12  86.69  597 Nashville, TN\n'
-    profile = grib.profileData(nat_ds.contents, fhr=2, filetype='nat', loc=loc, short_name='temp')
+    profile = gribdata.profileData(nat_ds.contents,
+                                   fhr=2,
+                                   filetype='nat',
+                                   loc=loc,
+                                   short_name='temp',
+                                   )
 
     assert isinstance(profile.get_xypoint(), tuple)
     assert isinstance(profile.values(), xarray.DataArray)

@@ -1,8 +1,7 @@
 # pylint: disable=invalid-name,too-few-public-methods
 
 '''
-Classes that handle generic grib file handling, and those that handle the
-specifics of grib files from UPP.
+Classes that handle the specifics of grib files from UPP.
 '''
 
 import abc
@@ -12,153 +11,11 @@ from string import digits, ascii_letters
 
 from matplotlib import cm
 import numpy as np
-import xarray as xr
 
 from .. import conversions
 from .. import errors
 from .. import specs
 from .. import utils
-
-class GribFile():
-
-    ''' Wrappers and helper functions for interfacing with pyNIO.'''
-
-    def __init__(self, filename, **kwargs):
-
-        # pylint: disable=unused-argument
-
-        self.filename = filename
-        self.contents = self._load()
-
-    def _load(self):
-
-        ''' Internal method that opens the grib file. Returns a grib message
-        iterator. '''
-
-        return xr.open_dataset(self.filename,
-                               engine='pynio',
-                               lock=False,
-                               backend_kwargs=dict(format="grib2"),
-                               )
-
-class GribFiles():
-
-    ''' Class for loading in a set of grib files and combining them over
-    forecast hours. '''
-
-    def __init__(self, coord_dims, filenames, filetype):
-
-        '''
-        Arguments:
-
-          coord_dims  dict containing the name of the dimension to
-                      concat (key), and a list of its values (value).
-                        Ex: {'fhr': [2, 3, 4]}
-          filenames   dict containing list of files names for the 0h and 1h
-                      forecast lead times ('01fcst'), and all the free forecast
-                      hours after that ('free_fcst').
-          filetype    key to use for dict when setting variable_names
-
-        '''
-        self.filenames = filenames
-        self.filetype = filetype
-        self.coord_dims = coord_dims
-        self.contents = self._load()
-
-    def append(self, filenames):
-
-        ''' Add a single new slice to existing data set. Must match coord_dims
-        and filetype of original dataset. Updates current contents of Object'''
-
-        self.contents = self._load(filenames)
-
-    def _load(self, filenames=None):
-
-        ''' Load the set of files into a single XArray structure. '''
-
-        all_leads = [] if filenames is None else [self.contents]
-        filenames = self.filenames if filenames is None else filenames
-        var_names = self.variable_names
-
-        # 0h and 1h forecast variables are named like the keys in var_names,
-        # while the free forecast hours are named like the values in var_names.
-        # Need to do a bit of cleanup to get them into a single datastructure.
-        names = {
-            '01fcst': var_names,
-            'free_fcst': var_names.values(),
-            }
-
-        for fcst_type, vnames in names.items():
-
-            if filenames.get(fcst_type):
-                for filename in filenames.get(fcst_type):
-                    print(f'Loading grib2 file: {fcst_type}, {filename}')
-
-                if fcst_type == '01fcst':
-                    if filenames.get(fcst_type):
-                        # Rename variables to match free forecast variables
-                        all_leads.append(xr.open_mfdataset(
-                            filenames[fcst_type],
-                            **self.open_kwargs(vnames),
-                            ).rename_vars(vnames))
-                else:
-                    all_leads.append(xr.open_mfdataset(
-                        filenames[fcst_type],
-                        **self.open_kwargs(vnames),
-                        ))
-
-        ret = xr.combine_nested(all_leads,
-                                compat='override',
-                                concat_dim=list(self.coord_dims.keys())[0],
-                                coords='minimal',
-                                data_vars='minimal',
-                                )
-
-        return ret
-
-    def open_kwargs(self, vnames):
-
-        ''' Defines the key word arguments used by the various calls to XArray
-        open_mfdataset '''
-
-        return dict(
-            backend_kwargs=dict(format="grib2"),
-            combine='nested',
-            compat='override',
-            concat_dim=list(self.coord_dims.keys())[0],
-            coords='minimal',
-            data_vars=vnames,
-            engine='pynio',
-            lock=False,
-            )
-
-    @property
-    def variable_names(self):
-
-        '''
-        Defines the variable name transitions that need to happen for each
-        model to combine along forecast hours.
-
-        Keys are original variable names, values are the updated variable names.
-
-        Choosing to update the 0 and 1 hour forecast variables to the longer
-        lead times for efficiency's sake.
-        '''
-
-        names = {
-            'prs': {
-                'REFC_P0_L10_GLC0': 'REFC_P0_L10_GLC0',
-                'MXUPHL_P8_2L103_GLC0_max': 'MXUPHL_P8_2L103_GLC0_max1h',
-                'UGRD_P0_L103_GLC0': 'UGRD_P0_L103_GLC0',
-                'VGRD_P0_L103_GLC0': 'VGRD_P0_L103_GLC0',
-                'WEASD_P8_L1_GLC0_acc': 'WEASD_P8_L1_GLC0_acc1h',
-                'APCP_P8_L1_GLC0_acc': 'APCP_P8_L1_GLC0_acc1h',
-                'PRES_P0_L1_GLC0': 'PRES_P0_L1_GLC0',
-                'VAR_0_7_200_P8_2L103_GLC0_min': 'VAR_0_7_200_P8_2L103_GLC0_min1h',
-                }
-            }
-
-        return names[self.filetype]
 
 
 class UPPData(specs.VarSpec):
@@ -173,6 +30,7 @@ class UPPData(specs.VarSpec):
 
     Keyword Arguments:
         config:      path to a user-specified configuration file
+        model:       string describing the model type
     '''
 
     def __init__(self, ds, short_name, **kwargs):
@@ -273,27 +131,85 @@ class UPPData(specs.VarSpec):
             raise errors.GribReadError(f'{ncl_name}')
         return field
 
-    def get_level(self, field, level, spec):
+    def get_level(self, field, level, spec, **kwargs):
 
-        ''' Returns the value of the level to for a 3D array '''
+        ''' Returns the value of the level to for a 3D array
+
+        Arguments:
+
+          field      dataset object for a given variable
+          level      string describing the level atmospheric level; corresponds
+                     to a key in default specs
+          spec       the specifications dictionary to use for the variable in
+                     question
+
+
+        Keyword Arguments:
+          split      bool sometimes passed in through transforms that indicates
+                     a level string should be split, e.g. 06km.
+
+
+        Return:
+
+          Integer value corresponding to the array index for the atmospheric
+          level.
+        '''
 
         # The index of the requested level
         lev = spec.get('vertical_index')
         if lev is not None:
             return lev
 
-        # Determine the vertical dimension of the variable by looking through
-        # the field's dimensions for one that includes "lv". Use the first
-        # instance returned in the list.
-        vertical_dim = [dim for dim in field.dims if 'lv' in dim]
-        dim_name = spec.get('vertical_level_name', vertical_dim[0])
+        vertical_dim = self.vertical_dim(field)
 
-        levs = self.ds[dim_name].values
+        # Create a list of dataset variables corresponding to the vertical
+        # dimension
+        if vertical_dim and vertical_dim in self.ds.variables:
+            dim_name = [vertical_dim]
+        else:
+            dim_name = [var for var in self.ds.variables \
+                        if vertical_dim in var]
 
-        # Requested level
-        lev_val, _ = self.numeric_level(level=level)
+        # numeric_level returns a list of length 1 (e.g. [500] for 500 mb) or of
+        # length 2 when split=True and it's like 0-6 km, so returns [0, 6000]
+        lev_val, _ = self.numeric_level(level=level,
+                                        split=kwargs.get('split', spec.get('split')),
+                                        )
 
-        return int(np.argwhere(levs == lev_val))
+        # Get the values of the levels stored in the grib file
+        levs = [self.ds[dim].values for dim in dim_name]
+
+        # For split-level variables, like 0-6km, find the matching index by
+        # looping through both the possible vertical level arrays.
+        if len(levs) == 2 and len(lev_val) == 2:
+            levlist = [list(lev) for lev in levs]
+            for lev, levset in enumerate(zip(*levlist)):
+                if sorted(levset) == lev_val:
+                    return lev
+
+        # For single-level variables, like 500mb, use the argwhere function to
+        # return the matching index
+        if len(lev_val) == 1:
+            try:
+                levarray = self.ds[dim_name[0]].values
+                lev = np.argwhere(levarray == lev_val[0])
+
+                if not lev.size and len(dim_name) == 2:
+                    levarray = self.ds[dim_name[1]].values
+                    lev = np.argwhere(levarray == lev_val[0])
+
+                lev = int(lev)
+            except:
+                print(f"Could not find a level for {field.name} at {lev_val[0]} for \
+                        {levarray}")
+                raise
+
+            return lev
+
+        # If neither of those cases worked out appropriately, raise an error.
+        msg = f'Length of lev_val ({len(lev_val)}) or levs ({len(levs)}) bad!' \
+                f' {level} {levs} {field.name}'
+        raise ValueError(msg)
 
     def get_transform(self, transforms, val):
 
@@ -381,13 +297,34 @@ class UPPData(specs.VarSpec):
                 name = name.get(self.model)
             else:
                 name = name.get(self.filetype)
+
+        if name is None:
+            print(f"Cannot find ncl_name for: ")
+            for key, value in spec.items():
+                print(f'{key}: {value}')
+            raise KeyError
+
         # The level_type for the entire atmosphere could be L10 or L200. Thanks
         # Grib2! Handle that in "try" statement when reading file.
-        return name.format(fhr=self.fhr,
-                           grid=self.grid_suffix,
-                           level_type=self.level_type)
 
-    def numeric_level(self, index_match=True, level=None):
+        name = name if isinstance(name, list) else [name]
+
+        for try_name in name:
+            try_name = try_name.format(fhr=self.fhr,
+                                       grid=self.grid_suffix,
+                                       level_type=self.level_type)
+
+            try:
+                self.get_field(try_name)
+            except errors.GribReadError:
+                continue
+            else:
+                return try_name
+
+        msg = f'Could not find any of {name} in input file'
+        raise errors.GribReadError(msg)
+
+    def numeric_level(self, index_match=True, level=None, split=None):
 
         '''
         Split the numeric level and unit associated with the level key.
@@ -397,18 +334,27 @@ class UPPData(specs.VarSpec):
         '''
 
         level = level if level else self.level
-        # Gather all the numbers and convert to integer
+
+        # Gather all the numbers in the string
         lev_val = ''.join([c for c in level if (c in digits or c == '.')])
+
+        # Convert the numbers to a list, and make integers or floats
         if lev_val:
-            lev_val = float(lev_val) if '.' in lev_val else int(lev_val)
+            if split is not None:
+                lev_val = [int(lev) for lev in lev_val]
+            else:
+                lev_val = [float(lev_val) if '.' in lev_val else int(lev_val)]
 
         # Gather all the letters
         lev_unit = ''.join([c for c in level if c in ascii_letters])
 
         if index_match:
-            lev_val = lev_val / 100. if lev_unit == 'cm' else lev_val
-            lev_val = lev_val * 100. if lev_unit in ['mb', 'mxmb'] else lev_val
-            lev_val = lev_val * 1000. if lev_unit in ['km', 'mx', 'sr'] else lev_val
+            if lev_unit == 'cm':
+                lev_val = [val / 100. for val in lev_val]
+            if lev_unit in ['mb', 'mxmb']:
+                lev_val = [val * 100. for val in lev_val]
+            if lev_unit in ['in', 'km', 'mn', 'mx', 'sr']:
+                lev_val = [val * 1000. for val in lev_val]
 
         return lev_val, lev_unit
 
@@ -434,6 +380,19 @@ class UPPData(specs.VarSpec):
 
         ''' Returns the values of a given variable. '''
         ...
+
+    @staticmethod
+    def vertical_dim(field):
+
+        ''' Determine the vertical dimension of the variable by looking through
+        the field's dimensions for one that includes "lv". Return the first
+        matching instance. '''
+
+        vert_dim = [dim for dim in field.dims if 'lv' in dim]
+        if vert_dim:
+            return vert_dim[0]
+        return ''
+
 
     @property
     def vspec(self):
@@ -685,21 +644,23 @@ class fieldData(UPPData):
             field = self.get_field(ncl_name or self.ncl_name(spec))
 
         lev = vertical_index
-        vertical_dim = []
-
         vals = field
         if one_lev:
 
             # Check if it's a 3D variable (lv in any dimension field)
-            vertical_dim = [dim for dim in field.dims if 'lv' in dim]
+            vertical_dim = self.vertical_dim(field)
 
             if vertical_dim: # Field has a vertical dimension
 
-                dim_name = spec.get('vertical_level_name', vertical_dim[0])
-                dim_name = vertical_dim[0]
+                dim_name = vertical_dim
 
                 if vertical_index is None: # No index is provided in kwargs
                     lev = self.get_level(field, level, spec)
+
+                if lev is None or dim_name is None:
+                    print(f'ERROR: Could not find dim_name ({dim_name}) or' \
+                          f'lev {lev} for {vals}')
+                    raise ValueError
 
                 try:
                     vals = vals.isel(**{dim_name: lev})
@@ -707,7 +668,6 @@ class fieldData(UPPData):
                     print(f'Error for {vals.name} : {dim_name} {lev} \
                             {level} {spec}')
                     raise
-
 
         # Select a single forecast hour (only if there are many)
         if not spec.get('accumulate', False):
@@ -851,18 +811,21 @@ class profileData(UPPData):
         Keyword Args:
             ncl_name         the NCL name of the variable to be retrieved
             one_lev          bool flag. if True, get the single level of the variable
+            split            bool flag. if True, level string numbers are split
+                             into a list, e.g. used to get [0, 6000] from 06km
             vertical_index   the index of the required level
         '''
 
         # Set the defaults here since this is an instance of an abstract method
         # level refers to the level key in the specs file.
-        level = level if level else 'ua'
+        level = level if level is not None else 'ua'
 
         if not name:
             name = self.short_name
 
         one_lev = kwargs.get('one_lev', False)
         vertical_index = kwargs.get('vertical_index')
+        split = kwargs.get('split')
 
         # Retrive the location for the profile
         x, y = self.get_xypoint()
@@ -891,7 +854,7 @@ class profileData(UPPData):
             if one_lev:
                 lev = vertical_index
                 if vertical_index is None:
-                    lev = self.get_level(field, level, var_spec)
+                    lev = self.get_level(field, level, var_spec, split=split)
                 profile = profile[lev, x, y]
             else:
                 profile = profile[:, x, y]

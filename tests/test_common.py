@@ -25,7 +25,7 @@ import numpy as np
 import adb_graphics.conversions as conversions
 import adb_graphics.specs as specs
 import adb_graphics.utils as utils
-import adb_graphics.datahandler.grib as grib
+import adb_graphics.datahandler.gribdata as gribdata
 
 def test_conversion():
 
@@ -135,6 +135,7 @@ class TestDefaultSpecs():
             'labels': self.is_a_contourf_dict,
             'ncl_name': True,
             'print_units': True,
+            'split': self.is_bool,
             'ticks': self.is_number,
             'title': self.is_string,
             'transform': self.check_transform,
@@ -251,14 +252,14 @@ class TestDefaultSpecs():
         if func in dir(self.varspec):
             return self.varspec.__getattribute__(func)
 
-        # Check datahandler.grib objects if a single word is provided
+        # Check datahandler.gribdata objects if a single word is provided
         if len(func.split('.')) == 1:
 
             funcs = []
-            for attr in dir(grib):
+            for attr in dir(gribdata):
                 # pylint: disable=no-member
-                if func in dir(grib.__getattribute__(attr)):
-                    funcs.append(grib.__getattribute__(attr).__dict__.get(func))
+                if func in dir(gribdata.__getattribute__(attr)):
+                    funcs.append(gribdata.__getattribute__(attr).__dict__.get(func))
             return funcs
 
         if callable(utils.get_func(func)):

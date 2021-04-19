@@ -5,7 +5,15 @@ hourly:
       - sfc
     1ref:
       - 1000m
+    acfrozr:
+      - sfc
+    acfrzr:
+      - sfc
     acpcp:
+      - sfc
+    acsnod:
+      - sfc
+    acsnw:
       - sfc
     cape:
       - mu
@@ -14,46 +22,109 @@ hourly:
       - sfc
     ceil:
       - ua
+    ceilexp:
+      - ua
+    ceilexp2:
+      - ua
     cin:
       - sfc
     cloudcover:
+      - bndylay
       - high
       - low
       - mid
       - total
+    cpofp:
+      - sfc
     cref:
       - sfc
     ctop:
       - ua
     dewp:
       - 2m
+    echotop:
+      - sfc
     flru:
       - sfc
+    G113bt:
+      - sat
+    G114bt:
+      - sat
+    G123bt:
+      - sat
+    G124bt:
+      - sat
     gust:
       - 10m
+    hail:
+      - max
+      - maxsfc
+    hailcast:
+      - maxsfc
     hlcy:
+      - in25
+      - mn03
+      - mn25
+      - mx03
+      - mx25
       - sr01
       - sr03
+    hlcytot:
+      - mn03
+      - mn25
+      - mx03
+      - mx25
+    hpbl:
+      - sfc
     lcl:
       - sfc
     lhtfl:
       - sfc
     li:
       - best
-    pres:
       - sfc
+    ltg3:
+      - sfc
+    mref:
+      - sfc
+    pres:
+      - msl
+      - sfc
+    ptmp:
+      - 2m
     pwtr:
       - sfc
+    ref:
+      - m10
+      - maxm10
     rh:
       - 2m
       - 850mb
+      - mean
+      - pw
     rvil:
       - sfc
+    shear:
+      - 01km
+      - 06km
     shtfl:
       - sfc
+    snod:
+      - sfc
+    soilm:
+      - sfc
+    soilt: &soilt_levs
+      - 0cm
+      - 10cm
+      - 40cm
+      - 1m
+    soilw: *soilt_levs
     solar:
       - sfc
+    ssrun:
+      - sfc
     temp:
+      - 2ds
       - 2m
       - 500mb
       - 700mb
@@ -64,12 +135,28 @@ hourly:
       - sfc
     ulwrf:
       - sfc
+      - top
     uswrf:
+      - sfc
+      - top
+    vbdsf:
+      - sfc
+    vddsf:
+      - sfc
+    vig:
+      - sfc
+    vil:
       - sfc
     vis:
       - sfc
+    vort:
+      - 500mb
     vvel:
       - 700mb
+      - mean
+    vvort:
+      - mx01
+      - mx02
     weasd:
       - sfc
     wspeed:
@@ -77,3 +164,6 @@ hourly:
       - 80m
       - 250mb
       - 850mb
+      - max
+      - mdn
+      - mup

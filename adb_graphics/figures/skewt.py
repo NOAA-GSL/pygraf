@@ -18,11 +18,11 @@ from metpy.plots import Hodograph, SkewT
 from metpy.units import units
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
-import adb_graphics.datahandler.grib as grib
+import adb_graphics.datahandler.gribdata as gribdata
 import adb_graphics.errors as errors
 import adb_graphics.utils as utils
 
-class SkewTDiagram(grib.profileData):
+class SkewTDiagram(gribdata.profileData):
 
     ''' The class responsible for gathering all data needed from a grib file to
     produce a Skew-T Log-P diagram.
@@ -38,7 +38,7 @@ class SkewTDiagram(grib.profileData):
       max_plev         maximum pressure level to plot in mb
       model_name       model name to use for plotting
 
-    Additional keyword arguments for the grib.profileData base class should also
+    Additional keyword arguments for the gribdata.profileData base class should also
     be included.
     '''
 
