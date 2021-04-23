@@ -473,7 +473,7 @@ def parallel_skewt(cla, fhr, ds, site, workdir):
         model_name=cla.model_name,
         )
     skew.create_diagram()
-    outfile = f"skewt_{skew.site_code}_{skew.site_num}_f{fhr:02d}.png"
+    outfile = f"{skew.site_code}_{skew.site_num}_skewt_f{fhr:02d}.png"
     png_path = os.path.join(workdir, outfile)
 
     print('*' * 80)
@@ -506,17 +506,12 @@ def graphics_driver(cla):
 
     # Create an empty zip file
     if cla.zip_dir:
-        if cla.graphic_type == 'skewts':
-            zipf = None
-            os.makedirs(cla.zip_dir, exist_ok=True)
-            zipf = os.path.join(cla.zip_dir, 'files.zip')
-            os.makedirs(cla.zip_dir, exist_ok=True)
-        else:
-            zipfiles = {}
-            for tile in cla.tiles:
-                tile_zip_dir = os.path.join(cla.zip_dir, tile)
-                os.makedirs(tile_zip_dir, exist_ok=True)
-                zipfiles[tile] = os.path.join(tile_zip_dir, 'files.zip')
+        zipfiles = {}
+        tiles = cla.tiles if cla.graphic_type == "maps" else ['skewt']
+        for tile in tiles:
+            tile_zip_dir = os.path.join(cla.zip_dir, tile)
+            os.makedirs(tile_zip_dir, exist_ok=True)
+            zipfiles[tile] = os.path.join(tile_zip_dir, 'files.zip')
 
     fcst_hours = copy.deepcopy(cla.fcst_hour)
 
@@ -552,36 +547,25 @@ def graphics_driver(cla):
             print()
             print((('-' * 80)+'\n') * 2)
 
-            if cla.zip_dir:
-                if cla.graphic_type == 'skewts':
-                    create_skewt(cla, fhr, grib_path, workdir)
+            if cla.graphic_type == 'skewts':
+                create_skewt(cla, fhr, grib_path, workdir)
+            else:
+                gribfiles = gather_gribfiles(cla, fhr, gribfiles)
+                create_maps(cla,
+                            fhr=fhr,
+                            gribfiles=gribfiles,
+                            workdir=workdir,
+                            )
 
-                    # Zip png files and remove the originals in a subprocess
-                    png_files = glob.glob(os.path.join(workdir, f'*{fhr:02d}.png'))
-
-                    zip_proc = Process(group=None,
-                                       target=create_zip,
-                                       args=(png_files, zipf),
-                                       )
-                    zip_proc.start()
-                    zip_proc.join()
-                else:
-                    gribfiles = gather_gribfiles(cla, fhr, gribfiles)
-                    create_maps(cla,
-                                fhr=fhr,
-                                gribfiles=gribfiles,
-                                workdir=workdir,
-                                )
-
-                    # Zip png files and remove the originals in a subprocess
-                    for tile, zipf in zipfiles.items():
-                        png_files = glob.glob(os.path.join(workdir, f'*_{tile}_*{fhr:02d}.png'))
-                        zip_proc = Process(group=None,
-                                           target=create_zip,
-                                           args=(png_files, zipf),
-                                           )
-                        zip_proc.start()
-                        zip_proc.join()
+            # Zip png files and remove the originals in a subprocess
+            for tile, zipf in zipfiles.items():
+                png_files = glob.glob(os.path.join(workdir, f'*_{tile}_*{fhr:02d}.png'))
+                zip_proc = Process(group=None,
+                                   target=create_zip,
+                                   args=(png_files, zipf),
+                                   )
+                zip_proc.start()
+                zip_proc.join()
 
             # Keep track of last time we did something useful
             timer_end = time.time()
