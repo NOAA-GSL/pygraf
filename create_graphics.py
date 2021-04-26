@@ -475,7 +475,7 @@ def parallel_skewt(cla, fhr, ds, site, workdir):
         model_name=cla.model_name,
         )
     skew.create_diagram()
-    outfile = f"skewt_{skew.site_code}_{skew.site_num}_f{fhr:02d}.png"
+    outfile = f"{skew.site_code}_{skew.site_num}_skewt_f{fhr:02d}.png"
     png_path = os.path.join(workdir, outfile)
 
     print('*' * 80)
@@ -509,7 +509,8 @@ def graphics_driver(cla):
     # Create an empty zip file
     if cla.zip_dir:
         zipfiles = {}
-        for tile in cla.tiles:
+        tiles = cla.tiles if cla.graphic_type == "maps" else ['skewt']
+        for tile in tiles:
             tile_zip_dir = os.path.join(cla.zip_dir, tile)
             os.makedirs(tile_zip_dir, exist_ok=True)
             zipfiles[tile] = os.path.join(tile_zip_dir, 'files.zip')
