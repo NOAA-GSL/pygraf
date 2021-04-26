@@ -585,7 +585,7 @@ class SkewTDiagram(gribdata.profileData):
                 if transforms:
                     tmp = self.get_transform(transforms, tmp)
 
-            except KeyError:
+            except errors.GribReadError:
 
                 tmp = '--'
 
