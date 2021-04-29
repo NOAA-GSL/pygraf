@@ -171,6 +171,8 @@ class GribFiles():
                 f'PRES_P0_L1_{grid}': f'PRES_P0_L1_{grid}',
                 f'VAR_0_7_200_P8_2L103_{grid}_min': f'VAR_0_7_200_P8_2L103_{grid}_min1h',
                 },
+            'hrrre': {
+                },
             'rap': {
                 f'REFC_P0_L10_{grid}': f'REFC_P0_L10_{grid}',
                 f'UGRD_P0_L103_{grid}': f'UGRD_P0_L103_{grid}',

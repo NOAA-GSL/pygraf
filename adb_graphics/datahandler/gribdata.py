@@ -388,7 +388,7 @@ class UPPData(specs.VarSpec):
         the field's dimensions for one that includes "lv". Return the first
         matching instance. '''
 
-        vert_dim = [dim for dim in field.dims if 'lv' in dim]
+        vert_dim = [dim for dim in field.dims if ('lv' in dim or 'probability' in dim)]
         if vert_dim:
             return vert_dim[0]
         return ''
