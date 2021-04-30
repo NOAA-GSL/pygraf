@@ -475,7 +475,7 @@ def parallel_skewt(cla, fhr, ds, site, workdir):
         model_name=cla.model_name,
         )
     skew.create_diagram()
-    outfile = f"{skew.site_code}_{skew.site_num}_skewt_f{fhr:02d}.png"
+    outfile = f"{skew.site_code}_{skew.site_num}_skewt_f{fhr:03d}.png"
     png_path = os.path.join(workdir, outfile)
 
     print('*' * 80)
