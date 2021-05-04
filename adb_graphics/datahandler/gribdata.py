@@ -164,11 +164,8 @@ class UPPData(specs.VarSpec):
 
         # Create a list of dataset variables corresponding to the vertical
         # dimension
-        if vertical_dim and vertical_dim in self.ds.variables:
-            dim_name = [vertical_dim]
-        else:
-            dim_name = [var for var in self.ds.variables \
-                        if vertical_dim in var]
+        dim_name = [var for var in self.ds.variables \
+                    if vertical_dim in var]
 
         # numeric_level returns a list of length 1 (e.g. [500] for 500 mb) or of
         # length 2 when split=True and it's like 0-6 km, so returns [0, 6000]
@@ -655,14 +652,13 @@ class fieldData(UPPData):
         if one_lev:
 
             # Check if it's a 3D variable (lv in any dimension field)
-            vertical_dim = self.vertical_dim(field)
+            dim_name = self.vertical_dim(field)
 
-            if vertical_dim: # Field has a vertical dimension
+            if dim_name: # Field has a vertical dimension
 
-                dim_name = vertical_dim
-
-                if vertical_index is None: # No index is provided in kwargs
-                    lev = self.get_level(field, level, spec)
+                # Use vertical_index if provided in kwargs
+                lev = vertical_index if vertical_index is not None else \
+                        self.get_level(field, level, spec)
 
                 if lev is None or dim_name is None:
                     print(f'ERROR: Could not find dim_name ({dim_name}) or' \
@@ -679,10 +675,8 @@ class fieldData(UPPData):
         # Select a single forecast hour (only if there are many)
         if not spec.get('accumulate', False):
             if 'fcst_hr' in vals.dims:
-                if self.ds.sizes['fcst_hr'] > 1:
-                    vals = vals.sel(**{'fcst_hr': int(self.fhr)})
-                else:
-                    vals = vals.sel(**{'fcst_hr': 0})
+                fcst_hr = 0 if self.ds.sizes['fcst_hr'] <= 1 else int(self.fhr)
+                vals = vals.sel(**{'fcst_hr': fcst_hr})
 
         transforms = spec.get('transform')
         if transforms:
