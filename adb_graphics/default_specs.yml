@@ -207,6 +207,14 @@ cape:
         levels: [-1000, -50]
     ncl_name: CAPE_P0_L1_{grid}
     title: Surface CAPE
+  sfc_spc:
+    clevs: [1, 100, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
+    cmap: gist_ncar
+    colors: vort_colors
+    ncl_name: CAPE_P0_L1_{grid}
+    ticks: 0
+    title: Surface CAPE
+    unit: J/kg
 cell: # Storm cell motion
   ua:
     ncl_name: USTM_P0_2L103_{grid}
@@ -348,6 +356,14 @@ dewp: # Dew point temperature
     transform: conversions.k_to_f
     unit: F
     wind: 10m
+e3kh: # Effective-layer SRH (SPC Product)
+  sfc:
+    clevs: [0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 600, 700, 800]
+    cmap: gist_ncar
+    colors: rainbow12_colors
+    ncl_name: VAR_0_7_207_P0_L14_{grid}
+    ticks: 0
+    title: Effective-layer SRH
 echotop: # Echo Top
   sfc:
     clevs: !!python/object/apply:numpy.arange [4, 50, 3]
@@ -1038,6 +1054,15 @@ ssrun: # Storm Surface Runoff
     title: Storm Surface Runoff
     transform: conversions.kgm2_to_in
     unit: in
+stpc: # Effective-layer STP
+  sfc:
+    clevs: !!python/object/apply:numpy.arange [-9., -8., 0.1]
+    cmap: gist_ncar
+    colors: pcp_colors
+    ncl_name: VAR_0_7_209_P0_L14_{grid}
+    ticks: 0
+    title: Effective-layer STP
+    transform: conversions.stp_scale
 temp: # Temperature
   2ds: # 2m - Sfc
     clevs: !!python/object/apply:numpy.arange [-16, 17, 2]
@@ -1225,6 +1250,14 @@ v:
     transform: conversions.ms_to_kt
   ua:
     <<: *ua_vwind
+var234:
+  sfc:
+    clevs: [0.0625, 0.125, 0.25, 0.5, 1, 1.5, 2, 3, 4, 5, 10, 30, 50]
+    cmap: gist_ncar
+    colors: vis_colors
+    ncl_name: VAR_0_2_234_P0_L14_GLC0
+    ticks: 0
+    title: Effective-layer U
 vbdsf: # Incoming Direct Radiation
   sfc:
     <<: *incoming_radiation

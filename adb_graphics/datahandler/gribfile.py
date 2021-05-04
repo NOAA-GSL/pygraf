@@ -179,6 +179,8 @@ class GribFiles():
                 f'APCP_P8_L1_{grid}_acc': f'APCP_P8_L1_{grid}_acc1h',
                 f'PRES_P0_L1_{grid}': f'PRES_P0_L1_{grid}',
                 },
+            'rtma': {
+                },
             'rrfs': {
                 f'REFC_P0_L200_{grid}': f'REFC_P0_L200_{grid}',
                 f'MXUPHL_P8_2L103_{grid}_max': f'MXUPHL_P8_2L103_{grid}_max1h',
