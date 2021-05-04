@@ -129,7 +129,7 @@ def gather_gribfiles(cla, fhr, gribfiles):
         else:
             filenames['free_fcst'].append(filename)
 
-    if gribfiles is None:
+    if gribfiles is None or not cla.all_leads:
 
         # Create a new GribFiles object, include all hours, or just this one,
         # depending on command line argument flag
@@ -156,6 +156,9 @@ def generate_tile_list(arg_list):
 
     if not arg_list:
         return ['full']
+
+    if ',' in arg_list[0]:
+        arg_list = arg_list[0].split(',')
 
     rap_only = ('AK', 'AKZoom', 'conus', 'HI')
     if 'all' in arg_list:
@@ -328,11 +331,11 @@ def parse_args():
         )
     map_group.add_argument(
         '--tiles',
-        choices=['full', 'all', 'conus', 'AK'] + list(maps.TILE_DEFS.keys()),
         default=['full'],
-        help='The domains to plot. Choose from any of those listed. Special \
-        choices: full is full model output domain, and all is the full domain, \
-        plus all of the sub domains.',
+        help='The domains to plot. Choose from any of those listed. Special ' \
+        'choices: full is full model output domain, and all is the full domain, ' \
+        'plus all of the sub domains. ' \
+        f'Choices: {["full", "all", "conus", "AK"] + list(maps.TILE_DEFS.keys())}',
         nargs='+',
         )
     return parser.parse_args()

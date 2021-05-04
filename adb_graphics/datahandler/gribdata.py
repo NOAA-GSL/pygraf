@@ -527,11 +527,11 @@ class fieldData(UPPData):
             grid_info['projection'] = 'rotpole'
 
             # CenterLon in RAP and Longitude_of_southern_pole in RRFS
-            lon_0 = lat.attrs.get('CenterLon', lat.attrs['Longitude_of_southern_pole'])
+            lon_0 = lat.attrs.get('CenterLon', lat.attrs.get('Longitude_of_southern_pole'))
             grid_info['lon_0'] = lon_0[0] - 360
 
             # CenterLat in RAP and Latitude_of_southern_pole in RRFS
-            center_lat = lat.attrs.get('CenterLat', lat.attrs['Latitude_of_southern_pole'])
+            center_lat = lat.attrs.get('CenterLat', lat.attrs.get('Latitude_of_southern_pole'))
             grid_info['o_lat_p'] = - center_lat[0] if center_lat[0] < 0 else 90 - center_lat[0]
 
             grid_info['o_lon_p'] = 180
@@ -679,7 +679,10 @@ class fieldData(UPPData):
         # Select a single forecast hour (only if there are many)
         if not spec.get('accumulate', False):
             if 'fcst_hr' in vals.dims:
-                vals = vals.sel(**{'fcst_hr': int(self.fhr)})
+                if self.ds.sizes['fcst_hr'] > 1:
+                    vals = vals.sel(**{'fcst_hr': int(self.fhr)})
+                else:
+                    vals = vals.sel(**{'fcst_hr': 0})
 
         transforms = spec.get('transform')
         if transforms:
