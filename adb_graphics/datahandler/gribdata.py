@@ -187,7 +187,6 @@ class UPPData(specs.VarSpec):
         if len(data_levels) == 2 and len(requested_level) == 2:
             levlist = [list(lev) for lev in data_levels]
             for lev, levset in enumerate(zip(*levlist)):
-                print(f"LEVELS: {levset} {levlist} {requested_level}")
                 if sorted(levset) == requested_level:
                     return lev
 
@@ -198,13 +197,10 @@ class UPPData(specs.VarSpec):
                 lev = np.argwhere(dim_levels == requested_level[0])
                 try:
                     if lev or lev == [0]:
-                        print(f"LEVEL: {dim} {field.name} {lev} {dim_levels} {requested_level[0]}")
                         lev = int(lev[0])
                         return lev
                 except ValueError:
-                    print(f"LEVEL: {dim} {field.name} {lev} {dim_levels} {requested_level[0]}")
                     print(f'BAD LEVEL is {lev} for {field.name}')
-                    raise
 
 
             print(f"Could not find a level for {field.name} at requested \
@@ -688,11 +684,8 @@ class fieldData(UPPData):
                 vals = vals.sel(**{'fcst_hr': fcst_hr})
 
         transforms = spec.get('transform')
-        try:
-            if transforms:
-                vals = self.get_transform(transforms, vals)
-        except ValueError:
-            print(f'ERROR IN TRANSFORM: {spec} {vals}')
+        if transforms:
+            vals = self.get_transform(transforms, vals)
 
         return vals
 
