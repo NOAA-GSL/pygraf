@@ -69,13 +69,10 @@ class GribFiles():
         self.contents = self._load(filenames)
 
     @staticmethod
-    def free_fcst_names(ds, fcst_hour=1):
+    def free_fcst_names(ds):
 
         ''' Given an opened dataset, return a dict of original variable names
         (key) and the desired name (value) '''
-
-        # Some free-forecast run total accumulates are tagged like this:
-        run_total = 'initial time to forecast time'
 
         ret = {}
         for var in ds.variables:
@@ -115,17 +112,11 @@ class GribFiles():
 
         all_leads = [] if filenames is None else [self.contents]
         filenames = self.filenames if filenames is None else filenames
-        var_names = self.variable_names
 
-        # 0h and 1h forecast variables are named like the keys in var_names,
-        # while the free forecast hours are named like the values in var_names.
-        # Need to do a bit of cleanup to get them into a single datastructure.
-        names = {
-            '01fcst': var_names,
-            'free_fcst': var_names.values(),
-            }
-
-        for fcst_type, vnames in names.items():
+        # 0h and 1h accumulated forecast variables are named differently than
+        # the rest of the forecast hours. Rename those accumulated variables if
+        # needed.
+        for fcst_type in ['01fcst', 'free_fcst']:
 
             if filenames.get(fcst_type):
                 for filename in filenames.get(fcst_type):
@@ -171,50 +162,3 @@ class GribFiles():
             engine='pynio',
             lock=False,
             )
-
-    @property
-    def variable_names(self):
-
-        '''
-        Defines the variable name transitions that need to happen for each
-        model to combine along forecast hours.
-
-        Keys are original variable names, values are the updated variable names.
-
-        Choosing to update the 0 and 1 hour forecast variables to the longer
-        lead times for efficiency's sake.
-        '''
-
-        grid = self.grid_suffix
-        names = {
-            'hrrr': {
-                f'REFC_P0_L10_{grid}': f'REFC_P0_L10_{grid}',
-                f'MXUPHL_P8_2L103_{grid}_max': f'MXUPHL_P8_2L103_{grid}_max1h',
-                f'UGRD_P0_L103_{grid}': f'UGRD_P0_L103_{grid}',
-                f'VGRD_P0_L103_{grid}': f'VGRD_P0_L103_{grid}',
-                f'WEASD_P8_L1_{grid}_acc': f'WEASD_P8_L1_{grid}_acc1h',
-                f'APCP_P8_L1_{grid}_acc': f'APCP_P8_L1_{grid}_acc1h',
-                f'PRES_P0_L1_{grid}': f'PRES_P0_L1_{grid}',
-                f'VAR_0_7_200_P8_2L103_{grid}_min': f'VAR_0_7_200_P8_2L103_{grid}_min1h',
-                },
-            'rap': {
-                f'REFC_P0_L10_{grid}': f'REFC_P0_L10_{grid}',
-                f'UGRD_P0_L103_{grid}': f'UGRD_P0_L103_{grid}',
-                f'VGRD_P0_L103_{grid}': f'VGRD_P0_L103_{grid}',
-                f'WEASD_P8_L1_{grid}_acc': f'WEASD_P8_L1_{grid}_acc1h',
-                f'APCP_P8_L1_{grid}_acc': f'APCP_P8_L1_{grid}_acc1h',
-                f'PRES_P0_L1_{grid}': f'PRES_P0_L1_{grid}',
-                },
-            'rrfs': {
-                f'REFC_P0_L200_{grid}': f'REFC_P0_L200_{grid}',
-                f'MXUPHL_P8_2L103_{grid}_max': f'MXUPHL_P8_2L103_{grid}_max1h',
-                f'UGRD_P0_L103_{grid}': f'UGRD_P0_L103_{grid}',
-                f'VGRD_P0_L103_{grid}': f'VGRD_P0_L103_{grid}',
-                f'WEASD_P8_L1_{grid}_acc': f'WEASD_P8_L1_{grid}_acc1h',
-                f'APCP_P8_L1_{grid}_acc': f'APCP_P8_L1_{grid}_acc1h',
-                f'PRES_P0_L1_{grid}': f'PRES_P0_L1_{grid}',
-                f'VAR_0_7_200_P8_2L103_{grid}_min': f'VAR_0_7_200_P8_2L103_{grid}_min1h',
-                },
-            }
-
-        return names[self.model]

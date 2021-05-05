@@ -99,7 +99,7 @@ class UPPData(specs.VarSpec):
         ''' Wrapper that calls get_field method for the current variable.
         Returns the NioVariable object '''
 
-        return self.get_field(self.ncl_name(self.vspec))
+        return self._get_field(self.ncl_name(self.vspec))
 
     def field_diff(self, values, variable2, level2, **kwargs) -> np.ndarray:
 
@@ -121,7 +121,23 @@ class UPPData(specs.VarSpec):
 
         return fsum / len(levels)
 
-    def get_field(self, ncl_name):
+    def _get_data_levels(self, vertical_dim):
+
+        ''' Return a list of vertical dimension values corresponding to the
+        requested vertical dimension to get the values of those dimensions '''
+
+        fcst_hr = 0 if self.ds.sizes.get('fcst_hr', 0) <= 1 else int(self.fhr)
+
+        ret = []
+        for dim in [var for var in self.ds.variables \
+                if vertical_dim in var]:
+
+            # Get the current forecast hour slice, if it's in the dataset
+            selector = {'fcst_hr': fcst_hr} if 'fcst_hr' in self.ds[dim].dims else {}
+            ret.append(self.ds[dim].sel(**selector).values)
+        return ret
+
+    def _get_field(self, ncl_name):
 
         ''' Given an ncl_name, return the NioVariable object. '''
 
@@ -131,7 +147,7 @@ class UPPData(specs.VarSpec):
             raise errors.GribReadError(f'{ncl_name}')
         return field
 
-    def get_level(self, field, level, spec, **kwargs):
+    def _get_level(self, field, level, spec, **kwargs):
 
         ''' Returns the value of the level to for a 3D array
 
@@ -162,31 +178,19 @@ class UPPData(specs.VarSpec):
 
         vertical_dim = self.vertical_dim(field)
 
-        # Create a list of dataset variables corresponding to the vertical
-        # dimension
-        dim_name = [var for var in self.ds.variables \
-                    if vertical_dim in var]
-
         # numeric_level returns a list of length 1 (e.g. [500] for 500 mb) or of
         # length 2 when split=True and it's like 0-6 km, so returns [0, 6000]
         requested_level, _ = self.numeric_level(level=level,
-                                        split=kwargs.get('split', spec.get('split')),
-                                        )
+                                                split=kwargs.get('split', spec.get('split')),
+                                                )
 
-        # Get the values of the levels stored in the grib file. Get only the
-        # slice for this forecast hour.
-        fcst_hr = 0 if self.ds.sizes.get('fcst_hr', 0) <= 1 else int(self.fhr)
-        data_levels = []
-        for dim in dim_name:
-            dim_var = self.ds[dim]
-            selector = {'fcst_hr': fcst_hr} if 'fcst_hr' in dim_var.dims else {}
-            data_levels.append(dim_var.sel(**selector).values)
+        # data_levels contains a list of vertical dimension values
+        data_levels = self._get_data_levels(vertical_dim)
 
         # For split-level variables, like 0-6km, find the matching index by
         # looping through both the possible vertical level arrays.
         if len(data_levels) == 2 and len(requested_level) == 2:
-            levlist = [list(lev) for lev in data_levels]
-            for lev, levset in enumerate(zip(*levlist)):
+            for lev, levset in enumerate(zip(*[list(lev) for lev in data_levels])):
                 if sorted(levset) == requested_level:
                     return lev
 
@@ -201,7 +205,6 @@ class UPPData(specs.VarSpec):
                         return lev
                 except ValueError:
                     print(f'BAD LEVEL is {lev} for {field.name}')
-
 
             print(f"Could not find a level for {field.name} at requested \
                   level = {requested_level} for variable levels = {data_levels}. Index \
@@ -317,7 +320,7 @@ class UPPData(specs.VarSpec):
                                        level_type=self.level_type)
 
             try:
-                self.get_field(try_name)
+                self._get_field(try_name)
             except errors.GribReadError:
                 continue
             else:
@@ -650,7 +653,7 @@ class fieldData(UPPData):
             spec = self.spec.get(name, {}).get(level, {})
             if not spec and name is not None:
                 raise errors.NoGraphicsDefinitionForVariable(name, level)
-            field = self.get_field(ncl_name or self.ncl_name(spec))
+            field = self._get_field(ncl_name or self.ncl_name(spec))
 
         lev = vertical_index
         vals = field
@@ -663,7 +666,7 @@ class fieldData(UPPData):
 
                 # Use vertical_index if provided in kwargs
                 lev = vertical_index if vertical_index is not None else \
-                        self.get_level(field, level, spec)
+                        self._get_level(field, level, spec)
 
                 if lev is None or dim_name is None:
                     print(f'ERROR: Could not find dim_name ({dim_name}) or' \
@@ -863,7 +866,7 @@ class profileData(UPPData):
             if one_lev:
                 lev = vertical_index
                 if vertical_index is None:
-                    lev = self.get_level(field, level, var_spec, split=split)
+                    lev = self._get_level(field, level, var_spec, split=split)
                 profile = profile[lev, x, y]
             else:
                 profile = profile[:, x, y]
