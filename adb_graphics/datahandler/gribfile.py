@@ -138,8 +138,11 @@ class GribFiles():
                     )
 
                 if fcst_type == '01fcst':
-                    print(f'FREE FCST NAMES: {self.free_fcst_names(dataset)}')
-                    dataset = dataset.rename_vars(self.free_fcst_names(dataset))
+                    print(f'RENAMING VARIABLES:')
+                    renaming = self.free_fcst_names(dataset)
+                    for old_name, new_name in renaming.items():
+                        print(f'  {old_name:>30s}  -> {new_name}')
+                    dataset = dataset.rename_vars(renaming)
 
                 all_leads.append(dataset)
 

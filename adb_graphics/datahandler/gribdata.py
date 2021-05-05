@@ -169,44 +169,52 @@ class UPPData(specs.VarSpec):
 
         # numeric_level returns a list of length 1 (e.g. [500] for 500 mb) or of
         # length 2 when split=True and it's like 0-6 km, so returns [0, 6000]
-        lev_val, _ = self.numeric_level(level=level,
+        requested_level, _ = self.numeric_level(level=level,
                                         split=kwargs.get('split', spec.get('split')),
                                         )
 
-        # Get the values of the levels stored in the grib file
-        levs = [self.ds[dim].values for dim in dim_name]
+        # Get the values of the levels stored in the grib file. Get only the
+        # slice for this forecast hour.
+        fcst_hr = 0 if self.ds.sizes.get('fcst_hr', 0) <= 1 else int(self.fhr)
+        data_levels = []
+        for dim in dim_name:
+            dim_var = self.ds[dim]
+            selector = {'fcst_hr': fcst_hr} if 'fcst_hr' in dim_var.dims else {}
+            data_levels.append(dim_var.sel(**selector).values)
 
         # For split-level variables, like 0-6km, find the matching index by
         # looping through both the possible vertical level arrays.
-        if len(levs) == 2 and len(lev_val) == 2:
-            levlist = [lev.tolist()[0] for lev in levs]
+        if len(data_levels) == 2 and len(requested_level) == 2:
+            levlist = [list(lev) for lev in data_levels]
             for lev, levset in enumerate(zip(*levlist)):
-                print(f"LEVELS: {levset} {levlist} {lev_val}")
-                if sorted(levset) == lev_val:
+                print(f"LEVELS: {levset} {levlist} {requested_level}")
+                if sorted(levset) == requested_level:
                     return lev
 
         # For single-level variables, like 500mb, use the argwhere function to
         # return the matching index
-        if len(lev_val) == 1:
-            try:
-                levarray = self.ds[dim_name[0]].values
-                lev = np.argwhere(levarray == lev_val[0])
+        if len(requested_level) == 1:
+            for dim_levels in data_levels:
+                lev = np.argwhere(dim_levels == requested_level[0])
+                try:
+                    if lev or lev == [0]:
+                        print(f"LEVEL: {dim} {field.name} {lev} {dim_levels} {requested_level[0]}")
+                        lev = int(lev[0])
+                        return lev
+                except ValueError:
+                    print(f"LEVEL: {dim} {field.name} {lev} {dim_levels} {requested_level[0]}")
+                    print(f'BAD LEVEL is {lev} for {field.name}')
+                    raise
 
-                if not lev.size and len(dim_name) == 2:
-                    levarray = self.ds[dim_name[1]].values
-                    lev = np.argwhere(levarray == lev_val[0])
 
-                lev = int(lev)
-            except:
-                print(f"Could not find a level for {field.name} at {lev_val[0]} for \
-                        {levarray}")
-                raise
-
-            return lev
+            print(f"Could not find a level for {field.name} at requested \
+                  level = {requested_level} for variable levels = {data_levels}. Index \
+                  was {lev}.")
 
         # If neither of those cases worked out appropriately, raise an error.
-        msg = f'Length of lev_val ({len(lev_val)}) or levs ({len(levs)}) bad!' \
-                f' {level} {levs} {field.name}'
+        msg = f'Length of requested_level ({len(requested_level)}) or '\
+              f'data_levels ({len(data_levels)}) bad!' \
+              f' {level} {field.name}'
         raise ValueError(msg)
 
     def get_transform(self, transforms, val):
@@ -680,8 +688,11 @@ class fieldData(UPPData):
                 vals = vals.sel(**{'fcst_hr': fcst_hr})
 
         transforms = spec.get('transform')
-        if transforms:
-            vals = self.get_transform(transforms, vals)
+        try:
+            if transforms:
+                vals = self.get_transform(transforms, vals)
+        except ValueError:
+            print(f'ERROR IN TRANSFORM: {spec} {vals}')
 
         return vals
 
