@@ -182,8 +182,9 @@ class UPPData(specs.VarSpec):
         # For split-level variables, like 0-6km, find the matching index by
         # looping through both the possible vertical level arrays.
         if len(levs) == 2 and len(lev_val) == 2:
-            levlist = [list(lev) for lev in levs]
+            levlist = [lev.tolist()[0] for lev in levs]
             for lev, levset in enumerate(zip(*levlist)):
+                print(f"LEVELS: {levset} {levlist} {lev_val}")
                 if sorted(levset) == lev_val:
                     return lev
 

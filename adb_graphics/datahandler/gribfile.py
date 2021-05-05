@@ -4,6 +4,8 @@
 Classes that load grib files.
 '''
 
+from functools import lru_cache
+
 import xarray as xr
 
 class GribFile():
@@ -67,6 +69,27 @@ class GribFiles():
         self.contents = self._load(filenames)
 
     @staticmethod
+    def free_fcst_names(ds, fcst_hour=1):
+
+        ''' Given an opened dataset, return a dict of original variable names
+        (key) and the desired name (value) '''
+
+        # Some free-forecast run total accumulates are tagged like this:
+        run_total = 'initial time to forecast time'
+
+        ret = {}
+        for var in ds.variables:
+            suffix = var.split('_')[-1]
+
+            # Because there doesn't seem to be another way to know....
+            needs_renaming = var.split('_')[0] not in ['ASNOW', 'FRZR']
+
+            if suffix in ['max', 'min', 'acc', 'avg'] and needs_renaming:
+                new_suffix = f'{suffix}1h'
+                ret[var] = var.replace(suffix, new_suffix)
+        return ret
+
+    @staticmethod
     def _get_grid_suffix(filenames):
 
         ''' Return the suffix of the first variable with 4 sections (split on _)
@@ -108,18 +131,17 @@ class GribFiles():
                 for filename in filenames.get(fcst_type):
                     print(f'Loading grib2 file: {fcst_type}, {filename}')
 
+                # Rename variables to match free forecast variables
+                dataset = xr.open_mfdataset(
+                    filenames[fcst_type],
+                    **self.open_kwargs,
+                    )
+
                 if fcst_type == '01fcst':
-                    if filenames.get(fcst_type):
-                        # Rename variables to match free forecast variables
-                        all_leads.append(xr.open_mfdataset(
-                            filenames[fcst_type],
-                            **self.open_kwargs(vnames),
-                            ).rename_vars(vnames))
-                else:
-                    all_leads.append(xr.open_mfdataset(
-                        filenames[fcst_type],
-                        **self.open_kwargs(vnames),
-                        ))
+                    print(f'FREE FCST NAMES: {self.free_fcst_names(dataset)}')
+                    dataset = dataset.rename_vars(self.free_fcst_names(dataset))
+
+                all_leads.append(dataset)
 
         ret = xr.combine_nested(all_leads,
                                 compat='override',
@@ -130,7 +152,9 @@ class GribFiles():
 
         return ret
 
-    def open_kwargs(self, vnames):
+    @property
+    @lru_cache()
+    def open_kwargs(self):
 
         ''' Defines the key word arguments used by the various calls to XArray
         open_mfdataset '''
@@ -141,7 +165,6 @@ class GribFiles():
             compat='override',
             concat_dim=list(self.coord_dims.keys())[0],
             coords='minimal',
-            data_vars=vnames,
             engine='pynio',
             lock=False,
             )
