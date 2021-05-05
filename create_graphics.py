@@ -413,7 +413,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
                 short_name=var,
                 ))
 
-    _, ax = plt.subplots(1, 1, figsize=(12, 12))
+    _, ax = plt.subplots(1, 1, figsize=(10, 10))
 
     # Generate a map object
     m = maps.Map(

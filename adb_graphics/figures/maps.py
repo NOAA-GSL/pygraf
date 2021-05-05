@@ -207,7 +207,7 @@ class DataMap():
 
         ''' Puts the NOAA logo at the bottom left of the matplotlib axes. '''
 
-        logo = mpimg.imread('static/noaa-logo-100x100.png')
+        logo = mpimg.imread('static/noaa-logo-50x50.png')
 
         imagebox = mpob.OffsetImage(logo)
         ab = mpob.AnnotationBbox(
