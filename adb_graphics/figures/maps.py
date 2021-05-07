@@ -469,4 +469,5 @@ class DataMap():
         ''' Helper function to create mesh for various plot. '''
 
         lat, lon = field.latlons()
-        return self.map.m(360+lon, lat)
+        adjust = 360 if np.any(lon < 0) else 0
+        return self.map.m(adjust + lon, lat)
