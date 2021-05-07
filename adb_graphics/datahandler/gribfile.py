@@ -80,12 +80,12 @@ class GribFiles():
 
             # Because there doesn't seem to be another way to know....
             odd_variables = [
-               'ASNOW',
-               'FRZR',
-               'LRGHR',
-               'TCDC',
-               'CDLYR',
-               ]
+                'ASNOW',
+                'CDLYR',
+                'FRZR',
+                'LRGHR',
+                'TCDC',
+                ]
             needs_renaming = var.split('_')[0] not in odd_variables
 
             if suffix in ['max', 'min', 'acc', 'avg'] and needs_renaming:

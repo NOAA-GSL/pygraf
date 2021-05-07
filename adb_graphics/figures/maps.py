@@ -395,8 +395,11 @@ class DataMap():
         contoured = ', '.join(contoured)
 
         # Analysis time (top) and forecast hour (bottom) on the left
-        plt.title(f"{self.model_name}: {atime}\nFcst Hr: {f.fhr}", loc='left',
-                fontsize=14, alpha=None)
+        plt.title(f"{self.model_name}: {atime}\nFcst Hr: {f.fhr}",
+                  alpha=None,
+                  fontsize=14,
+                  loc='left',
+                  )
 
         # Add "experimental" label
         if self.model_name not in ['RAP-NCEP', 'HRRR-NCEP']:
