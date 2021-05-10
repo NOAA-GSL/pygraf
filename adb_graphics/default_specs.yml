@@ -1056,13 +1056,12 @@ ssrun: # Storm Surface Runoff
     unit: in
 stpc: # Effective-layer STP
   sfc:
-    clevs: !!python/object/apply:numpy.arange [-9., -8., 0.1]
+    clevs: [0.05, 0.10, 0.15, 0.20, 0.35, 0.50, 0.75, 1.0, 1.5, 2.0, 2.5]
     cmap: gist_ncar
     colors: pcp_colors
-    ncl_name: VAR_0_7_209_P0_L14_{grid}
+    ncl_name: VAR_0_7_208_P0_L14_{grid}
     ticks: 0
     title: Effective-layer STP
-    transform: conversions.stp_scale
 temp: # Temperature
   2ds: # 2m - Sfc
     clevs: !!python/object/apply:numpy.arange [-16, 17, 2]
