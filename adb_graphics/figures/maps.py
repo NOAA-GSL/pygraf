@@ -201,6 +201,7 @@ class DataMap():
         self.map = map_
         self.model_name = model_name
 
+
     @staticmethod
     def add_logo(ax):
 
@@ -245,7 +246,7 @@ class DataMap():
         if self.field.short_name == 'flru':
             ticks = [label.rjust(30) for label in ['VFR', 'MVFR', 'IFR', 'LIFR']]
 
-        cbar.ax.set_xticklabels(ticks, fontsize=14)
+        cbar.ax.set_xticklabels(ticks, fontsize=18)
 
     @utils.timer
     def draw(self, show=False): # pylint: disable=too-many-locals
@@ -395,38 +396,26 @@ class DataMap():
         contoured = ', '.join(contoured)
 
         # Analysis time (top) and forecast hour (bottom) on the left
-        plt.title(f"{self.model_name}: {atime}\nFcst Hr: {f.fhr}", loc='left',
-                fontsize=14, alpha=None)
+        plt.title(f"{self.model_name}: {atime}\nFcst Hr: {f.fhr}", loc='left', fontsize=16)
 
-        # Add "experimental" label
-        if self.model_name not in ['RAP-NCEP', 'HRRR-NCEP']:
-            plt.title('Experimental',
-                      fontsize=16,
-                      loc='right',
-                      )
+        # Atmospheric level and unit in the high center
+        level, lev_unit = f.numeric_level(index_match=False)
+        if not f.vspec.get('title'):
+            plt.title(f"{level} {lev_unit}", position=(0.5, 1.04), fontsize=18)
 
         # Two lines for shaded data (top), and contoured data (bottom)
-        title = f.vspec.get('title')
-
-        level, lev_unit = ('', '')
-        if title is None:
-            title = f.field.long_name
-            level, lev_unit = f.numeric_level(index_match=False)
-            level = str(level[0]) if isinstance(level, list) else level
-
+        title = f.vspec.get('title', f.field.long_name)
         if f.vspec.get('print_units', True):
             units = f'({f.units}, shaded)'
         else:
             units = f''
-        plt.title(f"{level} {lev_unit} {title} {units}\n {contoured}",
+        plt.title(f"{title} {units}\n {contoured}",
+                  loc='right',
                   fontsize=16,
-                  horizontalalignment='right',
-                  position=(1, 1.05),
                   )
 
-
         # X label shows forecast valid time.
-        plt.xlabel(f"Valid time: {vtime}", fontsize=14, labelpad=75)
+        plt.xlabel(f"Valid time: {vtime}", fontsize=18, labelpad=100)
 
     def _wind_barbs(self, level):
 
