@@ -363,6 +363,8 @@ class VarSpec(abc.ABC):
 
         ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
                           ([88, 83, 80, 70, 50, 25, 20, 15])
+        return np.concatenate((grays, ncar))
+
         return ncar
 
     @property
@@ -371,8 +373,11 @@ class VarSpec(abc.ABC):
 
         ''' Default color map for Temperature '''
 
-        ncolors = len(self.clevs)
-        return cm.get_cmap(self.vspec.get('cmap', 'jet'), ncolors)(range(ncolors))
+        temp1 = cm.get_cmap('PRGn_r', 35)(range(0, 35))
+        temp2 = cm.get_cmap('nipy_spectral', 50)(range(3, 48))
+        temp3 = cm.get_cmap('Reds_r', 20)(range(3, 19))
+
+        return np.concatenate((temp1, temp2, temp3))
 
     @property
     @lru_cache()
