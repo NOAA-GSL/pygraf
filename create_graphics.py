@@ -538,7 +538,6 @@ def graphics_driver(cla):
                 fcst_hours.remove(fhr)
             else:
                 # Try next forecast hour
-                print(f'Input not yet available: {grib_path}')
                 continue
 
             # Create the working directory

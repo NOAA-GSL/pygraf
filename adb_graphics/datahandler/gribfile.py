@@ -79,6 +79,7 @@ class GribFiles():
             suffix = var.split('_')[-1]
 
             # Because there doesn't seem to be another way to know....
+
             odd_variables = [
                 'ASNOW',
                 'CDLYR',
