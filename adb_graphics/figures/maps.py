@@ -396,7 +396,12 @@ class DataMap():
         contoured = ', '.join(contoured)
 
         # Analysis time (top) and forecast hour (bottom) on the left
-        plt.title(f"{self.model_name}: {atime}\nFcst Hr: {f.fhr}", loc='left', fontsize=16)
+
+        plt.title(f"{self.model_name}: {atime}\nFcst Hr: {f.fhr}",
+                  alpha=None,
+                  fontsize=14,
+                  loc='left',
+                  )
 
         # Atmospheric level and unit in the high center
         level, lev_unit = f.numeric_level(index_match=False)
@@ -458,4 +463,5 @@ class DataMap():
         ''' Helper function to create mesh for various plot. '''
 
         lat, lon = field.latlons()
-        return self.map.m(360+lon, lat)
+        adjust = 360 if np.any(lon < 0) else 0
+        return self.map.m(adjust + lon, lat)
