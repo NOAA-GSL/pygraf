@@ -251,6 +251,29 @@ class UPPData(specs.VarSpec):
                 val = utils.get_func(transform)(val, **transform_kwargs)
         return val
 
+    @lru_cache()
+    def get_xypoint(self, site_lat, site_lon) -> tuple:
+
+        '''
+        Return the X, Y grid point corresponding to the site location. No
+        interpolation is used.
+        '''
+
+        lats, lons = self.latlons()
+        max_x, max_y = np.shape(lats)
+
+        # Numpy magic to grab the X, Y grid point nearest the profile site
+        # pylint: disable=unbalanced-tuple-unpacking
+        x, y = np.unravel_index((np.abs(lats - site_lat) \
+               + np.abs(lons - site_lon)).argmin(), lats.shape)
+        # pylint: enable=unbalanced-tuple-unpacking
+
+        if x == 0 or y == 0 or x == max_x or y == max_y:
+            msg = f"site location is outside your domain!"
+#            raise errors.OutsideDomain(msg)
+
+        return (x, y)
+
     @property
     def grid_suffix(self):
 
@@ -786,28 +809,28 @@ class profileData(UPPData):
         self.site_lat = float(lat)
         self.site_lon = -float(lon)
 
-    @lru_cache()
-    def get_xypoint(self) -> tuple:
-
-        '''
-        Return the X, Y grid point corresponding to the site location. No
-        interpolation is used.
-        '''
-
-        lats, lons = self.latlons()
-        max_x, max_y = np.shape(lats)
-
-        # Numpy magic to grab the X, Y grid point nearest the profile site
-        # pylint: disable=unbalanced-tuple-unpacking
-        x, y = np.unravel_index((np.abs(lats - self.site_lat) \
-               + np.abs(lons - self.site_lon)).argmin(), lats.shape)
-        # pylint: enable=unbalanced-tuple-unpacking
-
-        if x == 0 or y == 0 or x == max_x or y == max_y:
-            msg = f"{self.site_name} is outside your domain!"
-            raise errors.OutsideDomain(msg)
-
-        return (x, y)
+#    @lru_cache()
+#    def get_xypoint(self) -> tuple:
+#
+#        '''
+#        Return the X, Y grid point corresponding to the site location. No
+#        interpolation is used.
+#        '''
+#
+#        lats, lons = self.latlons()
+#        max_x, max_y = np.shape(lats)
+#
+#        # Numpy magic to grab the X, Y grid point nearest the profile site
+#        # pylint: disable=unbalanced-tuple-unpacking
+#        x, y = np.unravel_index((np.abs(lats - self.site_lat) \
+#               + np.abs(lons - self.site_lon)).argmin(), lats.shape)
+#        # pylint: enable=unbalanced-tuple-unpacking
+#
+#        if x == 0 or y == 0 or x == max_x or y == max_y:
+#            msg = f"{self.site_name} is outside your domain!"
+#            raise errors.OutsideDomain(msg)
+#
+#        return (x, y)
 
     def values(self, level=None, name=None, **kwargs):
 
@@ -840,7 +863,7 @@ class profileData(UPPData):
         split = kwargs.get('split')
 
         # Retrive the location for the profile
-        x, y = self.get_xypoint()
+        x, y = self.get_xypoint(self.site_lat, self.site_lon)
 
         # Retrieve the default_specs section for the specified level
         var_spec = self.spec.get(name, {}).get(level, {})

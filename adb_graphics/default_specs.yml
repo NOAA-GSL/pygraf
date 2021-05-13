@@ -1054,9 +1054,9 @@ temp: # Temperature
     unit: F
     wind: False
   2m:
-    clevs: !!python/object/apply:numpy.arange [-60, 120, 2]
+    clevs: !!python/object/apply:numpy.arange [-60, 121, 2]
     cmap: jet
-    colors: t_colors
+    colors: tsfc_colors
     ncl_name: TMP_P0_L103_{grid}
     ticks: 10
     transform: conversions.k_to_f
