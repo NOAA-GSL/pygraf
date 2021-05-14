@@ -5,6 +5,10 @@
 #   accumulate: bool to specify whether there should be multiple forecast hours
 #               present in the FieldData object
 #
+#   annotate: bool to add data values at airport locations (default: True)
+#
+#   annotate_decimal: sets the decimal place for plotting values (default: 0)
+#
 #   clevs: specifies the contour levels by one of the following methods
 #      - a list with no quotes
 #      - a numpy.arange specified as "!!python/object/apply:numpy.arange [list]"
@@ -1145,6 +1149,7 @@ thick:
 totp: # Hourly total precipitation
   sfc:
     <<: *precip
+    annotate_decimal: 2
     contours:
       pres_msl:
         colors: red
