@@ -1,0 +1,14 @@
+hourly:
+  model: hrrr
+  variables:
+    dewp:
+      - 2m
+    pres:
+      - sfc
+    temp:
+      - 2m
+    vis:
+      - sfc
+    wspeed:
+      - 10m
+      - 80m
