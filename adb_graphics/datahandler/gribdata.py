@@ -268,9 +268,9 @@ class UPPData(specs.VarSpec):
                + np.abs(lons - site_lon)).argmin(), lats.shape)
         # pylint: enable=unbalanced-tuple-unpacking
 
-        if x == 0 or y == 0 or x == max_x or y == max_y:
-            msg = f"site location is outside your domain!"
-#            raise errors.OutsideDomain(msg)
+        if x <= 0 or y <= 0 or x >= max_x or y >= max_y:
+            print(f'site location is outside your domain! {site_lat} {site_lon}')
+            return(-1.E10, -1.E10)
 
         return (x, y)
 
