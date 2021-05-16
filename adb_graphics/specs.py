@@ -380,17 +380,27 @@ class VarSpec(abc.ABC):
     @lru_cache()
     def tsfc_colors(self) -> np.ndarray:
 
-        ''' Default color map for Surface Temperature '''  # WeatherBell scheme
+        ''' Default color map for Surface Temperature '''  # GSL NCL scheme
 
-        temp1 = cm.get_cmap('cool_r', 15)(range(0, 15))
-        temp2 = cm.get_cmap('BuGn', 12)(range(4, 12))
-        temp3 = cm.get_cmap('Greens_r', 8)(range(0, 8))
-        temp4 = cm.get_cmap('RdPu_r', 15)(range(0, 15))
-        temp5 = cm.get_cmap('BuPu', 10)(range(0, 9))
-        temp6 = cm.get_cmap('RdYlBu_r', 20)(range(2, 20))
-        temp7 = cm.get_cmap('RdYlGn', 20)(range(0, 20))
+        temp1 = cm.get_cmap('autumn_r', 20)(range(0, 10))
+        temp2 = cm.get_cmap('Greys_r', 10)(range(2, 7))
+        temp3 = cm.get_cmap('hsv_r', 70)(range(0, 38))
+        temp4 = cm.get_cmap('hsv_r', 70)(range(48, 70))
+        temp5 = cm.get_cmap('gist_ncar', 55)(range(40, 55))
 
-        return np.concatenate((temp1, temp2, temp3, temp4, temp5, temp6, temp7))
+        return np.concatenate((temp1, temp2, temp3, temp4, temp5))
+
+#        ''' Default color map for Surface Temperature '''  # WeatherBell scheme
+#
+#        temp1 = cm.get_cmap('cool_r', 15)(range(0, 15))
+#        temp2 = cm.get_cmap('BuGn', 12)(range(4, 12))
+#        temp3 = cm.get_cmap('Greens_r', 8)(range(0, 8))
+#        temp4 = cm.get_cmap('RdPu_r', 15)(range(0, 15))
+#        temp5 = cm.get_cmap('BuPu', 10)(range(0, 9))
+#        temp6 = cm.get_cmap('RdYlBu_r', 20)(range(2, 20))
+#        temp7 = cm.get_cmap('RdYlGn', 20)(range(0, 20))
+#
+#        return np.concatenate((temp1, temp2, temp3, temp4, temp5, temp6, temp7))
 
 #        ''' Default color map for Surface Temperature '''  # Pivotal Wx scheme
 #
