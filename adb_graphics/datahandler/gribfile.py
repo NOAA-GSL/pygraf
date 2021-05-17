@@ -69,29 +69,45 @@ class GribFiles():
         self.contents = self._load(filenames)
 
     @staticmethod
-    def free_fcst_names(ds):
+    def free_fcst_names(ds, fcst_type):
 
         ''' Given an opened dataset, return a dict of original variable names
         (key) and the desired name (value) '''
 
         ret = {}
+
+        special_suffixes = ['max', 'min', 'acc', 'avg']
         for var in ds.variables:
             suffix = var.split('_')[-1]
 
-            # Because there doesn't seem to be another way to know....
+            # Keeping lists of misbehaving "accumulated variables here because
+            # there doesn't seem to be another way to know....
 
-            odd_variables = [
-                'ASNOW',
-                'CDLYR',
-                'FRZR',
-                'LRGHR',
-                'TCDC',
-                ]
-            needs_renaming = var.split('_')[0] not in odd_variables
+            if fcst_type == '01fcst':
+                # Don't rename these variables at early hours
+                odd_variables = [
+                    'ASNOW',
+                    'CDLYR',
+                    'FRZR',
+                    'LRGHR',
+                    'TCDC',
+                    ]
+                needs_renaming = var.split('_')[0] not in odd_variables
+                if suffix in special_suffixes and needs_renaming:
+                    new_suffix = f'{suffix}1h'
+                    ret[var] = var.replace(suffix, new_suffix)
+            else:
+                # Only rename these variables at late hours
+                odd_variables = [
+                    'CDLYR',
+                    'LRGHR',
+                    'TCDC',
+                    ]
+                needs_renaming = var.split('_')[0] in odd_variables
+                contains_suffix = [suf for suf in special_suffixes if suf in suffix]
+                if contains_suffix and needs_renaming:
+                    ret[var] = var.replace(suffix, contains_suffix[0])
 
-            if suffix in ['max', 'min', 'acc', 'avg'] and needs_renaming:
-                new_suffix = f'{suffix}1h'
-                ret[var] = var.replace(suffix, new_suffix)
         return ret
 
     @staticmethod
@@ -136,12 +152,11 @@ class GribFiles():
                     **self.open_kwargs,
                     )
 
-                if fcst_type == '01fcst':
-                    print(f'RENAMING VARIABLES:')
-                    renaming = self.free_fcst_names(dataset)
-                    for old_name, new_name in renaming.items():
-                        print(f'  {old_name:>30s}  -> {new_name}')
-                    dataset = dataset.rename_vars(renaming)
+                print(f'RENAMING VARIABLES:')
+                renaming = self.free_fcst_names(dataset, fcst_type)
+                for old_name, new_name in renaming.items():
+                    print(f'  {old_name:>30s}  -> {new_name}')
+                dataset = dataset.rename_vars(renaming)
 
                 all_leads.append(dataset)
 
