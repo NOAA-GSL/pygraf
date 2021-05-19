@@ -127,6 +127,8 @@ class TestDefaultSpecs():
 
         return {
             'accumulate': self.is_bool,
+            'annotate': self.is_bool,
+            'annotate_decimal': self.is_int,
             'clevs': self.is_a_clev,
             'cmap': self.is_a_cmap,
             'colors': self.is_a_color,

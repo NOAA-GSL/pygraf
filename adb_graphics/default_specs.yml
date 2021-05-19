@@ -5,7 +5,7 @@
 #   accumulate: bool to specify whether there should be multiple forecast hours
 #               present in the FieldData object
 #
-#   annotate: bool to add data values at airport locations (default: True)
+#   annotate: bool to add data values at airport locations (default: False)
 #
 #   annotate_decimal: sets the decimal place for plotting values (default: 0)
 #
@@ -1058,7 +1058,7 @@ temp: # Temperature
     unit: F
     wind: False
   2m:
-#    clevs: !!python/object/apply:numpy.arange [-60, 121, 2]
+    annotate: True
     clevs: !!python/object/apply:numpy.arange [-60, 121, 4]
     cmap: jet
     colors: tsfc_colors
@@ -1128,9 +1128,9 @@ temp: # Temperature
         hatches: ['', '...']
         levels: [0, 925]
   sfc:
-    clevs: !!python/object/apply:numpy.arange [-60, 120, 10]
+    clevs: !!python/object/apply:numpy.arange [-60, 120, 4]
     cmap: jet
-    colors: t_colors
+    colors: tsfc_colors
     ncl_name: TMP_P0_L1_{grid}
     ticks: 20
     transform: conversions.k_to_f
@@ -1150,7 +1150,6 @@ thick:
 totp: # Hourly total precipitation
   sfc:
     <<: *precip
-    annotate_decimal: 2
     contours:
       pres_msl:
         colors: red
