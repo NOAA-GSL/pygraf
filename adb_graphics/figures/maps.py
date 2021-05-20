@@ -342,9 +342,9 @@ class DataMap():
             lons = self.map.airports[:, 1]
             x, y = self.map.m(lons, lats)
             for i, lat in enumerate(lats):
-                if lats[i] > self.map.corners[0] and lats[i] < self.map.corners[1] and \
-                   lons[i] > self.map.corners[2] and lons[i] < self.map.corners[3]:
-                    xgrid, ygrid = self.field.get_xypoint(lats[i], lons[i])
+                if self.map.corners[1] > lat > self.map.corners[0] and \
+                   self.map.corners[3] > lons[i] > self.map.corners[2]:
+                    xgrid, ygrid = self.field.get_xypoint(lat, lons[i])
                     if xgrid > 0 and ygrid > 0:
                         data_value = self.field.values()[xgrid, ygrid]
                         if (not isnan(data_value)) and (data_value != 0.):
