@@ -10,6 +10,7 @@ barbs, and descriptive annotation.
 
 from functools import lru_cache
 
+from math import isnan
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import matplotlib.offsetbox as mpob
@@ -249,7 +250,7 @@ class DataMap():
         cbar.ax.set_xticklabels(ticks, fontsize=18)
 
     @utils.timer
-    def draw(self, show=False): # pylint: disable=too-many-locals
+    def draw(self, show=False): # pylint: disable=too-many-locals, too-many-branches
 
         ''' Main method for creating the plot. Set show=True to display the
         figure from the command line. '''
@@ -332,6 +333,23 @@ class DataMap():
         add_wind = self.field.vspec.get('wind', False)
         if add_wind:
             self._wind_barbs(add_wind)
+
+        # Add field values at airports
+        annotate = self.field.vspec.get('annotate', False)
+        if annotate:
+            annotate_decimal = self.field.vspec.get('annotate_decimal', 0)
+            lats = self.map.airports[:, 0]
+            lons = self.map.airports[:, 1]
+            x, y = self.map.m(lons, lats)
+            for i, lat in enumerate(lats):
+                if self.map.corners[1] > lat > self.map.corners[0] and \
+                   self.map.corners[3] > lons[i] > self.map.corners[2]:
+                    xgrid, ygrid = self.field.get_xypoint(lat, lons[i])
+                    if xgrid > 0 and ygrid > 0:
+                        data_value = self.field.values()[xgrid, ygrid]
+                        if (not isnan(data_value)) and (data_value != 0.):
+                            ax.annotate(f"{data_value:.{annotate_decimal}f}", \
+                                        xy=(x[i], y[i]), fontsize=10)
 
         # Finish with the title
         self._title()
