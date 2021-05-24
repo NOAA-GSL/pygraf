@@ -449,7 +449,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
     plt.savefig(
         png_path,
         bbox_inches='tight',
-        dpi='figure',
+        dpi=72,
         format='png',
         orientation='landscape',
         )
@@ -489,7 +489,7 @@ def parallel_skewt(cla, fhr, ds, site, workdir):
     plt.savefig(
         png_path,
         bbox_inches='tight',
-        dpi=72,
+        dpi='figure',
         format='png',
         orientation='landscape',
         )
