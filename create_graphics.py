@@ -489,7 +489,7 @@ def parallel_skewt(cla, fhr, ds, site, workdir):
     plt.savefig(
         png_path,
         bbox_inches='tight',
-        dpi='figure',
+        dpi=72,
         format='png',
         orientation='landscape',
         )
