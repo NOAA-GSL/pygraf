@@ -452,6 +452,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
         dpi=72,
         format='png',
         orientation='landscape',
+        pil_kwargs={'optimize': True},
         )
 
     plt.close()
