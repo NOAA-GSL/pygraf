@@ -396,6 +396,7 @@ class DataMap():
 
         # Create a descriptor string for the first hatched field, if one exists
         contoured = []
+        contoured_units = []
         not_labeled = [f.short_name]
         if self.hatch_fields:
             cf = self.hatch_fields[0]
@@ -409,9 +410,12 @@ class DataMap():
             for cf in self.contour_fields:
                 if cf.short_name not in not_labeled:
                     title = cf.vspec.get('title', cf.field.long_name)
-                    contoured.append(f'{title} ({cf.units}, contoured)')
+                    contoured.append(f'{title}')
+                    contoured_units.append(f'{cf.units}')
 
         contoured = ', '.join(contoured)
+        if contoured_units:
+            contoured = f"{contoured} ({', '.join(contoured_units)}; contoured)"
 
         # Analysis time (top) and forecast hour (bottom) on the left
 
@@ -424,6 +428,7 @@ class DataMap():
         # Atmospheric level and unit in the high center
         level, lev_unit = f.numeric_level(index_match=False)
         if not f.vspec.get('title'):
+            level = level if not isinstance(level, list) else level[0]
             plt.title(f"{level} {lev_unit}", position=(0.5, 1.04), fontsize=18)
 
         # Two lines for shaded data (top), and contoured data (bottom)
