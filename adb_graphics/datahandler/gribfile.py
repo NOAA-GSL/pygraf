@@ -99,12 +99,16 @@ class GribFiles():
             else:
                 # Only rename these variables at late hours
                 odd_variables = [
+                    'APCP',
                     'CDLYR',
+                    'FROZR',
                     'LRGHR',
                     'TCDC',
+                    'WEASD',
                     ]
                 needs_renaming = var.split('_')[0] in odd_variables
-                contains_suffix = [suf for suf in special_suffixes if suf in suffix]
+                contains_suffix = [suf for suf in special_suffixes if suf in
+                        suffix and '1h' not in suffix]
                 if contains_suffix and needs_renaming:
                     ret[var] = var.replace(suffix, contains_suffix[0])
 
@@ -152,21 +156,45 @@ class GribFiles():
                     **self.open_kwargs,
                     )
 
-                print(f'RENAMING VARIABLES:')
                 renaming = self.free_fcst_names(dataset, fcst_type)
+                if renaming:
+                    print(f'RENAMING VARIABLES:')
                 for old_name, new_name in renaming.items():
                     print(f'  {old_name:>30s}  -> {new_name}')
                 dataset = dataset.rename_vars(renaming)
 
+                if len(all_leads) == 1:
+                    # Check that specific variables exist in the xarray that is
+                    # already loaded (presumably 0hr), and add them if they
+                    # don't. This implementation is relying on pointers to
+                    # update "in place"
+                    og_ds = all_leads[0]
+                    bad_vars = [
+                        'APCP_P8_L1_{grid}_acc',
+                        'ACPCP_P8_L1_{grid}_acc',
+                        'FROZR_P8_L1_{grid}_acc',
+                        'NCPCP_P8_L1_{grid}_acc',
+                        'WEASD_P8_L1_{grid}_acc',
+                        ]
+                    bad_vars = [v.format(grid=self.grid_suffix) for v in \
+                            bad_vars]
+                    for bad_var in bad_vars:
+                        # Check to see if the bad variable is in the current
+                        # dataset and NOT in the original dataset.
+                        if bad_var not in og_ds.variables and \
+                            dataset.get(bad_var) is not None:
+                            print(f'Adding {bad_var} to og ds')
+                            # Dupplicate the accumulated variable with the
+                            # required name
+                            og_ds[bad_var] = og_ds.get(f'{bad_var}1h')
                 all_leads.append(dataset)
 
         ret = xr.combine_nested(all_leads,
                                 compat='override',
                                 concat_dim=list(self.coord_dims.keys())[0],
                                 coords='minimal',
-                                data_vars='minimal',
+                                data_vars='all',
                                 )
-
         return ret
 
     @property
