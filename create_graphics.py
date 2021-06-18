@@ -510,6 +510,8 @@ def graphics_driver(cla):
 
     '''
 
+    # pylint: disable=too-many-branches, too-many-locals
+
     # Create an empty zip file
     if cla.zip_dir:
         zipfiles = {}
@@ -519,8 +521,8 @@ def graphics_driver(cla):
             tile_zip_file = os.path.join(tile_zip_dir, 'files.zip')
             print(f"checking for {tile_zip_file}")
             if os.path.isfile(tile_zip_file):
-              os.remove(tile_zip_file)
-              print(f"{tile_zip_file} found and removed")
+                os.remove(tile_zip_file)
+                print(f"{tile_zip_file} found and removed")
             os.makedirs(tile_zip_dir, exist_ok=True)
             zipfiles[tile] = tile_zip_file
 
