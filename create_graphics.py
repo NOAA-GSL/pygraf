@@ -510,14 +510,21 @@ def graphics_driver(cla):
 
     '''
 
+    # pylint: disable=too-many-branches, too-many-locals
+
     # Create an empty zip file
     if cla.zip_dir:
         zipfiles = {}
         tiles = cla.tiles if cla.graphic_type == "maps" else ['skewt']
         for tile in tiles:
             tile_zip_dir = os.path.join(cla.zip_dir, tile)
+            tile_zip_file = os.path.join(tile_zip_dir, 'files.zip')
+            print(f"checking for {tile_zip_file}")
+            if os.path.isfile(tile_zip_file):
+                os.remove(tile_zip_file)
+                print(f"{tile_zip_file} found and removed")
             os.makedirs(tile_zip_dir, exist_ok=True)
-            zipfiles[tile] = os.path.join(tile_zip_dir, 'files.zip')
+            zipfiles[tile] = tile_zip_file
 
     fcst_hours = copy.deepcopy(cla.fcst_hour)
 
