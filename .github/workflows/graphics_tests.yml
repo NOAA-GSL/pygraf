@@ -2,10 +2,10 @@ name: graphics_tests
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     branches:
-      - master
+      - main
 jobs:
   test_graphics:
     runs-on: ubuntu-latest

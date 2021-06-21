@@ -10,6 +10,7 @@ barbs, and descriptive annotation.
 
 from functools import lru_cache
 
+from math import isnan
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import matplotlib.offsetbox as mpob
@@ -207,7 +208,7 @@ class DataMap():
 
         ''' Puts the NOAA logo at the bottom left of the matplotlib axes. '''
 
-        logo = mpimg.imread('static/noaa-logo-100x100.png')
+        logo = mpimg.imread('static/noaa-logo-50x50.png')
 
         imagebox = mpob.OffsetImage(logo)
         ab = mpob.AnnotationBbox(
@@ -249,7 +250,7 @@ class DataMap():
         cbar.ax.set_xticklabels(ticks, fontsize=18)
 
     @utils.timer
-    def draw(self, show=False): # pylint: disable=too-many-locals
+    def draw(self, show=False): # pylint: disable=too-many-locals, too-many-branches
 
         ''' Main method for creating the plot. Set show=True to display the
         figure from the command line. '''
@@ -333,6 +334,23 @@ class DataMap():
         if add_wind:
             self._wind_barbs(add_wind)
 
+        # Add field values at airports
+        annotate = self.field.vspec.get('annotate', False)
+        if annotate:
+            annotate_decimal = self.field.vspec.get('annotate_decimal', 0)
+            lats = self.map.airports[:, 0]
+            lons = self.map.airports[:, 1]
+            x, y = self.map.m(lons, lats)
+            for i, lat in enumerate(lats):
+                if self.map.corners[1] > lat > self.map.corners[0] and \
+                   self.map.corners[3] > lons[i] > self.map.corners[2]:
+                    xgrid, ygrid = self.field.get_xypoint(lat, lons[i])
+                    if xgrid > 0 and ygrid > 0:
+                        data_value = self.field.values()[xgrid, ygrid]
+                        if (not isnan(data_value)) and (data_value != 0.):
+                            ax.annotate(f"{data_value:.{annotate_decimal}f}", \
+                                        xy=(x[i], y[i]), fontsize=10)
+
         # Finish with the title
         self._title()
 
@@ -378,6 +396,7 @@ class DataMap():
 
         # Create a descriptor string for the first hatched field, if one exists
         contoured = []
+        contoured_units = []
         not_labeled = [f.short_name]
         if self.hatch_fields:
             cf = self.hatch_fields[0]
@@ -391,16 +410,25 @@ class DataMap():
             for cf in self.contour_fields:
                 if cf.short_name not in not_labeled:
                     title = cf.vspec.get('title', cf.field.long_name)
-                    contoured.append(f'{title} ({cf.units}, contoured)')
+                    contoured.append(f'{title}')
+                    contoured_units.append(f'{cf.units}')
 
         contoured = ', '.join(contoured)
+        if contoured_units:
+            contoured = f"{contoured} ({', '.join(contoured_units)}; contoured)"
 
         # Analysis time (top) and forecast hour (bottom) on the left
-        plt.title(f"{self.model_name}: {atime}\nFcst Hr: {f.fhr}", loc='left', fontsize=16)
+
+        plt.title(f"{self.model_name}: {atime}\nFcst Hr: {f.fhr}",
+                  alpha=None,
+                  fontsize=14,
+                  loc='left',
+                  )
 
         # Atmospheric level and unit in the high center
         level, lev_unit = f.numeric_level(index_match=False)
         if not f.vspec.get('title'):
+            level = level if not isinstance(level, list) else level[0]
             plt.title(f"{level} {lev_unit}", position=(0.5, 1.04), fontsize=18)
 
         # Two lines for shaded data (top), and contoured data (bottom)
@@ -458,4 +486,5 @@ class DataMap():
         ''' Helper function to create mesh for various plot. '''
 
         lat, lon = field.latlons()
-        return self.map.m(360+lon, lat)
+        adjust = 360 if np.any(lon < 0) else 0
+        return self.map.m(adjust + lon, lat)

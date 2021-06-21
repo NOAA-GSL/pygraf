@@ -5,6 +5,10 @@
 #   accumulate: bool to specify whether there should be multiple forecast hours
 #               present in the FieldData object
 #
+#   annotate: bool to add data values at airport locations (default: False)
+#
+#   annotate_decimal: sets the decimal place for plotting values (default: 0)
+#
 #   clevs: specifies the contour levels by one of the following methods
 #      - a list with no quotes
 #      - a numpy.arange specified as "!!python/object/apply:numpy.arange [list]"
@@ -92,7 +96,7 @@ acfrozr: # Run Total Graupel
     clevs: [0.002, 0.01, 0.05, 0.1, 0.25, 0.5, 0.75, 1, 2]
     cmap: gist_ncar
     colors: pcp_colors
-    ncl_name: FROZR_P8_L1_GLC0_acc{fhr}h
+    ncl_name: FROZR_P8_L1_GLC0_acc
     ticks: 0
     title: Total Graupel (Sleet)
     transform: conversions.kgm2_to_in
@@ -107,7 +111,7 @@ acpcp: # Accumulated run total precipitation
     clevs: [0.01, 0.1, 0.25, 0.5, 1, 2, 3, 5, 10, 15, 20, 40]
     cmap: gist_ncar
     colors: rainbow12_colors
-    ncl_name: APCP_P8_L1_{grid}_acc{fhr}h
+    ncl_name: APCP_P8_L1_{grid}_acc
     ticks: 0
     transform: conversions.kgm2_to_in
     unit: in
@@ -231,7 +235,7 @@ acsnw: # Run Total Accumulated Snow Using 10:1 Ratio
     clevs: [0.01, 0.1, 1, 2, 3, 4, 6, 8, 10, 12, 18, 24]
     cmap: gist_ncar
     colors: snow_colors
-    ncl_name: WEASD_P8_L1_{grid}_acc{fhr}h
+    ncl_name: WEASD_P8_L1_{grid}_acc
     ticks: 0
     title: Run-Total Accumulated Snow Using 10:1 Ratio
     transform: [conversions.kgm2_to_in, conversions.weasd_to_1hsnw]
@@ -793,7 +797,7 @@ ltg3: # Lightning Threat (LTG1 ... LTG2)
     colors: cref_colors
     ncl_name: LTNG_P0_L10_{grid}
     ticks: 0
-    title: Lightning Threat (comb of LTG1 and LTG2)
+    title: Lightning Threat
     unit: flashes / km^2 / 5 min
 mref: # Maximum reflectivity for past hour at 1 km AGL
   sfc:
@@ -881,7 +885,7 @@ ptyp: # Hourly total precipitation
         labels: Ice Pellets
         levels: [0, 1]
         linewidths: 0.2
-    ncl_name: APCP_P8_L1_GLC0_acc1h
+    ncl_name: APCP_P8_L1_{grid}_acc1h
     ticks: 0
     title: 1 hr Total Precip, Precip Type
     transform: conversions.kgm2_to_in
@@ -1176,9 +1180,10 @@ temp: # Temperature
     unit: F
     wind: False
   2m:
-    clevs: !!python/object/apply:numpy.arange [-60, 120, 10]
+    annotate: True
+    clevs: !!python/object/apply:numpy.arange [-60, 121, 4]
     cmap: jet
-    colors: t_colors
+    colors: tsfc_colors
     ncl_name: TMP_P0_L103_{grid}
     ticks: 10
     transform: conversions.k_to_f
@@ -1245,9 +1250,9 @@ temp: # Temperature
         hatches: ['', '...']
         levels: [0, 925]
   sfc:
-    clevs: !!python/object/apply:numpy.arange [-60, 120, 10]
+    clevs: !!python/object/apply:numpy.arange [-60, 120, 4]
     cmap: jet
-    colors: t_colors
+    colors: tsfc_colors
     ncl_name: TMP_P0_L1_{grid}
     ticks: 20
     transform: conversions.k_to_f

@@ -101,7 +101,7 @@ def test_profileData(natfile):
                                    short_name='temp',
                                    )
 
-    assert isinstance(profile.get_xypoint(), tuple)
+    assert isinstance(profile.get_xypoint(40., -100.), tuple)
     assert isinstance(profile.values(), xarray.DataArray)
 
     # The values should return a single number (0) or a 1D array (1)

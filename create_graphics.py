@@ -129,7 +129,7 @@ def gather_gribfiles(cla, fhr, gribfiles):
         else:
             filenames['free_fcst'].append(filename)
 
-    if gribfiles is None:
+    if gribfiles is None or not cla.all_leads:
 
         # Create a new GribFiles object, include all hours, or just this one,
         # depending on command line argument flag
@@ -156,6 +156,9 @@ def generate_tile_list(arg_list):
 
     if not arg_list:
         return ['full']
+
+    if ',' in arg_list[0]:
+        arg_list = arg_list[0].split(',')
 
     rap_only = ('AK', 'AKZoom', 'conus', 'HI')
     if 'all' in arg_list:
@@ -328,11 +331,11 @@ def parse_args():
         )
     map_group.add_argument(
         '--tiles',
-        choices=['full', 'all', 'conus', 'AK'] + list(maps.TILE_DEFS.keys()),
         default=['full'],
-        help='The domains to plot. Choose from any of those listed. Special \
-        choices: full is full model output domain, and all is the full domain, \
-        plus all of the sub domains.',
+        help='The domains to plot. Choose from any of those listed. Special ' \
+        'choices: full is full model output domain, and all is the full domain, ' \
+        'plus all of the sub domains. ' \
+        f'Choices: {["full", "all", "conus", "AK"] + list(maps.TILE_DEFS.keys())}',
         nargs='+',
         )
     return parser.parse_args()
@@ -410,7 +413,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
                 short_name=var,
                 ))
 
-    _, ax = plt.subplots(1, 1, figsize=(12, 12))
+    _, ax = plt.subplots(1, 1, figsize=(10, 10))
 
     # Generate a map object
     m = maps.Map(
@@ -446,9 +449,10 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
     plt.savefig(
         png_path,
         bbox_inches='tight',
-        dpi='figure',
+        dpi=72,
         format='png',
         orientation='landscape',
+        pil_kwargs={'optimize': True},
         )
 
     plt.close()
@@ -475,7 +479,7 @@ def parallel_skewt(cla, fhr, ds, site, workdir):
         model_name=cla.model_name,
         )
     skew.create_diagram()
-    outfile = f"skewt_{skew.site_code}_{skew.site_num}_f{fhr:02d}.png"
+    outfile = f"{skew.site_code}_{skew.site_num}_skewt_f{fhr:03d}.png"
     png_path = os.path.join(workdir, outfile)
 
     print('*' * 80)
@@ -506,13 +510,21 @@ def graphics_driver(cla):
 
     '''
 
+    # pylint: disable=too-many-branches, too-many-locals
+
     # Create an empty zip file
     if cla.zip_dir:
         zipfiles = {}
-        for tile in cla.tiles:
+        tiles = cla.tiles if cla.graphic_type == "maps" else ['skewt']
+        for tile in tiles:
             tile_zip_dir = os.path.join(cla.zip_dir, tile)
+            tile_zip_file = os.path.join(tile_zip_dir, 'files.zip')
+            print(f"checking for {tile_zip_file}")
+            if os.path.isfile(tile_zip_file):
+                os.remove(tile_zip_file)
+                print(f"{tile_zip_file} found and removed")
             os.makedirs(tile_zip_dir, exist_ok=True)
-            zipfiles[tile] = os.path.join(tile_zip_dir, 'files.zip')
+            zipfiles[tile] = tile_zip_file
 
     fcst_hours = copy.deepcopy(cla.fcst_hour)
 

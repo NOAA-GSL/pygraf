@@ -99,7 +99,7 @@ class UPPData(specs.VarSpec):
         ''' Wrapper that calls get_field method for the current variable.
         Returns the NioVariable object '''
 
-        return self.get_field(self.ncl_name(self.vspec))
+        return self._get_field(self.ncl_name(self.vspec))
 
     def field_diff(self, values, variable2, level2, **kwargs) -> np.ndarray:
 
@@ -121,7 +121,23 @@ class UPPData(specs.VarSpec):
 
         return fsum / len(levels)
 
-    def get_field(self, ncl_name):
+    def _get_data_levels(self, vertical_dim):
+
+        ''' Return a list of vertical dimension values corresponding to the
+        requested vertical dimension to get the values of those dimensions '''
+
+        fcst_hr = 0 if self.ds.sizes.get('fcst_hr', 0) <= 1 else int(self.fhr)
+
+        ret = []
+        for dim in [var for var in self.ds.variables \
+                if vertical_dim in var]:
+
+            # Get the current forecast hour slice, if it's in the dataset
+            selector = {'fcst_hr': fcst_hr} if 'fcst_hr' in self.ds[dim].dims else {}
+            ret.append(self.ds[dim].sel(**selector).values)
+        return ret
+
+    def _get_field(self, ncl_name):
 
         ''' Given an ncl_name, return the NioVariable object. '''
 
@@ -131,7 +147,7 @@ class UPPData(specs.VarSpec):
             raise errors.GribReadError(f'{ncl_name}')
         return field
 
-    def get_level(self, field, level, spec, **kwargs):
+    def _get_level(self, field, level, spec, **kwargs):
 
         ''' Returns the value of the level to for a 3D array
 
@@ -162,53 +178,42 @@ class UPPData(specs.VarSpec):
 
         vertical_dim = self.vertical_dim(field)
 
-        # Create a list of dataset variables corresponding to the vertical
-        # dimension
-        if vertical_dim and vertical_dim in self.ds.variables:
-            dim_name = [vertical_dim]
-        else:
-            dim_name = [var for var in self.ds.variables \
-                        if vertical_dim in var]
-
         # numeric_level returns a list of length 1 (e.g. [500] for 500 mb) or of
         # length 2 when split=True and it's like 0-6 km, so returns [0, 6000]
-        lev_val, _ = self.numeric_level(level=level,
-                                        split=kwargs.get('split', spec.get('split')),
-                                        )
+        requested_level, _ = self.numeric_level(level=level,
+                                                split=kwargs.get('split', spec.get('split')),
+                                                )
 
-        # Get the values of the levels stored in the grib file
-        levs = [self.ds[dim].values for dim in dim_name]
+        # data_levels contains a list of vertical dimension values
+        data_levels = self._get_data_levels(vertical_dim)
 
         # For split-level variables, like 0-6km, find the matching index by
         # looping through both the possible vertical level arrays.
-        if len(levs) == 2 and len(lev_val) == 2:
-            levlist = [list(lev) for lev in levs]
-            for lev, levset in enumerate(zip(*levlist)):
-                if sorted(levset) == lev_val:
+        if len(data_levels) == 2 and len(requested_level) == 2:
+            for lev, levset in enumerate(zip(*[list(lev) for lev in data_levels])):
+                if sorted(levset) == requested_level:
                     return lev
 
         # For single-level variables, like 500mb, use the argwhere function to
         # return the matching index
-        if len(lev_val) == 1:
-            try:
-                levarray = self.ds[dim_name[0]].values
-                lev = np.argwhere(levarray == lev_val[0])
+        if len(requested_level) == 1:
+            for dim_levels in data_levels:
+                lev = np.argwhere(dim_levels == requested_level[0])
+                try:
+                    if lev or lev == [0]:
+                        lev = int(lev[0])
+                        return lev
+                except ValueError:
+                    print(f'BAD LEVEL is {lev} for {field.name}')
 
-                if not lev.size and len(dim_name) == 2:
-                    levarray = self.ds[dim_name[1]].values
-                    lev = np.argwhere(levarray == lev_val[0])
-
-                lev = int(lev)
-            except:
-                print(f"Could not find a level for {field.name} at {lev_val[0]} for \
-                        {levarray}")
-                raise
-
-            return lev
+            print(f"Could not find a level for {field.name} at requested \
+                  level = {requested_level} for variable levels = {data_levels}. Index \
+                  was {lev}.")
 
         # If neither of those cases worked out appropriately, raise an error.
-        msg = f'Length of lev_val ({len(lev_val)}) or levs ({len(levs)}) bad!' \
-                f' {level} {levs} {field.name}'
+        msg = f'Length of requested_level ({len(requested_level)}) or '\
+              f'data_levels ({len(data_levels)}) bad!' \
+              f' {level} {field.name}'
         raise ValueError(msg)
 
     def get_transform(self, transforms, val):
@@ -245,6 +250,29 @@ class UPPData(specs.VarSpec):
             else:
                 val = utils.get_func(transform)(val, **transform_kwargs)
         return val
+
+    @lru_cache()
+    def get_xypoint(self, site_lat, site_lon) -> tuple:
+
+        '''
+        Return the X, Y grid point corresponding to the site location. No
+        interpolation is used.
+        '''
+
+        lats, lons = self.latlons()
+        max_x, max_y = np.shape(lats)
+
+        # Numpy magic to grab the X, Y grid point nearest the profile site
+        # pylint: disable=unbalanced-tuple-unpacking
+        x, y = np.unravel_index((np.abs(lats - site_lat) \
+               + np.abs(lons - site_lon)).argmin(), lats.shape)
+        # pylint: enable=unbalanced-tuple-unpacking
+
+        if x <= 0 or y <= 0 or x >= max_x or y >= max_y:
+            print(f'site location is outside your domain! {site_lat} {site_lon}')
+            return(-1.E10, -1.E10)
+
+        return (x, y)
 
     @property
     def grid_suffix(self):
@@ -315,7 +343,7 @@ class UPPData(specs.VarSpec):
                                        level_type=self.level_type)
 
             try:
-                self.get_field(try_name)
+                self._get_field(try_name)
             except errors.GribReadError:
                 continue
             else:
@@ -525,8 +553,15 @@ class fieldData(UPPData):
         else:
             attrs = []
             grid_info['projection'] = 'rotpole'
-            grid_info['lon_0'] = lat.attrs['CenterLon'][0] - 360
-            grid_info['o_lat_p'] = 90 - lat.attrs['CenterLat'][0]
+
+            # CenterLon in RAP and Longitude_of_southern_pole in RRFS
+            lon_0 = lat.attrs.get('CenterLon', lat.attrs.get('Longitude_of_southern_pole'))
+            grid_info['lon_0'] = lon_0[0] - 360
+
+            # CenterLat in RAP and Latitude_of_southern_pole in RRFS
+            center_lat = lat.attrs.get('CenterLat', lat.attrs.get('Latitude_of_southern_pole'))
+            grid_info['o_lat_p'] = - center_lat[0] if center_lat[0] < 0 else 90 - center_lat[0]
+
             grid_info['o_lon_p'] = 180
 
         for attr in attrs:
@@ -641,21 +676,20 @@ class fieldData(UPPData):
             spec = self.spec.get(name, {}).get(level, {})
             if not spec and name is not None:
                 raise errors.NoGraphicsDefinitionForVariable(name, level)
-            field = self.get_field(ncl_name or self.ncl_name(spec))
+            field = self._get_field(ncl_name or self.ncl_name(spec))
 
         lev = vertical_index
         vals = field
         if one_lev:
 
             # Check if it's a 3D variable (lv in any dimension field)
-            vertical_dim = self.vertical_dim(field)
+            dim_name = self.vertical_dim(field)
 
-            if vertical_dim: # Field has a vertical dimension
+            if dim_name: # Field has a vertical dimension
 
-                dim_name = vertical_dim
-
-                if vertical_index is None: # No index is provided in kwargs
-                    lev = self.get_level(field, level, spec)
+                # Use vertical_index if provided in kwargs
+                lev = vertical_index if vertical_index is not None else \
+                        self._get_level(field, level, spec)
 
                 if lev is None or dim_name is None:
                     print(f'ERROR: Could not find dim_name ({dim_name}) or' \
@@ -672,7 +706,8 @@ class fieldData(UPPData):
         # Select a single forecast hour (only if there are many)
         if not spec.get('accumulate', False):
             if 'fcst_hr' in vals.dims:
-                vals = vals.sel(**{'fcst_hr': int(self.fhr)})
+                fcst_hr = 0 if self.ds.sizes['fcst_hr'] <= 1 else int(self.fhr)
+                vals = vals.sel(**{'fcst_hr': fcst_hr})
 
         transforms = spec.get('transform')
         if transforms:
@@ -774,29 +809,6 @@ class profileData(UPPData):
         self.site_lat = float(lat)
         self.site_lon = -float(lon)
 
-    @lru_cache()
-    def get_xypoint(self) -> tuple:
-
-        '''
-        Return the X, Y grid point corresponding to the site location. No
-        interpolation is used.
-        '''
-
-        lats, lons = self.latlons()
-        max_x, max_y = np.shape(lats)
-
-        # Numpy magic to grab the X, Y grid point nearest the profile site
-        # pylint: disable=unbalanced-tuple-unpacking
-        x, y = np.unravel_index((np.abs(lats - self.site_lat) \
-               + np.abs(lons - self.site_lon)).argmin(), lats.shape)
-        # pylint: enable=unbalanced-tuple-unpacking
-
-        if x == 0 or y == 0 or x == max_x or y == max_y:
-            msg = f"{self.site_name} is outside your domain!"
-            raise errors.OutsideDomain(msg)
-
-        return (x, y)
-
     def values(self, level=None, name=None, **kwargs):
 
         '''
@@ -828,7 +840,7 @@ class profileData(UPPData):
         split = kwargs.get('split')
 
         # Retrive the location for the profile
-        x, y = self.get_xypoint()
+        x, y = self.get_xypoint(self.site_lat, self.site_lon)
 
         # Retrieve the default_specs section for the specified level
         var_spec = self.spec.get(name, {}).get(level, {})
@@ -854,7 +866,7 @@ class profileData(UPPData):
             if one_lev:
                 lev = vertical_index
                 if vertical_index is None:
-                    lev = self.get_level(field, level, var_spec, split=split)
+                    lev = self._get_level(field, level, var_spec, split=split)
                 profile = profile[lev, x, y]
             else:
                 profile = profile[:, x, y]

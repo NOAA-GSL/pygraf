@@ -369,10 +369,26 @@ class VarSpec(abc.ABC):
     @lru_cache()
     def t_colors(self) -> np.ndarray:
 
-        ''' Default color map for Temperature '''
+        ''' Default color map for Upper-Air Temperature '''
 
         ncolors = len(self.clevs)
         return cm.get_cmap(self.vspec.get('cmap', 'jet'), ncolors)(range(ncolors))
+
+    @property
+    @lru_cache()
+    def tsfc_colors(self) -> np.ndarray:
+
+        ''' Default color map for Surface Temperature '''  # WeatherBell-inspired scheme
+
+        temp1 = cm.get_cmap('cool_r', 8)(range(0, 8))
+        temp2 = cm.get_cmap('BuGn', 6)(range(2, 6))
+        temp3 = cm.get_cmap('Greens_r', 4)(range(0, 4))
+        temp4 = cm.get_cmap('RdPu_r', 8)(range(0, 8))
+        temp5 = cm.get_cmap('BuPu', 5)(range(0, 4))
+        temp6 = cm.get_cmap('RdYlBu_r', 10)(range(1, 10))
+        temp7 = cm.get_cmap('RdYlGn', 10)(range(0, 10))
+
+        return np.concatenate((temp1, temp2, temp3, temp4, temp5, temp6, temp7))
 
     @property
     @lru_cache()
