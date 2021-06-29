@@ -108,7 +108,7 @@ class GribFiles():
                     ]
                 needs_renaming = var.split('_')[0] in odd_variables
                 contains_suffix = [suf for suf in special_suffixes if suf in
-                                   suffix and '1h' not in suffix]
+                                   suffix and suffix != f'{suf}1h']
                 if contains_suffix and needs_renaming:
                     ret[var] = var.replace(suffix, contains_suffix[0])
 
