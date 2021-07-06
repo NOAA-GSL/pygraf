@@ -488,7 +488,7 @@ class fieldData(UPPData):
 
     def fire_weather_index(self, values, **kwargs) -> np.ndarray:
 
-        # pylint: disable=unused-argument, too-many-locals
+        # pylint: disable=unused-argument
 
         '''
         Generates a field of Fire Weather Index
@@ -498,26 +498,37 @@ class fieldData(UPPData):
 
         '''
 
-        # Read in required variables, convert units if needed
-        pres_sfc = self.values(name='pres', level='sfc') * 100.   # convert back to Pa from hPa
-        temp = (self.values(name='temp', level='2m') - 32.) * 5/9     # convert from F to C
-        sphum = self.values(name='sphum', level='2m').values    # kg kg^-1
-        weasd = self.values(name='weasd', level='sfc') / 0.03937 # convert back kg/m^2 from in
-        gust = self.values(name='gust', level='10m') / 1.9438 # convert back to m/s from kt
+        pres_sfc = self.values(name='pres', level='sfc') * 100. # convert back to Pa
+        temp = self.values(name='temp', level='2m') + 273.15   # convert back to K
+        sphum = self.values(name='sphum', level='2m').values
+        weasd = self.values(name='weasd', level='sfc') / 0.03937 # convert back
+        gust = self.values(name='gust', level='10m') / 1.9438 # convert back to m/s
         soilw = self.values(name='soilw', level='0cm').values
         land = self.values(name='land', level='sfc').values
+        print(f'in GRIBDATA, fire_weather_index: temp min, max = {temp.min()} {temp.max()}')
+        print(f'in GRIBDATA, fire_weather_index: pres_sfc min, max = {pres_sfc.min()} {pres_sfc.max()}')
+        print(f'in GRIBDATA, fire_weather_index: sphum min, max = {sphum.min()} {sphum.max()}')
+        print(f'in GRIBDATA, fire_weather_index: weasd min, max = {weasd.min()} {weasd.max()}')
+        print(f'in GRIBDATA, fire_weather_index: gust min, max = {gust.min()} {gust.max()}')
+        print(f'in GRIBDATA, fire_weather_index: soilw min, max = {soilw.min()} {soilw.max()}')
+        print(f'in GRIBDATA, fire_weather_index: land min, max = {land.min()} {land.max()}')
 
-        # calculate fire weather index
         fwi = pres_sfc * 0. # start with array of zero values
-        es1 = 611.2 * np.exp(17.67 * temp / (temp + 243.5))  # Pa
-        e1 = pres_sfc * sphum / 0.622     # Pa
+        es1 = 611.2*np.exp((17.67*(temp-273.15))/(temp-273.15+243.5))
+        print(f'in GRIBDATA, fire_weather_index: es1 min, max = {es1.min()} {es1.max()}')
+        e1 = pres_sfc * sphum / 0.622
+        print(f'in GRIBDATA, fire_weather_index: e1 min, max = {e1.min()} {e1.max()}')
         def1 = es1 - e1
-        def1 = def1 * 0.01         # convert to hPa
-        weasd1 = (50.0 - weasd) / 50.0
-        snowc = np.where(weasd1 > 0.0, weasd1, 0.0)
-        fwi1 = gust * gust * def1 * snowc * (1 - soilw)
-        fwi = np.where(land == 1, fwi1, 0.0)     # only use over land
-        fwi = np.squeeze(fwi)   # remove single-layer 3rd dimension
+        def1 = def1*0.01
+        print(f'in GRIBDATA, fire_weather_index: def1 min, max = {def1.min()} {def1.max()}')
+        weasd1 = (50.0 - weasd)/50.0
+        print(f'in GRIBDATA, fire_weather_index: weasd1 min, max = {weasd1.min()} {weasd1.max()}')
+        snowc = np.where(weasd1>0.0, weasd1, 0.0)
+        print(f'in GRIBDATA, fire_weather_index: snowc min, max = {snowc.min()} {snowc.max()}')
+        fwi1 = gust*gust*def1*snowc*(1-soilw)
+        print(f'in GRIBDATA, fire_weather_index: fwi1 min, max = {fwi1.min()} {fwi1.max()}')
+        fwi = np.where(land==1,fwi1,0.0)
+        print(f'in GRIBDATA, fire_weather_index: fwi min, max = {fwi.min()} {fwi.max()}')
 
         return fwi
 
