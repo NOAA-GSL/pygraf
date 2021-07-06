@@ -17,7 +17,6 @@ from .. import errors
 from .. import specs
 from .. import utils
 
-
 class UPPData(specs.VarSpec):
 
     '''
@@ -514,6 +513,41 @@ class fieldData(UPPData):
 
         lat, lon = self.latlons()
         return [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
+
+    def fire_weather_index(self, values, **kwargs) -> np.ndarray:
+
+        # pylint: disable=unused-argument, too-many-locals
+
+        '''
+        Generates a field of Fire Weather Index
+
+        This method uses wrfprs data to find regions where
+        weather conditions are most likely to lead to wildfires.
+
+        '''
+
+        # Read in required variables, convert units if needed
+        pres_sfc = self.values(name='pres', level='sfc') * 100.   # convert back to Pa from hPa
+        temp = (self.values(name='temp', level='2m') - 32.) * 5/9     # convert from F to C
+        sphum = self.values(name='sphum', level='2m').values    # kg kg^-1
+        weasd = self.values(name='weasd', level='sfc') / 0.03937 # convert back kg/m^2 from in
+        gust = self.values(name='gust', level='10m') / 1.9438 # convert back to m/s from kt
+        soilw = self.values(name='soilw', level='0cm').values
+        land = self.values(name='land', level='sfc').values
+
+        # calculate fire weather index
+        fwi = pres_sfc * 0. # start with array of zero values
+        es1 = 611.2 * np.exp(17.67 * temp / (temp + 243.5))  # Pa
+        e1 = pres_sfc * sphum / 0.622     # Pa
+        def1 = es1 - e1
+        def1 = def1 * 0.01         # convert to hPa
+        weasd1 = (50.0 - weasd) / 50.0
+        snowc = np.where(weasd1 > 0.0, weasd1, 0.0)
+        fwi1 = gust * gust * def1 * snowc * (1 - soilw)
+        fwi = np.where(land == 1, fwi1, 0.0)     # only use over land
+        fwi = np.squeeze(fwi)   # remove single-layer 3rd dimension
+
+        return fwi
 
     @property
     def grid_info(self):

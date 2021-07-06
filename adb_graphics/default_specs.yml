@@ -365,6 +365,16 @@ echotop: # Echo Top
     title: Echo Top
     transform: conversions.m_to_kft
     unit: kft
+firewx: # Fire Weather Index
+  sfc:
+    clevs: [1, 100, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
+    cmap: gist_ncar
+    colors: vort_colors
+    ncl_name: VIL_P0_L10_{grid}
+    ticks: 0
+    title: Experimental Fire Weather Index
+    transform: fire_weather_index
+    unit: hPa m2 / s2
 flru: # Aviation Flight Rules
   sfc:
     clevs: [0.0, 1.0, 2.0, 3.0, 4.0]
@@ -615,6 +625,9 @@ icmr: # Ice Water Mixing Ratio
         - ICMR_P0_L105_{grid}
         - CIMIXR_P0_L105_{grid}
       prs: ICMR_P0_L100_{grid}
+land: # Land Cover
+  sfc:
+    ncl_name:  LAND_P0_L1_{grid}
 lcl: # Lifted condensation level
   sfc: &lcl
     clevs: !!python/object/apply:numpy.arange [0, 5000, 250]
@@ -1038,6 +1051,8 @@ solar: # Incoming Solar Radiation
     title: Incoming Solar Radiation
     unit: $W/m^2$
 sphum: # Specific humidity
+  2m:
+    ncl_name: SPFH_P0_L103_{grid}
   ua:
     ncl_name: SPFH_P0_L105_{grid}
 ssrun: # Storm Surface Runoff
