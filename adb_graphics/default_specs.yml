@@ -1185,7 +1185,7 @@ trc1:
     ncl_name: MASSDEN_P0_L103_{grid}
     title: Near-Surface Smoke
     ticks: 0
-    unit: $\mu g/m^2$
+    unit: $\mu g/m^3$
     wind: 10m
 u:
   10m: &agl_uwind
