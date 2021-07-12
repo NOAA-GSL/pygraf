@@ -526,37 +526,35 @@ class fieldData(UPPData):
 
         '''
 
-        pres_sfc = self.values(name='pres', level='sfc') * 100. # convert back to Pa
-        temp = self.values(name='temp', level='2m') + 273.15   # convert back to K
-        sphum = self.values(name='sphum', level='2m').values
-        weasd = self.values(name='weasd', level='sfc') / 0.03937 # convert back
-        gust = self.values(name='gust', level='10m') / 1.9438 # convert back to m/s
-        soilw = self.values(name='soilw', level='0cm').values
-        land = self.values(name='land', level='sfc').values
-        print(f'in GRIBDATA, fire_weather_index: temp min, max = {temp.min()} {temp.max()}')
-        print(f'in GRIBDATA, fire_weather_index: pres_sfc min, max = {pres_sfc.min()} {pres_sfc.max()}')
-        print(f'in GRIBDATA, fire_weather_index: sphum min, max = {sphum.min()} {sphum.max()}')
-        print(f'in GRIBDATA, fire_weather_index: weasd min, max = {weasd.min()} {weasd.max()}')
-        print(f'in GRIBDATA, fire_weather_index: gust min, max = {gust.min()} {gust.max()}')
-        print(f'in GRIBDATA, fire_weather_index: soilw min, max = {soilw.min()} {soilw.max()}')
-        print(f'in GRIBDATA, fire_weather_index: land min, max = {land.min()} {land.max()}')
+        # Gather fields from the input
+        veg = values # Chose this value as the main one in the default_specs
+        temp = self.values(name='temp', level='2m', do_transform=False).values
+        dewpt = self.values(name='dewp', level='2m', do_transform=False).values
+        weasd = self.values(name='weasd', level='sfc', do_transform=False).values
+        gust = self.values(name='gust', level='10m', do_transform=False).values
+        soilm = self.values(name='soilm', level='sfc', do_transform=False).values
 
-        fwi = pres_sfc * 0. # start with array of zero values
-        es1 = 611.2*np.exp((17.67*(temp-273.15))/(temp-273.15+243.5))
-        print(f'in GRIBDATA, fire_weather_index: es1 min, max = {es1.min()} {es1.max()}')
-        e1 = pres_sfc * sphum / 0.622
-        print(f'in GRIBDATA, fire_weather_index: e1 min, max = {e1.min()} {e1.max()}')
-        def1 = es1 - e1
-        def1 = def1*0.01
-        print(f'in GRIBDATA, fire_weather_index: def1 min, max = {def1.min()} {def1.max()}')
-        weasd1 = (50.0 - weasd)/50.0
-        print(f'in GRIBDATA, fire_weather_index: weasd1 min, max = {weasd1.min()} {weasd1.max()}')
-        snowc = np.where(weasd1>0.0, weasd1, 0.0)
-        print(f'in GRIBDATA, fire_weather_index: snowc min, max = {snowc.min()} {snowc.max()}')
-        fwi1 = gust*gust*def1*snowc*(1-soilw)
-        print(f'in GRIBDATA, fire_weather_index: fwi1 min, max = {fwi1.min()} {fwi1.max()}')
-        fwi = np.where(land==1,fwi1,0.0)
-        print(f'in GRIBDATA, fire_weather_index: fwi min, max = {fwi.min()} {fwi.max()}')
+        # A few derived fields
+        dewpt_depression = temp - dewpt
+        dewpt_depression = np.where(dewpt_depression < 0, 0, dewpt_depression)
+
+        snowc = (25.0 - weasd) / 25.0
+        snowc = np.where(snowc > 0.0, snowc, 0.0)
+
+        mois = 0.01 * (100.0 - soilm)
+
+        # Set urban (13), snow/ice (15), barren (16), and water (17) to 0.
+        for vegtype in [13, 15, 16, 17]:
+            veg = np.where(veg == vegtype, 0, veg)
+
+        # Set all others vegetation types to 1
+        veg = np.where(veg > 0, 1, veg)
+
+        fwi = 44.09 * veg * \
+                (gust ** 1.82) * \
+                (dewpt_depression ** 0.61) * \
+                (mois ** 13.98) * \
+                snowc
 
         return fwi
 
@@ -695,6 +693,8 @@ class fieldData(UPPData):
             level      the desired level of the named field
 
         Keyword Args:
+            do_transform    bool flag. to call, or not, the transform specified
+                            in specs
             ncl_name        the NCL-assigned Grib2 name
             one_lev         bool flag. if True, get the single level of the variable
             vertical_index  the index (int) of the desired vertical level
@@ -707,6 +707,8 @@ class fieldData(UPPData):
 
         ncl_name = kwargs.get('ncl_name', '')
         ncl_name = ncl_name.format(fhr=self.fhr, grid=self.grid_suffix)
+
+        do_transform = kwargs.get('do_transform', True)
 
 
         if name is None and not ncl_name:
@@ -755,7 +757,7 @@ class fieldData(UPPData):
                 vals = vals.sel(**{'fcst_hr': fcst_hr})
 
         transforms = spec.get('transform')
-        if transforms:
+        if transforms and do_transform:
             vals = self.get_transform(transforms, vals)
 
         return vals

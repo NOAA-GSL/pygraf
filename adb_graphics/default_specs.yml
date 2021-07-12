@@ -367,14 +367,14 @@ echotop: # Echo Top
     unit: kft
 firewx: # Fire Weather Index
   sfc:
-    clevs: [1, 100, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
+    clevs: [1, 500, 2500, 5000, 7500, 10000, 12500, 15000, 17500, 20000, 22500, 25000]
     cmap: gist_ncar
     colors: vort_colors
-    ncl_name: VIL_P0_L10_{grid}
+    ncl_name: VGTYP_P0_L1_{grid} # choosing one of the un-transformed values in the algorithm
     ticks: 0
-    title: Experimental Fire Weather Index
+    title: Hourly Fire Potential
     transform: fire_weather_index
-    unit: hPa m2 / s2
+    unit: $K^{0.61} m^{1.82} / s^{1.82}$
 flru: # Aviation Flight Rules
   sfc:
     clevs: [0.0, 1.0, 2.0, 3.0, 4.0]
@@ -625,9 +625,6 @@ icmr: # Ice Water Mixing Ratio
         - ICMR_P0_L105_{grid}
         - CIMIXR_P0_L105_{grid}
       prs: ICMR_P0_L100_{grid}
-land: # Land Cover
-  sfc:
-    ncl_name:  LAND_P0_L1_{grid}
 lcl: # Lifted condensation level
   sfc: &lcl
     clevs: !!python/object/apply:numpy.arange [0, 5000, 250]

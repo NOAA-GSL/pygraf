@@ -1,8 +1,8 @@
 hourly:
   model: hrrr
   variables:
-    #    fwi:
-    #      - sfc
+    firewx:
+      - sfc
     gust:
       - 10m
     hpbl:
