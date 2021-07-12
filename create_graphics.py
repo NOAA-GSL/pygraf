@@ -160,10 +160,11 @@ def generate_tile_list(arg_list):
     if ',' in arg_list[0]:
         arg_list = arg_list[0].split(',')
 
+    hrrr_ak_only = ('Anchorage', 'AKRange', 'Juneau')
     rap_only = ('AK', 'AKZoom', 'conus', 'HI')
     if 'all' in arg_list:
         all_list = ['full'] + list(maps.TILE_DEFS.keys())
-        return [tile for tile in all_list if tile not in rap_only]
+        return [tile for tile in all_list if tile not in hrrr_ak_only + rap_only]
 
     return arg_list
 
