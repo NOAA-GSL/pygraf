@@ -383,12 +383,14 @@ class TestDefaultSpecs():
             'ds',      # difference
             'km',      # kilometers
             'm',       # meters
+            'mm',      # millimeters
             'mb',      # milibars
             'sr',      # storm relative
             ]
 
         allowed_stat = [
             'in',      # ???
+            'ens',     # ensemble
             'm',       # ???
             'maxm',    # ???
             'mn',      # minimum
