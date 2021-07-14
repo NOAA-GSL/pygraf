@@ -372,7 +372,7 @@ firewx: # Fire Weather Index
     colors: vort_colors
     ncl_name: VGTYP_P0_L1_{grid} # choosing one of the un-transformed values in the algorithm
     ticks: 0
-    title: Hourly Fire Potential
+    title: Hourly Wildfire Potential
     transform: fire_weather_index
     unit: $K^{0.61} m^{1.82} / s^{1.82}$
 flru: # Aviation Flight Rules
