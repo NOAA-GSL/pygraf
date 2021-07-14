@@ -157,11 +157,11 @@ class GribFiles():
                     )
 
                 renaming = self.free_fcst_names(dataset, fcst_type)
-                if renaming:
+                if renaming and self.model != 'hrrre':
                     print(f'RENAMING VARIABLES:')
-                for old_name, new_name in renaming.items():
-                    print(f'  {old_name:>30s}  -> {new_name}')
-                dataset = dataset.rename_vars(renaming)
+                    for old_name, new_name in renaming.items():
+                        print(f'  {old_name:>30s}  -> {new_name}')
+                    dataset = dataset.rename_vars(renaming)
 
                 if len(all_leads) == 1:
                     # Check that specific variables exist in the xarray that is
