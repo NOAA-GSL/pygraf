@@ -365,6 +365,16 @@ echotop: # Echo Top
     title: Echo Top
     transform: conversions.m_to_kft
     unit: kft
+firewx: # Fire Weather Index
+  sfc:
+    clevs: [1, 500, 2500, 5000, 7500, 10000, 12500, 15000, 17500, 20000, 22500, 25000]
+    cmap: gist_ncar
+    colors: vort_colors
+    ncl_name: VGTYP_P0_L1_{grid} # choosing one of the un-transformed values in the algorithm
+    ticks: 0
+    title: Hourly Wildfire Potential
+    transform: fire_weather_index
+    unit: $K^{0.61} m^{1.82} / s^{1.82}$
 flru: # Aviation Flight Rules
   sfc:
     clevs: [0.0, 1.0, 2.0, 3.0, 4.0]
@@ -677,6 +687,14 @@ ltg3: # Lightning Threat (LTG1 ... LTG2)
     ticks: 0
     title: Lightning Threat
     unit: flashes / km$^{2}$ / 5 min
+mfrp: # Fire radiative power
+  sfc:
+    clevs: [0, 10, 25, 50, 100, 250]
+    colors: fire_power_colors
+    ncl_name: CFNSF_P0_L1_{grid}
+    ticks: 0
+    title: Fire Radiative Power
+    unit: MW
 mref: # Maximum reflectivity for past hour at 1 km AGL
   sfc:
     <<: *refl
@@ -1030,6 +1048,8 @@ solar: # Incoming Solar Radiation
     title: Incoming Solar Radiation
     unit: W/m$^{2}$
 sphum: # Specific humidity
+  2m:
+    ncl_name: SPFH_P0_L103_{grid}
   ua:
     ncl_name: SPFH_P0_L105_{grid}
 ssrun: # Storm Surface Runoff
@@ -1162,6 +1182,23 @@ totp: # Hourly total precipitation
         linestyles: dashed
     ncl_name: APCP_P8_L1_{grid}_acc1h
     title: 1 hr Total Precip
+trc1:
+  int:
+    clevs: [1, 4, 7, 11, 15, 20, 25, 30, 40, 50, 75, 150, 250, 500]
+    colors: smoke_colors
+    ncl_name: COLMD_P0_L200_{grid}
+    ticks: 0
+    title: Vertically Integrated Smoke
+    transform: conversions.to_micro
+    unit: $mg/m^2$
+  sfc:
+    clevs: [1, 2, 4, 6, 8, 12, 16, 20, 25, 30, 40, 60, 100, 200]
+    colors: smoke_colors
+    ncl_name: MASSDEN_P0_L103_{grid}
+    title: Near-Surface Smoke
+    ticks: 0
+    unit: $\mu g/m^3$
+    wind: 10m
 u:
   10m: &agl_uwind
     ncl_name: UGRD_P0_L103_{grid}

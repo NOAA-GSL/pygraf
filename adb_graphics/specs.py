@@ -9,6 +9,7 @@ import abc
 from itertools import chain
 from functools import lru_cache
 from matplotlib import cm
+from matplotlib import colors as mpcolors
 import numpy as np
 import yaml
 from metpy.plots import ctables
@@ -112,6 +113,15 @@ class VarSpec(abc.ABC):
         return ctable
 
     @property
+    @lru_cache()
+    def fire_power_colors(self) -> np.ndarray:
+
+        ''' Default color map for fire power plot. '''
+
+        blues = cm.get_cmap('Blues', 3)(range(3))
+        green_orange = cm.get_cmap('RdYlGn_r', 10)([1, 7, 8, 9])
+        return np.concatenate((blues, green_orange))
+
     @lru_cache()
     def flru_colors(self) -> np.ndarray:
 
@@ -324,6 +334,18 @@ class VarSpec(abc.ABC):
                           (range(5, 15))
         ctable[9] = [1, 1, 1, 1]
         return ctable
+
+    @property
+    @lru_cache()
+    def smoke_colors(self) -> np.ndarray:
+
+        ''' Default color map for smoke plots. '''
+
+        blues = cm.get_cmap('Blues', 6)(range(5))
+        green_yellow_red = cm.get_cmap('RdYlGn_r', 18)([1, 3, 5, 9, 12, 13, 14, 16, 18])
+        purple = np.array([mpcolors.to_rgba('xkcd:vivid purple')])
+        return np.concatenate((blues, green_yellow_red, purple))
+
 
     @property
     @lru_cache()

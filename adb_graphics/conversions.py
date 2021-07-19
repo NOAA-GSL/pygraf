@@ -72,6 +72,12 @@ def percent(field: np.ndarray, **kwargs) -> np.ndarray:
 
     return np.asarray(field) * 100.
 
+def to_micro(field: np.ndarray, **kwargs) -> np.ndarray:
+
+    ''' Convert field to micro '''
+
+    return np.asarray(field) * 1E6
+
 def vvel_scale(field: np.ndarray, **kwargs) -> np.ndarray:
 
     ''' Scale vertical velocity for plotting  '''
