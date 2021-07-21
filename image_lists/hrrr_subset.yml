@@ -44,6 +44,8 @@ hourly:
       - 2m
     echotop:
       - sfc
+    firewx:
+      - sfc
     flru:
       - sfc
     G113bt:
@@ -88,6 +90,8 @@ hourly:
       - best
       - sfc
     ltg3:
+      - sfc
+    mfrp:
       - sfc
     mref:
       - sfc
@@ -142,6 +146,9 @@ hourly:
       - sfc
     totp:
       - sfc
+    trc1:
+      - sfc
+      - int
     ulwrf:
       - sfc
       - top

@@ -1224,7 +1224,7 @@ ulwrf: # Upward Longwave Radiation Flux
     cmap: gist_ncar
     colors: radiation_colors
     ncl_name: ULWRF_P0_L1_{grid}
-    ticks: 0
+    ticks: -2
     title: Upward Longwave Radiation Flux, Surface
     unit: W/m$^{2}$
   top: # Nominal top of atmosphere

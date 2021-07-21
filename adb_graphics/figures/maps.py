@@ -249,8 +249,6 @@ class DataMap():
 
         if self.field.short_name == 'flru':
             ticks = [label.rjust(30) for label in ['VFR', 'MVFR', 'IFR', 'LIFR']]
-        if self.field.short_name == 'ulwrf' and self.field.level == 'sfc':
-            plt.setp(cbar.ax.get_xticklabels()[::2], visible=False)
 
         cbar.ax.set_xticklabels(ticks, fontsize=12)
 
