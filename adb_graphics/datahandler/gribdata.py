@@ -17,7 +17,6 @@ from .. import errors
 from .. import specs
 from .. import utils
 
-
 class UPPData(specs.VarSpec):
 
     '''
@@ -515,6 +514,50 @@ class fieldData(UPPData):
         lat, lon = self.latlons()
         return [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
 
+    def fire_weather_index(self, values, **kwargs) -> np.ndarray:
+
+        # pylint: disable=unused-argument
+
+        '''
+        Generates a field of Fire Weather Index
+
+        This method uses wrfprs data to find regions where
+        weather conditions are most likely to lead to wildfires.
+
+        '''
+
+        # Gather fields from the input
+        veg = values # Chose this value as the main one in the default_specs
+        temp = self.values(name='temp', level='2m', do_transform=False).values
+        dewpt = self.values(name='dewp', level='2m', do_transform=False).values
+        weasd = self.values(name='weasd', level='sfc', do_transform=False).values
+        gust = self.values(name='gust', level='10m', do_transform=False).values
+        soilm = self.values(name='soilm', level='sfc', do_transform=False).values
+
+        # A few derived fields
+        dewpt_depression = temp - dewpt
+        dewpt_depression = np.where(dewpt_depression < 0, 0, dewpt_depression)
+
+        snowc = (25.0 - weasd) / 25.0
+        snowc = np.where(snowc > 0.0, snowc, 0.0)
+
+        mois = 0.01 * (100.0 - soilm)
+
+        # Set urban (13), snow/ice (15), barren (16), and water (17) to 0.
+        for vegtype in [13, 15, 16, 17]:
+            veg = np.where(veg == vegtype, 0, veg)
+
+        # Set all others vegetation types to 1
+        veg = np.where(veg > 0, 1, veg)
+
+        fwi = 44.09 * veg * \
+                (gust ** 1.82) * \
+                (dewpt_depression ** 0.61) * \
+                (mois ** 13.98) * \
+                snowc
+
+        return fwi
+
     @property
     def grid_info(self):
 
@@ -650,6 +693,8 @@ class fieldData(UPPData):
             level      the desired level of the named field
 
         Keyword Args:
+            do_transform    bool flag. to call, or not, the transform specified
+                            in specs
             ncl_name        the NCL-assigned Grib2 name
             one_lev         bool flag. if True, get the single level of the variable
             vertical_index  the index (int) of the desired vertical level
@@ -662,6 +707,8 @@ class fieldData(UPPData):
 
         ncl_name = kwargs.get('ncl_name', '')
         ncl_name = ncl_name.format(fhr=self.fhr, grid=self.grid_suffix)
+
+        do_transform = kwargs.get('do_transform', True)
 
 
         if name is None and not ncl_name:
@@ -710,7 +757,7 @@ class fieldData(UPPData):
                 vals = vals.sel(**{'fcst_hr': fcst_hr})
 
         transforms = spec.get('transform')
-        if transforms:
+        if transforms and do_transform:
             vals = self.get_transform(transforms, vals)
 
         return vals

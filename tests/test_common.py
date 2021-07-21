@@ -358,6 +358,7 @@ class TestDefaultSpecs():
             'esbl',    # ???
             'esblmn',  # ???
             'high',    # high clouds
+            'int',     # vertical integral
             'low',     # low clouds
             'max',     # maximum in column
             'maxsfc',  # max surface value
