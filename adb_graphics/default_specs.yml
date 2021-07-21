@@ -115,7 +115,7 @@ acpcp: # Accumulated run total precipitation
     ticks: 0
     transform: conversions.kgm2_to_in
     unit: in
-  ens1:
+  ens1: &ens_mean_pcp
     clevs: [0., 0.01, 0.1, 0.25, 0.5, 1, 2, 3, 4, 6, 10]
     cmap: gist_ncar
     colors: rainbow12_colors
@@ -125,25 +125,15 @@ acpcp: # Accumulated run total precipitation
     transform: conversions.kgm2_to_in
     unit: in
   ens24:
-    clevs: [0., 0.01, 0.1, 0.25, 0.5, 1, 2, 3, 4, 6, 10]
-    cmap: gist_ncar
-    colors: rainbow12_colors
+    <<: *ens_mean_pcp
     ncl_name: APCP_P12_L1_{grid}_acc24h
-    ticks: 0
     title: Ensemble Mean 24-hr Precipitation
-    transform: conversions.kgm2_to_in
-    unit: in
   ens6:
-    clevs: [0., 0.01, 0.1, 0.25, 0.5, 1, 2, 3, 4, 6, 10]
-    cmap: gist_ncar
-    colors: rainbow12_colors
+    <<: *ens_mean_pcp
     ncl_name: APCP_P12_L1_{grid}_acc6h
-    ticks: 0
     title: Ensemble Mean 6-hr Precipitation
-    transform: conversions.kgm2_to_in
-    unit: in
 acpcpens1: # ensemble probability of precipitation, 1h
-  76.2mm: &ens_precip_prob1
+  76.2mm: &ens_precip_prob
     clevs: [0., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100.]
     cmap: gist_ncar
     colors: rainbow12_colors
@@ -152,73 +142,71 @@ acpcpens1: # ensemble probability of precipitation, 1h
     title: Probability of 1-hr Precipitation >= 3.0 in within 40km
     unit: '%'
   50.8mm:
-    <<: *ens_precip_prob1
+    <<: *ens_precip_prob
     title: Probability of 1-hr Precipitation >= 2.0 in within 40km
   25.4mm:
-    <<: *ens_precip_prob1
+    <<: *ens_precip_prob
     title: Probability of 1-hr Precipitation >= 1.0 in within 40km
   12.7mm:
-    <<: *ens_precip_prob1
+    <<: *ens_precip_prob
     title: Probability of 1-hr Precipitation >= 0.5 in within 40km
   6.35mm:
-    <<: *ens_precip_prob1
+    <<: *ens_precip_prob
     title: Probability of 1-hr Precipitation >= 0.25 in within 40km
 acpcpens24: # ensemble probability of precipitation, 24h
-  127.0mm: &ens_precip_prob24
-    clevs: [0., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100.]
-    cmap: gist_ncar
-    colors: rainbow12_colors
+  127.0mm:
+    <<: *ens_precip_prob
     ncl_name: APCP_P9_L1_{grid}_acc24h
-    ticks: 0
     title: Probability of 24-hr Precipitation >= 5.0 in within 40km
-    unit: '%'
   76.2mm:
-    <<: *ens_precip_prob24
+    <<: *ens_precip_prob
+    ncl_name: APCP_P9_L1_{grid}_acc24h
     title: Probability of 24-hr Precipitation >= 3.0 in within 40km
   50.8mm:
-    <<: *ens_precip_prob24
+    <<: *ens_precip_prob
+    ncl_name: APCP_P9_L1_{grid}_acc24h
     title: Probability of 24-hr Precipitation >= 2.0 in within 40km
   25.4mm:
-    <<: *ens_precip_prob24
+    <<: *ens_precip_prob
+    ncl_name: APCP_P9_L1_{grid}_acc24h
     title: Probability of 24-hr Precipitation >= 1.0 in within 40km
   12.7mm:
-    <<: *ens_precip_prob24
+    <<: *ens_precip_prob
+    ncl_name: APCP_P9_L1_{grid}_acc24h
     title: Probability of 24-hr Precipitation >= 0.5 in within 40km
 acpcpens3: # ensemble probability of precipitation, 3h
-  76.2mm: &ens_precip_prob3
-    clevs: [0., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100.]
-    cmap: gist_ncar
-    colors: rainbow12_colors
+  76.2mm:
+    <<: *ens_precip_prob
     ncl_name: APCP_P9_L1_{grid}_acc3h
-    ticks: 0
     title: Probability of 3-hr Precipitation >= 3.0 in within 40km
-    unit: '%'
   50.8mm:
-    <<: *ens_precip_prob3
+    <<: *ens_precip_prob
+    ncl_name: APCP_P9_L1_{grid}_acc3h
     title: Probability of 3-hr Precipitation >= 2.0 in within 40km
   25.4mm:
-    <<: *ens_precip_prob3
+    <<: *ens_precip_prob
+    ncl_name: APCP_P9_L1_{grid}_acc3h
     title: Probability of 3-hr Precipitation >= 1.0 in within 40km
   12.7mm:
-    <<: *ens_precip_prob3
+    <<: *ens_precip_prob
+    ncl_name: APCP_P9_L1_{grid}_acc3h
     title: Probability of 3-hr Precipitation >= 0.5 in within 40km
 acpcpens6: # ensemble probability of precipitation, 6h
-  76.2mm: &ens_precip_prob6
-    clevs: [0., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100.]
-    cmap: gist_ncar
-    colors: rainbow12_colors
+  76.2mm:
+    <<: *ens_precip_prob
     ncl_name: APCP_P9_L1_{grid}_acc6h
-    ticks: 0
     title: Probability of 6-hr Precipitation >= 3.0 in within 40km
-    unit: '%'
   50.8mm:
-    <<: *ens_precip_prob6
+    <<: *ens_precip_prob
+    ncl_name: APCP_P9_L1_{grid}_acc6h
     title: Probability of 6-hr Precipitation >= 2.0 in within 40km
   25.4mm:
-    <<: *ens_precip_prob6
+    <<: *ens_precip_prob
+    ncl_name: APCP_P9_L1_{grid}_acc6h
     title: Probability of 6-hr Precipitation >= 1.0 in within 40km
   12.7mm:
-    <<: *ens_precip_prob6
+    <<: *ens_precip_prob
+    ncl_name: APCP_P9_L1_{grid}_acc6h
     title: Probability of 6-hr Precipitation >= 0.5 in within 40km
 acsnod: # Accumulated snow
   sfc: &snow
