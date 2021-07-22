@@ -250,7 +250,7 @@ class DataMap():
         if self.field.short_name == 'flru':
             ticks = [label.rjust(30) for label in ['VFR', 'MVFR', 'IFR', 'LIFR']]
 
-        cbar.ax.set_xticklabels(ticks, fontsize=18)
+        cbar.ax.set_xticklabels(ticks, fontsize=12)
 
     @utils.timer
     def draw(self, show=False): # pylint: disable=too-many-locals, too-many-branches
@@ -413,40 +413,40 @@ class DataMap():
             for cf in self.contour_fields:
                 if cf.short_name not in not_labeled:
                     title = cf.vspec.get('title', cf.field.long_name)
+                    title = title.replace("Geopotential", "Geop.")
                     contoured.append(f'{title}')
                     contoured_units.append(f'{cf.units}')
 
-        contoured = ', '.join(contoured)
+        contoured = '\n'.join(contoured)  # Make 'contoured' a string with linefeeds
         if contoured_units:
-            contoured = f"{contoured} ({', '.join(contoured_units)}; contoured)"
+            contoured = f"{contoured} ({', '.join(contoured_units)}, contoured)"
 
-        # Analysis time (top) and forecast hour (bottom) on the left
-
-        plt.title(f"{self.model_name}: {atime}\nFcst Hr: {f.fhr}",
+        # Analysis time (top) and forecast hour with Valid Time (bottom) on the left
+        plt.title(f"{self.model_name}: {atime}\nFcst Hr: {f.fhr}, Valid Time {vtime}",
                   alpha=None,
                   fontsize=14,
                   loc='left',
                   )
 
-        # Atmospheric level and unit in the high center
         level, lev_unit = f.numeric_level(index_match=False)
-        if not f.vspec.get('title'):
-            level = level if not isinstance(level, list) else level[0]
-            plt.title(f"{level} {lev_unit}", position=(0.5, 1.04), fontsize=18)
-
-        # Two lines for shaded data (top), and contoured data (bottom)
-        title = f.vspec.get('title', f.field.long_name)
         if f.vspec.get('print_units', True):
             units = f'({f.units}, shaded)'
         else:
             units = f''
-        plt.title(f"{title} {units}\n {contoured}",
-                  loc='right',
-                  fontsize=16,
-                  )
 
-        # X label shows forecast valid time.
-        plt.xlabel(f"Valid time: {vtime}", fontsize=18, labelpad=100)
+        # Title or Atmospheric level and unit in the high center
+        if f.vspec.get('title'):
+            title = f"{f.vspec.get('title')} {units}"
+        else:
+            level = level if not isinstance(level, list) else level[0]
+            title = f'{level} {lev_unit} {f.field.long_name} {units}'
+        plt.title(f"{title}", position=(0.5, 1.06), fontsize=18)
+
+        # Two lines for hatched data (top), and contoured data (bottom) on the right
+        plt.title(f"{contoured}",
+                  loc='right',
+                  fontsize=14,
+                  )
 
     def _wind_barbs(self, level):
 

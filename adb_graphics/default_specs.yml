@@ -498,7 +498,7 @@ flru: # Aviation Flight Rules
       kwargs:
         variable2: gh
         level2: sfc
-    unit: " "
+    unit: "category"
 G113bt: # GOES-W Brightness temperature, water vapor (Ch 3)
   sat: &goes_sat
     clevs: !!python/object/apply:numpy.arange [-80, 41, 1]
@@ -760,7 +760,7 @@ lhtfl: # Latent Heat Net Flux
     ncl_name: LHTFL_P0_L1_{grid}
     ticks: 0
     title: Latent Heat Net Flux
-    unit: $W/m^2$
+    unit: W/m$^{2}$
 li: # Lifted Index
   best: &lifted_index
     clevs: !!python/object/apply:numpy.arange [-15, 16]
@@ -796,7 +796,7 @@ ltg3: # Lightning Threat (LTG1 ... LTG2)
     ncl_name: LTNG_P0_L10_{grid}
     ticks: 0
     title: Lightning Threat
-    unit: $flashes / km^2 / 5 min$
+    unit: flashes / km$^{2}$ / 5 min
 mfrp: # Fire radiative power
   sfc:
     clevs: [0, 10, 25, 50, 100, 250]
@@ -1005,7 +1005,7 @@ rvil: # Radar-derived Vertically Integrated Liquid
       rrfs: VIL_P0_L200_{grid}
     ticks: 0
     title: Radar-derived Vertically Integrated Liquid
-    unit: $kg/m^2$
+    unit: kg/m$^{2}$
 rwmr: # Rain Mixing Ratio
   ua:
     ncl_name:
@@ -1026,7 +1026,7 @@ shear:
         split: True
         level: 01km
     ticks: 0
-    unit: $s^{-1}$
+    unit: s$^{-1}$
   06km: # 0-6 km
     <<: *shear
     split: True
@@ -1043,7 +1043,7 @@ shtfl: # Sensible Heat Net Flux
     ncl_name: SHTFL_P0_L1_{grid}
     ticks: 0
     title: Sensible Heat Net Flux
-    unit: $W/m^2$
+    unit: W/m$^{2}$
 slw: # Supercooled Liquid Water
   sfc:
     clevs: [0.05, 0.1, 0.2, .3, .4, .5, .75, 1., 1.25, 1.5, 2., 3., 4., 5., 6.]
@@ -1053,7 +1053,7 @@ slw: # Supercooled Liquid Water
     ticks: 0
     title: Supercooled Liquid Water
     transform: supercooled_liquid_water
-    unit: $kg/m^2$
+    unit: kg/m$^{2}$
 snmr: # Snow Mixing Ratio
   ua:
     ncl_name:
@@ -1156,7 +1156,7 @@ solar: # Incoming Solar Radiation
     ncl_name: DSWRF_P0_L1_{grid}
     ticks: 0
     title: Incoming Solar Radiation
-    unit: $W/m^2$
+    unit: W/m$^{2}$
 sphum: # Specific humidity
   2m:
     ncl_name: SPFH_P0_L103_{grid}
@@ -1334,9 +1334,9 @@ ulwrf: # Upward Longwave Radiation Flux
     cmap: gist_ncar
     colors: radiation_colors
     ncl_name: ULWRF_P0_L1_{grid}
-    ticks: 0
+    ticks: -2
     title: Upward Longwave Radiation Flux, Surface
-    unit: $W/m^2$
+    unit: W/m$^{2}$
   top: # Nominal top of atmosphere
     clevs: !!python/object/apply:numpy.arange [80, 341, 2]
     cmap: ir_rgbv_r
@@ -1344,7 +1344,7 @@ ulwrf: # Upward Longwave Radiation Flux
     ncl_name: ULWRF_P0_L8_{grid}
     ticks: 20
     title: Outgoing Longwave Radiation Flux, Top of Atmosphere
-    unit: $W/m^2$
+    unit: W/m$^{2}$
 uswrf: # Upward Shortwave Radiation Flux
   sfc:
     <<: *radiation_flux
@@ -1450,11 +1450,11 @@ vvort: # Vertical vorticity
     colors: vort_colors
     ncl_name: RELV_P8_2L103_{grid}_max1h
     ticks: 0
-    title: 0-1km Max Vertical Velocity (over prev hour)
+    title: 0-1km Max Vertical Vorticity (over prev hour)
     unit: 1/s
   mx02: # Hourly maximum of vertical vorticity over 0-2 km layer
     <<: *vvort 
-    title: 0-2km Max Vertical Velocity (over prev hour)
+    title: 0-2km Max Vertical Vorticity (over prev hour)
 weasd: # Water equivalent of accumulated snow depth
   sfc:
     clevs: [0.01, 0.1, 0.3, 0.5, 1, 2, 3, 4, 5, 7.5, 10, 20]
