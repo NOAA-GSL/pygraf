@@ -356,7 +356,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
       ds         xarray dataset from the grib file
       level      the vertical level of the variable to be plotted
                  corresponding to a key in the specs file
-      model      model name: rap, hrrr, rrfs, rtma
+      model      model name: rap, hrrr, hrrre, rrfs, rtma
       spec       the dictionary of specifications for the given variable
                  and level
       variable   the name of the variable section in the specs file

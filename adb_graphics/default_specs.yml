@@ -115,6 +115,99 @@ acpcp: # Accumulated run total precipitation
     ticks: 0
     transform: conversions.kgm2_to_in
     unit: in
+  ens1: &ens_mean_pcp
+    clevs: [0., 0.01, 0.1, 0.25, 0.5, 1, 2, 3, 4, 6, 10]
+    cmap: gist_ncar
+    colors: rainbow12_colors
+    ncl_name: APCP_P12_L1_{grid}_acc1h
+    ticks: 0
+    title: Ensemble Mean 1-hr Precipitation
+    transform: conversions.kgm2_to_in
+    unit: in
+  ens24:
+    <<: *ens_mean_pcp
+    ncl_name: APCP_P12_L1_{grid}_acc24h
+    title: Ensemble Mean 24-hr Precipitation
+  ens6:
+    <<: *ens_mean_pcp
+    ncl_name: APCP_P12_L1_{grid}_acc6h
+    title: Ensemble Mean 6-hr Precipitation
+acpcpens1: # ensemble probability of precipitation, 1h
+  76.2mm: &ens_precip_prob
+    clevs: [0., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100.]
+    cmap: gist_ncar
+    colors: rainbow12_colors
+    ncl_name: APCP_P9_L1_{grid}_acc1h
+    ticks: 0
+    title: Probability of 1-hr Precipitation >= 3.0 in within 40km
+    unit: '%'
+  50.8mm:
+    <<: *ens_precip_prob
+    title: Probability of 1-hr Precipitation >= 2.0 in within 40km
+  25.4mm:
+    <<: *ens_precip_prob
+    title: Probability of 1-hr Precipitation >= 1.0 in within 40km
+  12.7mm:
+    <<: *ens_precip_prob
+    title: Probability of 1-hr Precipitation >= 0.5 in within 40km
+  6.35mm:
+    <<: *ens_precip_prob
+    title: Probability of 1-hr Precipitation >= 0.25 in within 40km
+acpcpens24: # ensemble probability of precipitation, 24h
+  127.0mm:
+    <<: *ens_precip_prob
+    ncl_name: APCP_P9_L1_{grid}_acc24h
+    title: Probability of 24-hr Precipitation >= 5.0 in within 40km
+  76.2mm:
+    <<: *ens_precip_prob
+    ncl_name: APCP_P9_L1_{grid}_acc24h
+    title: Probability of 24-hr Precipitation >= 3.0 in within 40km
+  50.8mm:
+    <<: *ens_precip_prob
+    ncl_name: APCP_P9_L1_{grid}_acc24h
+    title: Probability of 24-hr Precipitation >= 2.0 in within 40km
+  25.4mm:
+    <<: *ens_precip_prob
+    ncl_name: APCP_P9_L1_{grid}_acc24h
+    title: Probability of 24-hr Precipitation >= 1.0 in within 40km
+  12.7mm:
+    <<: *ens_precip_prob
+    ncl_name: APCP_P9_L1_{grid}_acc24h
+    title: Probability of 24-hr Precipitation >= 0.5 in within 40km
+acpcpens3: # ensemble probability of precipitation, 3h
+  76.2mm:
+    <<: *ens_precip_prob
+    ncl_name: APCP_P9_L1_{grid}_acc3h
+    title: Probability of 3-hr Precipitation >= 3.0 in within 40km
+  50.8mm:
+    <<: *ens_precip_prob
+    ncl_name: APCP_P9_L1_{grid}_acc3h
+    title: Probability of 3-hr Precipitation >= 2.0 in within 40km
+  25.4mm:
+    <<: *ens_precip_prob
+    ncl_name: APCP_P9_L1_{grid}_acc3h
+    title: Probability of 3-hr Precipitation >= 1.0 in within 40km
+  12.7mm:
+    <<: *ens_precip_prob
+    ncl_name: APCP_P9_L1_{grid}_acc3h
+    title: Probability of 3-hr Precipitation >= 0.5 in within 40km
+acpcpens6: # ensemble probability of precipitation, 6h
+  76.2mm:
+    <<: *ens_precip_prob
+    ncl_name: APCP_P9_L1_{grid}_acc6h
+    title: Probability of 6-hr Precipitation >= 3.0 in within 40km
+  50.8mm:
+    <<: *ens_precip_prob
+    ncl_name: APCP_P9_L1_{grid}_acc6h
+    title: Probability of 6-hr Precipitation >= 2.0 in within 40km
+  25.4mm:
+    <<: *ens_precip_prob
+    ncl_name: APCP_P9_L1_{grid}_acc6h
+    title: Probability of 6-hr Precipitation >= 1.0 in within 40km
+  12.7mm:
+    <<: *ens_precip_prob
+    ncl_name: APCP_P9_L1_{grid}_acc6h
+    title: Probability of 6-hr Precipitation >= 0.5 in within 40km
 acsnod: # Accumulated snow
   sfc: &snow
     clevs: [0.01, 0.1, 1, 2, 3, 4, 6, 8, 10, 12, 18, 24]
@@ -365,6 +458,23 @@ echotop: # Echo Top
     title: Echo Top
     transform: conversions.m_to_kft
     unit: kft
+ffldro: # Ensemble flash flood runoff
+  ens24: &flashflood_ensprob
+    clevs: [0., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100.]
+    cmap: gist_ncar
+    colors: rainbow12_colors
+    ncl_name: FFLDRO_P9_L1_{grid}_acc24h
+    ticks: 0
+    title: Probability of 24-hr Precipitation > RFC flash flood guidance within 40 km
+    unit: '%'
+  ens3:
+    <<: *flashflood_ensprob
+    ncl_name: FFLDRO_P9_L1_{grid}_acc3h
+    title: Probability of 3-hr Precipitation > RFC flash flood guidance within 40 km
+  ens6:
+    <<: *flashflood_ensprob
+    ncl_name: FFLDRO_P9_L1_{grid}_acc6h
+    title: Probability of 6-hr Precipitation > RFC flash flood guidance within 40 km
 firewx: # Fire Weather Index
   sfc:
     clevs: [1, 500, 2500, 5000, 7500, 10000, 12500, 15000, 17500, 20000, 22500, 25000]
