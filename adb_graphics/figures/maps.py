@@ -406,7 +406,7 @@ class DataMap():
             not_labeled.extend([h.short_name for h in self.hatch_fields])
             if not any(list(set(cf.short_name).intersection(['pres']))):
                 title = cf.vspec.get('title', cf.field.long_name)
-                contoured.append(f'{title} ({cf.units}, hatched)\n')
+                contoured.append(f'{title} ({cf.units}, hatched)')
 
         # Add descriptor string for the important contoured fields
         if self.contour_fields:
@@ -417,7 +417,7 @@ class DataMap():
                     contoured.append(f'{title}')
                     contoured_units.append(f'{cf.units}')
 
-        contoured = ''.join(contoured)  # The join method makes contoured a string, enabling linefeeds
+        contoured = '\n'.join(contoured)  # Make 'contoured' a string with linefeeds
         if contoured_units:
             contoured = f"{contoured} ({', '.join(contoured_units)}, contoured)"
 
@@ -436,11 +436,11 @@ class DataMap():
 
         # Title or Atmospheric level and unit in the high center
         if f.vspec.get('title'):
-            title = f.vspec.get('title')
-            plt.title(f"{title} {units}", position=(0.5, 1.06), fontsize=18)
+            title = f"{f.vspec.get('title')} {units}"
         else:
             level = level if not isinstance(level, list) else level[0]
-            plt.title(f"{level} {lev_unit} {f.field.long_name} {units}", position=(0.5, 1.06), fontsize=18)
+            title = f'{level} {lev_unit} {f.field.long_name} {units}'
+        plt.title(f"{title}", position=(0.5, 1.06), fontsize=18)
 
         # Two lines for hatched data (top), and contoured data (bottom) on the right
         plt.title(f"{contoured}",
