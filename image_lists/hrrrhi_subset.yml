@@ -1,0 +1,104 @@
+hourly:
+  model: hrrr
+  variables:
+    1hsnw:
+      - sfc
+    1ref:
+      - 1000m
+    acpcp:
+      - sfc
+    acsnod:
+      - sfc
+    acsnw:
+      - sfc
+    cape:
+      - mu
+      - sfc
+    ceil:
+      - ua
+    cin:
+      - sfc
+    cloudcover:
+      - high
+      - low
+      - mid
+      - total
+    cref:
+      - sfc
+    ctop:
+      - ua
+    dewp:
+      - 2m
+    echotop:
+      - sfc
+    flru:
+      - sfc
+    G113bt:
+      - sat
+    G114bt:
+      - sat
+    gust:
+      - 10m
+    hlcy:
+      - mx25
+    hpbl:
+      - sfc
+    lcl:
+      - sfc
+    lhtfl:
+      - sfc
+    li:
+      - best
+    mref:
+      - sfc
+    pres:
+      - sfc
+    ptmp:
+      - 2m
+    pwtr:
+      - sfc
+    rh:
+      - 2m
+    shear:
+      - 06km
+    shtfl:
+      - sfc
+    snod:
+      - sfc
+    solar:
+      - sfc
+    temp:
+      - 2ds
+      - 2m
+      - 500mb
+      - 700mb
+      - 850mb
+      - 925mb
+      - sfc
+    totp:
+      - sfc
+    ulwrf:
+      - top
+    vbdsf:
+      - sfc
+    vddsf:
+      - sfc
+    vig:
+      - sfc
+    vil:
+      - sfc
+    vis:
+      - sfc
+    vort:
+      - 500mb
+    vvel:
+      - mean
+    weasd:
+      - sfc
+    wspeed:
+      - 10m
+      - 80m
+      - 250mb
+      - max
+      - mdn
+      - mup
