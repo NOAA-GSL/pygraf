@@ -454,12 +454,17 @@ class DataMap():
 
         u, v = self.field.wind(level)
 
+        model = self.model_name
         tile = self.map.tile
 
         # Set the stride and size of the barbs to be plotted with a masked array.
         if self.map.m.projection == 'lcc' and tile == 'full':
-            stride = 30
-            length = 5
+            if model == 'HRRR-HI':
+                stride = 12
+                length = 4
+            else:
+                stride = 30
+                length = 5
         elif tile == 'HI':
             stride = 1
             length = 4

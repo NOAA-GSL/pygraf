@@ -414,7 +414,12 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
                 short_name=var,
                 ))
 
-    _, ax = plt.subplots(1, 1, figsize=(10, 10))
+    if cla.model_name == "HRRR-HI":
+        inches = 12.2
+    else:
+        inches = 10
+
+    _, ax = plt.subplots(1, 1, figsize=(inches, inches))
 
     # Generate a map object
     m = maps.Map(
