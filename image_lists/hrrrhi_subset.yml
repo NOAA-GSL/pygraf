@@ -55,6 +55,8 @@ hourly:
       - sfc
     ptmp:
       - 2m
+    ptyp:
+      - sfc
     pwtr:
       - sfc
     rh:
@@ -99,6 +101,7 @@ hourly:
       - 10m
       - 80m
       - 250mb
+      - 850mb
       - max
       - mdn
       - mup
