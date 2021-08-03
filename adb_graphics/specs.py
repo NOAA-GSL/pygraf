@@ -428,11 +428,13 @@ class VarSpec(abc.ABC):
 
         ''' Default color map for Visibility '''
 
-        grays = cm.get_cmap('Greys', 3)([1, 0])
-        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
-                          ([15, 18, 20, 25, 50, 60, 70, 80, 85, 90, 100, 120])
+        lifr = cm.get_cmap('RdPu_r', 20)(range(0, 11))
+        ifr = cm.get_cmap('autumn', 30)(range(0, 30))
+        mvfr = cm.get_cmap('Blues', 20)(range(10, 20))
+        vfr1 = cm.get_cmap('YlGn_r', 60)(range(0, 50))
+        vfr2 = cm.get_cmap('Reds', 15)(np.full(51, 1))
 
-        return np.concatenate((grays, ncar))
+        return np.concatenate((lifr, ifr, mvfr, vfr1, vfr2))
 
     @property
     @lru_cache()
