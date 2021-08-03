@@ -428,6 +428,14 @@ class VarSpec(abc.ABC):
 
         ''' Default color map for Visibility '''
 
+        '''
+        section names are based on Aviation Flight Rule visibility categories
+        LIFR (Low Instrument Flight Rules) -- less than 1 mile
+        IFR (Instrument Flight Rules) -- 1 mile to less than 3 miles
+        MVFR (Marginal Visual Flight Rules) -- 3 to 5 miles
+        VFR (Visual Flight Rules) -- greater than 5 miles
+        '''
+        
         lifr = cm.get_cmap('RdPu_r', 20)(range(0, 11))
         ifr = cm.get_cmap('autumn', 30)(range(0, 30))
         mvfr = cm.get_cmap('Blues', 20)(range(10, 20))
