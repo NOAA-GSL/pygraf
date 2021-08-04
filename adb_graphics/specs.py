@@ -426,13 +426,22 @@ class VarSpec(abc.ABC):
     @lru_cache()
     def vis_colors(self) -> np.ndarray:
 
-        ''' Default color map for Visibility '''
+        ''' Default color map for Visibility
 
-        grays = cm.get_cmap('Greys', 3)([1, 0])
-        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
-                          ([15, 18, 20, 25, 50, 60, 70, 80, 85, 90, 100, 120])
+        section names are based on Aviation Flight Rule visibility categories
+        LIFR (Low Instrument Flight Rules) -- less than 1 mile
+        IFR (Instrument Flight Rules) -- 1 mile to less than 3 miles
+        MVFR (Marginal Visual Flight Rules) -- 3 to 5 miles
+        VFR (Visual Flight Rules) -- greater than 5 miles
+        '''
 
-        return np.concatenate((grays, ncar))
+        lifr = cm.get_cmap('RdPu_r', 20)(range(0, 11))
+        ifr = cm.get_cmap('autumn', 30)(range(0, 30))
+        mvfr = cm.get_cmap('Blues', 20)(range(10, 20))
+        vfr1 = cm.get_cmap('YlGn_r', 60)(range(0, 50))
+        vfr2 = cm.get_cmap('Reds', 15)(np.full(51, 1))
+
+        return np.concatenate((lifr, ifr, mvfr, vfr1, vfr2))
 
     @property
     @lru_cache()

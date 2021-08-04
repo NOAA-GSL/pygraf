@@ -1403,11 +1403,11 @@ vil: # Vertically Integrated Liquid
     title: Vertically Integrated Liquid
 vis: # Visibility
   sfc:
-    clevs: [0.0625, 0.125, 0.25, 0.5, 1, 1.5, 2, 3, 4, 5, 10, 30, 50]
+    clevs: !!python/object/apply:numpy.arange [0., 15., 0.1]
     cmap: gist_ncar
     colors: vis_colors
     ncl_name: VIS_P0_L1_{grid}
-    ticks: 0
+    ticks: -10
     title: Sfc Visibility
     transform: conversions.m_to_mi
     unit: mi
