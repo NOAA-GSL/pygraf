@@ -357,6 +357,8 @@ class TestDefaultSpecs():
             'bndylay', # boundary layer cld cover
             'esbl',    # ???
             'esblmn',  # ???
+            # '1000ft',  # 1000 feet above ground level
+            # '6000ft',  # 6000 feet above ground level
             'high',    # high clouds
             'int',     # vertical integral
             'low',     # low clouds
@@ -382,6 +384,7 @@ class TestDefaultSpecs():
         allowed_lev_type = [
             'cm',      # centimeters
             'ds',      # difference
+            'ft',      # feet
             'km',      # kilometers
             'm',       # meters
             'mm',      # millimeters

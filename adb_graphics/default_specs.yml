@@ -1301,7 +1301,7 @@ trc1:
     title: Vertically Integrated Smoke
     transform: conversions.to_micro
     unit: $mg/m^2$
-  lvl4: &tracer1
+  1000ft: &tracer1
     clevs: [1, 2, 4, 6, 8, 12, 16, 20, 25, 30, 40, 60, 100, 200]
     colors: smoke_colors
     ncl_name: MASSDEN_P0_L105_{grid}
@@ -1309,9 +1309,11 @@ trc1:
     title: 1000ft AGL Smoke
     wind: True
     unit: $\mu g/m^3$
-  lvl11:
+    vertical_index: 4
+  6000ft:
     <<: *tracer1
     title: 6000ft AGL Smoke
+    vertical_index: 11
   sfc:
     clevs: [1, 2, 4, 6, 8, 12, 16, 20, 25, 30, 40, 60, 100, 200]
     colors: smoke_colors
@@ -1334,12 +1336,14 @@ u:
   700mb: *ua_uwind
   850mb: *ua_uwind
   925mb: *ua_uwind
-  lvl4:
+  1000ft:
     ncl_name: UGRD_P0_L105_{grid}
     transform: conversions.ms_to_kt
-  lvl11:
+    vertical_index: 4
+  6000ft:
     ncl_name: UGRD_P0_L105_{grid}
     transform: conversions.ms_to_kt
+    vertical_index: 11
   max:
     ncl_name: MAXUW_P8_L103_{grid}_max1h
     transform: conversions.ms_to_kt
@@ -1389,12 +1393,14 @@ v:
   700mb: *ua_vwind
   850mb: *ua_vwind
   925mb: *ua_vwind
-  lvl4:
+  1000ft:
     ncl_name: VGRD_P0_L105_{grid}
     transform: conversions.ms_to_kt
-  lvl11:
+    vertical_index: 4
+  6000ft:
     ncl_name: VGRD_P0_L105_{grid}
     transform: conversions.ms_to_kt
+    vertical_index: 11
   max:
     ncl_name: MAXVW_P8_L103_{grid}_max1h
     transform: conversions.ms_to_kt
