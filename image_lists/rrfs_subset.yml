@@ -92,6 +92,8 @@ hourly:
       - sfc
     ptmp:
       - 2m
+    ptyp
+      - sfc
     pwtr:
       - sfc
     ref:
