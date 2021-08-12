@@ -1,0 +1,6 @@
+hourly:
+  model: hrrr
+  variables:
+    trc1:
+      - 1000ft
+      - 6000ft

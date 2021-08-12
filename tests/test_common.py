@@ -382,6 +382,7 @@ class TestDefaultSpecs():
         allowed_lev_type = [
             'cm',      # centimeters
             'ds',      # difference
+            'ft',      # feet
             'km',      # kilometers
             'm',       # meters
             'mm',      # millimeters
