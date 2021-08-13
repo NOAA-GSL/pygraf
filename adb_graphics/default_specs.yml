@@ -682,42 +682,42 @@ hlcytot:
   mn02:
     <<: *hlcy_mn02
     accumulate: True
-    title: Run Total 0-2km Min Updraft Helicity (over prv hr)
+    title: Run Total 0-2km Min Updraft Helicity
     transform: run_total
   mn03:
     <<: *hlcy_mn03
     accumulate: True
-    title: Run Total 0-6km Min Updraft Helicity (over prv hr)
+    title: Run Total 0-6km Min Updraft Helicity
     transform: run_total
   mn16:
     <<: *hlcy_mn16
     accumulate: True
-    title: Run Total 1-6km Min Updraft Helicity (over prv hr)
+    title: Run Total 1-6km Min Updraft Helicity
     transform: run_total
   mn25:
     <<: *hlcy_mn25
     accumulate: True
-    title: Run Total 2-5km Min Updraft Helicity (over prv hr)
+    title: Run Total 2-5km Min Updraft Helicity
     transform: run_total
   mx02:
     <<: *hlcy_mx02
     accumulate: True
-    title: Run Total 0-2km Max Updraft Helicity (over prv hr)
+    title: Run Total 0-2km Max Updraft Helicity
     transform: run_total
   mx03:
     <<: *hlcy_mx03
     accumulate: True
-    title: Run Total 0-6km Max Updraft Helicity (over prv hr)
+    title: Run Total 0-6km Max Updraft Helicity
     transform: run_total
   mx16:
     <<: *hlcy_mx16
     accumulate: True
-    title: Run Total 1-6km Max Updraft Helicity (over prv hr)
+    title: Run Total 1-6km Max Updraft Helicity
     transform: run_total
   mx25:
     <<: *hlcy_mx25
     accumulate: True
-    title: Run Total 2-5km Max Updraft Helicity (over prv hr)
+    title: Run Total 2-5km Max Updraft Helicity
     transform: run_total
 hpbl: # Height of Planetary Boundary Layer
   sfc: 
@@ -982,7 +982,7 @@ rh: # Relative Humidity
   mean: # Mean RH 850mb to 500mb
     <<: *rh
     print_units: false
-    title: Mean 850-500mb Relative Humidity (%, shaded), 700mb Wind (kt)
+    title: Mean 850-500mb RH (%, shaded), 700mb Wind (kt)
     transform: 
       funcs: field_mean
       kwargs:
@@ -1355,7 +1355,7 @@ ulwrf: # Upward Longwave Radiation Flux
     colors: radiation_colors
     ncl_name: ULWRF_P0_L1_{grid}
     ticks: -2
-    title: Upward Longwave Radiation Flux, Surface
+    title: Upward LW Radiation Flux, Surface
     unit: W/m$^{2}$
   top: # Nominal top of atmosphere
     clevs: !!python/object/apply:numpy.arange [80, 341, 2]
@@ -1363,13 +1363,13 @@ ulwrf: # Upward Longwave Radiation Flux
     colors: radiation_mix_colors
     ncl_name: ULWRF_P0_L8_{grid}
     ticks: 20
-    title: Outgoing Longwave Radiation Flux, Top of Atmosphere
+    title: Outgoing LW Radiation Flux, Top of Atmosphere
     unit: W/m$^{2}$
 uswrf: # Upward Shortwave Radiation Flux
   sfc:
     <<: *radiation_flux
     ncl_name: USWRF_P0_L1_{grid}
-    title: Upward Shortwave Radiation Flux, Surface
+    title: Upward SW Radiation Flux, Surface
   top: # Nominal top of atmosphere
     <<: *radiation_flux
     clevs: !!python/object/apply:numpy.arange [50, 851, 10]
@@ -1377,7 +1377,7 @@ uswrf: # Upward Shortwave Radiation Flux
     colors: radiation_bw_colors
     ncl_name: USWRF_P0_L8_{grid}
     ticks: 40
-    title: Outgoing Shortwave Radiation Flux, Top of Atmosphere
+    title: Outgoing SW Radiation Flux, Top of Atmosphere
 v:
   10m: &agl_wind
     ncl_name: VGRD_P0_L103_{grid}
@@ -1421,7 +1421,7 @@ vig: # Vertically-integrated graupel
     colors: graupel_colors
     ncl_name: TCOLG_P8_L200_{grid}_max1h
     ticks: 0
-    title: Max Vertically Integrated Graupel (over previous hour)
+    title: Max Vertically Integrated Graupel (over prv hr)
     unit: mm
 vil: # Vertically Integrated Liquid
   sfc:
