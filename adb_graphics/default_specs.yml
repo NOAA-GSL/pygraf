@@ -603,7 +603,7 @@ hlcy: # Helicity
     split: True
     ticks: 25
     title: 1-6km Updraft Helicity
-    unit: m2/s2
+    unit: $m^2 / s^2$
   in25: # Hourly updraft helicity over 2-5 km layer
     <<: *hlcy
     clevs: !!python/object/apply:numpy.arange [25, 301, 25]
