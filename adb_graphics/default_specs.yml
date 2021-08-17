@@ -1355,7 +1355,7 @@ ulwrf: # Upward Longwave Radiation Flux
     colors: radiation_colors
     ncl_name: ULWRF_P0_L1_{grid}
     ticks: -2
-    title: Upward LW Radiation Flux, Surface
+    title: Upward Longwave Radiation Flux, Surface
     unit: W/m$^{2}$
   top: # Nominal top of atmosphere
     clevs: !!python/object/apply:numpy.arange [80, 341, 2]
@@ -1363,13 +1363,13 @@ ulwrf: # Upward Longwave Radiation Flux
     colors: radiation_mix_colors
     ncl_name: ULWRF_P0_L8_{grid}
     ticks: 20
-    title: Outgoing LW Radiation Flux, Top of Atmosphere
+    title: Outgoing Longwave Radiation Flux, TOA
     unit: W/m$^{2}$
 uswrf: # Upward Shortwave Radiation Flux
   sfc:
     <<: *radiation_flux
     ncl_name: USWRF_P0_L1_{grid}
-    title: Upward SW Radiation Flux, Surface
+    title: Upward Shortwave Radiation Flux, Surface
   top: # Nominal top of atmosphere
     <<: *radiation_flux
     clevs: !!python/object/apply:numpy.arange [50, 851, 10]
@@ -1377,7 +1377,7 @@ uswrf: # Upward Shortwave Radiation Flux
     colors: radiation_bw_colors
     ncl_name: USWRF_P0_L8_{grid}
     ticks: 40
-    title: Outgoing SW Radiation Flux, Top of Atmosphere
+    title: Outgoing Shortwave Radiation Flux, TOA
 v:
   10m: &agl_wind
     ncl_name: VGRD_P0_L103_{grid}
