@@ -440,7 +440,7 @@ class DataMap():
         else:
             level = level if not isinstance(level, list) else level[0]
             title = f'{level} {lev_unit} {f.field.long_name} {units}'
-        plt.title(f"{title}", position=(0.5, 1.06), fontsize=18)
+        plt.title(f"{title}", position=(0.5, 1.08), fontsize=18)
 
         # Two lines for hatched data (top), and contoured data (bottom) on the right
         plt.title(f"{contoured}",
