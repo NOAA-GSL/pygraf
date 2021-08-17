@@ -44,6 +44,8 @@ hourly:
       - 2m
     echotop:
       - sfc
+    firewx:
+      - sfc
     flru:
       - sfc
     G113bt:
@@ -92,7 +94,7 @@ hourly:
       - sfc
     ptmp:
       - 2m
-    ptyp
+    ptyp:
       - sfc
     pwtr:
       - sfc
