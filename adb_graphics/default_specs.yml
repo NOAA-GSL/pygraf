@@ -484,7 +484,7 @@ firewx: # Fire Weather Index
     ticks: 0
     title: Hourly Wildfire Potential
     transform: fire_weather_index
-    unit: $K^{0.61} m^{1.82} / s^{1.82}$
+    unit: $K^{0.2} m^{2} / s^{2}$
 flru: # Aviation Flight Rules
   sfc:
     clevs: [0.0, 1.0, 2.0, 3.0, 4.0]
