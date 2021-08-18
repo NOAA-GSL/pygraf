@@ -550,11 +550,12 @@ class fieldData(UPPData):
         # Set all others vegetation types to 1
         veg = np.where(veg > 0, 1, veg)
 
-        fwi = 44.09 * veg * \
-                (gust ** 1.82) * \
-                (dewpt_depression ** 0.61) * \
-                (mois ** 13.98) * \
-                snowc
+        fwi = veg * \
+                (333.23 + \
+                 65.46 * (gust ** 1.97) * \
+                (dewpt_depression ** 0.31) * \
+                (mois ** 13.55) * \
+                snowc)
 
         return fwi
 
