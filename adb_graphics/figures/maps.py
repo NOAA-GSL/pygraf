@@ -71,14 +71,16 @@ class Map():
           corners       list of values lat and lon of lower left (ll) and upper
                         right(ur) corners:
                              ll_lat, ur_lat, ll_lon, ur_lon
+          model         model designation used to trigger higher resolution maps if needed
           tile          a string corresponding to a pre-defined tile in the
                         TILE_DEFS dictionary
     '''
 
-    def __init__(self, airport_fn, ax, model_name=None, **kwargs):
+    def __init__(self, airport_fn, ax, **kwargs):
 
         self.ax = ax
         self.grid_info = kwargs.get('grid_info', {})
+        self.model = kwargs.get('model')
         self.tile = kwargs.get('tile', 'full')
         self.airports = self.load_airports(airport_fn)
 
@@ -88,10 +90,10 @@ class Map():
             self.corners = self.get_corners()
             self.grid_info.pop('corners')
 
-        # Some of Hawaii's smaller islands and islands in the Caribbean don't 
+        # Some of Hawaii's smaller islands and islands in the Caribbean don't
         # show up with a larger threshold.
         area_thresh = 1000
-        if self.tile in ['HI', 'Florida', 'PuertoRico'] or model_name == 'HRRR-HI':
+        if self.tile in ['HI', 'Florida', 'PuertoRico'] or self.model in ['hrrrhi', 'hrrrcar']:
             area_thresh = 100
 
         self.m = self._get_basemap(area_thresh=area_thresh, **self.grid_info)
