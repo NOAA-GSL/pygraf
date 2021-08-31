@@ -426,6 +426,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
         airport_fn=AIRPORTS,
         ax=ax,
         grid_info=field.grid_info,
+        model_name=cla.model_name,
         tile=tile,
         )
 
