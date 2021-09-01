@@ -855,7 +855,8 @@ class profileData(UPPData):
         # Convert the string to a number. Longitude should be negative for all
         # these sites.
         self.site_lat = float(lat)
-        self.site_lon = -float(lon)
+#        self.site_lon = -float(lon)
+        self.site_lon = 360.0 - float(lon)
 
     def values(self, level=None, name=None, **kwargs):
 
