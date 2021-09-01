@@ -259,6 +259,8 @@ class UPPData(specs.VarSpec):
         '''
 
         lats, lons = self.latlons()
+        adjust = 360 if np.any(lons < 0) else 0
+        lons = lons + adjust
         max_x, max_y = np.shape(lats)
 
         # Numpy magic to grab the X, Y grid point nearest the profile site
@@ -852,11 +854,12 @@ class profileData(UPPData):
         # The variable lenght site name is included past column 37
         self.site_name = loc[37:].rstrip()
 
-        # Convert the string to a number. Longitude should be negative for all
+        # Convert the string to a number. Longitude should be positive for all
         # these sites.
         self.site_lat = float(lat)
-#        self.site_lon = -float(lon)
-        self.site_lon = 360.0 - float(lon)
+        self.site_lon = -float(lon) # lons are -180 but without minus sign in input file
+        if self.site_lon < 0:
+            self.site_lon = self.site_lon + 360.0
 
     def values(self, level=None, name=None, **kwargs):
 
