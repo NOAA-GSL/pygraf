@@ -39,10 +39,12 @@ TILE_DEFS = {
     'CHI-DET': [39, 44, -92, -83],
     'DCArea': [36.7, 40, -81, -72],
     'EastCO': [36.5, 41.5, -108, -101.8],
+    'Florida': [19.2305, 29.521, -86.1119, -73.8189],
     'GreatLakes': [37, 50, -96, -70],
     'HI': [16.6, 24.6, -157.6, -157.5],
     'Juneau': [55.741, 59.629, -140.247, -129.274],
     'NYC-BOS': [40, 43, -78.5, -68.5],
+    'PuertoRico': [15.5257, 24.0976, -74.6703, -61.848],
     'SEA-POR': [43, 50, -125, -119],
     'SouthCA': [31, 37, -120, -114],
     'SouthFL': [24, 28.5, -84, -77],
@@ -69,6 +71,7 @@ class Map():
           corners       list of values lat and lon of lower left (ll) and upper
                         right(ur) corners:
                              ll_lat, ur_lat, ll_lon, ur_lon
+          model         model designation used to trigger higher resolution maps if needed
           tile          a string corresponding to a pre-defined tile in the
                         TILE_DEFS dictionary
     '''
@@ -77,6 +80,7 @@ class Map():
 
         self.ax = ax
         self.grid_info = kwargs.get('grid_info', {})
+        self.model = kwargs.get('model')
         self.tile = kwargs.get('tile', 'full')
         self.airports = self.load_airports(airport_fn)
 
@@ -86,10 +90,10 @@ class Map():
             self.corners = self.get_corners()
             self.grid_info.pop('corners')
 
-        # Some of Hawaii's smaller islands don't show up with a larger
-        # threshold.
+        # Some of Hawaii's smaller islands and islands in the Caribbean don't
+        # show up with a larger threshold.
         area_thresh = 1000
-        if self.tile == 'HI':
+        if self.tile in ['HI', 'Florida', 'PuertoRico'] or self.model in ['hrrrhi', 'hrrrcar']:
             area_thresh = 100
 
         self.m = self._get_basemap(area_thresh=area_thresh, **self.grid_info)

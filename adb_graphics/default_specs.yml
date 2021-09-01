@@ -452,6 +452,8 @@ echotop: # Echo Top
     colors: cref_colors
     ncl_name: 
       hrrr: RETOP_P0_L3_{grid}
+      hrrrhi: RETOP_P0_L3_{grid}
+      hrrrcar: RETOP_P0_L3_{grid}
       rap: RETOP_P0_L3_{grid}
       rrfs: RETOP_P0_L200_{grid}
     ticks: 0
@@ -825,6 +827,8 @@ pres:
     colors: ps_colors
     ncl_name:
       hrrr: MSLMA_P0_L101_{grid}
+      hrrrhi: MSLMA_P0_L101_{grid}
+      hrrrcar: MSLMA_P0_L101_{grid}
       rap: MSLMA_P0_L101_{grid}
       rrfs: PRMSL_P0_L101_{grid}
     ticks: 20
@@ -1001,6 +1005,8 @@ rvil: # Radar-derived Vertically Integrated Liquid
     colors: cref_colors
     ncl_name: 
       hrrr: VIL_P0_L{level_type}_{grid}
+      hrrrhi: VIL_P0_L{level_type}_{grid}
+      hrrrcar: VIL_P0_L{level_type}_{grid}
       rap: VIL_P0_L{level_type}_{grid}
       rrfs: VIL_P0_L200_{grid}
     ticks: 0
@@ -1071,6 +1077,8 @@ soilm: # Soil Moisture Availability
     colors: soilm_colors
     ncl_name:
       hrrr: MSTAV_P0_L106_{grid}
+      hrrrhi: MSTAV_P0_L106_{grid}
+      hrrrcar: MSTAV_P0_L106_{grid}
       rap: MSTAV_P0_L106_{grid}
       rrfs: SOILM_P0_2L106_{grid}
     ticks: 0
