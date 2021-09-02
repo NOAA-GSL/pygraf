@@ -110,7 +110,11 @@ class SkewTDiagram(gribdata.profileData):
         for mixr, settings in mixing_ratios.items():
             # Get the profile values
             scale = settings.get('scale')
-            profile = np.asarray(self.values(name=mixr)) * 1000. * scale
+            try:
+                profile = np.asarray(self.values(name=mixr)) * 1000. * scale
+            except errors.GribReadError:
+                print(f'missing {mixr} for hydrometeor plot, skipping that field.')
+                continue
             mixr_total = 0.
             for n in range(nlevs):
                 if n == 0:
