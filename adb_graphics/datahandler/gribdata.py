@@ -856,10 +856,10 @@ class profileData(UPPData):
 
         # Convert the string to a number. Longitude should be positive for all
         # these sites.
-	# The conus_raobs file uses -180 to 180, but leaves off the minus sign,
-	# i.e., the values are in degrees West. So, first we need to add the
-	# minus sign to convert the longitude to deg East, and then need to
-	# adjust to the 0 to 360 system.
+        # The conus_raobs file uses -180 to 180, but leaves off the minus sign,
+        # i.e., the values are in degrees West. So, first we need to add the
+        # minus sign to convert the longitude to deg East, and then need to
+        # adjust to the 0 to 360 system.
         self.site_lat = float(lat)
         self.site_lon = -float(lon) # lons are -180 but without minus sign in input file
         if self.site_lon < 0:
