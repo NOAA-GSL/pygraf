@@ -10,10 +10,20 @@ jobs:
   test_graphics:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout repo
+        uses: actions/checkout@v2
         with:
           lfs: true
-      - uses: conda-incubator/setup-miniconda@v2
+      - name: Cache conda env
+        uses: actions/cache@v2
+        env:
+          CACHE_NUMBER: 0
+        with:
+          path: ~/conda_pkgs_dir
+          key:
+            ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment.yml') }}
+      - name: Setup conda environment
+        uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: pygraf
           environment-file: environment.yml
