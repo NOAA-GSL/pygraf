@@ -229,6 +229,12 @@ def parse_args():
 
     # Short args
     parser.add_argument(
+        '-a',
+        dest='data_age',
+        default=3,
+        help='Age in minutes required for data files to be complete. Default = 3',
+        )
+    parser.add_argument(
         '-d',
         dest='data_root',
         help='Cycle-independant data directory location.',
@@ -273,6 +279,12 @@ def parse_args():
         help='Start time in YYYYMMDDHH format',
         required=True,
         type=utils.to_datetime,
+        )
+    parser.add_argument(
+        '-w',
+        dest='wait_time',
+        default=10,
+        help='Time in minutes to wait on data files to be available. Default = 10',
         )
     parser.add_argument(
         '-z',
@@ -548,8 +560,9 @@ def graphics_driver(cla):
             grib_path = os.path.join(cla.data_root,
                                      cla.file_tmpl.format(FCST_TIME=fhr))
 
-            # UPP is most likely done writing if it hasn't written in 3 mins
-            if os.path.exists(grib_path) and utils.old_enough(3, grib_path):
+            # UPP is most likely done writing if it hasn't written in data_age
+            # mins (default is 3 to address most CONUS-sized domains)
+            if os.path.exists(grib_path) and utils.old_enough(cla.data_age, grib_path):
                 fcst_hours.remove(fhr)
             else:
                 # Try next forecast hour
@@ -591,9 +604,10 @@ def graphics_driver(cla):
             # Keep track of last time we did something useful
             timer_end = time.time()
 
-        # Give up trying to process remaining forecast hours after waiting 10
-        # arbitrary mins since doing something useful.
-        if time.time() - timer_end > 600:
+        # Give up trying to process remaining forecast hours after waiting
+        # wait_time mins. This accounts for slower UPP processes. Default for
+        # most CONUS-sized domains is 10 mins.
+        if time.time() - timer_end > cla.wait_time * 60:
             print(f"Exiting with forecast hours remaining: {fcst_hours}")
             print((('-' * 80)+'\n') * 2)
             break

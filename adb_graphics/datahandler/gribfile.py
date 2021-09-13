@@ -68,8 +68,7 @@ class GribFiles():
 
         self.contents = self._load(filenames)
 
-    @staticmethod
-    def free_fcst_names(ds, fcst_type):
+    def free_fcst_names(self, ds, fcst_type):
 
         ''' Given an opened dataset, return a dict of original variable names
         (key) and the desired name (value) '''
@@ -87,11 +86,14 @@ class GribFiles():
                 # Don't rename these variables at early hours
                 odd_variables = [
                     'ASNOW',
-                    'CDLYR',
                     'FRZR',
                     'LRGHR',
-                    'TCDC',
                     ]
+                if self.model != 'rrfs':
+                    odd_variables.extend([
+                        'CDLYR',
+                        'TCDC',
+                        ])
                 needs_renaming = var.split('_')[0] not in odd_variables
                 if suffix in special_suffixes and needs_renaming:
                     new_suffix = f'{suffix}1h'
@@ -106,9 +108,25 @@ class GribFiles():
                     'TCDC',
                     'WEASD',
                     ]
-                needs_renaming = var.split('_')[0] in odd_variables
-                contains_suffix = [suf for suf in special_suffixes if suf in
-                                   suffix and suffix != f'{suf}1h']
+                variable = var.split('_')[0]
+                needs_renaming = variable in odd_variables
+                contains_suffix = []
+                for suf in special_suffixes:
+
+                    # The LRGHR variable behaves differently in RRFS than in all
+                    # others! At 7 hours, it starts averaging since 6h. From 0-6
+                    # h it's named with suffix avg, after its named avg1h,
+                    # avg2h, etc.
+                    if self.model == 'rrfs' and \
+                        variable == 'LRGHR' and \
+                        suffix == f'{suf}1h':
+                        contains_suffix.append(suf)
+
+                    # All the variables that need to be renamed. In most cases,
+                    # exclude the "1h" accumulated variables
+                    if suf in suffix and suffix != f'{suf}1h':
+                        contains_suffix.append(suf)
+
                 if contains_suffix and needs_renaming:
                     ret[var] = var.replace(suffix, contains_suffix[0])
 
