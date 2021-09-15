@@ -233,6 +233,7 @@ def parse_args():
         dest='data_age',
         default=3,
         help='Age in minutes required for data files to be complete. Default = 3',
+        type=int,
         )
     parser.add_argument(
         '-d',
@@ -285,6 +286,7 @@ def parse_args():
         dest='wait_time',
         default=10,
         help='Time in minutes to wait on data files to be available. Default = 10',
+        type=int,
         )
     parser.add_argument(
         '-z',
