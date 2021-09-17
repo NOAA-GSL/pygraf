@@ -19,6 +19,8 @@ jobs:
         with:
           lfs: true
       - name: Cache conda environment
+        # Attempt to save off the packages to reduce the spin-up time for the
+        # conda environment.
         uses: actions/cache@v2
         env:
           CACHE_NUMBER: 0
