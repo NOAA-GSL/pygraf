@@ -11,6 +11,7 @@ from string import digits, ascii_letters
 
 from matplotlib import cm
 import numpy as np
+import xarray as xr
 
 from .. import conversions
 from .. import errors
@@ -480,7 +481,7 @@ class fieldData(UPPData):
 
         vis.close()
 
-        return flru
+        return xr.DataArray(flru)
 
     @property
     def cmap(self):
