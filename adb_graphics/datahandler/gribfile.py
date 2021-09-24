@@ -141,6 +141,7 @@ class GribFiles():
         for files in filenames.values():
             if files:
                 gfile = xr.open_dataset(files[0],
+                                        cache=False,
                                         engine='pynio',
                                         lock=False,
                                         backend_kwargs=dict(format="grib2"),
@@ -216,7 +217,6 @@ class GribFiles():
         return ret
 
     @property
-    @lru_cache()
     def open_kwargs(self):
 
         ''' Defines the key word arguments used by the various calls to XArray
@@ -224,6 +224,7 @@ class GribFiles():
 
         return dict(
             backend_kwargs=dict(format="grib2"),
+            cache=False,
             combine='nested',
             compat='override',
             concat_dim=list(self.coord_dims.keys())[0],

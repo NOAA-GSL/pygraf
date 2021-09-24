@@ -92,7 +92,6 @@ class UPPData(specs.VarSpec):
         return date.strftime('%Y%m%d %H UTC')
 
     @property
-    @lru_cache()
     def field(self):
 
         ''' Wrapper that calls get_field method for the current variable.
@@ -106,7 +105,11 @@ class UPPData(specs.VarSpec):
 
         ''' Subtracts the values from variable2 from self.field. '''
 
-        return values - self.values(name=variable2, level=level2)
+        value2 = self.values(name=variable2, level=level2)
+        diff = values - value2
+        value2.close()
+
+        return diff
 
     def field_mean(self, values, variable, levels, **kwargs) -> np.ndarray:
 
@@ -116,7 +119,9 @@ class UPPData(specs.VarSpec):
 
         fsum = np.zeros_like(values)
         for level in levels:
-            fsum = fsum + self.values(name=variable, level=level)
+            val_lev = self.values(name=variable, level=level)
+            fsum = fsum + val_lev
+            val_lev.close()
 
         return fsum / len(levels)
 
@@ -473,6 +478,8 @@ class fieldData(UPPData):
         flru = np.where((ceil > 0.0) & (ceil < 0.5), 3.01, flru)
         flru = np.where((vis < 1.), 3.01, flru)
 
+        vis.close()
+
         return flru
 
     @property
@@ -530,11 +537,11 @@ class fieldData(UPPData):
 
         # Gather fields from the input
         veg = values # Chose this value as the main one in the default_specs
-        temp = self.values(name='temp', level='2m', do_transform=False).values
-        dewpt = self.values(name='dewp', level='2m', do_transform=False).values
-        weasd = self.values(name='weasd', level='sfc', do_transform=False).values
-        gust = self.values(name='gust', level='10m', do_transform=False).values
-        soilm = self.values(name='soilm', level='sfc', do_transform=False).values
+        temp = self.values(name='temp', level='2m', do_transform=False)
+        dewpt = self.values(name='dewp', level='2m', do_transform=False)
+        weasd = self.values(name='weasd', level='sfc', do_transform=False)
+        gust = self.values(name='gust', level='10m', do_transform=False)
+        soilm = self.values(name='soilm', level='sfc', do_transform=False)
 
         # A few derived fields
         dewpt_depression = temp - dewpt
@@ -559,9 +566,14 @@ class fieldData(UPPData):
                 (mois ** 13.55) * \
                 snowc)
 
+        temp.close()
+        dewpt.close()
+        weasd.close()
+        gust.close()
+        soilm.close()
+
         return fwi
 
-    @property
     def grid_info(self):
 
         ''' Returns a dict that includes the grid info for the full grid. '''
@@ -615,6 +627,9 @@ class fieldData(UPPData):
             val = lat.attrs[attr]
             val = val[0] if isinstance(val, np.ndarray) else val
             grid_info[bm_arg] = val
+            del val
+
+        del lat
 
         return grid_info
 
@@ -667,6 +682,11 @@ class fieldData(UPPData):
                              cloud_mixing_ratio[n, :, :]+rain_mixing_ratio[n, :, :], 0.0)
             slw = slw + pres_layer / gravity * supercool_locs
 
+        pres_sfc.close()
+        pres_nat_lev.close()
+        temp.close()
+        cloud_mixing_ratio.close()
+        rain_mixing_ratio.close()
         return slw
 
     @property
@@ -791,9 +811,12 @@ class fieldData(UPPData):
                 **kwargs,
                 )
 
-        return conversions.magnitude(field1, field2)
+        mag = conversions.magnitude(field1, field2)
+        field1.close()
+        field2.close()
 
-    @lru_cache()
+        return mag
+
     def wind(self, level) -> [np.ndarray, np.ndarray]:
 
         '''

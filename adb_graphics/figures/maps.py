@@ -142,6 +142,9 @@ class Map():
                     markersize=4,
                     )
 
+        del x
+        del y
+
     def _get_basemap(self, **get_basemap_kwargs):
 
         ''' Wrapper around basemap creation '''
@@ -357,6 +360,7 @@ class DataMap():
                         if (not isnan(data_value)) and (data_value != 0.):
                             ax.annotate(f"{data_value:.{annotate_decimal}f}", \
                                         xy=(x[i], y[i]), fontsize=10)
+                        data_value.close()
 
         # Finish with the title
         self._title()
@@ -367,6 +371,8 @@ class DataMap():
             plt.show()
 
         self.add_logo(ax)
+
+        return cf
 
     def _draw_field(self, ax, field, func, **kwargs):
 
@@ -387,11 +393,20 @@ class DataMap():
         '''
 
         x, y = self._xy_mesh(field)
-
-        return func(x, y, field.values()[::],
+        vals = field.values()[::]
+        ret = func(x, y, vals,
                     ax=ax,
                     **kwargs,
                     )
+
+        del x
+        del y
+        try:
+            vals.close()
+        except AttributeError:
+            del vals
+            print(f'CLOSE ERROR: {field.short_name} {field.level}')
+        return ret
 
     def _title(self):
 
@@ -492,7 +507,6 @@ class DataMap():
                          sizes={'spacing': 0.25},
                          )
 
-    @lru_cache()
     def _xy_mesh(self, field):
 
         ''' Helper function to create mesh for various plot. '''
