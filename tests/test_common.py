@@ -33,7 +33,6 @@ def test_conversion():
     list, or int '''
 
     a = np.ones([3, 2]) * 300
-    b = list(a)
     c = a[0, 0]
 
     # Check for the right answer
@@ -69,8 +68,8 @@ def test_conversion():
 
     # Check that all functions return a np.ndarray given a collection, or single float
     for f in functions:
-        for collection in [b, c]:
-            assert isinstance(f(collection), (float, np.ndarray))
+        for collection in [a, c]:
+            assert isinstance(f(collection), type(collection))
 
 
 class MockSpecs(specs.VarSpec):
