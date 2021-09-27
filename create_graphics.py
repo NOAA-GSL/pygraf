@@ -456,7 +456,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
         )
 
     # Draw the map
-    f = dm.draw(show=True)
+    dm.draw(show=True)
 
     # Build the output path
     png_suffix = level if level != 'ua' else ''
@@ -481,18 +481,14 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
 
     fig.clear()
     # Clear the current axes.
-    plt.cla() 
+    plt.cla()
     # Clear the current figure.
-    plt.clf() 
+    plt.clf()
     # Closes all the figure windows.
-    plt.close('all')   
+    plt.close('all')
     del field
     del m
     gc.collect()
-
-    #field.values().close()
-    #for aux_field in hatch_fields + contour_fields:
-    #    aux_field.values().close()
 
 def parallel_skewt(cla, fhr, ds, site, workdir):
 

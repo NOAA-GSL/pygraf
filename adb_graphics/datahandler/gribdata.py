@@ -100,7 +100,7 @@ class UPPData(specs.VarSpec):
 
         return self._get_field(self.ncl_name(self.vspec))
 
-    def field_diff(self, values, variable2, level2, **kwargs) -> np.ndarray:
+    def field_diff(self, values, variable2, level2, **kwargs):
 
         # pylint: disable=unused-argument
 
@@ -112,7 +112,7 @@ class UPPData(specs.VarSpec):
 
         return diff
 
-    def field_mean(self, values, variable, levels, **kwargs) -> np.ndarray:
+    def field_mean(self, values, variable, levels, **kwargs):
 
         # pylint: disable=unused-argument
 
@@ -394,7 +394,7 @@ class UPPData(specs.VarSpec):
         return lev_val, lev_unit
 
     @staticmethod
-    def opposite(values, **kwargs) -> np.ndarray:
+    def opposite(values, **kwargs):
     # pylint: disable=unused-argument
 
         ''' Returns the opposite of input values  '''
@@ -462,7 +462,7 @@ class fieldData(UPPData):
         self.level = level
         self.contour_kwargs = kwargs.get('contour_kwargs', {})
 
-    def aviation_flight_rules(self, values, **kwargs) -> np.ndarray:
+    def aviation_flight_rules(self, values, **kwargs):
         # pylint: disable=unused-argument
 
         '''
@@ -524,7 +524,7 @@ class fieldData(UPPData):
         lat, lon = self.latlons()
         return [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
 
-    def fire_weather_index(self, values, **kwargs) -> np.ndarray:
+    def fire_weather_index(self, values, **kwargs):
 
         # pylint: disable=unused-argument
 
@@ -634,7 +634,7 @@ class fieldData(UPPData):
 
         return grid_info
 
-    def run_total(self, values, **kwargs) -> np.ndarray:
+    def run_total(self, values, **kwargs):
 
         ''' Sums over all the forecast lead times available. '''
 
@@ -642,7 +642,7 @@ class fieldData(UPPData):
 
         return values.sum(dim='fcst_hr')
 
-    def supercooled_liquid_water(self, values, **kwargs) -> np.ndarray:
+    def supercooled_liquid_water(self, values, **kwargs):
 
         # pylint: disable=unused-argument
 
@@ -706,7 +706,7 @@ class fieldData(UPPData):
 
         return self.vspec.get('unit', self.field.units)
 
-    def values(self, level=None, name=None, **kwargs) -> np.ndarray:
+    def values(self, level=None, name=None, **kwargs):
 
         '''
         Returns the numpy array of values at the requested level for the

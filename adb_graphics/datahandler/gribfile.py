@@ -4,8 +4,6 @@
 Classes that load grib files.
 '''
 
-from functools import lru_cache
-
 import xarray as xr
 
 class GribFile():
