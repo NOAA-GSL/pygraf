@@ -369,16 +369,6 @@ class VarSpec(abc.ABC):
 
     @property
     @lru_cache()
-    def soilt_colors(self) -> np.ndarray:
-
-        ''' Default color map for Soil Temperature '''
-
-        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
-                          ([15, 20, 25, 50, 70, 80, 83, 88, 110])
-        return ncar
-
-    @property
-    @lru_cache()
     def soilw_colors(self) -> np.ndarray:
 
         ''' Default color map for Soil Moisture '''
