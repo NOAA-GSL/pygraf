@@ -179,7 +179,7 @@ class SkewTDiagram(gribdata.profileData):
                                          )
                           )
 
-        plt.legend(handles=handles, loc=[4.2, -0.8])
+        hydro_subplot.legend(handles=handles, loc=[0.05, 0.65])
 
         contents = '\n'.join(lines)
         # Draw the vertically integrated amounts box
