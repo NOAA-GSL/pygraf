@@ -29,6 +29,7 @@ import adb_graphics.utils as utils
 
 
 AIRPORTS = 'static/Airports_locs.txt'
+print(f'speed test for GitHub Actions. test  #1')
 
 def create_skewt(cla, fhr, grib_path, workdir):
 
