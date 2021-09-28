@@ -1086,11 +1086,11 @@ soilm: # Soil Moisture Availability
     unit: "%"
 soilt: # Soil Temperature
   0cm: &soilt_levs
-    clevs: !!python/object/apply:numpy.arange [240, 311, 10]
-    cmap: gist_ncar
-    colors: soilt_colors
+    clevs: !!python/object/apply:numpy.arange [240, 331, 2]
+    cmap: jet
+    colors: tsfc_colors
     ncl_name: TSOIL_P0_2L106_{grid}
-    ticks: 0
+    ticks: 4
     title: Soil Temperature at Sfc
     unit: K
   1cm:
