@@ -7,7 +7,6 @@ colors from a color map.
 
 import abc
 from itertools import chain
-from functools import lru_cache
 from matplotlib import cm
 from matplotlib import colors as mpcolors
 import numpy as np
@@ -44,7 +43,6 @@ class VarSpec(abc.ABC):
         return colors
 
     @property
-    @lru_cache()
     def cin_colors(self) -> np.ndarray:
 
         ''' Default color map for Convective Inhibition '''
@@ -69,7 +67,6 @@ class VarSpec(abc.ABC):
         from a config file like default_specs.yml. '''
 
     @property
-    @lru_cache()
     def ceil_colors(self) -> np.ndarray:
 
         ''' Default color map for Ceiling '''
@@ -80,7 +77,6 @@ class VarSpec(abc.ABC):
         return np.concatenate((grays, ncar, grays))
 
     @property
-    @lru_cache()
     def cldcov_colors(self) -> np.ndarray:
 
         ''' Default color map for Cloud Cover '''
@@ -91,7 +87,6 @@ class VarSpec(abc.ABC):
         return np.concatenate((grays, ncar))
 
     @property
-    @lru_cache()
     def cref_colors(self) -> np.ndarray:
 
         ''' Default color map for Reflectivity '''
@@ -103,7 +98,6 @@ class VarSpec(abc.ABC):
         return np.concatenate((grays, nws, white))
 
     @property
-    @lru_cache()
     def dewp_colors(self) -> np.ndarray:
 
         ''' Default color map for Dew point temperature '''
@@ -113,7 +107,6 @@ class VarSpec(abc.ABC):
         return ctable
 
     @property
-    @lru_cache()
     def fire_power_colors(self) -> np.ndarray:
 
         ''' Default color map for fire power plot. '''
@@ -122,7 +115,6 @@ class VarSpec(abc.ABC):
         green_orange = cm.get_cmap('RdYlGn_r', 10)([1, 7, 8, 9])
         return np.concatenate((blues, green_orange))
 
-    @lru_cache()
     def flru_colors(self) -> np.ndarray:
 
         ''' Default color map for Ceiling '''
@@ -132,7 +124,6 @@ class VarSpec(abc.ABC):
         return ctable
 
     @property
-    @lru_cache()
     def frzn_colors(self) -> np.ndarray:
 
         ''' Default color map for Frozen Precip % '''
@@ -143,7 +134,6 @@ class VarSpec(abc.ABC):
         return np.concatenate((grays, ncar))
 
     @property
-    @lru_cache()
     def goes_colors(self) -> np.ndarray:
 
         ''' Default color map for simulated GOES IR satellite '''
@@ -154,7 +144,6 @@ class VarSpec(abc.ABC):
         return np.concatenate((grays[-1:], grays, ctable2, grays[1:]))
 
     @property
-    @lru_cache()
     def graupel_colors(self) -> np.ndarray:
 
         ''' Default color map for Max Vertically Integrated Graupel '''
@@ -165,7 +154,6 @@ class VarSpec(abc.ABC):
         return np.concatenate((grays, ncar))
 
     @property
-    @lru_cache()
     def hail_colors(self) -> np.ndarray:
 
         ''' Default color map for Hail diameter '''
@@ -176,7 +164,6 @@ class VarSpec(abc.ABC):
         return np.concatenate((grays, ncar))
 
     @property
-    @lru_cache()
     def heat_flux_colors(self) -> np.ndarray:
 
         ''' Default color map for Latent/Sensible Heat Flux '''
@@ -187,7 +174,6 @@ class VarSpec(abc.ABC):
         return np.concatenate((grays, ctable))
 
     @property
-    @lru_cache()
     def lcl_colors(self) -> np.ndarray:
 
         ''' Default color map for Lifted Condensation Level '''
@@ -197,7 +183,6 @@ class VarSpec(abc.ABC):
         return ctable
 
     @property
-    @lru_cache()
     def lifted_index_colors(self) -> np.ndarray:
 
         ''' Default color map for Lifted Index '''
@@ -209,7 +194,6 @@ class VarSpec(abc.ABC):
         return ctable
 
     @property
-    @lru_cache()
     def mdn_colors(self) -> np.ndarray:
 
         ''' Default color map for Max Downdraft '''
@@ -219,7 +203,6 @@ class VarSpec(abc.ABC):
         return np.concatenate((others, grays))
 
     @property
-    @lru_cache()
     def mean_vvel_colors(self) -> np.ndarray:
 
         ''' Default color map for Mean Vertical Velocity '''
@@ -229,7 +212,6 @@ class VarSpec(abc.ABC):
         return ctable
 
     @property
-    @lru_cache()
     def mup_colors(self) -> np.ndarray:
 
         ''' Default color map for Max Updraft '''
@@ -239,7 +221,6 @@ class VarSpec(abc.ABC):
         return np.concatenate((grays, others))
 
     @property
-    @lru_cache()
     def pbl_colors(self) -> np.ndarray:
 
         ''' Default color map for PBL Height '''
@@ -248,7 +229,6 @@ class VarSpec(abc.ABC):
                           (range(15, 60, 3))
 
     @property
-    @lru_cache()
     def pcp_colors(self) -> np.ndarray:
 
         ''' Default color map for Hourly Precipitation '''
@@ -259,7 +239,6 @@ class VarSpec(abc.ABC):
         return np.concatenate((grays, ncar))
 
     @property
-    @lru_cache()
     def ps_colors(self) -> np.ndarray:
 
         ''' Default color map for Surface Pressure '''
@@ -270,7 +249,6 @@ class VarSpec(abc.ABC):
         return np.concatenate((grays, ncar))
 
     @property
-    @lru_cache()
     def pw_colors(self) -> np.ndarray:
 
         ''' Default color map for Precipitable Water '''
@@ -283,7 +261,6 @@ class VarSpec(abc.ABC):
         return np.concatenate((grays, ncar, bupu, cool))
 
     @property
-    @lru_cache()
     def radiation_colors(self) -> np.ndarray:
 
         ''' Default color map for Longwave Radiation '''
@@ -294,7 +271,6 @@ class VarSpec(abc.ABC):
         return np.concatenate((grays, ncar))
 
     @property
-    @lru_cache()
     def radiation_bw_colors(self) -> np.ndarray:
 
         ''' Default grayscale map for Outgoing Shortwave Radiation '''
@@ -303,7 +279,6 @@ class VarSpec(abc.ABC):
                           (range(30, 110))
 
     @property
-    @lru_cache()
     def radiation_mix_colors(self) -> np.ndarray:
 
         ''' Default color map for Longwave Radiation '''
@@ -314,7 +289,6 @@ class VarSpec(abc.ABC):
         return np.concatenate((ncar, grays))
 
     @property
-    @lru_cache()
     def rainbow12_colors(self) -> np.ndarray:
 
         ''' Default color map for ACPCP, ACSNOD, HLCY, RH, and SNOD '''
@@ -325,7 +299,6 @@ class VarSpec(abc.ABC):
         return np.concatenate((grays, ncar))
 
     @property
-    @lru_cache()
     def shear_colors(self) -> np.ndarray:
 
         ''' Default color map for Vertical Shear '''
@@ -336,7 +309,6 @@ class VarSpec(abc.ABC):
         return ctable
 
     @property
-    @lru_cache()
     def smoke_colors(self) -> np.ndarray:
 
         ''' Default color map for smoke plots. '''
@@ -348,7 +320,6 @@ class VarSpec(abc.ABC):
 
 
     @property
-    @lru_cache()
     def snow_colors(self) -> np.ndarray:
 
         ''' Default color map for Snow fields '''
@@ -359,7 +330,6 @@ class VarSpec(abc.ABC):
         return np.concatenate((grays, ncar))
 
     @property
-    @lru_cache()
     def soilm_colors(self) -> np.ndarray:
 
         ''' Default color map for Soil Moisture Availability '''
@@ -368,7 +338,6 @@ class VarSpec(abc.ABC):
         return ncar
 
     @property
-    @lru_cache()
     def soilw_colors(self) -> np.ndarray:
 
         ''' Default color map for Soil Moisture '''
@@ -378,7 +347,6 @@ class VarSpec(abc.ABC):
         return ncar
 
     @property
-    @lru_cache()
     def t_colors(self) -> np.ndarray:
 
         ''' Default color map for Upper-Air Temperature '''
@@ -387,7 +355,6 @@ class VarSpec(abc.ABC):
         return cm.get_cmap(self.vspec.get('cmap', 'jet'), ncolors)(range(ncolors))
 
     @property
-    @lru_cache()
     def tsfc_colors(self) -> np.ndarray:
 
         ''' Default color map for Surface Temperature '''  # WeatherBell-inspired scheme
@@ -403,7 +370,6 @@ class VarSpec(abc.ABC):
         return np.concatenate((temp1, temp2, temp3, temp4, temp5, temp6, temp7))
 
     @property
-    @lru_cache()
     def terrain_colors(self) -> np.ndarray:
 
         ''' Default color map for Terrain '''
@@ -413,7 +379,6 @@ class VarSpec(abc.ABC):
         return ctable
 
     @property
-    @lru_cache()
     def vis_colors(self) -> np.ndarray:
 
         ''' Default color map for Visibility
@@ -434,7 +399,6 @@ class VarSpec(abc.ABC):
         return np.concatenate((lifr, ifr, mvfr, vfr1, vfr2))
 
     @property
-    @lru_cache()
     def vvel_colors(self) -> np.ndarray:
 
         ''' Default color map for Vetical Velocity '''
@@ -445,7 +409,6 @@ class VarSpec(abc.ABC):
         return np.concatenate((ncar1, grays, ncar2))
 
     @property
-    @lru_cache()
     def vort_colors(self) -> np.ndarray:
 
         ''' Default color map for Absolute Vorticity '''
@@ -456,7 +419,6 @@ class VarSpec(abc.ABC):
         return np.concatenate((grays, ncar))
 
     @property
-    @lru_cache()
     def wind_colors(self) -> np.ndarray:
 
         ''' Default color map for Wind Speed '''
@@ -466,7 +428,6 @@ class VarSpec(abc.ABC):
         return np.concatenate((low, high))
 
     @property
-    @lru_cache()
     def wind_colors_high(self) -> np.ndarray:
 
         ''' Default color map for High Wind Speed '''

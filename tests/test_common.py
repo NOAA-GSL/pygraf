@@ -33,7 +33,6 @@ def test_conversion():
     list, or int '''
 
     a = np.ones([3, 2]) * 300
-    b = list(a)
     c = a[0, 0]
 
     # Check for the right answer
@@ -47,6 +46,7 @@ def test_conversion():
     assert np.array_equal(conversions.ms_to_kt(a), a * 1.9438)
     assert np.array_equal(conversions.pa_to_hpa(a), a / 100)
     assert np.array_equal(conversions.percent(a), a * 100)
+    assert np.array_equal(conversions.to_micro(a), a * 1E6)
     assert np.array_equal(conversions.vvel_scale(a), a * -10)
     assert np.array_equal(conversions.vort_scale(a), a / 1E-05)
     assert np.array_equal(conversions.weasd_to_1hsnw(a), a * 10)
@@ -62,6 +62,7 @@ def test_conversion():
         conversions.ms_to_kt,
         conversions.pa_to_hpa,
         conversions.percent,
+        conversions.to_micro,
         conversions.vvel_scale,
         conversions.vort_scale,
         conversions.weasd_to_1hsnw,
@@ -69,8 +70,8 @@ def test_conversion():
 
     # Check that all functions return a np.ndarray given a collection, or single float
     for f in functions:
-        for collection in [b, c]:
-            assert isinstance(f(collection), (float, np.ndarray))
+        for collection in [a, c]:
+            assert isinstance(f(collection), type(collection))
 
 
 class MockSpecs(specs.VarSpec):

@@ -10,6 +10,8 @@ mpl.use('Agg')
 
 import argparse
 import copy
+import gc
+
 import glob
 from multiprocessing import Pool, Process
 import os
@@ -433,13 +435,13 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
     else:
         inches = 10
 
-    _, ax = plt.subplots(1, 1, figsize=(inches, inches))
+    fig, ax = plt.subplots(1, 1, figsize=(inches, inches))
 
     # Generate a map object
     m = maps.Map(
         airport_fn=AIRPORTS,
         ax=ax,
-        grid_info=field.grid_info,
+        grid_info=field.grid_info(),
         model=model,
         tile=tile,
         )
@@ -476,7 +478,17 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
         pil_kwargs={'optimize': True},
         )
 
-    plt.close()
+
+    fig.clear()
+    # Clear the current axes.
+    plt.cla()
+    # Clear the current figure.
+    plt.clf()
+    # Closes all the figure windows.
+    plt.close('all')
+    del field
+    del m
+    gc.collect()
 
 def parallel_skewt(cla, fhr, ds, site, workdir):
 
@@ -568,6 +580,7 @@ def graphics_driver(cla):
                 fcst_hours.remove(fhr)
             else:
                 # Try next forecast hour
+                print(f'Cannot find {grib_path}')
                 continue
 
             # Create the working directory

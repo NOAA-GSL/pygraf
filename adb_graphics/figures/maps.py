@@ -8,8 +8,6 @@ UPPData object) and creates a standard plot with shaded fields, contours, wind
 barbs, and descriptive annotation.
 '''
 
-from functools import lru_cache
-
 from math import isnan
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
@@ -141,6 +139,9 @@ class Map():
                     markeredgewidth=0.5,
                     markersize=4,
                     )
+
+        del x
+        del y
 
     def _get_basemap(self, **get_basemap_kwargs):
 
@@ -281,60 +282,11 @@ class DataMap():
 
         # Contour secondary fields, if requested
         if self.contour_fields:
-            for contour_field in self.contour_fields:
-                levels = contour_field.contour_kwargs.pop('levels',
-                                                          contour_field.clevs)
-
-                cc = self._draw_field(ax=ax,
-                                      field=contour_field,
-                                      func=self.map.m.contour,
-                                      levels=levels,
-                                      **contour_field.contour_kwargs,
-                                      )
-                if contour_field.short_name not in not_labeled:
-                    try:
-                        clab = plt.clabel(cc, levels[::4],
-                                          colors='w',
-                                          fmt='%1.0f',
-                                          fontsize=10,
-                                          inline=1,
-                                          )
-                        # Set the background color for the line labels to black
-                        _ = [txt.set_bbox(dict(color='k')) for txt in clab]
-
-                    except ValueError:
-                        print(f'Cannot add contour labels to map for {self.field.short_name} \
-                                {self.field.level}')
+            self._draw_contours(ax, not_labeled)
 
         # Add hatched fields, if requested
-        # Levels should be included in the settings dict here since they don't
-        # correspond to a full field of contours.
         if self.hatch_fields:
-            handles = []
-            for field in self.hatch_fields:
-                colors = field.contour_kwargs.get('colors', 'k')
-                hatches = field.contour_kwargs.get('hatches', '----')
-                labels = field.contour_kwargs.get('labels', 'XXXX')
-                linewidths = field.contour_kwargs.get('linewidths', 0.1)
-                handles.append(mpatches.Patch(edgecolor=colors[-1], facecolor='lightgrey', \
-                               label=labels, hatch=hatches[-1]))
-
-                cf = self._draw_field(ax=ax,
-                                      extend='both',
-                                      field=field,
-                                      func=self.map.m.contourf,
-                                      **field.contour_kwargs,
-                                      )
-
-                # For each level, we set the color of its hatch
-                for collection in cf.collections:
-                    collection.set_edgecolor(colors)
-                    collection.set_facecolor(['None'])
-                    collection.set_linewidth(linewidths)
-
-            # Create legend for precip type field
-            if self.field.short_name == 'ptyp':
-                plt.legend(handles=handles, loc=[0.25, 0.03])
+            self._draw_hatches(ax)
 
         # Add wind barbs, if requested
         add_wind = self.field.vspec.get('wind', False)
@@ -344,19 +296,7 @@ class DataMap():
         # Add field values at airports
         annotate = self.field.vspec.get('annotate', False)
         if annotate:
-            annotate_decimal = self.field.vspec.get('annotate_decimal', 0)
-            lats = self.map.airports[:, 0]
-            lons = self.map.airports[:, 1]
-            x, y = self.map.m(lons, lats)
-            for i, lat in enumerate(lats):
-                if self.map.corners[1] > lat > self.map.corners[0] and \
-                   self.map.corners[3] > lons[i] > self.map.corners[2]:
-                    xgrid, ygrid = self.field.get_xypoint(lat, lons[i])
-                    if xgrid > 0 and ygrid > 0:
-                        data_value = self.field.values()[xgrid, ygrid]
-                        if (not isnan(data_value)) and (data_value != 0.):
-                            ax.annotate(f"{data_value:.{annotate_decimal}f}", \
-                                        xy=(x[i], y[i]), fontsize=10)
+            self._draw_field_values(ax)
 
         # Finish with the title
         self._title()
@@ -367,6 +307,38 @@ class DataMap():
             plt.show()
 
         self.add_logo(ax)
+
+        return cf
+
+    def _draw_contours(self, ax, not_labeled):
+
+        ''' Draw the contour fields requested. '''
+
+        for contour_field in self.contour_fields:
+            levels = contour_field.contour_kwargs.pop('levels',
+                                                      contour_field.clevs)
+
+            cc = self._draw_field(ax=ax,
+                                  field=contour_field,
+                                  func=self.map.m.contour,
+                                  levels=levels,
+                                  **contour_field.contour_kwargs,
+                                  )
+            if contour_field.short_name not in not_labeled:
+                try:
+                    clab = plt.clabel(cc, levels[::4],
+                                      colors='w',
+                                      fmt='%1.0f',
+                                      fontsize=10,
+                                      inline=1,
+                                      )
+                    # Set the background color for the line labels to black
+                    _ = [txt.set_bbox(dict(color='k')) for txt in clab]
+
+                except ValueError:
+                    print(f'Cannot add contour labels to map for {self.field.short_name} \
+                            {self.field.level}')
+
 
     def _draw_field(self, ax, field, func, **kwargs):
 
@@ -387,11 +359,71 @@ class DataMap():
         '''
 
         x, y = self._xy_mesh(field)
+        vals = field.values()[::]
+        ret = func(x, y, vals,
+                   ax=ax,
+                   **kwargs,
+                   )
 
-        return func(x, y, field.values()[::],
-                    ax=ax,
-                    **kwargs,
-                    )
+        del x
+        del y
+        try:
+            vals.close()
+        except AttributeError:
+            del vals
+            print(f'CLOSE ERROR: {field.short_name} {field.level}')
+        return ret
+
+    def _draw_field_values(self, ax):
+
+        ''' Add the text value of the field at airport locations. '''
+        annotate_decimal = self.field.vspec.get('annotate_decimal', 0)
+        lats = self.map.airports[:, 0]
+        lons = 360 + self.map.airports[:, 1]
+        x, y = self.map.m(lons, lats)
+        data_values = self.field.values()
+        for i, lat in enumerate(lats):
+            if self.map.corners[1] > lat > self.map.corners[0] and \
+               self.map.corners[3] > lons[i] > self.map.corners[2]:
+                xgrid, ygrid = self.field.get_xypoint(lat, lons[i])
+                data_value = data_values[xgrid, ygrid]
+                if xgrid > 0 and ygrid > 0:
+                    if (not isnan(data_value)) and (data_value != 0.):
+                        ax.annotate(f"{data_value:.{annotate_decimal}f}", \
+                                    xy=(x[i], y[i]), fontsize=10)
+        data_values.close()
+
+    def _draw_hatches(self, ax):
+
+        ''' Draw the hatched regions requested. '''
+
+        # Levels should be included in the settings dict here since they don't
+        # correspond to a full field of contours.
+        handles = []
+        for field in self.hatch_fields:
+            colors = field.contour_kwargs.get('colors', 'k')
+            hatches = field.contour_kwargs.get('hatches', '----')
+            labels = field.contour_kwargs.get('labels', 'XXXX')
+            linewidths = field.contour_kwargs.get('linewidths', 0.1)
+            handles.append(mpatches.Patch(edgecolor=colors[-1], facecolor='lightgrey', \
+                           label=labels, hatch=hatches[-1]))
+
+            cf = self._draw_field(ax=ax,
+                                  extend='both',
+                                  field=field,
+                                  func=self.map.m.contourf,
+                                  **field.contour_kwargs,
+                                  )
+
+            # For each level, we set the color of its hatch
+            for collection in cf.collections:
+                collection.set_edgecolor(colors)
+                collection.set_facecolor(['None'])
+                collection.set_linewidth(linewidths)
+
+        # Create legend for precip type field
+        if self.field.short_name == 'ptyp':
+            plt.legend(handles=handles, loc=[0.25, 0.03])
 
     def _title(self):
 
@@ -492,7 +524,6 @@ class DataMap():
                          sizes={'spacing': 0.25},
                          )
 
-    @lru_cache()
     def _xy_mesh(self, field):
 
         ''' Helper function to create mesh for various plot. '''

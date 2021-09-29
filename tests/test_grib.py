@@ -5,10 +5,12 @@ import datetime
 
 import numpy as np
 from matplotlib import colors as mcolors
-import xarray
+import xarray as xr
 
 import adb_graphics.datahandler.gribdata as gribdata
 import adb_graphics.datahandler.gribfile as gribfile
+
+DATAARRAY = xr.core.dataarray.DataArray
 
 def test_UPPData(natfile, prsfile):
 
@@ -33,7 +35,7 @@ def test_UPPData(natfile, prsfile):
         assert isinstance(upp.clevs, np.ndarray)
         assert isinstance(upp.date_to_str(datetime.datetime.now()), str)
         assert isinstance(upp.fhr, str)
-        assert isinstance(upp.field, xarray.DataArray)
+        assert isinstance(upp.field, DATAARRAY)
         assert isinstance(upp.latlons(), list)
         assert isinstance(upp.lev_descriptor, str)
         assert isinstance(upp.ncl_name(upp.vspec), str)
@@ -57,21 +59,21 @@ def test_fieldData(prsfile):
     assert isinstance(field.corners, list)
     assert isinstance(field.ticks, int)
     assert isinstance(field.units, str)
-    assert isinstance(field.values(), np.ndarray)
-    assert isinstance(field.aviation_flight_rules(field.values()), np.ndarray)
+    assert isinstance(field.values(), DATAARRAY)
+    assert isinstance(field.aviation_flight_rules(field.values()), DATAARRAY)
     assert isinstance(field.wind(True), list)
     assert len(field.corners) == 4
     assert len(field.wind(True)) == 2
     assert len(field.wind('850mb')) == 2
     for component in field.wind(True):
-        assert isinstance(component, np.ndarray)
+        assert isinstance(component, DATAARRAY)
 
     # Test retrieving other values
     assert np.array_equal(field.values(), field.values(name='temp', level='500mb'))
 
     # Return zeros by subtracting same field
     diff = field.field_diff(field.values(), variable2='temp', level2='500mb')
-    assert isinstance(diff, np.ndarray)
+    assert isinstance(diff, DATAARRAY)
     assert not np.any(diff)
 
     # Test transform
@@ -102,7 +104,7 @@ def test_profileData(natfile):
                                    )
 
     assert isinstance(profile.get_xypoint(40., -100.), tuple)
-    assert isinstance(profile.values(), xarray.DataArray)
+    assert isinstance(profile.values(), DATAARRAY)
 
     # The values should return a single number (0) or a 1D array (1)
     assert len(np.shape((profile.values(level='best', name='li')))) == 0
