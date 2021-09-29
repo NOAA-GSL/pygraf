@@ -1,0 +1,78 @@
+hourly:
+  model: global
+  variables:
+    1ref:
+      - 1000m
+    acpcp:
+      - sfc
+    acsnod:
+      - sfc
+    acsnw:
+      - sfc
+    cape:
+      - mu
+      - mul
+      - mx90mb
+      - sfc
+    ceil:
+      - ua
+    cin:
+      - sfc
+    cloudcover:
+      - high
+      - low
+      - mid
+      - total
+    cpofp:
+      - sfc
+    cref:
+      - sfc
+    dewp:
+      - 2m
+    gust:
+      - 10m
+    hlcy:
+      - sr01
+      - sr03
+    hpbl:
+      - sfc
+    pwtr:
+      - sfc
+    rh:
+      - 2m
+      - 850mb
+    snod:
+      - sfc
+    soilm:
+      - sfc
+    soilt: &soilt_levs
+      - 10cm
+      - 1m
+    soilw: *soilt_levs
+    solar:
+      - sfc
+    ssrun:
+      - sfc
+    temp:
+      - 2ds
+      - 2m
+      - 500mb
+      - 700mb
+      - 850mb
+      - 925mb
+      - sfc
+    totp6h:
+      - sfc
+    vis:
+      - sfc
+    vort:
+      - 500mb
+    vvel:
+      - 700mb
+    weasd:
+      - sfc
+    wspeed:
+      - 10m
+      - 250mb
+      - 80m
+      - 850mb

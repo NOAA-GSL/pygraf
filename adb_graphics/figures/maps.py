@@ -16,6 +16,7 @@ import matplotlib.image as mpimg
 import matplotlib.offsetbox as mpob
 import matplotlib.patches as mpatches
 from mpl_toolkits.basemap import Basemap
+from mpl_toolkits.basemap import shiftgrid
 import numpy as np
 
 import adb_graphics.utils as utils
@@ -30,15 +31,20 @@ TILE_DEFS = {
     'SC': [24, 41, -107, -86],
     'SE': [22, 37, -93.5, -72],
     'SW': [24.5, 45, -122, -103],
+    'Africa': [-40, 40, -40, 60],
     'AKZoom': [52, 73, -162, -132],
     'AKRange': [59.722, 65.022, -153.583, -144.289],
     'Anchorage': [58.59, 62.776, -152.749, -146.218],
     'ATL': [31.2, 35.8, -87.4, -79.8],
+    'Beijing': [25, 53, 102, 133],
     'CA-NV': [30, 45, -124, -114],
+    'Cambodia': [0, 24, 90, 118],
     'CentralCA': [34.5, 40.5, -124, -118],
     'CHI-DET': [39, 44, -92, -83],
     'DCArea': [36.7, 40, -81, -72],
     'EastCO': [36.5, 41.5, -108, -101.8],
+    'EPacific': [0, 60, 180, 300],
+    'Europe': [15, 75, -30, 75],
     'Florida': [19.2305, 29.521, -86.1119, -73.8189],
     'GreatLakes': [37, 50, -96, -70],
     'HI': [16.6, 24.6, -157.6, -157.5],
@@ -48,7 +54,9 @@ TILE_DEFS = {
     'SEA-POR': [43, 50, -125, -119],
     'SouthCA': [31, 37, -120, -114],
     'SouthFL': [24, 28.5, -84, -77],
+    'Taiwan': [19, 28, 116, 126],
     'VortexSE': [30, 37, -92.5, -82],
+    'WPacific': [-40, 50, 90, 240],
 }
 
 
@@ -72,6 +80,7 @@ class Map():
                         right(ur) corners:
                              ll_lat, ur_lat, ll_lon, ur_lon
           model         model designation used to trigger higher resolution maps if needed
+                        also used to turn off plotting of airports on global maps
           tile          a string corresponding to a pre-defined tile in the
                         TILE_DEFS dictionary
     '''
@@ -124,7 +133,8 @@ class Map():
         ''' Draw a map with political boundaries and airports only. '''
 
         self.boundaries()
-        self.draw_airports()
+        if self.model not in ['global']:
+            self.draw_airports()
 
     def draw_airports(self):
 
@@ -223,6 +233,7 @@ class DataMap():
             (0, 0),
             box_alignment=(-0.2, -0.2),
             frameon=False,
+            xycoords='axes points',
             )
 
         ax.add_artist(ab)
@@ -279,6 +290,8 @@ class DataMap():
         if self.hatch_fields:
             not_labeled.extend([h.short_name for h in self.hatch_fields])
 
+        if self.map.model in ['global'] and self.map.tile in ['full']:
+            self.contour_fields = False
         # Contour secondary fields, if requested
         if self.contour_fields:
             for contour_field in self.contour_fields:
@@ -388,7 +401,18 @@ class DataMap():
 
         x, y = self._xy_mesh(field)
 
-        return func(x, y, field.values()[::],
+        #vals = field.values()[::]
+        vals = field.values()
+
+        # For global lat-lon models, make 2D arrays for x and y
+        # Shift the map and data if needed
+        if self.map.model in ['global']:
+            tile = self.map.tile
+            if tile in ['Africa', 'Europe']:
+                vals, x = shiftgrid(180., vals, x, start=False)
+            y, x = np.meshgrid(y, x, sparse=False, indexing='ij')
+
+        return func(x, y, vals,
                     ax=ax,
                     **kwargs,
                     )
@@ -469,6 +493,22 @@ class DataMap():
             else:
                 stride = 30
                 length = 5
+        elif self.map.m.projection == 'cyl':
+            if tile == 'full':
+                stride = 20
+                length = 4
+            elif tile == 'Africa':
+                stride = 7
+                length = 5
+            elif tile in ['Beijing', 'Cambodia']:
+                stride = 3
+                length = 5
+            elif tile == 'Taiwan':
+                stride = 1
+                length = 5
+            else:
+                stride = 10
+                length = 5
         elif tile == 'HI':
             stride = 1
             length = 4
@@ -482,8 +522,18 @@ class DataMap():
         mask = np.ones_like(u)
         mask[::stride, ::stride] = 0
 
-        mu, mv = [np.ma.masked_array(c, mask=mask) for c in [u, v]]
         x, y = self._xy_mesh(self.field)
+
+        # For global lat-lon models, make 2D arrays for x and y
+        # Shift the map and data if needed
+        if self.map.m.projection == 'cyl':
+            if tile in ['Africa', 'Europe']:
+                savex = x
+                u, x = shiftgrid(180., u, x, start=False)
+                v, savex = shiftgrid(180., v, savex, start=False)
+            y, x = np.meshgrid(y, x, sparse=False, indexing='ij')
+        mu, mv = [np.ma.masked_array(c, mask=mask) for c in [u, v]]
+
         self.map.m.barbs(x, y, mu, mv,
                          barbcolor='k',
                          flagcolor='k',

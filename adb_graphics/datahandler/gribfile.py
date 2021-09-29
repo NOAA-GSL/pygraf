@@ -69,7 +69,7 @@ class GribFiles():
         self.contents = self._load(filenames)
 
     @staticmethod
-    def free_fcst_names(ds, fcst_type):
+    def free_fcst_names(self, ds, fcst_type):
 
         ''' Given an opened dataset, return a dict of original variable names
         (key) and the desired name (value) '''
@@ -94,7 +94,7 @@ class GribFiles():
                     ]
                 needs_renaming = var.split('_')[0] not in odd_variables
                 if suffix in special_suffixes and needs_renaming:
-                    new_suffix = f'{suffix}1h'
+                    new_suffix = f'{suffix}1h' if self.model not in ['global'] else f'{suffix}6h'
                     ret[var] = var.replace(suffix, new_suffix)
             else:
                 # Only rename these variables at late hours
@@ -107,8 +107,12 @@ class GribFiles():
                     'WEASD',
                     ]
                 needs_renaming = var.split('_')[0] in odd_variables
-                contains_suffix = [suf for suf in special_suffixes if suf in
-                                   suffix and suffix != f'{suf}1h']
+                if self.model in ['global']:
+                    contains_suffix = [suf for suf in special_suffixes if suf in
+                                       suffix and suffix != f'{suf}6h']
+                else:
+                    contains_suffix = [suf for suf in special_suffixes if suf in
+                                       suffix and suffix != f'{suf}1h']
                 if contains_suffix and needs_renaming:
                     ret[var] = var.replace(suffix, contains_suffix[0])
 
@@ -156,7 +160,7 @@ class GribFiles():
                     **self.open_kwargs,
                     )
 
-                renaming = self.free_fcst_names(dataset, fcst_type)
+                renaming = self.free_fcst_names(self, dataset, fcst_type)
                 if renaming and self.model != 'hrrre':
                     print(f'RENAMING VARIABLES:')
                     for old_name, new_name in renaming.items():

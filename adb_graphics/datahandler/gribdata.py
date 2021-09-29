@@ -512,7 +512,10 @@ class fieldData(UPPData):
         '''
 
         lat, lon = self.latlons()
-        return [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
+        if self.model == 'global':
+            return [lat[-1], lat[0], lon[0], lon[-1]]
+        else:
+            return [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
 
     def fire_weather_index(self, values, **kwargs) -> np.ndarray:
 
@@ -565,17 +568,18 @@ class fieldData(UPPData):
         ''' Returns a dict that includes the grid info for the full grid. '''
 
         # Keys are grib names, values are Basemap argument names
-        ncl_to_basemap = dict(
-            CenterLon='lon_0',
-            CenterLat='lat_0',
-            Latin2='lat_1',
-            Latin1='lat_2',
-            Lov='lon_0',
-            La1='lat_0',
-            La2='lat_2',
-            Lo1='lon_1',
-            Lo2='lon_2',
-            )
+        if self.model not in ['global']:
+            ncl_to_basemap = dict(
+                CenterLon='lon_0',
+                CenterLat='lat_0',
+                Latin2='lat_1',
+                Latin1='lat_2',
+                Lov='lon_0',
+                La1='lat_0',
+                La2='lat_2',
+                Lo1='lon_1',
+                Lo2='lon_2',
+                )
 
         # Last coordinate listed should be latitude or longitude
         lat_var = [var for var in self.field.coords if 'lat' in var][0]
@@ -594,6 +598,9 @@ class fieldData(UPPData):
             grid_info['projection'] = 'stere'
             grid_info['lat_0'] = 90
             grid_info['lat_ts'] = 90
+        elif self.grid_suffix == 'GLL0':
+            attrs = []
+            grid_info['projection'] = 'cyl'
         else:
             attrs = []
             grid_info['projection'] = 'rotpole'
