@@ -542,7 +542,7 @@ class fieldData(UPPData):
         dewpt = self.values(name='dewp', level='2m', do_transform=False)
         weasd = self.values(name='weasd', level='sfc', do_transform=False)
         gust = self.values(name='gust', level='10m', do_transform=False)
-        soilm = self.values(name='soilm', level='sfc', do_transform=False)
+        soilw = self.values(name='soilw', level='0cm', do_transform=False)
 
         # A few derived fields
         dewpt_depression = temp - dewpt
@@ -551,7 +551,7 @@ class fieldData(UPPData):
         snowc = (25.0 - weasd) / 25.0
         snowc = np.where(snowc > 0.0, snowc, 0.0)
 
-        mois = 0.01 * (100.0 - soilm)
+        mois = 1.0 - soilw
 
         # Set urban (13), snow/ice (15), barren (16), and water (17) to 0.
         for vegtype in [13, 15, 16, 17]:
@@ -571,7 +571,7 @@ class fieldData(UPPData):
         dewpt.close()
         weasd.close()
         gust.close()
-        soilm.close()
+        soilw.close()
 
         return fwi
 
