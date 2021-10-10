@@ -29,7 +29,7 @@ jobs:
           key:
             ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment.yml') }}
       - name: Setup conda environment
-        uses: conda-incubator/setup-miniconda@v2
+        uses: conda-incubator/setup-miniconda@v2.1.1
         with:
           activate-environment: pygraf
           auto-update-conda: true
