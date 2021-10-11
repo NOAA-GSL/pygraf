@@ -5,11 +5,11 @@ channels:
 dependencies:
   - python
   - basemap
-  - basemap-data-hires
-  - pynio
+  - basemap-data-hires=1.2.1
+  - pynio=1.5.5
   - matplotlib
-  - metpy
+  - metpy=0.12.1
   - pylint
   - pytest
-  - pyyaml
-  - xarray
+  - pyyaml=5.3.1
+  - xarray=0.15.1
