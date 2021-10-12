@@ -10,6 +10,8 @@ mpl.use('Agg')
 
 import argparse
 import copy
+import gc
+
 import glob
 from multiprocessing import Pool, Process
 import os
@@ -230,6 +232,13 @@ def parse_args():
 
     # Short args
     parser.add_argument(
+        '-a',
+        dest='data_age',
+        default=3,
+        help='Age in minutes required for data files to be complete. Default = 3',
+        type=int,
+        )
+    parser.add_argument(
         '-d',
         dest='data_root',
         help='Cycle-independant data directory location.',
@@ -274,6 +283,13 @@ def parse_args():
         help='Start time in YYYYMMDDHH format',
         required=True,
         type=utils.to_datetime,
+        )
+    parser.add_argument(
+        '-w',
+        dest='wait_time',
+        default=10,
+        help='Time in minutes to wait on data files to be available. Default = 10',
+        type=int,
         )
     parser.add_argument(
         '-z',
@@ -420,13 +436,13 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
     else:
         inches = 10
 
-    _, ax = plt.subplots(1, 1, figsize=(inches, inches))
+    fig, ax = plt.subplots(1, 1, figsize=(inches, inches))
 
     # Generate a map object
     m = maps.Map(
         airport_fn=AIRPORTS,
         ax=ax,
-        grid_info=field.grid_info,
+        grid_info=field.grid_info(),
         model=model,
         tile=tile,
         )
@@ -463,7 +479,17 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
         pil_kwargs={'optimize': True},
         )
 
-    plt.close()
+
+    fig.clear()
+    # Clear the current axes.
+    plt.cla()
+    # Clear the current figure.
+    plt.clf()
+    # Closes all the figure windows.
+    plt.close('all')
+    del field
+    del m
+    gc.collect()
 
 def parallel_skewt(cla, fhr, ds, site, workdir):
 
@@ -549,11 +575,13 @@ def graphics_driver(cla):
             grib_path = os.path.join(cla.data_root,
                                      cla.file_tmpl.format(FCST_TIME=fhr))
 
-            # UPP is most likely done writing if it hasn't written in 3 mins
-            if os.path.exists(grib_path) and utils.old_enough(3, grib_path):
+            # UPP is most likely done writing if it hasn't written in data_age
+            # mins (default is 3 to address most CONUS-sized domains)
+            if os.path.exists(grib_path) and utils.old_enough(cla.data_age, grib_path):
                 fcst_hours.remove(fhr)
             else:
                 # Try next forecast hour
+                print(f'Cannot find {grib_path}')
                 continue
 
             # Create the working directory
@@ -592,9 +620,10 @@ def graphics_driver(cla):
             # Keep track of last time we did something useful
             timer_end = time.time()
 
-        # Give up trying to process remaining forecast hours after waiting 10
-        # arbitrary mins since doing something useful.
-        if time.time() - timer_end > 600:
+        # Give up trying to process remaining forecast hours after waiting
+        # wait_time mins. This accounts for slower UPP processes. Default for
+        # most CONUS-sized domains is 10 mins.
+        if time.time() - timer_end > cla.wait_time * 60:
             print(f"Exiting with forecast hours remaining: {fcst_hours}")
             print((('-' * 80)+'\n') * 2)
             break

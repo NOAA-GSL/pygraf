@@ -11,6 +11,7 @@ from string import digits, ascii_letters
 
 from matplotlib import cm
 import numpy as np
+import xarray as xr
 
 from .. import conversions
 from .. import errors
@@ -92,7 +93,6 @@ class UPPData(specs.VarSpec):
         return date.strftime('%Y%m%d %H UTC')
 
     @property
-    @lru_cache()
     def field(self):
 
         ''' Wrapper that calls get_field method for the current variable.
@@ -100,15 +100,19 @@ class UPPData(specs.VarSpec):
 
         return self._get_field(self.ncl_name(self.vspec))
 
-    def field_diff(self, values, variable2, level2, **kwargs) -> np.ndarray:
+    def field_diff(self, values, variable2, level2, **kwargs):
 
         # pylint: disable=unused-argument
 
         ''' Subtracts the values from variable2 from self.field. '''
 
-        return values - self.values(name=variable2, level=level2)
+        value2 = self.values(name=variable2, level=level2)
+        diff = values - value2
+        value2.close()
 
-    def field_mean(self, values, variable, levels, **kwargs) -> np.ndarray:
+        return diff
+
+    def field_mean(self, values, variable, levels, **kwargs):
 
         # pylint: disable=unused-argument
 
@@ -116,7 +120,9 @@ class UPPData(specs.VarSpec):
 
         fsum = np.zeros_like(values)
         for level in levels:
-            fsum = fsum + self.values(name=variable, level=level)
+            val_lev = self.values(name=variable, level=level)
+            fsum = fsum + val_lev
+            val_lev.close()
 
         return fsum / len(levels)
 
@@ -259,6 +265,10 @@ class UPPData(specs.VarSpec):
         '''
 
         lats, lons = self.latlons()
+        adjust = 360 if np.any(lons < 0) else 0
+        lons = lons + adjust
+        #if self.model in ['global']:
+        #    lats, lons = np.meshgrid(lats, lons, sparse=False, indexing='ij')
         max_x, max_y = np.shape(lats)
 
         # Numpy magic to grab the X, Y grid point nearest the profile site
@@ -386,7 +396,7 @@ class UPPData(specs.VarSpec):
         return lev_val, lev_unit
 
     @staticmethod
-    def opposite(values, **kwargs) -> np.ndarray:
+    def opposite(values, **kwargs):
     # pylint: disable=unused-argument
 
         ''' Returns the opposite of input values  '''
@@ -454,7 +464,7 @@ class fieldData(UPPData):
         self.level = level
         self.contour_kwargs = kwargs.get('contour_kwargs', {})
 
-    def aviation_flight_rules(self, values, **kwargs) -> np.ndarray:
+    def aviation_flight_rules(self, values, **kwargs):
         # pylint: disable=unused-argument
 
         '''
@@ -471,7 +481,9 @@ class fieldData(UPPData):
         flru = np.where((ceil > 0.0) & (ceil < 0.5), 3.01, flru)
         flru = np.where((vis < 1.), 3.01, flru)
 
-        return flru
+        vis.close()
+
+        return xr.DataArray(flru)
 
     @property
     def cmap(self):
@@ -512,12 +524,15 @@ class fieldData(UPPData):
         '''
 
         lat, lon = self.latlons()
-        if self.model == 'global':
-            return [lat[-1], lat[0], lon[0], lon[-1]]
-        else:
-            return [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
+        ret = [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
+        #if self.model == 'global':
+        #    ret = [lat[-1], lat[0], lon[0], lon[-1]]
+        #else:
+        #    ret = [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
 
-    def fire_weather_index(self, values, **kwargs) -> np.ndarray:
+        return ret
+
+    def fire_weather_index(self, values, **kwargs):
 
         # pylint: disable=unused-argument
 
@@ -531,11 +546,11 @@ class fieldData(UPPData):
 
         # Gather fields from the input
         veg = values # Chose this value as the main one in the default_specs
-        temp = self.values(name='temp', level='2m', do_transform=False).values
-        dewpt = self.values(name='dewp', level='2m', do_transform=False).values
-        weasd = self.values(name='weasd', level='sfc', do_transform=False).values
-        gust = self.values(name='gust', level='10m', do_transform=False).values
-        soilm = self.values(name='soilm', level='sfc', do_transform=False).values
+        temp = self.values(name='temp', level='2m', do_transform=False)
+        dewpt = self.values(name='dewp', level='2m', do_transform=False)
+        weasd = self.values(name='weasd', level='sfc', do_transform=False)
+        gust = self.values(name='gust', level='10m', do_transform=False)
+        soilm = self.values(name='soilm', level='sfc', do_transform=False)
 
         # A few derived fields
         dewpt_depression = temp - dewpt
@@ -560,26 +575,30 @@ class fieldData(UPPData):
                 (mois ** 13.55) * \
                 snowc)
 
+        temp.close()
+        dewpt.close()
+        weasd.close()
+        gust.close()
+        soilm.close()
+
         return fwi
 
-    @property
     def grid_info(self):
 
         ''' Returns a dict that includes the grid info for the full grid. '''
 
         # Keys are grib names, values are Basemap argument names
-        if self.model not in ['global']:
-            ncl_to_basemap = dict(
-                CenterLon='lon_0',
-                CenterLat='lat_0',
-                Latin2='lat_1',
-                Latin1='lat_2',
-                Lov='lon_0',
-                La1='lat_0',
-                La2='lat_2',
-                Lo1='lon_1',
-                Lo2='lon_2',
-                )
+        ncl_to_basemap = dict(
+            CenterLon='lon_0',
+            CenterLat='lat_0',
+            Latin2='lat_1',
+            Latin1='lat_2',
+            Lov='lon_0',
+            La1='lat_0',
+            La2='lat_2',
+            Lo1='lon_1',
+            Lo2='lon_2',
+            )
 
         # Last coordinate listed should be latitude or longitude
         lat_var = [var for var in self.field.coords if 'lat' in var][0]
@@ -620,10 +639,13 @@ class fieldData(UPPData):
             val = lat.attrs[attr]
             val = val[0] if isinstance(val, np.ndarray) else val
             grid_info[bm_arg] = val
+            del val
+
+        del lat
 
         return grid_info
 
-    def run_total(self, values, **kwargs) -> np.ndarray:
+    def run_total(self, values, **kwargs):
 
         ''' Sums over all the forecast lead times available. '''
 
@@ -631,7 +653,7 @@ class fieldData(UPPData):
 
         return values.sum(dim='fcst_hr')
 
-    def supercooled_liquid_water(self, values, **kwargs) -> np.ndarray:
+    def supercooled_liquid_water(self, values, **kwargs):
 
         # pylint: disable=unused-argument
 
@@ -672,6 +694,11 @@ class fieldData(UPPData):
                              cloud_mixing_ratio[n, :, :]+rain_mixing_ratio[n, :, :], 0.0)
             slw = slw + pres_layer / gravity * supercool_locs
 
+        pres_sfc.close()
+        pres_nat_lev.close()
+        temp.close()
+        cloud_mixing_ratio.close()
+        rain_mixing_ratio.close()
         return slw
 
     @property
@@ -690,7 +717,7 @@ class fieldData(UPPData):
 
         return self.vspec.get('unit', self.field.units)
 
-    def values(self, level=None, name=None, **kwargs) -> np.ndarray:
+    def values(self, level=None, name=None, **kwargs):
 
         '''
         Returns the numpy array of values at the requested level for the
@@ -796,9 +823,12 @@ class fieldData(UPPData):
                 **kwargs,
                 )
 
-        return conversions.magnitude(field1, field2)
+        mag = conversions.magnitude(field1, field2)
+        field1.close()
+        field2.close()
 
-    @lru_cache()
+        return mag
+
     def wind(self, level) -> [np.ndarray, np.ndarray]:
 
         '''
@@ -859,10 +889,16 @@ class profileData(UPPData):
         # The variable lenght site name is included past column 37
         self.site_name = loc[37:].rstrip()
 
-        # Convert the string to a number. Longitude should be negative for all
+        # Convert the string to a number. Longitude should be positive for all
         # these sites.
+        # The conus_raobs file uses -180 to 180, but leaves off the minus sign,
+        # i.e., the values are in degrees West. So, first we need to add the
+        # minus sign to convert the longitude to deg East, and then need to
+        # adjust to the 0 to 360 system.
         self.site_lat = float(lat)
-        self.site_lon = -float(lon)
+        self.site_lon = -float(lon) # lons are -180 but without minus sign in input file
+        if self.site_lon < 0:
+            self.site_lon = self.site_lon + 360.0
 
     def values(self, level=None, name=None, **kwargs):
 
