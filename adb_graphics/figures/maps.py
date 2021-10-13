@@ -19,11 +19,9 @@ import numpy as np
 
 import adb_graphics.utils as utils
 
-'''
-TILE_DEFS is a dict of dicts with predefined tiles specifying the corners of the grid to be plotted,
-    snd the stride and length of the wind barbs.
-    Order for corners: [lower left lat, upper right lat, lower left lon, upper right lon]
-'''
+# TILE_DEFS is a dict of dicts with predefined tiles specifying the corners of the grid
+#     to be plotted, and the stride and length of the wind barbs.
+# Order for corners: [lower left lat, upper right lat, lower left lon, upper right lon]
 
 TILE_DEFS = {
     'NC': {'corners': [36, 51, -109, -85], 'stride': 10, 'length': 4},
