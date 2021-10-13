@@ -267,8 +267,6 @@ class UPPData(specs.VarSpec):
         lats, lons = self.latlons()
         adjust = 360 if np.any(lons < 0) else 0
         lons = lons + adjust
-        #if self.model in ['global']:
-        #    lats, lons = np.meshgrid(lats, lons, sparse=False, indexing='ij')
         max_x, max_y = np.shape(lats)
 
         # Numpy magic to grab the X, Y grid point nearest the profile site
@@ -524,11 +522,10 @@ class fieldData(UPPData):
         '''
 
         lat, lon = self.latlons()
-        ret = [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
-        #if self.model == 'global':
-        #    ret = [lat[-1], lat[0], lon[0], lon[-1]]
-        #else:
-        #    ret = [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
+        if self.model == 'global':
+            ret = [lat[-1], lat[0], lon[0], lon[-1]]
+        else:
+            ret = [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
 
         return ret
 
