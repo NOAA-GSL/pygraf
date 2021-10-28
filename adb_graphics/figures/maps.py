@@ -40,6 +40,7 @@ TILE_DEFS = {
     'Cambodia': {'corners': [0, 24, 90, 118], 'stride': 3, 'length': 5},
     'CentralCA': {'corners': [34.5, 40.5, -124, -118], 'stride': 4, 'length': 4},
     'CHI-DET': {'corners': [39, 44, -92, -83], 'stride': 4, 'length': 4},
+    'CONUS130': {'corners': [16.281, 55.48131, -126.138, -57.38108], 'stride': 4, 'length': 4},
     'DCArea': {'corners': [36.7, 40, -81, -72], 'stride': 4, 'length': 4},
     'EastCO': {'corners': [36.5, 41.5, -108, -101.8], 'stride': 4, 'length': 4},
     'EPacific': {'corners': [0, 60, 180, 300], 'stride': 10, 'length': 5},
@@ -48,6 +49,7 @@ TILE_DEFS = {
     'GreatLakes': {'corners': [37, 50, -96, -70], 'stride': 10, 'length': 4},
     'HI': {'corners': [16.6, 24.6, -157.6, -157.5], 'stride': 1, 'length': 4},
     'Juneau': {'corners': [55.741, 59.629, -140.247, -129.274], 'stride': 4, 'length': 4},
+    'NHemisphere': {'corners': [-20.826, -20.82529, -150, 30], 'stride': 4, 'length': 4},
     'NYC-BOS': {'corners': [40, 43, -78.5, -68.5], 'stride': 4, 'length': 4},
     'PuertoRico': {'corners': [15.5257, 24.0976, -74.6703, -61.848], 'stride': 10, 'length': 5},
     'SEA-POR': {'corners': [43, 50, -125, -119], 'stride': 4, 'length': 4},
@@ -68,6 +70,7 @@ class Map():
 
         Required arguments:
 
+          airport_fn    full path to airport file
           airport_fn    full path to airport file
           ax            figure axis
 
@@ -481,7 +484,6 @@ class DataMap():
                     title = title.replace("Geopotential", "Geop.")
                     contoured.append(f'{title}')
                     contoured_units.append(f'{cf.units}')
-
         contoured = '\n'.join(contoured)  # Make 'contoured' a string with linefeeds
         if contoured_units:
             contoured = f"{contoured} ({', '.join(contoured_units)}, contoured)"
@@ -522,27 +524,47 @@ class DataMap():
         model = self.model_name
         tile = self.map.tile
 
-        # Set the stride and size of the barbs to be plotted with a masked array.
-        if self.map.m.projection == 'lcc' and tile == 'full':
-            if model == 'HRRR-HI':
-                stride = 12
-                length = 4
+        if tile == 'full':
+#            avgside = (u.shape[0] + u.shape[1]) / 2
+#            stride = int(round(avgside / 35))
+            print(f'shape 0 = {u.shape[0]}, shape 1 = {u.shape[1]}')
+            if u.shape[0] < u.shape[1]:
+                stride = int(round(u.shape[0] / 35))
+                print('using u shape 0')
             else:
-                stride = 30
-                length = 5
-        elif self.map.m.projection == 'rotpole' and tile == 'full':
-            if model == 'RRFS_NA_3km':
-                stride = 50
-                length = 4
-            else:
-                stride = 15
-                length = 4
-        elif self.map.model == 'global' and tile == 'full':
-            stride = 20
-            length = 4
+                stride = int(round(u.shape[1] / 35))
+                print('using u shape 1')
+            length = 5
         else:
             stride = TILE_DEFS[tile]["stride"]
             length = TILE_DEFS[tile]["length"]
+        print(f'stride = {stride}')
+        length = 5
+#        # Set the stride and size of the barbs to be plotted with a masked array.
+#        if self.map.m.projection == 'lcc' and tile == 'full':
+#            if model == 'HRRR-HI':
+#                stride = 12
+#                length = 4
+#            else:
+#                if len(u) < 1000:
+#                    stride = 10
+#                    length = 5
+#                else:
+#                    stride = 30
+#                    length = 5
+#        elif self.map.m.projection == 'rotpole' and tile == 'full':
+#            if model == 'RRFS_NA_3km':
+#                stride = 50
+#                length = 4
+#            else:
+#                stride = 15
+#                length = 4
+#        elif self.map.model == 'global' and tile == 'full':
+#            stride = 20
+#            length = 4
+#        else:
+#            stride = TILE_DEFS[tile]["stride"]
+#            length = TILE_DEFS[tile]["length"]
 
         mask = np.ones_like(u)
         mask[::stride, ::stride] = 0

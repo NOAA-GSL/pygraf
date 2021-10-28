@@ -39,6 +39,7 @@ class UPPData(specs.VarSpec):
         # Parse kwargs first
         config = kwargs.get('config', 'adb_graphics/default_specs.yml')
         self.model = kwargs.get('model')
+        self.tile = kwargs.get('tile')
         self.filetype = kwargs.get('filetype', 'prs')
 
 
@@ -277,7 +278,8 @@ class UPPData(specs.VarSpec):
 
         if x <= 0 or y <= 0 or x >= max_x or y >= max_y:
             print(f'site location is outside your domain! {site_lat} {site_lon}')
-            return(-1.E10, -1.E10)
+            # return(-1.E10, -1.E10)
+            return(-1, -1)
 
         return (x, y)
 
@@ -522,10 +524,11 @@ class fieldData(UPPData):
         '''
 
         lat, lon = self.latlons()
-        if self.model == 'global':
-            ret = [lat[-1], lat[0], lon[0], lon[-1]]
-        else:
-            ret = [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
+        #if self.model == 'global' and self.tile not in ['CONUS130', 'NHemisphere', 'SHemisphere']:
+        #    ret = [lat[-1], lat[0], lon[0], lon[-1]]
+        #else:
+        #    ret = [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
+        ret = [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
 
         return ret
 
@@ -615,8 +618,14 @@ class fieldData(UPPData):
             grid_info['lat_0'] = 90
             grid_info['lat_ts'] = 90
         elif self.grid_suffix == 'GLL0':
-            attrs = []
-            grid_info['projection'] = 'cyl'
+            #attrs = []
+            attrs = ['CenterLon', 'DenterLat']
+            #grid_info['projection'] = 'cyl'
+            #grid_info['projection'] = 'npstere'
+            #grid_info['boundinglat'] = 10
+            #grid_info['lon_0'] = 270
+            grid_info['projection'] = 'stere'
+            grid_info['lat_ts'] = 90.
         else:
             attrs = []
             grid_info['projection'] = 'rotpole'

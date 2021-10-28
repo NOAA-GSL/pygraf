@@ -145,6 +145,7 @@ def gather_gribfiles(cla, fhr, gribfiles):
             )
     else:
 
+        print('leg 2')
         # Append a single forecast hour to the existing GribFiles object.
         gribfiles.coord_dims.get('fcst_hr').append(fhr)
         gribfiles.append(filenames)
@@ -434,7 +435,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
     if cla.model_name == "HRRR-HI":
         inches = 12.2
     else:
-        inches = 10
+        inches = 15
 
     fig, ax = plt.subplots(1, 1, figsize=(inches, inches))
 
