@@ -15,6 +15,7 @@ import gc
 import glob
 from multiprocessing import Pool, Process
 import os
+import subprocess
 import sys
 import time
 import zipfile
@@ -108,36 +109,28 @@ def create_zip(png_files, zipf):
         # Wait before trying to obtain the lock on the file
         time.sleep(5)
 
-def gather_gribfiles(cla, fhr, gribfiles):
+def gather_gribfiles(cla, fhr, filename, gribfiles):
 
     ''' Returns the appropriate gribfiles object for the type of graphics being
     generated -- whether it's for a single forecast time or all forecast lead
     times. '''
 
-    # We already checked that the current file exists and is old enough, so
-    # assume that the earlier ones are, too.
-
     filenames = {'01fcst': [], 'free_fcst': []}
 
-    fcst_hours = [int(fhr)]
-    if cla.all_leads and gribfiles is None:
-        fcst_hours = list(range(int(fhr) + 1))
+    fcst_hour = int(fhr)
 
-    for fcst_hour in fcst_hours:
-        filename = os.path.join(cla.data_root,
-                                cla.file_tmpl.format(FCST_TIME=fcst_hour))
-        if fcst_hour <= 1:
-            filenames['01fcst'].append(filename)
-        else:
-            filenames['free_fcst'].append(filename)
+    if fcst_hour <= 1:
+        filenames['01fcst'].append(filename)
+    else:
+        filenames['free_fcst'].append(filename)
 
-    if gribfiles is None or not cla.all_leads:
+    if gribfiles is None:
 
         # Create a new GribFiles object, include all hours, or just this one,
         # depending on command line argument flag
 
         gribfiles = gribfile.GribFiles(
-            coord_dims={'fcst_hr': fcst_hours},
+            coord_dims={'fcst_hr': [fhr]},
             filenames=filenames,
             filetype=cla.file_type,
             model=cla.images[0],
@@ -240,7 +233,11 @@ def parse_args():
     parser.add_argument(
         '-d',
         dest='data_root',
-        help='Cycle-independant data directory location.',
+        help='Cycle-independant data directory location. Provide more than one \
+        data path if data input files should be combined. When providing \
+        multiple options, the same number of options is required for the \
+        --file_tmpl flag.',
+        nargs='+',
         required=True,
         type=utils.path_exists,
         )
@@ -305,11 +302,15 @@ def parse_args():
     parser.add_argument(
         '--file_tmpl',
         default='wrfnat_hrconus_{FCST_TIME:02d}.grib2',
-        help='File naming convention',
+        nargs='+',
+        help='File naming convention. Use FCST_TIME to indicate forecast hour. \
+        Provide more than one template when data files should be combined. \
+        When providing multiple options, the same number of options is required \
+        for the -d flag.', \
         )
     parser.add_argument(
         '--file_type',
-        choices=('nat', 'prs'),
+        choices=('nat', 'prs', 'combined'),
         default='nat',
         help='Type of levels contained in grib file.',
         )
@@ -566,21 +567,46 @@ def graphics_driver(cla):
 
     gribfiles = None
 
+    # When accummulating variables for preparing a single lead time,
+    # load all of those into gribfiles up front.
+    # This is not an operational feature. Exit if files don't exist.
+    if len(cla.fcst_hour) == 1 and cla.all_leads:
+        for fhr in range(int(cla.fcst_hour[0])):
+            grib_path, old_enough = pre_proc_grib_files(cla, fhr)
+            if not os.path.exists(grib_path) or not old_enough:
+                print(f'File {grib_path} does not exist! Cannot accumulate \n \
+                data for this forecast lead time!')
+            gribfiles = gather_gribfiles(cla, fhr, grib_path, gribfiles)
+
+
     # Allow this task to run concurrently with UPP by continuing to check for
     # new files as they become available.
     while fcst_hours:
         timer_sleep = time.time()
         for fhr in sorted(fcst_hours):
-            grib_path = os.path.join(cla.data_root,
-                                     cla.file_tmpl.format(FCST_TIME=fhr))
+            grib_path, old_enough = pre_proc_grib_files(cla, fhr)
 
             # UPP is most likely done writing if it hasn't written in data_age
             # mins (default is 3 to address most CONUS-sized domains)
-            if os.path.exists(grib_path) and utils.old_enough(cla.data_age, grib_path):
+            if os.path.exists(grib_path) and old_enough:
                 fcst_hours.remove(fhr)
             else:
-                # Try next forecast hour
-                print(f'Cannot find {grib_path}')
+                if cla.all_leads:
+                    # Wait on the missing file for an arbitrary 90% of wait time
+                    if time.time() - timer_end > cla.wait_time * 60 * .9:
+                        print(f"Giving up waiting on {grib_path}. \n \
+                        Removing accumulated variables from image list")
+                        print((('-' * 80)+'\n') * 2)
+                        remove_accumulated_images()
+                    else:
+
+                        # Break out of loop, wait for the desired period, and start
+                        # back at this forecast hour.
+                        print(f'Waiting for {grib_path} to be available.')
+                        break
+                # It's safe to continue on processing the next forecast hour
+                print(f'Cannot find {grib_path}, continuing to check on \
+                    next forecast hour.')
                 continue
 
             # Create the working directory
@@ -598,7 +624,7 @@ def graphics_driver(cla):
             if cla.graphic_type == 'skewts':
                 create_skewt(cla, fhr, grib_path, workdir)
             else:
-                gribfiles = gather_gribfiles(cla, fhr, gribfiles)
+                gribfiles = gather_gribfiles(cla, fhr, grib_path, gribfiles)
                 create_maps(cla,
                             fhr=fhr,
                             gribfiles=gribfiles,
@@ -634,11 +660,127 @@ def graphics_driver(cla):
             print((('-' * 80)+'\n') * 2)
             time.sleep(60)
 
+def pre_proc_grib_files(cla, fhr):
+
+    ''' Use the command line argument object (cla) to determine the grib file
+    loaction at a given forecast hour. If multiple data input paths and file
+    templates are provided by user, concatenate the files and remove the
+    duplicates. Return the file path of the file to be used by the graphics data
+    handler, and whether the file is old enough. Files making it through the
+    combined process here are assumed to be old enough.
+
+    Input:
+        cla     Program command line arguments in a  Namespace datastructure
+        fhr     Forecast hour; integer
+
+    Output
+        grib_path    path to data used in plotting
+        old_enough   bool stating whether the file is old enough as defined by
+                     user settings. Combined files here are presumed old enough
+                     by default
+    '''
+
+    if len(cla.data_root) == 1 and len(cla.file_tmpl) == 1:
+        # Nothing to do, return the original file location
+        grib_path = os.path.join(cla.data_root,
+                                 cla.file_tmpl.format(FCST_TIME=fhr))
+
+        old_enough = utils.old_enough(cla.data_age, grib_path)
+        return grib_path, old_enough
+
+    # Generate a list of files to be joined.
+    file_list = [os.path.join(*path).format(FCST_TIME=fhr) for path in
+                 zip(cla.data_root, cla.file_tmpl)]
+    for file_path in file_list:
+        exists = os.path.exists(file_path)
+        if not exists or not utils.old_enough(cla.data_age, file_path):
+            return file_path, False
+
+    print(f'Combining input files: {file_list}')
+
+    combined_fn = f'combined_{fhr:03d}.grib2'
+    tmp_fn = f'combined_{fhr:03d}.tmp.grib2'
+    combined_fp = os.path.join(cla.output_path, combined_fn)
+    tmp_fp = os.path.join(cla.output_path, tmp_fn)
+
+    cmd = f'cat {" ".join(file_list)} > {tmp_fp}'
+    output = subprocess.run(cmd, shell=True, check=True)
+    if output.returncode != 0:
+        msg = f'{cmd} returned exit status: {output.returncode}!'
+        raise OSError(msg)
+
+    # Gather all grib2 entries from combined file
+    cmd = f'wgrib2 {tmp_fp} -submsg 1'
+    wgrib2_output = subprocess.run(cmd, shell=True, capture_output=True,
+                                   check=True)
+    wgrib2_list = wgrib2_output.stdout.decode("utf-8").split('\n')
+
+    # Create a unique list of grib fields. Uniqueness is defined by the wgrib
+    # output from field 3 (colon delimted) onward, although the resulting full
+    # grib record must be included in the wgrib2 command below.
+
+    field_set = set()
+    uniq_list = []
+    for field in wgrib2_list:
+        field_info = field.split(':')
+        if len(field_info) <= 3:
+            continue
+        field_str = ':'.join(field_info[3:])
+        if field_str not in field_set:
+            uniq_list.append(field)
+        field_set.add(field_str)
+
+    # Remove duplicate grib2 entries in grib file
+    cmd = f'wgrib2 -i {tmp_fp} -GRIB {combined_fp}'
+    input_arg = '\n'.join(uniq_list).encode("utf-8")
+
+    ret = subprocess.run(cmd, shell=True, input=input_arg, check=True)
+    if ret.returncode != 0:
+        msg = f'{cmd} returned exit status: {ret.returncode}'
+        raise OSError(msg)
+    os.remove(f'{tmp_fp}')
+
+    return f'{combined_fp}', True
+
+def remove_accumulated_images(cla):
+
+    ''' Searches for all images that correspond with specs that have the
+    accumulate entry set to True and removes them from the list of images to
+    create. '''
+
+    for variable, levels in cla.images[1].items():
+        for level in levels:
+            spec = cla.specs.get(variable, {}).get(level)
+            if not spec:
+                msg = f'graphics: {variable} {level}'
+                raise errors.NoGraphicsDefinitionForVariable(msg)
+            accumulate = spec.get(accumulate, False)
+
+            if accumulate:
+                print(f'Will not plot {variable}:{level}')
+                cla.images[1][variable].remove(levels)
+                if not cla.images[1][variable]:
+                    del cla.images[1][variable]
 
 if __name__ == '__main__':
 
     CLARGS = parse_args()
     CLARGS.fcst_hour = utils.fhr_list(CLARGS.fcst_hour)
+
+    # Check that the same number of entries exists in -d and --file_tmpl
+    if len(CLARGS.data_root) != len(CLARGS.file_tmpl):
+        errmsg = 'Must specify the same number of arguments for -d and --file_tmpl'
+        print(errmsg)
+        raise argparse.ArgumentError
+
+    # Ensure wgrib command is available in environment before getting too far
+    # down this path...
+    if len(CLARGS.data_root) > 1:
+        retcode = subprocess.run('which wgrib2', shell=True, check=True)
+        if retcode.returncode != 0:
+            errmsg = 'Could not find wgrib2, please make sure it is loaded \n \
+            in your environment.'
+            raise OSError(errmsg)
 
     # Only need to load the default in memory if we're making maps.
     if CLARGS.graphic_type == 'maps':
