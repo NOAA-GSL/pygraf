@@ -8,6 +8,7 @@ UPPData object) and creates a standard plot with shaded fields, contours, wind
 barbs, and descriptive annotation.
 '''
 
+import copy
 from math import isnan
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
@@ -374,8 +375,7 @@ class DataMap():
         '''
 
         x, y = self._xy_mesh(field)
-        #vals = field.values()[::]
-        vals = field.values()
+        vals = field.values()[::]
 
         # For global lat-lon models, make 2D arrays for x and y
         # Shift the map and data if needed
@@ -407,13 +407,14 @@ class DataMap():
         lons = 360 + self.map.airports[:, 1]
         x, y = self.map.m(lons, lats)
         data_values = self.field.values()
-        if self.map.corners[2] < 0:
-            self.map.corners[2] = 360 + self.map.corners[2]
-        if self.map.corners[3] < 0:
-            self.map.corners[3] = 360 + self.map.corners[3]
+        crnrs = copy.copy(self.map.corners)
+        if crnrs[2] < 0:
+            crnrs[2] = 360 + crnrs[2]
+        if crnrs[3] < 0:
+            crnrs[3] = 360 + crnrs[3]
         for i, lat in enumerate(lats):
-            if self.map.corners[1] > lat > self.map.corners[0] and \
-               self.map.corners[3] > lons[i] > self.map.corners[2]:
+            if crnrs[1] > lat > crnrs[0] and \
+               crnrs[3] > lons[i] > crnrs[2]:
                 xgrid, ygrid = self.field.get_xypoint(lat, lons[i])
                 data_value = data_values[xgrid, ygrid].values.item()
                 if xgrid > 0 and ygrid > 0:

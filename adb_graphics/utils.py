@@ -33,11 +33,8 @@ def fhr_list(args):
 
     args = args if isinstance(args, list) else [args]
     arg_len = len(args)
-    if arg_len == 2:
-        args[-1] += 1
-        return list(range(*args))
-    if arg_len == 3:
-        args[-2] += 1
+    if arg_len in (2, 3):
+        args[1] += 1
         return list(range(*args))
 
     return args
