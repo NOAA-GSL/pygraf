@@ -826,6 +826,7 @@ pres:
     cmap: gist_ncar
     colors: ps_colors
     ncl_name:
+      global: PRMSL_P0_L101_{grid}
       hrrr: MSLMA_P0_L101_{grid}
       hrrrhi: MSLMA_P0_L101_{grid}
       hrrrcar: MSLMA_P0_L101_{grid}
@@ -1076,6 +1077,7 @@ soilm: # Soil Moisture Availability
     cmap: Spectral
     colors: soilm_colors
     ncl_name:
+      global: SOILM_P0_2L106_{grid}
       hrrr: MSTAV_P0_L106_{grid}
       hrrrhi: MSTAV_P0_L106_{grid}
       hrrrcar: MSTAV_P0_L106_{grid}
@@ -1300,6 +1302,21 @@ totp: # Hourly total precipitation
         linestyles: dashed
     ncl_name: APCP_P8_L1_{grid}_acc1h
     title: 1 hr Total Precip
+totp6h: # 6-hourly total precipitation
+  sfc:
+    <<: *precip
+    contours:
+      pres_msl:
+        colors: red
+        linewidths: 0.4
+        levels: !!python/object/apply:numpy.arange [650, 1051, 2]
+      thick_500mb:
+        colors: blue
+        levels: !!python/object/apply:numpy.arange [402, 601, 6]
+        linewidths: 0.4
+        linestyles: dashed
+    ncl_name: APCP_P8_L1_{grid}_acc6h
+    title: 6 hr Total Precip
 trc1:
   int:
     clevs: [1, 4, 7, 11, 15, 20, 25, 30, 40, 50, 75, 150, 250, 500]

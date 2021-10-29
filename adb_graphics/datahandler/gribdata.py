@@ -522,7 +522,12 @@ class fieldData(UPPData):
         '''
 
         lat, lon = self.latlons()
-        return [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
+        if self.model == 'global':
+            ret = [lat[-1], lat[0], lon[0], lon[-1]]
+        else:
+            ret = [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
+
+        return ret
 
     def fire_weather_index(self, values, **kwargs):
 
@@ -609,6 +614,9 @@ class fieldData(UPPData):
             grid_info['projection'] = 'stere'
             grid_info['lat_0'] = 90
             grid_info['lat_ts'] = 90
+        elif self.grid_suffix == 'GLL0':
+            attrs = []
+            grid_info['projection'] = 'cyl'
         else:
             attrs = []
             grid_info['projection'] = 'rotpole'
