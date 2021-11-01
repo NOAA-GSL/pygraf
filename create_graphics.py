@@ -78,7 +78,6 @@ def create_maps(cla, fhr, gribfiles, workdir):
         with Pool(processes=cla.nprocs) as pool:
             pool.starmap(parallel_maps, args)
 
-
 def create_zip(png_files, zipf):
 
     ''' Create a zip file. Use a locking mechanism -- write a lock file to disk. '''
@@ -536,123 +535,6 @@ def parallel_skewt(cla, fhr, ds, site, workdir):
         )
     plt.close()
 
-
-@utils.timer
-def graphics_driver(cla):
-
-    '''
-    Function that interprets the command line arguments to locate the input grib
-    file, create the output directory, and call the graphic-specifc function.
-
-    Input:
-
-      cla         Namespace object containing command line arguments.
-
-    '''
-
-    # pylint: disable=too-many-branches, too-many-locals
-
-    # Create an empty zip file
-    if cla.zip_dir:
-        tiles = cla.tiles if cla.graphic_type == "maps" else ['skewt']
-        zipfiles = stage_zip_files(tiles, cla.zip_dir)
-
-    fcst_hours = copy.deepcopy(cla.fcst_hour)
-
-    # Initialize a timer used for killing the program
-    timer_end = time.time()
-
-    gribfiles = None
-
-    # When accummulating variables for preparing a single lead time,
-    # load all of those into gribfiles up front.
-    # This is not an operational feature. Exit if files don't exist.
-    if len(cla.fcst_hour) == 1 and cla.all_leads:
-        for fhr in range(int(cla.fcst_hour[0])):
-            grib_path, old_enough = pre_proc_grib_files(cla, fhr)
-            if not os.path.exists(grib_path) or not old_enough:
-                msg = (f'File {grib_path} does not exist! Cannot accumulate',
-                       f'data for this forecast lead time!')
-                remove_proc_grib_files(cla)
-                raise FileNotFoundError(' '.join(msg))
-            gribfiles = gather_gribfiles(cla, fhr, grib_path, gribfiles)
-
-
-    # Allow this task to run concurrently with UPP by continuing to check for
-    # new files as they become available.
-    while fcst_hours:
-        timer_sleep = time.time()
-        for fhr in sorted(fcst_hours):
-            grib_path, old_enough = pre_proc_grib_files(cla, fhr)
-
-            # UPP is most likely done writing if it hasn't written in data_age
-            # mins (default is 3 to address most CONUS-sized domains)
-            if os.path.exists(grib_path) and old_enough:
-                fcst_hours.remove(fhr)
-            else:
-                if cla.all_leads:
-                    # Wait on the missing file for an arbitrary 90% of wait time
-                    if time.time() - timer_end > cla.wait_time * 60 * .9:
-                        print(f"Giving up waiting on {grib_path}. \n",
-                              f"Removing accumulated variables from image list \n",
-                              f"{LOG_BREAK}\n")
-                        remove_accumulated_images(cla)
-                        # Explicitly set -all_leads to False
-                        cla.all_leads = False
-                    else:
-                        # Break out of loop, wait for the desired period, and start
-                        # back at this forecast hour.
-                        print(f'Waiting for {grib_path} to be available.')
-                        break
-                # It's safe to continue on processing the next forecast hour
-                print(f'Cannot find {grib_path}, continuing to check on \n \
-                    next forecast hour.')
-                continue
-
-            # Create the working directory
-            workdir = os.path.join(cla.output_path,
-                                   f"{utils.from_datetime(cla.start_time)}{fhr:02d}")
-            os.makedirs(workdir, exist_ok=True)
-
-            print(f'{LOG_BREAK}\n',
-                  f'Graphics will be created for input file: {grib_path}\n',
-                  f'Output graphics directory: {workdir} \n'
-                  f'{LOG_BREAK}')
-
-            if cla.graphic_type == 'skewts':
-                create_skewt(cla, fhr, grib_path, workdir)
-            else:
-                gribfiles = gather_gribfiles(cla, fhr, grib_path, gribfiles)
-                create_maps(cla,
-                            fhr=fhr,
-                            gribfiles=gribfiles,
-                            workdir=workdir,
-                            )
-
-            # Zip png files and remove the originals in a subprocess
-            if cla.zip_dir:
-                zip_pngs(fhr, workdir, zipfiles)
-
-            # Keep track of last time we did something useful
-            timer_end = time.time()
-
-        # Give up trying to process remaining forecast hours after waiting
-        # wait_time mins. This accounts for slower UPP processes. Default for
-        # most CONUS-sized domains is 10 mins.
-        if time.time() - timer_end > cla.wait_time * 60:
-            print(f"Exiting with forecast hours remaining: {fcst_hours}",
-                  f"{LOG_BREAK}")
-            break
-
-        # Wait for a bit if it's been < 2 minutes (about the length of time UPP
-        # takes) since starting last loop
-        if fcst_hours and time.time() - timer_sleep < 120:
-            print(f"Waiting for a minute for forecast hours: {fcst_hours}",
-                  f"{LOG_BREAK}")
-            time.sleep(60)
-
-        remove_proc_grib_files(cla)
-
 def pre_proc_grib_files(cla, fhr):
 
     ''' Use the command line argument object (cla) to determine the grib file
@@ -823,7 +705,6 @@ def uniq_wgrib2_list(inlist):
 
     return uniq_list
 
-
 def zip_pngs(fhr, workdir, zipfiles):
 
     ''' Spin up a subprocess to zip all the png files into the staged zip files.
@@ -847,6 +728,121 @@ def zip_pngs(fhr, workdir, zipfiles):
         zip_proc.start()
         zip_proc.join()
 
+@utils.timer
+def graphics_driver(cla):
+
+    '''
+    Function that interprets the command line arguments to locate the input grib
+    file, create the output directory, and call the graphic-specifc function.
+
+    Input:
+
+      cla         Namespace object containing command line arguments.
+
+    '''
+
+    # pylint: disable=too-many-branches, too-many-locals
+
+    # Create an empty zip file
+    if cla.zip_dir:
+        tiles = cla.tiles if cla.graphic_type == "maps" else ['skewt']
+        zipfiles = stage_zip_files(tiles, cla.zip_dir)
+
+    fcst_hours = copy.deepcopy(cla.fcst_hour)
+
+    # Initialize a timer used for killing the program
+    timer_end = time.time()
+
+    gribfiles = None
+
+    # When accummulating variables for preparing a single lead time,
+    # load all of those into gribfiles up front.
+    # This is not an operational feature. Exit if files don't exist.
+    if len(cla.fcst_hour) == 1 and cla.all_leads:
+        for fhr in range(int(cla.fcst_hour[0])):
+            grib_path, old_enough = pre_proc_grib_files(cla, fhr)
+            if not os.path.exists(grib_path) or not old_enough:
+                msg = (f'File {grib_path} does not exist! Cannot accumulate',
+                       f'data for this forecast lead time!')
+                remove_proc_grib_files(cla)
+                raise FileNotFoundError(' '.join(msg))
+            gribfiles = gather_gribfiles(cla, fhr, grib_path, gribfiles)
+
+
+    # Allow this task to run concurrently with UPP by continuing to check for
+    # new files as they become available.
+    while fcst_hours:
+        timer_sleep = time.time()
+        for fhr in sorted(fcst_hours):
+            grib_path, old_enough = pre_proc_grib_files(cla, fhr)
+
+            # UPP is most likely done writing if it hasn't written in data_age
+            # mins (default is 3 to address most CONUS-sized domains)
+            if os.path.exists(grib_path) and old_enough:
+                fcst_hours.remove(fhr)
+            else:
+                if cla.all_leads:
+                    # Wait on the missing file for an arbitrary 90% of wait time
+                    if time.time() - timer_end > cla.wait_time * 60 * .9:
+                        print(f"Giving up waiting on {grib_path}. \n",
+                              f"Removing accumulated variables from image list \n",
+                              f"{LOG_BREAK}\n")
+                        remove_accumulated_images(cla)
+                        # Explicitly set -all_leads to False
+                        cla.all_leads = False
+                    else:
+                        # Break out of loop, wait for the desired period, and start
+                        # back at this forecast hour.
+                        print(f'Waiting for {grib_path} to be available.')
+                        break
+                # It's safe to continue on processing the next forecast hour
+                print(f'Cannot find {grib_path}, continuing to check on \n \
+                    next forecast hour.')
+                continue
+
+            # Create the working directory
+            workdir = os.path.join(cla.output_path,
+                                   f"{utils.from_datetime(cla.start_time)}{fhr:02d}")
+            os.makedirs(workdir, exist_ok=True)
+
+            print(f'{LOG_BREAK}\n',
+                  f'Graphics will be created for input file: {grib_path}\n',
+                  f'Output graphics directory: {workdir} \n'
+                  f'{LOG_BREAK}')
+
+            if cla.graphic_type == 'skewts':
+                create_skewt(cla, fhr, grib_path, workdir)
+            else:
+                gribfiles = gather_gribfiles(cla, fhr, grib_path, gribfiles)
+                create_maps(cla,
+                            fhr=fhr,
+                            gribfiles=gribfiles,
+                            workdir=workdir,
+                            )
+
+            # Zip png files and remove the originals in a subprocess
+            if cla.zip_dir:
+                zip_pngs(fhr, workdir, zipfiles)
+
+            # Keep track of last time we did something useful
+            timer_end = time.time()
+
+        # Give up trying to process remaining forecast hours after waiting
+        # wait_time mins. This accounts for slower UPP processes. Default for
+        # most CONUS-sized domains is 10 mins.
+        if time.time() - timer_end > cla.wait_time * 60:
+            print(f"Exiting with forecast hours remaining: {fcst_hours}",
+                  f"{LOG_BREAK}")
+            break
+
+        # Wait for a bit if it's been < 2 minutes (about the length of time UPP
+        # takes) since starting last loop
+        if fcst_hours and time.time() - timer_sleep < 120:
+            print(f"Waiting for a minute for forecast hours: {fcst_hours}",
+                  f"{LOG_BREAK}")
+            time.sleep(60)
+
+        remove_proc_grib_files(cla)
 
 if __name__ == '__main__':
 
