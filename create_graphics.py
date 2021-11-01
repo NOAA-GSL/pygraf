@@ -758,8 +758,11 @@ def graphics_driver(cla):
     # When accummulating variables for preparing a single lead time,
     # load all of those into gribfiles up front.
     # This is not an operational feature. Exit if files don't exist.
+
+    first_fcst = 6 if cla.images[0] == 'global' else 0
+    fcst_inc = 6 if cla.images[0] == 'global' else 1
     if len(cla.fcst_hour) == 1 and cla.all_leads:
-        for fhr in range(int(cla.fcst_hour[0])):
+        for fhr in range(first_fcst, int(cla.fcst_hour[0]), fcst_inc):
             grib_path, old_enough = pre_proc_grib_files(cla, fhr)
             if not os.path.exists(grib_path) or not old_enough:
                 msg = (f'File {grib_path} does not exist! Cannot accumulate',
