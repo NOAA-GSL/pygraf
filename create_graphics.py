@@ -122,7 +122,8 @@ def gather_gribfiles(cla, fhr, filename, gribfiles):
 
     fcst_hour = int(fhr)
 
-    if fcst_hour <= 1:
+    first_fcst = 6 if cla.images[0] == 'global' else 1
+    if fcst_hour <= first_fcst:
         filenames['01fcst'].append(filename)
     else:
         filenames['free_fcst'].append(filename)

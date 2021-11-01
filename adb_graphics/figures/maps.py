@@ -8,45 +8,56 @@ UPPData object) and creates a standard plot with shaded fields, contours, wind
 barbs, and descriptive annotation.
 '''
 
+import copy
 from math import isnan
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import matplotlib.offsetbox as mpob
 import matplotlib.patches as mpatches
 from mpl_toolkits.basemap import Basemap
+from mpl_toolkits.basemap import shiftgrid
 import numpy as np
 
 import adb_graphics.utils as utils
 
-# TILE_DEFS is a dict with predefined tiles specifying the corners of the grid to be plotted.
-#     Order: [lower left lat, upper right lat, lower left lon, upper right lon]
+# TILE_DEFS is a dict of dicts with predefined tiles specifying the corners of the grid
+#     to be plotted, and the stride and length of the wind barbs.
+# Order for corners: [lower left lat, upper right lat, lower left lon, upper right lon]
 
 TILE_DEFS = {
-    'NC': [36, 51, -109, -85],
-    'NE': [36, 48, -91, -62],
-    'NW': [35, 52, -126, -102],
-    'SC': [24, 41, -107, -86],
-    'SE': [22, 37, -93.5, -72],
-    'SW': [24.5, 45, -122, -103],
-    'AKZoom': [52, 73, -162, -132],
-    'AKRange': [59.722, 65.022, -153.583, -144.289],
-    'Anchorage': [58.59, 62.776, -152.749, -146.218],
-    'ATL': [31.2, 35.8, -87.4, -79.8],
-    'CA-NV': [30, 45, -124, -114],
-    'CentralCA': [34.5, 40.5, -124, -118],
-    'CHI-DET': [39, 44, -92, -83],
-    'DCArea': [36.7, 40, -81, -72],
-    'EastCO': [36.5, 41.5, -108, -101.8],
-    'Florida': [19.2305, 29.521, -86.1119, -73.8189],
-    'GreatLakes': [37, 50, -96, -70],
-    'HI': [16.6, 24.6, -157.6, -157.5],
-    'Juneau': [55.741, 59.629, -140.247, -129.274],
-    'NYC-BOS': [40, 43, -78.5, -68.5],
-    'PuertoRico': [15.5257, 24.0976, -74.6703, -61.848],
-    'SEA-POR': [43, 50, -125, -119],
-    'SouthCA': [31, 37, -120, -114],
-    'SouthFL': [24, 28.5, -84, -77],
-    'VortexSE': [30, 37, -92.5, -82],
+    'NC': {'corners': [36, 51, -109, -85], 'stride': 10, 'length': 4},
+    'NE': {'corners': [36, 48, -91, -62], 'stride': 10, 'length': 4},
+    'NW': {'corners': [35, 52, -126, -102], 'stride': 10, 'length': 4},
+    'SC': {'corners': [24, 41, -107, -86], 'stride': 10, 'length': 4},
+    'SE': {'corners': [22, 37, -93.5, -72], 'stride': 10, 'length': 4},
+    'SW': {'corners': [24.5, 45, -122, -103], 'stride': 10, 'length': 4},
+    'Africa': {'corners': [-40, 40, -40, 60], 'stride': 7, 'length': 5},
+    'AKZoom': {'corners': [52, 73, -162, -132], 'stride': 4, 'length': 4},
+    'AKRange': {'corners': [59.722, 65.022, -153.583, -144.289], 'stride': 4, 'length': 4},
+    'Anchorage': {'corners': [58.59, 62.776, -152.749, -146.218], 'stride': 4, 'length': 4},
+    'ATL': {'corners': [31.2, 35.8, -87.4, -79.8], 'stride': 4, 'length': 4},
+    'Beijing': {'corners': [25, 53, 102, 133], 'stride': 3, 'length': 5},
+    'CA-NV': {'corners': [30, 45, -124, -114], 'stride': 10, 'length': 4},
+    'Cambodia': {'corners': [0, 24, 90, 118], 'stride': 3, 'length': 5},
+    'CentralCA': {'corners': [34.5, 40.5, -124, -118], 'stride': 4, 'length': 4},
+    'CHI-DET': {'corners': [39, 44, -92, -83], 'stride': 4, 'length': 4},
+    'DCArea': {'corners': [36.7, 40, -81, -72], 'stride': 4, 'length': 4},
+    'EastCO': {'corners': [36.5, 41.5, -108, -101.8], 'stride': 4, 'length': 4},
+    'EPacific': {'corners': [0, 60, 180, 300], 'stride': 10, 'length': 5},
+    'Europe': {'corners': [15, 75, -30, 75], 'stride': 10, 'length': 5},
+    'Florida': {'corners': [19.2305, 29.521, -86.1119, -73.8189], 'stride': 10, 'length': 5},
+    'GreatLakes': {'corners': [37, 50, -96, -70], 'stride': 10, 'length': 4},
+    'HI': {'corners': [16.6, 24.6, -157.6, -157.5], 'stride': 1, 'length': 4},
+    'Juneau': {'corners': [55.741, 59.629, -140.247, -129.274], 'stride': 4, 'length': 4},
+    'NYC-BOS': {'corners': [40, 43, -78.5, -68.5], 'stride': 4, 'length': 4},
+    'PuertoRico': {'corners': [15.5257, 24.0976, -74.6703, -61.848], 'stride': 10, 'length': 5},
+    'SEA-POR': {'corners': [43, 50, -125, -119], 'stride': 4, 'length': 4},
+    'SouthCA': {'corners': [31, 37, -120, -114], 'stride': 4, 'length': 4},
+    'SouthFL': {'corners': [24, 28.5, -84, -77], 'stride': 4, 'length': 4},
+    'Taiwan': {'corners': [19, 28, 116, 126], 'stride': 1, 'length': 5},
+    'VortexSE': {'corners': [30, 37, -92.5, -82], 'stride': 4, 'length': 4},
+    'WAtlantic': {'corners': [-0.25, 50.25, 261.75, 330.25], 'stride': 5, 'length': 5},
+    'WPacific': {'corners': [-40, 50, 90, 240], 'stride': 10, 'length': 5},
 }
 
 
@@ -70,6 +81,7 @@ class Map():
                         right(ur) corners:
                              ll_lat, ur_lat, ll_lon, ur_lon
           model         model designation used to trigger higher resolution maps if needed
+                        also used to turn off plotting of airports on global maps
           tile          a string corresponding to a pre-defined tile in the
                         TILE_DEFS dictionary
     '''
@@ -108,7 +120,7 @@ class Map():
                                 zorder=2,
                                 )
         else:
-            if self.tile not in ['full', 'conus', 'AK']:
+            if self.model not in ['global'] and self.tile not in ['full', 'conus', 'AK']:
                 self.m.drawcounties(antialiased=False,
                                     color='gray',
                                     linewidth=0.1,
@@ -122,7 +134,8 @@ class Map():
         ''' Draw a map with political boundaries and airports only. '''
 
         self.boundaries()
-        self.draw_airports()
+        if self.model not in ['global']: # airports are too dense in global
+            self.draw_airports()
 
     def draw_airports(self):
 
@@ -174,7 +187,7 @@ class Map():
              ll_lat, ur_lat, ll_lon, ur_lon
         '''
 
-        return TILE_DEFS[self.tile]
+        return TILE_DEFS[self.tile]["corners"]
 
     @staticmethod
     def load_airports(fn):
@@ -224,6 +237,7 @@ class DataMap():
             (0, 0),
             box_alignment=(-0.2, -0.2),
             frameon=False,
+            xycoords='axes points',
             )
 
         ax.add_artist(ab)
@@ -280,6 +294,8 @@ class DataMap():
         if self.hatch_fields:
             not_labeled.extend([h.short_name for h in self.hatch_fields])
 
+        if self.map.model in ['global'] and self.map.tile in ['full']:
+            self.contour_fields = False
         # Contour secondary fields, if requested
         if self.contour_fields:
             self._draw_contours(ax, not_labeled)
@@ -295,7 +311,7 @@ class DataMap():
 
         # Add field values at airports
         annotate = self.field.vspec.get('annotate', False)
-        if annotate:
+        if annotate and self.map.model not in ['global']: # airports are too dense in global
             self._draw_field_values(ax)
 
         # Finish with the title
@@ -360,6 +376,15 @@ class DataMap():
 
         x, y = self._xy_mesh(field)
         vals = field.values()[::]
+
+        # For global lat-lon models, make 2D arrays for x and y
+        # Shift the map and data if needed
+        if self.map.model in ['global']:
+            tile = self.map.tile
+            if tile in ['Africa', 'Europe']:
+                vals, x = shiftgrid(180., vals, x, start=False)
+            y, x = np.meshgrid(y, x, sparse=False, indexing='ij')
+
         ret = func(x, y, vals,
                    ax=ax,
                    **kwargs,
@@ -382,11 +407,16 @@ class DataMap():
         lons = 360 + self.map.airports[:, 1]
         x, y = self.map.m(lons, lats)
         data_values = self.field.values()
+        crnrs = copy.copy(self.map.corners)
+        if crnrs[2] < 0:
+            crnrs[2] = 360 + crnrs[2]
+        if crnrs[3] < 0:
+            crnrs[3] = 360 + crnrs[3]
         for i, lat in enumerate(lats):
-            if self.map.corners[1] > lat > self.map.corners[0] and \
-               self.map.corners[3] > lons[i] > self.map.corners[2]:
+            if crnrs[1] > lat > crnrs[0] and \
+               crnrs[3] > lons[i] > crnrs[2]:
                 xgrid, ygrid = self.field.get_xypoint(lat, lons[i])
-                data_value = data_values[xgrid, ygrid]
+                data_value = data_values[xgrid, ygrid].values.item()
                 if xgrid > 0 and ygrid > 0:
                     if (not isnan(data_value)) and (data_value != 0.):
                         ax.annotate(f"{data_value:.{annotate_decimal}f}", \
@@ -501,21 +531,35 @@ class DataMap():
             else:
                 stride = 30
                 length = 5
-        elif tile == 'HI':
-            stride = 1
-            length = 4
-        elif len(tile) == 2 or tile in ['full', 'conus', 'GreatLakes', 'CA-NV']:
-            stride = 10
+        elif self.map.m.projection == 'rotpole' and tile == 'full':
+            if model == 'RRFS_NA_3km':
+                stride = 50
+                length = 4
+            else:
+                stride = 15
+                length = 4
+        elif self.map.model == 'global' and tile == 'full':
+            stride = 20
             length = 4
         else:
-            stride = 4
-            length = 4
+            stride = TILE_DEFS[tile]["stride"]
+            length = TILE_DEFS[tile]["length"]
 
         mask = np.ones_like(u)
         mask[::stride, ::stride] = 0
 
-        mu, mv = [np.ma.masked_array(c, mask=mask) for c in [u, v]]
         x, y = self._xy_mesh(self.field)
+
+        # For global lat-lon models, make 2D arrays for x and y
+        # Shift the map and data if needed
+        if self.map.m.projection == 'cyl':
+            if tile in ['Africa', 'Europe']:
+                savex = x
+                u, x = shiftgrid(180., u, x, start=False)
+                v, savex = shiftgrid(180., v, savex, start=False)
+            y, x = np.meshgrid(y, x, sparse=False, indexing='ij')
+        mu, mv = [np.ma.masked_array(c, mask=mask) for c in [u, v]]
+
         self.map.m.barbs(x, y, mu, mv,
                          barbcolor='k',
                          flagcolor='k',
