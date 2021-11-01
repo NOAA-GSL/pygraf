@@ -33,6 +33,9 @@ import adb_graphics.utils as utils
 
 AIRPORTS = 'static/Airports_locs.txt'
 
+COMBINED_FN = 'combined_{fhr:03d}.grib2'
+TMP_FN = 'combined_{fhr:03d}.tmp.grib2'
+
 def create_skewt(cla, fhr, grib_path, workdir):
 
     ''' Generate arguments for parallel processing of Skew T graphics,
@@ -124,7 +127,7 @@ def gather_gribfiles(cla, fhr, filename, gribfiles):
     else:
         filenames['free_fcst'].append(filename)
 
-    if gribfiles is None:
+    if gribfiles is None or not cla.all_leads:
 
         # Create a new GribFiles object, include all hours, or just this one,
         # depending on command line argument flag
@@ -574,8 +577,10 @@ def graphics_driver(cla):
         for fhr in range(int(cla.fcst_hour[0])):
             grib_path, old_enough = pre_proc_grib_files(cla, fhr)
             if not os.path.exists(grib_path) or not old_enough:
-                print(f'File {grib_path} does not exist! Cannot accumulate \n \
-                data for this forecast lead time!')
+                msg = (f'File {grib_path} does not exist! Cannot accumulate',
+                       f'data for this forecast lead time!')
+                remove_proc_grib_files(cla)
+                raise FileNotFoundError(' '.join(msg))
             gribfiles = gather_gribfiles(cla, fhr, grib_path, gribfiles)
 
 
@@ -597,7 +602,9 @@ def graphics_driver(cla):
                         print(f"Giving up waiting on {grib_path}. \n \
                         Removing accumulated variables from image list")
                         print((('-' * 80)+'\n') * 2)
-                        remove_accumulated_images()
+                        remove_accumulated_images(cla)
+                        # Explicitly set -all_leads to False
+                        cla.all_leads = False
                     else:
 
                         # Break out of loop, wait for the desired period, and start
@@ -605,7 +612,7 @@ def graphics_driver(cla):
                         print(f'Waiting for {grib_path} to be available.')
                         break
                 # It's safe to continue on processing the next forecast hour
-                print(f'Cannot find {grib_path}, continuing to check on \
+                print(f'Cannot find {grib_path}, continuing to check on \n \
                     next forecast hour.')
                 continue
 
@@ -656,9 +663,11 @@ def graphics_driver(cla):
         # Wait for a bit if it's been < 2 minutes (about the length of time UPP
         # takes) since starting last loop
         if fcst_hours and time.time() - timer_sleep < 120:
-            print(f"Waiting for a minute before forecast hours: {fcst_hours}")
+            print(f"Waiting for a minute for forecast hours: {fcst_hours}")
             print((('-' * 80)+'\n') * 2)
             time.sleep(60)
+
+        remove_proc_grib_files(cla)
 
 def pre_proc_grib_files(cla, fhr):
 
@@ -682,10 +691,11 @@ def pre_proc_grib_files(cla, fhr):
 
     if len(cla.data_root) == 1 and len(cla.file_tmpl) == 1:
         # Nothing to do, return the original file location
-        grib_path = os.path.join(cla.data_root,
-                                 cla.file_tmpl.format(FCST_TIME=fhr))
+        grib_path = os.path.join(cla.data_root[0],
+                                 cla.file_tmpl[0].format(FCST_TIME=fhr))
 
-        old_enough = utils.old_enough(cla.data_age, grib_path)
+        old_enough = utils.old_enough(cla.data_age, grib_path) if \
+            os.path.exists(grib_path) else False
         return grib_path, old_enough
 
     # Generate a list of files to be joined.
@@ -696,15 +706,17 @@ def pre_proc_grib_files(cla, fhr):
         if not exists or not utils.old_enough(cla.data_age, file_path):
             return file_path, False
 
-    print(f'Combining input files: {file_list}')
+    print(f'Combining input files: ')
+    for fn in file_list:
+        print(f'  {fn}')
 
-    combined_fn = f'combined_{fhr:03d}.grib2'
-    tmp_fn = f'combined_{fhr:03d}.tmp.grib2'
+    combined_fn = COMBINED_FN.format(fhr=fhr)
+    tmp_fn = TMP_FN.format(fhr=fhr)
     combined_fp = os.path.join(cla.output_path, combined_fn)
     tmp_fp = os.path.join(cla.output_path, tmp_fn)
 
     cmd = f'cat {" ".join(file_list)} > {tmp_fp}'
-    output = subprocess.run(cmd, shell=True, check=True)
+    output = subprocess.run(cmd, shell=True, check=True, capture_output=True)
     if output.returncode != 0:
         msg = f'{cmd} returned exit status: {output.returncode}!'
         raise OSError(msg)
@@ -734,7 +746,8 @@ def pre_proc_grib_files(cla, fhr):
     cmd = f'wgrib2 -i {tmp_fp} -GRIB {combined_fp}'
     input_arg = '\n'.join(uniq_list).encode("utf-8")
 
-    ret = subprocess.run(cmd, shell=True, input=input_arg, check=True)
+    ret = subprocess.run(cmd, shell=True, input=input_arg, check=True,
+            capture_output=True)
     if ret.returncode != 0:
         msg = f'{cmd} returned exit status: {ret.returncode}'
         raise OSError(msg)
@@ -754,13 +767,30 @@ def remove_accumulated_images(cla):
             if not spec:
                 msg = f'graphics: {variable} {level}'
                 raise errors.NoGraphicsDefinitionForVariable(msg)
-            accumulate = spec.get(accumulate, False)
+            accumulate = spec.get('accumulate', False)
 
             if accumulate:
                 print(f'Will not plot {variable}:{level}')
-                cla.images[1][variable].remove(levels)
+                cla.images[1][variable].remove(level)
                 if not cla.images[1][variable]:
                     del cla.images[1][variable]
+
+def remove_proc_grib_files(cla):
+
+    ''' Find all processed grib files produced by this script and remove them.
+    '''
+
+    # Prepare template with all viable forecast hours -- glob accepts *
+    combined_fn = COMBINED_FN.format(fhr=999).replace('999', '*')
+    combined_fp = os.path.join(cla.output_path, combined_fn)
+
+    combined_files = glob.glob(combined_fp)
+
+    print(f'Removing combined files: ')
+    for file_path in combined_files:
+        print(f'  {file_path}')
+        os.remove(file_path)
+
 
 if __name__ == '__main__':
 
