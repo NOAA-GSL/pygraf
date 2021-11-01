@@ -36,6 +36,8 @@ AIRPORTS = 'static/Airports_locs.txt'
 COMBINED_FN = 'combined_{fhr:03d}.grib2'
 TMP_FN = 'combined_{fhr:03d}.tmp.grib2'
 
+LOG_BREAK = f"{('-' * 80)}\n{('-' * 80)}"
+
 def create_skewt(cla, fhr, grib_path, workdir):
 
     ''' Generate arguments for parallel processing of Skew T graphics,
@@ -314,7 +316,7 @@ def parse_args():
         )
     parser.add_argument(
         '--file_type',
-        choices=('nat', 'prs', 'combined'),
+        choices=('nat', 'prs'),
         default='nat',
         help='Type of levels contained in grib file.',
         )
@@ -552,17 +554,8 @@ def graphics_driver(cla):
 
     # Create an empty zip file
     if cla.zip_dir:
-        zipfiles = {}
         tiles = cla.tiles if cla.graphic_type == "maps" else ['skewt']
-        for tile in tiles:
-            tile_zip_dir = os.path.join(cla.zip_dir, tile)
-            tile_zip_file = os.path.join(tile_zip_dir, 'files.zip')
-            print(f"checking for {tile_zip_file}")
-            if os.path.isfile(tile_zip_file):
-                os.remove(tile_zip_file)
-                print(f"{tile_zip_file} found and removed")
-            os.makedirs(tile_zip_dir, exist_ok=True)
-            zipfiles[tile] = tile_zip_file
+        zipfiles = stage_zip_files(tiles, cla.zip_dir)
 
     fcst_hours = copy.deepcopy(cla.fcst_hour)
 
@@ -600,14 +593,13 @@ def graphics_driver(cla):
                 if cla.all_leads:
                     # Wait on the missing file for an arbitrary 90% of wait time
                     if time.time() - timer_end > cla.wait_time * 60 * .9:
-                        print(f"Giving up waiting on {grib_path}. \n \
-                        Removing accumulated variables from image list")
-                        print((('-' * 80)+'\n') * 2)
+                        print(f"Giving up waiting on {grib_path}. \n",
+                              f"Removing accumulated variables from image list \n",
+                              f"{LOG_BREAK}\n")
                         remove_accumulated_images(cla)
                         # Explicitly set -all_leads to False
                         cla.all_leads = False
                     else:
-
                         # Break out of loop, wait for the desired period, and start
                         # back at this forecast hour.
                         print(f'Waiting for {grib_path} to be available.')
@@ -622,12 +614,10 @@ def graphics_driver(cla):
                                    f"{utils.from_datetime(cla.start_time)}{fhr:02d}")
             os.makedirs(workdir, exist_ok=True)
 
-            print((('-' * 80)+'\n') * 2)
-            print()
-            print(f'Graphics will be created for input file: {grib_path}')
-            print(f'Output graphics directory: {workdir}')
-            print()
-            print((('-' * 80)+'\n') * 2)
+            print(f'{LOG_BREAK}\n',
+                  f'Graphics will be created for input file: {grib_path}\n',
+                  f'Output graphics directory: {workdir} \n'
+                  f'{LOG_BREAK}')
 
             if cla.graphic_type == 'skewts':
                 create_skewt(cla, fhr, grib_path, workdir)
@@ -641,14 +631,7 @@ def graphics_driver(cla):
 
             # Zip png files and remove the originals in a subprocess
             if cla.zip_dir:
-                for tile, zipf in zipfiles.items():
-                    png_files = glob.glob(os.path.join(workdir, f'*_{tile}_*{fhr:02d}.png'))
-                    zip_proc = Process(group=None,
-                                       target=create_zip,
-                                       args=(png_files, zipf),
-                                       )
-                    zip_proc.start()
-                    zip_proc.join()
+                zip_pngs(fhr, workdir, zipfiles)
 
             # Keep track of last time we did something useful
             timer_end = time.time()
@@ -657,15 +640,15 @@ def graphics_driver(cla):
         # wait_time mins. This accounts for slower UPP processes. Default for
         # most CONUS-sized domains is 10 mins.
         if time.time() - timer_end > cla.wait_time * 60:
-            print(f"Exiting with forecast hours remaining: {fcst_hours}")
-            print((('-' * 80)+'\n') * 2)
+            print(f"Exiting with forecast hours remaining: {fcst_hours}",
+                  f"{LOG_BREAK}")
             break
 
         # Wait for a bit if it's been < 2 minutes (about the length of time UPP
         # takes) since starting last loop
         if fcst_hours and time.time() - timer_sleep < 120:
-            print(f"Waiting for a minute for forecast hours: {fcst_hours}")
-            print((('-' * 80)+'\n') * 2)
+            print(f"Waiting for a minute for forecast hours: {fcst_hours}",
+                  f"{LOG_BREAK}")
             time.sleep(60)
 
         remove_proc_grib_files(cla)
@@ -703,54 +686,53 @@ def pre_proc_grib_files(cla, fhr):
     file_list = [os.path.join(*path).format(FCST_TIME=fhr) for path in
                  zip(cla.data_root, cla.file_tmpl)]
     for file_path in file_list:
-        exists = os.path.exists(file_path)
-        if not exists or not utils.old_enough(cla.data_age, file_path):
+        if not os.path.exists(file_path) \
+            or not utils.old_enough(cla.data_age, file_path):
             return file_path, False
 
     print(f'Combining input files: ')
     for fn in file_list:
         print(f'  {fn}')
 
-    combined_fn = COMBINED_FN.format(fhr=fhr)
-    tmp_fn = TMP_FN.format(fhr=fhr)
-    combined_fp = os.path.join(cla.output_path, combined_fn)
-    tmp_fp = os.path.join(cla.output_path, tmp_fn)
+    combined_fp = os.path.join(cla.output_path,
+                               COMBINED_FN.format(fhr=fhr))
+    tmp_fp = os.path.join(cla.output_path,
+                          TMP_FN.format(fhr=fhr))
 
     cmd = f'cat {" ".join(file_list)} > {tmp_fp}'
-    output = subprocess.run(cmd, shell=True, check=True, capture_output=True)
+    output = subprocess.run(cmd,
+                            capture_output=True,
+                            check=True,
+                            shell=True,
+                            )
     if output.returncode != 0:
         msg = f'{cmd} returned exit status: {output.returncode}!'
         raise OSError(msg)
 
     # Gather all grib2 entries from combined file
     cmd = f'wgrib2 {tmp_fp} -submsg 1'
-    wgrib2_output = subprocess.run(cmd, shell=True, capture_output=True,
-                                   check=True)
-    wgrib2_list = wgrib2_output.stdout.decode("utf-8").split('\n')
+    output = subprocess.run(cmd,
+                            capture_output=True,
+                            check=True,
+                            shell=True,
+                            )
+    wgrib2_list = output.stdout.decode("utf-8").split('\n')
 
-    # Create a unique list of grib fields. Uniqueness is defined by the wgrib
-    # output from field 3 (colon delimted) onward, although the resulting full
-    # grib record must be included in the wgrib2 command below.
-
-    field_set = set()
-    uniq_list = []
-    for field in wgrib2_list:
-        field_info = field.split(':')
-        if len(field_info) <= 3:
-            continue
-        field_str = ':'.join(field_info[3:])
-        if field_str not in field_set:
-            uniq_list.append(field)
-        field_set.add(field_str)
+    # Create a unique list of grib fields.
+    uniq_list = uniq_wgrib2_list(wgrib2_list)
 
     # Remove duplicate grib2 entries in grib file
     cmd = f'wgrib2 -i {tmp_fp} -GRIB {combined_fp}'
     input_arg = '\n'.join(uniq_list).encode("utf-8")
 
-    ret = subprocess.run(cmd, shell=True, input=input_arg, check=True,
-            capture_output=True)
-    if ret.returncode != 0:
-        msg = f'{cmd} returned exit status: {ret.returncode}'
+    output = subprocess.run(cmd,
+                            capture_output=True,
+                            check=True,
+                            input=input_arg,
+                            shell=True,
+                            )
+    if output.returncode != 0:
+        msg = f'{cmd} returned exit status: {output.returncode}'
         raise OSError(msg)
     os.remove(f'{tmp_fp}')
 
@@ -792,6 +774,79 @@ def remove_proc_grib_files(cla):
         print(f'  {file_path}')
         os.remove(file_path)
 
+def stage_zip_files(tiles, zip_dir):
+
+    ''' Stage the zip files in the appropriate directory for each tile to be
+    plotted. Return the dictionary of zipfile paths.
+
+    Input:
+
+        tiles    list of subregions to plot from larger domain. becomes the
+                 subdirectory under the zip_dir
+        zip_dir  the top level zip file directory where files are expected to
+                 show up
+
+    Returns:
+        zipfiles   dictionary of tile keys, and zip directory values.
+
+    '''
+    zipfiles = {}
+    for tile in tiles:
+        tile_zip_dir = os.path.join(zip_dir, tile)
+        tile_zip_file = os.path.join(tile_zip_dir, 'files.zip')
+        print(f"checking for {tile_zip_file}")
+        if os.path.isfile(tile_zip_file):
+            os.remove(tile_zip_file)
+            print(f"{tile_zip_file} found and removed")
+        os.makedirs(tile_zip_dir, exist_ok=True)
+        zipfiles[tile] = tile_zip_file
+    return zipfiles
+
+def uniq_wgrib2_list(inlist):
+
+    ''' Given a list of wgrib2 output fields, returns a uniq list of fields for
+    simplifying a grib2 dataset. Uniqueness is defined by the wgrib output from
+    field 3 (colon delimted) onward, although the original full grib record must
+    be included in the wgrib2 command below.
+    '''
+
+    uniq_field_set = set()
+    uniq_list = []
+    for infield in inlist:
+        infield_info = infield.split(':')
+        if len(infield_info) <= 3:
+            continue
+        infield_str = ':'.join(infield_info[3:])
+        if infield_str not in uniq_field_set:
+            uniq_list.append(infield)
+        uniq_field_set.add(infield_str)
+
+    return uniq_list
+
+
+def zip_pngs(fhr, workdir, zipfiles):
+
+    ''' Spin up a subprocess to zip all the png files into the staged zip files.
+
+    Input:
+
+        fhr         integer forecast hour
+        workdir     path to the png files
+        zipfiles    dictionary of tile keys, and zip directory values.
+
+    Output:
+        None
+    '''
+
+    for tile, zipf in zipfiles.items():
+        png_files = glob.glob(os.path.join(workdir, f'*_{tile}_*{fhr:02d}.png'))
+        zip_proc = Process(group=None,
+                           target=create_zip,
+                           args=(png_files, zipf),
+                           )
+        zip_proc.start()
+        zip_proc.join()
+
 
 if __name__ == '__main__':
 
@@ -820,8 +875,8 @@ if __name__ == '__main__':
         CLARGS.images = load_images(CLARGS.images)
         CLARGS.tiles = generate_tile_list(CLARGS.tiles)
 
-    print(f"Running script for {CLARGS.graphic_type} with args: ")
-    print((('-' * 80)+'\n') * 2)
+    print(f"Running script for {CLARGS.graphic_type} with args: ",
+          f"{LOG_BREAK}")
 
     for name, val in CLARGS.__dict__.items():
         if name not in ['specs', 'sites']:
