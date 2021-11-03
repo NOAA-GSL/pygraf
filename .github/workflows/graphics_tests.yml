@@ -25,7 +25,7 @@ jobs:
         env:
           CACHE_NUMBER: 0
         with:
-          path: ~/conda_pkgs_dir
+          path: /home/runner/conda_pkgs_dir
           key:
             ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment.yml') }}
       - name: Setup conda environment
@@ -34,7 +34,11 @@ jobs:
           activate-environment: pygraf
           condarc-file: .condarc
           environment-file: environment.yml
-          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
+          use_only_tar_bz2: true # IMPORTANT: This needs to be set for caching to work properly!
+          use_local: true
+          channels:
+            - conda-forge
+          default_python: 3.7
       - run: pylint *.py
       - run: pylint adb_graphics
       - run: pylint tests
