@@ -1393,7 +1393,10 @@ ulwrf: # Upward Longwave Radiation Flux
 uswrf: # Upward Shortwave Radiation Flux
   sfc:
     <<: *radiation_flux
+    clevs: [0, 50, 100, 150, 200, 250, 300, 400, 500, 600, 700, 800, 900, 1000]
+    colors: rainbow12_colors
     ncl_name: USWRF_P0_L1_{grid}
+    ticks: 0
     title: Upward Shortwave Radiation Flux, Surface
   top: # Nominal top of atmosphere
     <<: *radiation_flux
