@@ -1,1 +1,2 @@
 default_threads: 8
+priority_channel: strict
