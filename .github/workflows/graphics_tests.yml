@@ -34,7 +34,7 @@ jobs:
           activate-environment: pygraf
           condarc-file: .condarc
           environment-file: environment.yml
-          use_only_tar_bz2: true # IMPORTANT: This needs to be set for caching to work properly!
+          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
           python-version: 3.7
       - run: pylint *.py
       - run: pylint adb_graphics
