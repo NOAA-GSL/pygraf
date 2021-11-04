@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import matplotlib.offsetbox as mpob
 import matplotlib.patches as mpatches
-from mpl_toolkits.basemap import Basemap
+#from mpl_toolkits.basemap import Basemap
 import numpy as np
 
 import adb_graphics.utils as utils
@@ -96,28 +96,28 @@ class Map():
         if self.tile in ['HI', 'Florida', 'PuertoRico'] or self.model in ['hrrrhi', 'hrrrcar']:
             area_thresh = 100
 
-        self.m = self._get_basemap(area_thresh=area_thresh, **self.grid_info)
+#        self.m = self._get_basemap(area_thresh=area_thresh, **self.grid_info)
 
     def boundaries(self):
 
         ''' Draws map boundaries - coasts, states, countries. '''
 
-        try:
-            self.m.drawcoastlines(linewidth=0.5)
-        except ValueError:
-            self.m.drawcounties(color='k',
-                                linewidth=0.4,
-                                zorder=2,
-                                )
-        else:
-            if self.tile not in ['full', 'conus', 'AK']:
-                self.m.drawcounties(antialiased=False,
-                                    color='gray',
-                                    linewidth=0.1,
-                                    zorder=2,
-                                    )
-        self.m.drawstates()
-        self.m.drawcountries()
+#        try:
+#            self.m.drawcoastlines(linewidth=0.5)
+#        except ValueError:
+#            self.m.drawcounties(color='k',
+#                                linewidth=0.4,
+#                                zorder=2,
+#                                )
+#        else:
+#            if self.tile not in ['full', 'conus', 'AK']:
+#                self.m.drawcounties(antialiased=False,
+#                                    color='gray',
+#                                    linewidth=0.1,
+#                                    zorder=2,
+#                                    )
+#        self.m.drawstates()
+#        self.m.drawcountries()
 
     def draw(self):
 
@@ -132,36 +132,36 @@ class Map():
 
         lats = self.airports[:, 0]
         lons = 360 + self.airports[:, 1] # Convert to positive longitude
-        x, y = self.m(lons, lats)
-        self.m.plot(x, y, 'ko',
-                    ax=self.ax,
-                    color='w',
-                    fillstyle='full',
-                    markeredgecolor='k',
-                    markeredgewidth=0.5,
-                    markersize=4,
-                    )
+#        x, y = self.m(lons, lats)
+#        self.m.plot(x, y, 'ko',
+#                    ax=self.ax,
+#                    color='w',
+#                    fillstyle='full',
+#                    markeredgecolor='k',
+#                    markeredgewidth=0.5,
+#                    markersize=4,
+#                    )
 
-    def _get_basemap(self, **get_basemap_kwargs):
-
-        ''' Wrapper around basemap creation '''
-
-        basemap_args = dict(
-            ax=self.ax,
-            resolution='i',
-            )
-        corners = self.corners
-        if corners is not None:
-            basemap_args.update(dict(
-                llcrnrlat=corners[0],
-                llcrnrlon=corners[2],
-                urcrnrlat=corners[1],
-                urcrnrlon=corners[3],
-                ))
-
-        basemap_args.update(get_basemap_kwargs)
-
-        return Basemap(**basemap_args)
+#    def _get_basemap(self, **get_basemap_kwargs):
+#
+#        ''' Wrapper around basemap creation '''
+#
+#        basemap_args = dict(
+#            ax=self.ax,
+#            resolution='i',
+#            )
+#        corners = self.corners
+#        if corners is not None:
+#            basemap_args.update(dict(
+#                llcrnrlat=corners[0],
+#                llcrnrlon=corners[2],
+#                urcrnrlat=corners[1],
+#                urcrnrlon=corners[3],
+#                ))
+#
+#        basemap_args.update(get_basemap_kwargs)
+#
+#        return Basemap(**basemap_args)
 
     def get_corners(self):
 
