@@ -35,7 +35,8 @@ jobs:
           condarc-file: .condarc
           environment-file: environment.yml
           use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
-          python-version: 3.7
+          python-version: 3.8
+      - run: conda install -c anaconda pylint pyyaml pytest
       - run: pylint *.py
       - run: pylint adb_graphics
       - run: pylint tests

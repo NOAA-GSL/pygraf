@@ -1,4 +1,4 @@
 default_threads: 8
 channel_priority: strict
 use_local: true
-default_python: 3.7
+default_python: 3.8
