@@ -33,9 +33,10 @@ jobs:
         with:
           activate-environment: pygraf
           condarc-file: .condarc
-          environment-file: environment.yml
           use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
           python-version: 3.8
+      - run: conda install -c conda-forge basemap=1.2* basemap-data-hires=1.2.1 pynio=1.5.5
+      - run: conda install -c conda-forge matplotlib=3.2* metpy=0.12.1 xarray=0.15.1
       - run: conda install -c anaconda pylint pyyaml pytest
       - run: pylint *.py
       - run: pylint adb_graphics
