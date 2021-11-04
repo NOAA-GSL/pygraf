@@ -1,6 +1,7 @@
 name: pygraf
 channels:
   - conda-forge
+  - anaconda
 dependencies:
   - python=3.8*
   - basemap=1.2*
