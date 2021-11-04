@@ -3,9 +3,7 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python=3.9*
-  - basemap
-  - basemap-data-hires
+  - python=3.7*
   - pynio=1.5.5
   - matplotlib=3.2*
   - metpy=0.12.1
