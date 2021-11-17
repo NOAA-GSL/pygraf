@@ -3,12 +3,6 @@ hourly:
   variables:
     1ref:
       - 1000m
-    acpcp:
-      - sfc
-    acsnod:
-      - sfc
-    acsnw:
-      - sfc
     cape:
       - mu
       - mul
@@ -41,18 +35,10 @@ hourly:
     rh:
       - 2m
       - 850mb
-    snod:
-      - sfc
-    soilm:
-      - sfc
     soilt: &soilt_levs
       - 10cm
       - 1m
     soilw: *soilt_levs
-    solar:
-      - sfc
-    ssrun:
-      - sfc
     temp:
       - 2ds
       - 2m
@@ -60,8 +46,6 @@ hourly:
       - 700mb
       - 850mb
       - 925mb
-      - sfc
-    totp6h:
       - sfc
     vis:
       - sfc

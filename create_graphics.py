@@ -126,7 +126,7 @@ def gather_gribfiles(cla, fhr, gribfiles):
     for fcst_hour in fcst_hours:
         filename = os.path.join(cla.data_root,
                                 cla.file_tmpl.format(FCST_TIME=fcst_hour))
-        first_fcst = 6 if cla.images[0] == 'global' else 1
+        first_fcst = 6 if cla.images[0] in ['global', 'globalAK', 'globalCONUS'] else 1
         if fcst_hour <= first_fcst:
             filenames['01fcst'].append(filename)
         else:
@@ -145,7 +145,6 @@ def gather_gribfiles(cla, fhr, gribfiles):
             )
     else:
 
-        print('leg 2')
         # Append a single forecast hour to the existing GribFiles object.
         gribfiles.coord_dims.get('fcst_hr').append(fhr)
         gribfiles.append(filenames)
@@ -432,12 +431,31 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
                 short_name=var,
                 ))
 
-    if cla.model_name == "HRRR-HI":
+    #if cla.model_name == "HRRR-HI":
+    if cla.model_name in ['HRRR-HI', 'FV3']:
         inches = 12.2
     else:
-        inches = 15
+        inches = 10
 
-    fig, ax = plt.subplots(1, 1, figsize=(inches, inches))
+    #fig, ax = plt.subplots(1, 1, figsize=(inches, inches))
+    #fig, ax = plt.subplots(1, 1, figsize=(15, 10))  # large image, a little colorbar extent
+    #fig, ax = plt.subplots(1, 1, figsize=(13, 10))  # fairly large, no colorbar extent
+    #fig, ax = plt.subplots(1, 1, figsize=(12, 10))  # ok size, no overlap, no colorbar extent
+    #fig, ax = plt.subplots(1, 1, figsize=(11, 10))  # a bit too small, titles overlap a little
+    #fig, ax = plt.subplots(1, 1, figsize=(12, 11))  # kinda small, slight title overlap, no colorbar extent
+    #fig, ax = plt.subplots(1, 1, figsize=(12, 12))  # pretty much same as 12, 11
+    #fig, ax = plt.subplots(1, 1, figsize=(12, 13))  # pretty much same as 12, 11
+    #fig, ax = plt.subplots(1, 1, figsize=(12, 14))  # pretty much same as 12, 11
+    #fig, ax = plt.subplots(1, 1, figsize=(13, 14))  # like 12, 10
+    #fig, ax = plt.subplots(1, 1, figsize=(14, 14))  # like 12, 10 a little bigger
+    #fig, ax = plt.subplots(1, 1, figsize=(14, 13))  # "
+    #fig, ax = plt.subplots(1, 1, figsize=(14, 12))  # "
+    #fig, ax = plt.subplots(1, 1, figsize=(14, 11))  # "
+    #fig, ax = plt.subplots(1, 1, figsize=(14, 10))  # large image, a little colorbar extent
+    #fig, ax = plt.subplots(1, 1, figsize=(14, 9))   # smaller than 14, 10; more colorbar extent
+    #fig, ax = plt.subplots(1, 1, figsize=(14, 8))   # smaller than 14, 9; more colorbar extent, less WS
+    #fig, ax = plt.subplots(1, 1, figsize=(14, 7))   # smaller than 14, 8; max cb extent, slight title overlap
+    fig, ax = plt.subplots(1, 1, figsize=(14, 14))  # best square 
 
     # Generate a map object
     m = maps.Map(

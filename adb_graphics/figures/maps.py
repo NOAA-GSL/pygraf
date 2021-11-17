@@ -527,18 +527,18 @@ class DataMap():
         if tile == 'full':
 #            avgside = (u.shape[0] + u.shape[1]) / 2
 #            stride = int(round(avgside / 35))
-            print(f'shape 0 = {u.shape[0]}, shape 1 = {u.shape[1]}')
+#            print(f'shape 0 = {u.shape[0]}, shape 1 = {u.shape[1]}')
             if u.shape[0] < u.shape[1]:
                 stride = int(round(u.shape[0] / 35))
-                print('using u shape 0')
+#                print('using u shape 0')
             else:
                 stride = int(round(u.shape[1] / 35))
-                print('using u shape 1')
+#                print('using u shape 1')
             length = 5
         else:
             stride = TILE_DEFS[tile]["stride"]
             length = TILE_DEFS[tile]["length"]
-        print(f'stride = {stride}')
+#        print(f'stride = {stride}')
         length = 5
 #        # Set the stride and size of the barbs to be plotted with a masked array.
 #        if self.map.m.projection == 'lcc' and tile == 'full':

@@ -94,7 +94,9 @@ class GribFiles():
                         ])
                 needs_renaming = var.split('_')[0] not in odd_variables
                 if suffix in special_suffixes and needs_renaming:
-                    new_suffix = f'{suffix}1h' if self.model not in ['global'] else f'{suffix}6h'
+                    #new_suffix = f'{suffix}1h' if self.model not in ['global'] else f'{suffix}6h'
+                    new_suffix = f'{suffix}1h' if 'global' not in self.model else f'{suffix}6h'
+                    print(f'new_suffix = {new_suffix}')
                     ret[var] = var.replace(suffix, new_suffix)
             else:
                 # Only rename these variables at late hours
@@ -122,7 +124,8 @@ class GribFiles():
 
                     # All the variables that need to be renamed. In most cases,
                     # exclude the "1h" accumulated variables
-                    if self.model in ['global']:
+                    #if self.model in ['global', 'NHemi', 'SHemi']:
+                    if 'global' in self.model:
                         if suf in suffix and suffix != f'{suf}6h':
                             contains_suffix.append(suf)
                     else:
@@ -179,9 +182,14 @@ class GribFiles():
 
                 renaming = self.free_fcst_names(dataset, fcst_type)
                 if renaming and self.model != 'hrrre':
+                    checked = []
                     print(f'RENAMING VARIABLES:')
                     for old_name, new_name in renaming.items():
-                        print(f'  {old_name:>30s}  -> {new_name}')
+                        #print(f'  {old_name:>30s}  -> {new_name}')
+                        if old_name not in checked:
+                            print(f' checked = {checked}')
+                            print(f'  {old_name:>30s}  -> {new_name}')
+                            checked.append(old_name)
                     dataset = dataset.rename_vars(renaming)
 
                 if len(all_leads) == 1:
