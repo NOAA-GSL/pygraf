@@ -575,6 +575,7 @@ gust:
     colors: wind_colors
     ncl_name: GUST_P0_L1_{grid}
     ticks: 5
+    title: 10m Wind Gust Potential
     transform: conversions.ms_to_kt
     unit: kt
 hail: # Max 1h Hail diameter
