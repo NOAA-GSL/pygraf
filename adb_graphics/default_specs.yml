@@ -1124,8 +1124,8 @@ soilt: # Soil Temperature
     title: Soil Temperature at 3m
 soilw: # Soil Moisture
   0cm: &soilw_levs
-    clevs: !!python/object/apply:numpy.arange [0.0, 0.61, 0.1]
-    cmap: gist_ncar
+    clevs: !!python/object/apply:numpy.arange [0.0, 0.51, 0.05]
+    cmap: jet_r
     colors: soilw_colors
     ncl_name: SOILW_P0_2L106_{grid}
     ticks: 0
