@@ -759,17 +759,18 @@ def graphics_driver(cla):
     # load all of those into gribfiles up front.
     # This is not an operational feature. Exit if files don't exist.
 
-    first_fcst = 6 if cla.images[0] == 'global' else 0
-    fcst_inc = 6 if cla.images[0] == 'global' else 1
-    if len(cla.fcst_hour) == 1 and cla.all_leads:
-        for fhr in range(first_fcst, int(cla.fcst_hour[0]), fcst_inc):
-            grib_path, old_enough = pre_proc_grib_files(cla, fhr)
-            if not os.path.exists(grib_path) or not old_enough:
-                msg = (f'File {grib_path} does not exist! Cannot accumulate',
-                       f'data for this forecast lead time!')
-                remove_proc_grib_files(cla)
-                raise FileNotFoundError(' '.join(msg))
-            gribfiles = gather_gribfiles(cla, fhr, grib_path, gribfiles)
+    if cla.graphic_type == 'maps':
+        first_fcst = 6 if cla.images[0] == 'global' else 0
+        fcst_inc = 6 if cla.images[0] == 'global' else 1
+        if len(cla.fcst_hour) == 1 and cla.all_leads:
+            for fhr in range(first_fcst, int(cla.fcst_hour[0]), fcst_inc):
+                grib_path, old_enough = pre_proc_grib_files(cla, fhr)
+                if not os.path.exists(grib_path) or not old_enough:
+                    msg = (f'File {grib_path} does not exist! Cannot accumulate',
+                           f'data for this forecast lead time!')
+                    remove_proc_grib_files(cla)
+                    raise FileNotFoundError(' '.join(msg))
+                gribfiles = gather_gribfiles(cla, fhr, grib_path, gribfiles)
 
 
     # Allow this task to run concurrently with UPP by continuing to check for
