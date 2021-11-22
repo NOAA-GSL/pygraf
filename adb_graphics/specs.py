@@ -326,7 +326,7 @@ class VarSpec(abc.ABC):
 
         grays = cm.get_cmap('Greys', 5)([0, 2])
         ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
-                          ([15, 18, 20, 25, 50, 60, 70, 80, 85, 90, 100])
+                          ([15, 18, 20, 25, 50, 60, 74, 81, 85, 90, 100])
         return np.concatenate((grays, ncar))
 
     @property

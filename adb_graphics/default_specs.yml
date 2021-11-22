@@ -212,7 +212,7 @@ acsnod: # Accumulated snow
   sfc: &snow
     clevs: [0.01, 0.1, 1, 2, 3, 4, 6, 8, 10, 12, 18, 24]
     cmap: gist_ncar
-    colors: rainbow12_colors
+    colors: snow_colors
     ncl_name: ASNOW_P8_L1_GLC0_acc
     ticks: 0
     title: Run Total Accumulated Snow Depth - var dens
