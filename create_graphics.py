@@ -15,6 +15,8 @@ import gc
 import glob
 from multiprocessing import Pool, Process
 import os
+import random
+import string
 import subprocess
 import sys
 import time
@@ -33,8 +35,8 @@ import adb_graphics.utils as utils
 
 AIRPORTS = 'static/Airports_locs.txt'
 
-COMBINED_FN = 'combined_{fhr:03d}.grib2'
-TMP_FN = 'combined_{fhr:03d}.tmp.grib2'
+COMBINED_FN = 'combined_{fhr:03d}_{uniq}.grib2'
+TMP_FN = 'combined_{fhr:03d}_{uniq}.tmp.grib2'
 
 LOG_BREAK = f"{('-' * 80)}\n{('-' * 80)}"
 
@@ -576,10 +578,12 @@ def pre_proc_grib_files(cla, fhr):
     for fn in file_list:
         print(f'  {fn}')
 
+    file_rand = ''.join([random.choice(string.ascii_letters + string.digits) \
+        for _ in range(8)])
     combined_fp = os.path.join(cla.output_path,
-                               COMBINED_FN.format(fhr=fhr))
+                               COMBINED_FN.format(fhr=fhr, uniq=file_rand))
     tmp_fp = os.path.join(cla.output_path,
-                          TMP_FN.format(fhr=fhr))
+                          TMP_FN.format(fhr=fhr, uniq=file_rand))
 
     cmd = f'cat {" ".join(file_list)} > {tmp_fp}'
     output = subprocess.run(cmd,
@@ -601,11 +605,11 @@ def pre_proc_grib_files(cla, fhr):
     wgrib2_list = output.stdout.decode("utf-8").split('\n')
 
     # Create a unique list of grib fields.
-    uniq_list = uniq_wgrib2_list(wgrib2_list)
+    wgrib2_list = uniq_wgrib2_list(wgrib2_list)
 
     # Remove duplicate grib2 entries in grib file
     cmd = f'wgrib2 -i {tmp_fp} -GRIB {combined_fp}'
-    input_arg = '\n'.join(uniq_list).encode("utf-8")
+    input_arg = '\n'.join(wgrib2_list).encode("utf-8")
 
     output = subprocess.run(cmd,
                             capture_output=True,
@@ -646,7 +650,7 @@ def remove_proc_grib_files(cla):
     '''
 
     # Prepare template with all viable forecast hours -- glob accepts *
-    combined_fn = COMBINED_FN.format(fhr=999).replace('999', '*')
+    combined_fn = COMBINED_FN.format(fhr=999, uniq=999).replace('999', '*')
     combined_fp = os.path.join(cla.output_path, combined_fn)
 
     combined_files = glob.glob(combined_fp)
