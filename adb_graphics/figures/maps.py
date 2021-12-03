@@ -31,7 +31,8 @@ TILE_DEFS = {
     'SE': {'corners': [22, 37, -93.5, -72], 'stride': 10, 'length': 4},
     'SW': {'corners': [24.5, 45, -122, -103], 'stride': 10, 'length': 4},
     'Africa': {'corners': [-40, 40, -40, 60], 'stride': 7, 'length': 5},
-    'AKZoom': {'corners': [52, 73, -162, -132], 'stride': 4, 'length': 4},
+    'AKZoom': {'corners': [52, 73, -162, -132], 'stride': 4, 'length': 5},
+    'AKZoom2': {'corners': [37.9, 80.8, 180, -105.7], 'stride': 8, 'length': 5},
     'AKRange': {'corners': [59.722, 65.022, -153.583, -144.289], 'stride': 4, 'length': 4},
     'Anchorage': {'corners': [58.59, 62.776, -152.749, -146.218], 'stride': 4, 'length': 4},
     'ATL': {'corners': [31.2, 35.8, -87.4, -79.8], 'stride': 4, 'length': 4},
@@ -71,7 +72,6 @@ class Map():
         Required arguments:
 
           airport_fn    full path to airport file
-          airport_fn    full path to airport file
           ax            figure axis
 
         Keyword arguments:
@@ -96,7 +96,7 @@ class Map():
         self.tile = kwargs.get('tile', 'full')
         self.airports = self.load_airports(airport_fn)
 
-        if self.tile in ['full', 'conus', 'AK',]:
+        if self.tile in ['full', 'CONUS', 'AK', 'NHemi']:
             self.corners = self.grid_info.pop('corners')
         else:
             self.corners = self.get_corners()
@@ -313,7 +313,7 @@ class DataMap():
 
         # Add field values at airports
         annotate = self.field.vspec.get('annotate', False)
-        if annotate and self.map.model not in ['global']: # airports are too dense in global
+        if annotate and 'global' not in self.map.model: # airports are too dense in global
             self._draw_field_values(ax)
 
         # Finish with the title
@@ -377,7 +377,6 @@ class DataMap():
         '''
 
         x, y = self._xy_mesh(field)
-        #vals = field.values()[::]
         vals = field.values()
 
         # For global lat-lon models, make 2D arrays for x and y
@@ -484,6 +483,7 @@ class DataMap():
                     title = title.replace("Geopotential", "Geop.")
                     contoured.append(f'{title}')
                     contoured_units.append(f'{cf.units}')
+
         contoured = '\n'.join(contoured)  # Make 'contoured' a string with linefeeds
         if contoured_units:
             contoured = f"{contoured} ({', '.join(contoured_units)}, contoured)"
@@ -524,47 +524,19 @@ class DataMap():
         model = self.model_name
         tile = self.map.tile
 
-        if tile == 'full':
-#            avgside = (u.shape[0] + u.shape[1]) / 2
-#            stride = int(round(avgside / 35))
-#            print(f'shape 0 = {u.shape[0]}, shape 1 = {u.shape[1]}')
+        # Set the stride and size of the barbs to be plotted with a masked array.
+        if tile in ['full', 'AK', 'CONUS', 'NHemi']:
             if u.shape[0] < u.shape[1]:
                 stride = int(round(u.shape[0] / 35))
-#                print('using u shape 0')
             else:
                 stride = int(round(u.shape[1] / 35))
-#                print('using u shape 1')
             length = 5
         else:
             stride = TILE_DEFS[tile]["stride"]
             length = TILE_DEFS[tile]["length"]
-#        print(f'stride = {stride}')
-        length = 5
-#        # Set the stride and size of the barbs to be plotted with a masked array.
-#        if self.map.m.projection == 'lcc' and tile == 'full':
-#            if model == 'HRRR-HI':
-#                stride = 12
-#                length = 4
-#            else:
-#                if len(u) < 1000:
-#                    stride = 10
-#                    length = 5
-#                else:
-#                    stride = 30
-#                    length = 5
-#        elif self.map.m.projection == 'rotpole' and tile == 'full':
-#            if model == 'RRFS_NA_3km':
-#                stride = 50
-#                length = 4
-#            else:
-#                stride = 15
-#                length = 4
-#        elif self.map.model == 'global' and tile == 'full':
-#            stride = 20
-#            length = 4
-#        else:
-#            stride = TILE_DEFS[tile]["stride"]
-#            length = TILE_DEFS[tile]["length"]
+            if self.map.model == 'globalCONUS':
+                stride = int(round(stride / 2.5))
+                length = 5
 
         mask = np.ones_like(u)
         mask[::stride, ::stride] = 0

@@ -94,9 +94,7 @@ class GribFiles():
                         ])
                 needs_renaming = var.split('_')[0] not in odd_variables
                 if suffix in special_suffixes and needs_renaming:
-                    #new_suffix = f'{suffix}1h' if self.model not in ['global'] else f'{suffix}6h'
                     new_suffix = f'{suffix}1h' if 'global' not in self.model else f'{suffix}6h'
-                    print(f'new_suffix = {new_suffix}')
                     ret[var] = var.replace(suffix, new_suffix)
             else:
                 # Only rename these variables at late hours
@@ -124,7 +122,6 @@ class GribFiles():
 
                     # All the variables that need to be renamed. In most cases,
                     # exclude the "1h" accumulated variables
-                    #if self.model in ['global', 'NHemi', 'SHemi']:
                     if 'global' in self.model:
                         if suf in suffix and suffix != f'{suf}6h':
                             contains_suffix.append(suf)
@@ -182,14 +179,9 @@ class GribFiles():
 
                 renaming = self.free_fcst_names(dataset, fcst_type)
                 if renaming and self.model != 'hrrre':
-                    checked = []
                     print(f'RENAMING VARIABLES:')
                     for old_name, new_name in renaming.items():
-                        #print(f'  {old_name:>30s}  -> {new_name}')
-                        if old_name not in checked:
-                            print(f' checked = {checked}')
-                            print(f'  {old_name:>30s}  -> {new_name}')
-                            checked.append(old_name)
+                        print(f'  {old_name:>30s}  -> {new_name}')
                     dataset = dataset.rename_vars(renaming)
 
                 if len(all_leads) == 1:
@@ -213,7 +205,7 @@ class GribFiles():
                         if bad_var not in og_ds.variables and \
                             dataset.get(bad_var) is not None:
                             print(f'Adding {bad_var} to og ds')
-                            # Dupplicate the accumulated variable with the
+                            # Duplicate the accumulated variable with the
                             # required name
                             og_ds[bad_var] = og_ds.get(f'{bad_var}1h')
                 all_leads.append(dataset)

@@ -431,31 +431,12 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
                 short_name=var,
                 ))
 
-    #if cla.model_name == "HRRR-HI":
-    if cla.model_name in ['HRRR-HI', 'FV3']:
+    if cla.model_name == "HRRR-HI":
         inches = 12.2
     else:
         inches = 10
 
-    #fig, ax = plt.subplots(1, 1, figsize=(inches, inches))
-    #fig, ax = plt.subplots(1, 1, figsize=(15, 10))  # large image, a little colorbar extent
-    #fig, ax = plt.subplots(1, 1, figsize=(13, 10))  # fairly large, no colorbar extent
-    #fig, ax = plt.subplots(1, 1, figsize=(12, 10))  # ok size, no overlap, no colorbar extent
-    #fig, ax = plt.subplots(1, 1, figsize=(11, 10))  # a bit too small, titles overlap a little
-    #fig, ax = plt.subplots(1, 1, figsize=(12, 11))  # kinda small, slight title overlap, no colorbar extent
-    #fig, ax = plt.subplots(1, 1, figsize=(12, 12))  # pretty much same as 12, 11
-    #fig, ax = plt.subplots(1, 1, figsize=(12, 13))  # pretty much same as 12, 11
-    #fig, ax = plt.subplots(1, 1, figsize=(12, 14))  # pretty much same as 12, 11
-    #fig, ax = plt.subplots(1, 1, figsize=(13, 14))  # like 12, 10
-    #fig, ax = plt.subplots(1, 1, figsize=(14, 14))  # like 12, 10 a little bigger
-    #fig, ax = plt.subplots(1, 1, figsize=(14, 13))  # "
-    #fig, ax = plt.subplots(1, 1, figsize=(14, 12))  # "
-    #fig, ax = plt.subplots(1, 1, figsize=(14, 11))  # "
-    #fig, ax = plt.subplots(1, 1, figsize=(14, 10))  # large image, a little colorbar extent
-    #fig, ax = plt.subplots(1, 1, figsize=(14, 9))   # smaller than 14, 10; more colorbar extent
-    #fig, ax = plt.subplots(1, 1, figsize=(14, 8))   # smaller than 14, 9; more colorbar extent, less WS
-    #fig, ax = plt.subplots(1, 1, figsize=(14, 7))   # smaller than 14, 8; max cb extent, slight title overlap
-    fig, ax = plt.subplots(1, 1, figsize=(14, 14))  # best square 
+    fig, ax = plt.subplots(1, 1, figsize=(inches, inches))
 
     # Generate a map object
     m = maps.Map(

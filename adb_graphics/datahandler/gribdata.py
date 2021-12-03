@@ -39,7 +39,6 @@ class UPPData(specs.VarSpec):
         # Parse kwargs first
         config = kwargs.get('config', 'adb_graphics/default_specs.yml')
         self.model = kwargs.get('model')
-        self.tile = kwargs.get('tile')
         self.filetype = kwargs.get('filetype', 'prs')
 
 
@@ -278,7 +277,6 @@ class UPPData(specs.VarSpec):
 
         if x <= 0 or y <= 0 or x >= max_x or y >= max_y:
             print(f'site location is outside your domain! {site_lat} {site_lon}')
-            # return(-1.E10, -1.E10)
             return(-1, -1)
 
         return (x, y)
@@ -527,10 +525,7 @@ class fieldData(UPPData):
         if self.model == 'global':
             ret = [lat[-1], lat[0], lon[0], lon[-1]]
         else:
-            ret = [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]  # good SHemi data but wrong map
-            #ret = [20.826, 20.826, 30.0, 120.0]
-            #ret = [20.826, 20.826, 120, -60]  # good SHemi map but no data
-        print(f'ret = {ret}')
+            ret = [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
 
         return ret
 
@@ -616,22 +611,13 @@ class fieldData(UPPData):
             grid_info['lat_0'] = 39.0
         elif self.grid_suffix == 'GST0':
             attrs = ['Lov']
-            grid_info['projection'] = 'stere'  # don't use npstere or spstere
-            #grid_info['lat_0'] = 90  # works for NHemi
-            #grid_info['lat_0'] = -90  # works for SHemi
-            grid_info['lat_ts'] = 90
+            grid_info['projection'] = 'stere'
             grid_info['lat_0'] = 90
         elif self.grid_suffix == 'GLL0':
             attrs = []
-            #grid_info['projection'] = 'cyl'
-            grid_info['projection'] = 'ortho'
-            #grid_info['resolution'] = None
+            grid_info['projection'] = 'cyl'
             grid_info['lon_0'] = 0
             grid_info['lat_0'] = 90
-            grid_info['llcrnrx'] = 0
-            grid_info['llcrnry'] = 0
-            grid_info['urcrnrx'] = 1439
-            grid_info['urcrnry'] = 720
         else:
             attrs = []
             grid_info['projection'] = 'rotpole'

@@ -827,6 +827,7 @@ pres:
     colors: ps_colors
     ncl_name:
       global: PRMSL_P0_L101_{grid}
+      globalAK: PRMSL_P0_L101_{grid}
       hrrr: MSLMA_P0_L101_{grid}
       hrrrhi: MSLMA_P0_L101_{grid}
       hrrrcar: MSLMA_P0_L101_{grid}
@@ -1069,7 +1070,7 @@ snmr: # Snow Mixing Ratio
 snod: # Snow Depth
   sfc:
     <<: *snow
-    ncl_name: SNOD_P0_L1_GLC0
+    ncl_name: SNOD_P0_L1_{grid}
     title:  Cycled Snow Depth
 soilm: # Soil Moisture Availability
   sfc:
@@ -1078,6 +1079,7 @@ soilm: # Soil Moisture Availability
     colors: soilm_colors
     ncl_name:
       global: SOILM_P0_2L106_{grid}
+      globalAK: SOILM_P0_2L106_{grid}
       hrrr: MSTAV_P0_L106_{grid}
       hrrrhi: MSTAV_P0_L106_{grid}
       hrrrcar: MSTAV_P0_L106_{grid}
@@ -1200,7 +1202,7 @@ temp: # Temperature
     unit: F
     wind: False
   2m:
-    annotate: True
+    # annotate: True
     clevs: !!python/object/apply:numpy.arange [-60, 121, 4]
     cmap: jet
     colors: tsfc_colors
