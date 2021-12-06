@@ -41,7 +41,6 @@ TILE_DEFS = {
     'Cambodia': {'corners': [0, 24, 90, 118], 'stride': 3, 'length': 5},
     'CentralCA': {'corners': [34.5, 40.5, -124, -118], 'stride': 4, 'length': 4},
     'CHI-DET': {'corners': [39, 44, -92, -83], 'stride': 4, 'length': 4},
-    'CONUS130': {'corners': [16.281, 55.48131, -126.138, -57.38108], 'stride': 4, 'length': 4},
     'DCArea': {'corners': [36.7, 40, -81, -72], 'stride': 4, 'length': 4},
     'EastCO': {'corners': [36.5, 41.5, -108, -101.8], 'stride': 4, 'length': 4},
     'EPacific': {'corners': [0, 60, 180, 300], 'stride': 10, 'length': 5},
@@ -50,7 +49,6 @@ TILE_DEFS = {
     'GreatLakes': {'corners': [37, 50, -96, -70], 'stride': 10, 'length': 4},
     'HI': {'corners': [16.6, 24.6, -157.6, -157.5], 'stride': 1, 'length': 4},
     'Juneau': {'corners': [55.741, 59.629, -140.247, -129.274], 'stride': 4, 'length': 4},
-    'NHemisphere': {'corners': [-20.826, -20.82529, -150, 30], 'stride': 4, 'length': 4},
     'NYC-BOS': {'corners': [40, 43, -78.5, -68.5], 'stride': 4, 'length': 4},
     'PuertoRico': {'corners': [15.5257, 24.0976, -74.6703, -61.848], 'stride': 10, 'length': 5},
     'SEA-POR': {'corners': [43, 50, -125, -119], 'stride': 4, 'length': 4},
@@ -117,12 +115,12 @@ class Map():
         try:
             self.m.drawcoastlines(linewidth=0.5)
         except ValueError:
-            self.m.drawcounties(color='k',
+            self.m.drawcounties(color='gray',
                                 linewidth=0.4,
                                 zorder=2,
                                 )
         else:
-            if self.model not in ['global'] and self.tile not in ['full', 'conus', 'AK']:
+            if 'global' in self.model and self.tile not in ['full', 'CONUS', 'AK']:
                 self.m.drawcounties(antialiased=False,
                                     color='gray',
                                     linewidth=0.1,
@@ -521,7 +519,6 @@ class DataMap():
 
         u, v = self.field.wind(level)
 
-        model = self.model_name
         tile = self.map.tile
 
         # Set the stride and size of the barbs to be plotted with a masked array.

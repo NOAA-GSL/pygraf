@@ -828,6 +828,9 @@ pres:
     ncl_name:
       global: PRMSL_P0_L101_{grid}
       globalAK: PRMSL_P0_L101_{grid}
+      globalCONUS: PRMSL_P0_L101_{grid}
+      globalNHemi: PRMSL_P0_L101_{grid}
+      globalSHemi: PRMSL_P0_L101_{grid}
       hrrr: MSLMA_P0_L101_{grid}
       hrrrhi: MSLMA_P0_L101_{grid}
       hrrrcar: MSLMA_P0_L101_{grid}
@@ -1080,13 +1083,14 @@ soilm: # Soil Moisture Availability
     ncl_name:
       global: SOILM_P0_2L106_{grid}
       globalAK: SOILM_P0_2L106_{grid}
+      globalCONUS: SOILM_P0_2L106_{grid}
+      globalNHemi: SOILM_P0_2L106_{grid}
+      globalSHemi: SOILM_P0_2L106_{grid}
       hrrr: MSTAV_P0_L106_{grid}
       hrrrhi: MSTAV_P0_L106_{grid}
       hrrrcar: MSTAV_P0_L106_{grid}
-      NHemi: SOILM_P0_2L106_{grid}
       rap: MSTAV_P0_L106_{grid}
       rrfs: SOILM_P0_2L106_{grid}
-      SHemi: SOILM_P0_2L106_{grid}
     ticks: 0
     title: Soil Moisture Availability
     unit: "%"
@@ -1202,7 +1206,7 @@ temp: # Temperature
     unit: F
     wind: False
   2m:
-    # annotate: True
+    annotate: True
     clevs: !!python/object/apply:numpy.arange [-60, 121, 4]
     cmap: jet
     colors: tsfc_colors
