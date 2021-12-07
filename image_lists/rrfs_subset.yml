@@ -119,9 +119,14 @@ hourly:
       - sfc
     soilt: &soilt_levs
       - 0cm
+      - 1cm
+      - 4cm
       - 10cm
-      - 40cm
+      - 30cm
+      - 60cm
       - 1m
+      - 1.6m
+      - 3m
     soilw: *soilt_levs
     solar:
       - sfc

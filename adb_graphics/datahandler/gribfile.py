@@ -121,13 +121,10 @@ class GribFiles():
                         contains_suffix.append(suf)
 
                     # All the variables that need to be renamed. In most cases,
-                    # exclude the "1h" accumulated variables
-                    if 'global' in self.model:
-                        if suf in suffix and suffix != f'{suf}6h':
-                            contains_suffix.append(suf)
-                    else:
-                        if suf in suffix and suffix != f'{suf}1h':
-                            contains_suffix.append(suf)
+                    # exclude the "1h" ("6h" for global) accumulated variables
+                    accum_freq = 6 if 'global' in self.model else 1
+                    if suf in suffix and suffix != f'{suf}{accum_freq}h':
+                        contains_suffix.append(suf)
 
                 if contains_suffix and needs_renaming:
                     ret[var] = var.replace(suffix, contains_suffix[0])

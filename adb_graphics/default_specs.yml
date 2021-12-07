@@ -212,7 +212,7 @@ acsnod: # Accumulated snow
   sfc: &snow
     clevs: [0.01, 0.1, 1, 2, 3, 4, 6, 8, 10, 12, 18, 24]
     cmap: gist_ncar
-    colors: rainbow12_colors
+    colors: snow_colors
     ncl_name: ASNOW_P8_L1_GLC0_acc
     ticks: 0
     title: Run Total Accumulated Snow Depth - var dens
@@ -575,6 +575,7 @@ gust:
     colors: wind_colors
     ncl_name: GUST_P0_L1_{grid}
     ticks: 5
+    title: 10m Wind Gust Potential
     transform: conversions.ms_to_kt
     unit: kt
 hail: # Max 1h Hail diameter
@@ -1132,8 +1133,8 @@ soilt: # Soil Temperature
     title: Soil Temperature at 3m
 soilw: # Soil Moisture
   0cm: &soilw_levs
-    clevs: !!python/object/apply:numpy.arange [0.0, 0.61, 0.1]
-    cmap: gist_ncar
+    clevs: [0, 0.01, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50]
+    cmap: jet_r
     colors: soilw_colors
     ncl_name: SOILW_P0_2L106_{grid}
     ticks: 0
@@ -1330,6 +1331,7 @@ trc1:
     clevs: [1, 4, 7, 11, 15, 20, 25, 30, 40, 50, 75, 150, 250, 500]
     colors: smoke_colors
     ncl_name: COLMD_P0_L200_{grid}
+    plot_airports: False
     ticks: 0
     title: Vertically Integrated Smoke
     transform: conversions.to_micro
@@ -1338,6 +1340,7 @@ trc1:
     clevs: [1, 2, 4, 6, 8, 12, 16, 20, 25, 30, 40, 60, 100, 200]
     colors: smoke_colors
     ncl_name: MASSDEN_P0_L105_{grid}
+    plot_airports: False
     ticks: 0
     title: 1000ft AGL Smoke
     wind: True
@@ -1351,6 +1354,7 @@ trc1:
     clevs: [1, 2, 4, 6, 8, 12, 16, 20, 25, 30, 40, 60, 100, 200]
     colors: smoke_colors
     ncl_name: MASSDEN_P0_L103_{grid}
+    plot_airports: False
     title: Near-Surface Smoke
     ticks: 0
     unit: $\mu g/m^3$
@@ -1401,7 +1405,10 @@ ulwrf: # Upward Longwave Radiation Flux
 uswrf: # Upward Shortwave Radiation Flux
   sfc:
     <<: *radiation_flux
+    clevs: [0, 50, 100, 150, 200, 250, 300, 400, 500, 600, 700, 800, 900, 1000]
+    colors: rainbow12_colors
     ncl_name: USWRF_P0_L1_{grid}
+    ticks: 0
     title: Upward Shortwave Radiation Flux, Surface
   top: # Nominal top of atmosphere
     <<: *radiation_flux

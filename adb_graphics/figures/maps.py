@@ -8,6 +8,7 @@ UPPData object) and creates a standard plot with shaded fields, contours, wind
 barbs, and descriptive annotation.
 '''
 
+import copy
 from math import isnan
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
@@ -86,9 +87,10 @@ class Map():
                         TILE_DEFS dictionary
     '''
 
-    def __init__(self, airport_fn, ax, **kwargs):
+    def __init__(self, airport_fn, ax, field, **kwargs):
 
         self.ax = ax
+        self.field = field
         self.grid_info = kwargs.get('grid_info', {})
         self.model = kwargs.get('model')
         self.tile = kwargs.get('tile', 'full')
@@ -134,7 +136,7 @@ class Map():
         ''' Draw a map with political boundaries and airports only. '''
 
         self.boundaries()
-        if self.model not in ['global']: # airports are too dense in global
+        if 'global' not in self.model: # airports are too dense in global
             self.draw_airports()
 
     def draw_airports(self):
@@ -144,14 +146,17 @@ class Map():
         lats = self.airports[:, 0]
         lons = 360 + self.airports[:, 1] # Convert to positive longitude
         x, y = self.m(lons, lats)
-        self.m.plot(x, y, 'ko',
-                    ax=self.ax,
-                    color='w',
-                    fillstyle='full',
-                    markeredgecolor='k',
-                    markeredgewidth=0.5,
-                    markersize=4,
-                    )
+        
+        add_airports = self.field.vspec.get('plot_airports', True)
+        if add_airports:
+            self.m.plot(x, y, 'ko',
+                        ax=self.ax,
+                        color='w',
+                        fillstyle='full',
+                        markeredgecolor='k',
+                        markeredgewidth=0.5,
+                        markersize=4,
+                        )
 
         del x
         del y
@@ -310,8 +315,9 @@ class DataMap():
             self._wind_barbs(add_wind)
 
         # Add field values at airports
+        add_airports = self.field.vspec.get('plot_airports', True)
         annotate = self.field.vspec.get('annotate', False)
-        if annotate and 'global' not in self.map.model: # airports are too dense in global
+        if add_airports and annotate and 'global' not in self.map.model: # airports are too dense in global
             self._draw_field_values(ax)
 
         # Finish with the title
@@ -407,13 +413,14 @@ class DataMap():
         lons = 360 + self.map.airports[:, 1]
         x, y = self.map.m(lons, lats)
         data_values = self.field.values()
-        if self.map.corners[2] < 0:
-            self.map.corners[2] = 360 + self.map.corners[2]
-        if self.map.corners[3] < 0:
-            self.map.corners[3] = 360 + self.map.corners[3]
+        crnrs = copy.copy(self.map.corners)
+        if crnrs[2] < 0:
+            crnrs[2] = 360 + crnrs[2]
+        if crnrs[3] < 0:
+            crnrs[3] = 360 + crnrs[3]
         for i, lat in enumerate(lats):
-            if self.map.corners[1] > lat > self.map.corners[0] and \
-               self.map.corners[3] > lons[i] > self.map.corners[2]:
+            if crnrs[1] > lat > crnrs[0] and \
+               crnrs[3] > lons[i] > crnrs[2]:
                 xgrid, ygrid = self.field.get_xypoint(lat, lons[i])
                 data_value = data_values[xgrid, ygrid].values.item()
                 if xgrid > 0 and ygrid > 0:

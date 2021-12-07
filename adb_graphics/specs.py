@@ -326,7 +326,7 @@ class VarSpec(abc.ABC):
 
         grays = cm.get_cmap('Greys', 5)([0, 2])
         ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
-                          ([15, 18, 20, 25, 50, 60, 70, 80, 85, 90, 100])
+                          ([15, 18, 20, 25, 50, 60, 74, 81, 85, 90, 100])
         return np.concatenate((grays, ncar))
 
     @property
@@ -342,9 +342,10 @@ class VarSpec(abc.ABC):
 
         ''' Default color map for Soil Moisture '''
 
-        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
-                          ([88, 83, 80, 70, 50, 25, 20, 15])
-        return ncar
+        grays = cm.get_cmap('Greys', 2)([1])
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 110) \
+               ([0, 10, 20, 25, 35, 40, 60, 73, 80, 85, 95, 105])
+        return np.concatenate((grays, ncar))
 
     @property
     def t_colors(self) -> np.ndarray:
