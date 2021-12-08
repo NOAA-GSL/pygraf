@@ -63,6 +63,7 @@ TILE_DEFS = {
 
 
 class Map():
+    # pylint: disable=too-many-instance-attributes
 
     '''
     Class includes utilities needed to create a Basemap object, add airport
@@ -146,7 +147,7 @@ class Map():
         lats = self.airports[:, 0]
         lons = 360 + self.airports[:, 1] # Convert to positive longitude
         x, y = self.m(lons, lats)
-        
+
         add_airports = self.field.vspec.get('plot_airports', True)
         if add_airports:
             self.m.plot(x, y, 'ko',
@@ -317,7 +318,7 @@ class DataMap():
         # Add field values at airports
         add_airports = self.field.vspec.get('plot_airports', True)
         annotate = self.field.vspec.get('annotate', False)
-        if add_airports and annotate and 'global' not in self.map.model: # airports are too dense in global
+        if add_airports and annotate and 'global' not in self.map.model: # too dense in global
             self._draw_field_values(ax)
 
         # Finish with the title
