@@ -1,0 +1,62 @@
+hourly:
+  model: globalCONUS
+  variables:
+    1ref:
+      - 1000m
+    cape:
+      - mu
+      - mul
+      - mx90mb
+      - sfc
+    ceil:
+      - ua
+    cin:
+      - sfc
+    cloudcover:
+      - high
+      - low
+      - mid
+      - total
+    cpofp:
+      - sfc
+    cref:
+      - sfc
+    dewp:
+      - 2m
+    gust:
+      - 10m
+    hlcy:
+      - sr01
+      - sr03
+    hpbl:
+      - sfc
+    pwtr:
+      - sfc
+    rh:
+      - 2m
+      - 850mb
+    soilt: &soilt_levs
+      - 10cm
+      - 1m
+    soilw: *soilt_levs
+    temp:
+      - 2ds
+      - 2m
+      - 500mb
+      - 700mb
+      - 850mb
+      - 925mb
+      - sfc
+    vis:
+      - sfc
+    vort:
+      - 500mb
+    vvel:
+      - 700mb
+    weasd:
+      - sfc
+    wspeed:
+      - 10m
+      - 250mb
+      - 80m
+      - 850mb
