@@ -137,6 +137,7 @@ class TestDefaultSpecs():
             'hatches': self.is_a_contourf_dict,
             'labels': self.is_a_contourf_dict,
             'ncl_name': True,
+            'plot_airports': self.is_bool,
             'print_units': True,
             'split': self.is_bool,
             'ticks': self.is_number,
