@@ -35,6 +35,8 @@
 #
 #   ncl_name: the name of the variable as expected by NCL
 #
+#   plot_airports: bool to enable/disable plotting of airports. defaults to True
+#
 #   print_units: bool for printing the units in the map title
 #
 #   ticks: the number of tick marks on the colorbar
@@ -1082,11 +1084,6 @@ soilm: # Soil Moisture Availability
     cmap: Spectral
     colors: soilm_colors
     ncl_name:
-      global: SOILM_P0_2L106_{grid}
-      globalAK: SOILM_P0_2L106_{grid}
-      globalCONUS: SOILM_P0_2L106_{grid}
-      globalNHemi: SOILM_P0_2L106_{grid}
-      globalSHemi: SOILM_P0_2L106_{grid}
       hrrr: MSTAV_P0_L106_{grid}
       hrrrhi: MSTAV_P0_L106_{grid}
       hrrrcar: MSTAV_P0_L106_{grid}

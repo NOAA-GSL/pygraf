@@ -88,10 +88,10 @@ class Map():
                         TILE_DEFS dictionary
     '''
 
-    def __init__(self, airport_fn, ax, field, **kwargs):
+    def __init__(self, airport_fn, ax, plot_airports, **kwargs):
 
         self.ax = ax
-        self.field = field
+        self.plot_airports = plot_airports
         self.grid_info = kwargs.get('grid_info', {})
         self.model = kwargs.get('model')
         self.tile = kwargs.get('tile', 'full')
@@ -123,7 +123,7 @@ class Map():
                                 zorder=2,
                                 )
         else:
-            if 'global' in self.model and self.tile not in ['full', 'CONUS', 'AK']:
+            if 'global' in self.model and self.tile not in ['full', 'CONUS', 'AK', 'NHemi']:
                 self.m.drawcounties(antialiased=False,
                                     color='gray',
                                     linewidth=0.1,
@@ -137,7 +137,7 @@ class Map():
         ''' Draw a map with political boundaries and airports only. '''
 
         self.boundaries()
-        if 'global' not in self.model: # airports are too dense in global
+        if self.plot_airports and 'global' not in self.model: # airports are too dense in global
             self.draw_airports()
 
     def draw_airports(self):
@@ -147,17 +147,14 @@ class Map():
         lats = self.airports[:, 0]
         lons = 360 + self.airports[:, 1] # Convert to positive longitude
         x, y = self.m(lons, lats)
-
-        add_airports = self.field.vspec.get('plot_airports', True)
-        if add_airports:
-            self.m.plot(x, y, 'ko',
-                        ax=self.ax,
-                        color='w',
-                        fillstyle='full',
-                        markeredgecolor='k',
-                        markeredgewidth=0.5,
-                        markersize=4,
-                        )
+        self.m.plot(x, y, 'ko',
+                    ax=self.ax,
+                    color='w',
+                    fillstyle='full',
+                    markeredgecolor='k',
+                    markeredgewidth=0.5,
+                    markersize=4,
+                    )
 
         del x
         del y
@@ -316,9 +313,8 @@ class DataMap():
             self._wind_barbs(add_wind)
 
         # Add field values at airports
-        add_airports = self.field.vspec.get('plot_airports', True)
         annotate = self.field.vspec.get('annotate', False)
-        if add_airports and annotate and 'global' not in self.map.model: # too dense in global
+        if annotate and 'global' not in self.map.model: # too dense in global
             self._draw_field_values(ax)
 
         # Finish with the title
@@ -528,6 +524,13 @@ class DataMap():
         u, v = self.field.wind(level)
 
         tile = self.map.tile
+
+        ''' 
+        A decent stride can be found if you divide the number of grid points 
+        on the shorter side by 35. Subdomains are defined by lat,lon so the 
+        stride is set in the TILE_DEFS. For the globalCONUS subdomains, further
+        dividing by 2.5 works well.
+        '''
 
         # Set the stride and size of the barbs to be plotted with a masked array.
         if tile in ['full', 'AK', 'CONUS', 'NHemi']:

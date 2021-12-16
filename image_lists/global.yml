@@ -37,8 +37,6 @@ hourly:
       - 850mb
     snod:
       - sfc
-    soilm:
-      - sfc
     soilt: &soilt_levs
       - 10cm
       - 1m

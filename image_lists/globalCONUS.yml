@@ -35,6 +35,8 @@ hourly:
     rh:
       - 2m
       - 850mb
+    snod:
+      - sfc
     soilt: &soilt_levs
       - 10cm
       - 1m
@@ -46,6 +48,8 @@ hourly:
       - 700mb
       - 850mb
       - 925mb
+      - sfc
+    totp6h:
       - sfc
     vis:
       - sfc

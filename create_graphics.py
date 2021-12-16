@@ -445,13 +445,15 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
 
     fig, ax = plt.subplots(1, 1, figsize=(inches, inches))
 
+    plot_airports = spec.get('plot_airports', True)
+
     # Generate a map object
     m = maps.Map(
         airport_fn=AIRPORTS,
         ax=ax,
-        field=field,
         grid_info=field.grid_info(),
         model=model,
+        plot_airports=plot_airports,
         tile=tile,
         )
 
