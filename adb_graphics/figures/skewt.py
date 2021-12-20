@@ -183,7 +183,7 @@ class SkewTDiagram(gribdata.profileData):
 
         contents = '\n'.join(lines)
         # Draw the vertically integrated amounts box
-        hydro_subplot.text(0.02, 0.90, contents,
+        hydro_subplot.text(0.02, 0.95, contents,
                            bbox=dict(facecolor='white', edgecolor='black', alpha=0.7),
                            fontproperties=fm.FontProperties(family='monospace'),
                            size=8,
