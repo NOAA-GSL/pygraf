@@ -519,18 +519,14 @@ class DataMap():
 
     def _wind_barbs(self, level):
 
-        ''' Draws the wind barbs. '''
+        ''' Draws the wind barbs. A decent stride can be found if you divide the
+            number of grid points on the shorter side by 35. Subdomains are defined
+            by lat,lon so the stride is set in the TILE_DEFS. For the globalCONUS
+            subdomains, further dividing by 2.5 works well. '''
 
         u, v = self.field.wind(level)
 
         tile = self.map.tile
-
-        ''' 
-        A decent stride can be found if you divide the number of grid points 
-        on the shorter side by 35. Subdomains are defined by lat,lon so the 
-        stride is set in the TILE_DEFS. For the globalCONUS subdomains, further
-        dividing by 2.5 works well.
-        '''
 
         # Set the stride and size of the barbs to be plotted with a masked array.
         if tile in ['full', 'AK', 'CONUS', 'NHemi']:
