@@ -334,7 +334,7 @@ ceilexp: # Ceiling - experimental
 ceilexp2: # Ceiling - experimental no.2
   ua:
     <<: *ceil
-    ncl_name: CEIL_P0_L2_{grid}
+    ncl_name: HGT_P0_L2_{grid}
     title: Ceiling (exp-2)
 cfrzr: # Categorical Freezing Rain
   sfc:
