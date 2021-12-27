@@ -1333,6 +1333,7 @@ trc1:
     ncl_name: MASSDEN_P0_L105_{grid}
     ticks: 0
     title: 1000ft AGL Smoke
+    transform: conversions.to_micrograms_per_m3
     wind: True
     unit: $\mu g/m^3$
     vertical_index: 4
@@ -1345,6 +1346,7 @@ trc1:
     colors: smoke_colors
     ncl_name: MASSDEN_P0_L103_{grid}
     title: Near-Surface Smoke
+    transform: conversions.to_micrograms_per_m3
     ticks: 0
     unit: $\mu g/m^3$
     wind: 10m

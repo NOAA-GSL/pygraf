@@ -78,6 +78,12 @@ def to_micro(field, **kwargs):
 
     return field * 1E6
 
+def to_micrograms_per_m3(field, **kwargs):
+
+    ''' Convert field to micrograms per cubic meter '''
+
+    return field * 1E9
+
 def vvel_scale(field, **kwargs):
 
     ''' Scale vertical velocity for plotting  '''
