@@ -47,6 +47,7 @@ def test_conversion():
     assert np.array_equal(conversions.pa_to_hpa(a), a / 100)
     assert np.array_equal(conversions.percent(a), a * 100)
     assert np.array_equal(conversions.to_micro(a), a * 1E6)
+    assert np.array_equal(conversions.to_micrograms_per_m3(a), a * 1E9)
     assert np.array_equal(conversions.vvel_scale(a), a * -10)
     assert np.array_equal(conversions.vort_scale(a), a / 1E-05)
     assert np.array_equal(conversions.weasd_to_1hsnw(a), a * 10)
@@ -63,6 +64,7 @@ def test_conversion():
         conversions.pa_to_hpa,
         conversions.percent,
         conversions.to_micro,
+        conversions.to_micrograms_per_m3,
         conversions.vvel_scale,
         conversions.vort_scale,
         conversions.weasd_to_1hsnw,
