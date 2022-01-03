@@ -425,8 +425,9 @@ class VarSpec(abc.ABC):
         ''' Default color map for Wind Speed '''
 
         low = cm.get_cmap(self.vspec.get('cmap'), 129)(range(129, 109, -5))
-        high = cm.get_cmap(self.vspec.get('cmap'), 129)(range(18, 103, 6))
-        return np.concatenate((low, high))
+        high1 = cm.get_cmap(self.vspec.get('cmap'), 129)(range(16, 29, 3))
+        high2 = cm.get_cmap(self.vspec.get('cmap'), 129)(range(48, 103, 6))
+        return np.concatenate((low, high1, high2))
 
     @property
     def wind_colors_high(self) -> np.ndarray:
@@ -434,5 +435,6 @@ class VarSpec(abc.ABC):
         ''' Default color map for High Wind Speed '''
 
         low = cm.get_cmap(self.vspec.get('cmap'), 129)(range(129, 108, -7))
-        high = cm.get_cmap(self.vspec.get('cmap'), 129)(range(18, 95, 7))
-        return np.concatenate((low, high))
+        high1 = cm.get_cmap(self.vspec.get('cmap'), 129)(range(16, 29, 4))
+        high2 = cm.get_cmap(self.vspec.get('cmap'), 129)(range(46, 95, 7))
+        return np.concatenate((low, high1, high2))

@@ -336,7 +336,7 @@ ceilexp: # Ceiling - experimental
 ceilexp2: # Ceiling - experimental no.2
   ua:
     <<: *ceil
-    ncl_name: CEIL_P0_L2_{grid}
+    ncl_name: HGT_P0_L2_{grid}
     title: Ceiling (exp-2)
 cfrzr: # Categorical Freezing Rain
   sfc:
@@ -1340,6 +1340,7 @@ trc1:
     plot_airports: False
     ticks: 0
     title: 1000ft AGL Smoke
+    transform: conversions.to_micrograms_per_m3
     wind: True
     unit: $\mu g/m^3$
     vertical_index: 4
@@ -1353,6 +1354,7 @@ trc1:
     ncl_name: MASSDEN_P0_L103_{grid}
     plot_airports: False
     title: Near-Surface Smoke
+    transform: conversions.to_micrograms_per_m3
     ticks: 0
     unit: $\mu g/m^3$
     wind: 10m
