@@ -84,16 +84,18 @@ class Map():
                              ll_lat, ur_lat, ll_lon, ur_lon
           model         model designation used to trigger higher resolution maps if needed
                         also used to turn off plotting of airports on global maps
+          plot_airports bool to allow airport plotting to be turned off for
+                        certain plots, default is True
           tile          a string corresponding to a pre-defined tile in the
                         TILE_DEFS dictionary
     '''
 
-    def __init__(self, airport_fn, ax, plot_airports, **kwargs):
+    def __init__(self, airport_fn, ax, **kwargs):
 
         self.ax = ax
-        self.plot_airports = plot_airports
         self.grid_info = kwargs.get('grid_info', {})
         self.model = kwargs.get('model')
+        self.plot_airports = kwargs.get('plot_airports', True)
         self.tile = kwargs.get('tile', 'full')
         self.airports = self.load_airports(airport_fn)
 
