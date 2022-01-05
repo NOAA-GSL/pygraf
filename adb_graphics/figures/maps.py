@@ -20,6 +20,15 @@ import numpy as np
 
 import adb_graphics.utils as utils
 
+# FULL_TILES is a list strings that includes the labels GSL attaches to some of
+# the wgrib2 cutouts used for larger domains like RAP and RRFS NA.
+FULL_TILES = [
+    "AK",
+    "conus",
+    "full",
+    "hrrr",
+    "hrrrak",
+    ]
 # TILE_DEFS is a dict of dicts with predefined tiles specifying the corners of the grid
 #     to be plotted, and the stride and length of the wind barbs.
 # Order for corners: [lower left lat, upper right lat, lower left lon, upper right lon]
@@ -94,7 +103,7 @@ class Map():
         self.tile = kwargs.get('tile', 'full')
         self.airports = self.load_airports(airport_fn)
 
-        if self.tile in ['full', 'conus', 'AK',]:
+        if self.tile in FULL_TILES:
             self.corners = self.grid_info.pop('corners')
         else:
             self.corners = self.get_corners()
@@ -120,7 +129,7 @@ class Map():
                                 zorder=2,
                                 )
         else:
-            if self.model not in ['global'] and self.tile not in ['full', 'conus', 'AK']:
+            if self.model not in ['global'] and self.tile not in FULL_TILES:
                 self.m.drawcounties(antialiased=False,
                                     color='gray',
                                     linewidth=0.1,
@@ -523,22 +532,24 @@ class DataMap():
         model = self.model_name
         tile = self.map.tile
 
+        full_tile = tile in FULL_TILES
+
         # Set the stride and size of the barbs to be plotted with a masked array.
-        if self.map.m.projection == 'lcc' and tile == 'full':
+        if self.map.m.projection == 'lcc' and full_tile:
             if model == 'HRRR-HI':
                 stride = 12
                 length = 4
             else:
                 stride = 30
                 length = 5
-        elif self.map.m.projection == 'rotpole' and tile == 'full':
+        elif self.map.m.projection == 'rotpole' and full_tile:
             if model == 'RRFS_NA_3km':
                 stride = 50
                 length = 4
             else:
                 stride = 15
                 length = 4
-        elif self.map.model == 'global' and tile == 'full':
+        elif self.map.model == 'global' and full_tile:
             stride = 20
             length = 4
         else:
