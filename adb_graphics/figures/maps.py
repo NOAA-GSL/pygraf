@@ -20,6 +20,17 @@ import numpy as np
 
 import adb_graphics.utils as utils
 
+# FULL_TILES is a list of strings that includes the labels GSL attaches to some of
+# the wgrib2 cutouts used for larger domains like RAP, RRFS NA, and global.
+FULL_TILES = [
+    "AK",
+    "CONUS",
+    "conus",
+    "full",
+    "hrrr",
+    "hrrrak",
+    "NHemi",
+    ]
 # TILE_DEFS is a dict of dicts with predefined tiles specifying the corners of the grid
 #     to be plotted, and the stride and length of the wind barbs.
 # Order for corners: [lower left lat, upper right lat, lower left lon, upper right lon]
@@ -99,7 +110,7 @@ class Map():
         self.tile = kwargs.get('tile', 'full')
         self.airports = self.load_airports(airport_fn)
 
-        if self.tile in ['full', 'CONUS', 'AK', 'NHemi']:
+        if self.tile in FULL_TILES:
             self.corners = self.grid_info.pop('corners')
         else:
             self.corners = self.get_corners()
@@ -125,7 +136,7 @@ class Map():
                                 zorder=2,
                                 )
         else:
-            if 'global' in self.model and self.tile not in ['full', 'CONUS', 'AK', 'NHemi']:
+            if self.model not in ['global'] and self.tile not in FULL_TILES:
                 self.m.drawcounties(antialiased=False,
                                     color='gray',
                                     linewidth=0.1,
@@ -530,8 +541,10 @@ class DataMap():
 
         tile = self.map.tile
 
+        full_tile = tile in FULL_TILES
+
         # Set the stride and size of the barbs to be plotted with a masked array.
-        if tile in ['full', 'AK', 'CONUS', 'NHemi']:
+        if full_tile:
             if u.shape[0] < u.shape[1]:
                 stride = int(round(u.shape[0] / 35))
             else:

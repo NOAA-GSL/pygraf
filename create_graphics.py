@@ -360,7 +360,7 @@ def parse_args():
         help='The domains to plot. Choose from any of those listed. Special ' \
         'choices: full is full model output domain, and all is the full domain, ' \
         'plus all of the sub domains. ' \
-        f'Choices: {["full", "all", "conus", "AK"] + list(maps.TILE_DEFS.keys())}',
+        f'Choices: {["full", "all"] + maps.FULL_TILES + list(maps.TILE_DEFS.keys())}',
         nargs='+',
         )
     return parser.parse_args()
@@ -656,10 +656,11 @@ def remove_proc_grib_files(cla):
 
     combined_files = glob.glob(combined_fp)
 
-    print(f'Removing combined files: ')
-    for file_path in combined_files:
-        print(f'  {file_path}')
-        os.remove(file_path)
+    if combined_files:
+        print(f'Removing combined files: ')
+        for file_path in combined_files:
+            print(f'  {file_path}')
+            os.remove(file_path)
 
 def stage_zip_files(tiles, zip_dir):
 
