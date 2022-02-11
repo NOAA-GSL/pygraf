@@ -40,6 +40,19 @@ TMP_FN = 'combined_{fhr:03d}_{uniq}.tmp.grib2'
 
 LOG_BREAK = f"{('-' * 80)}\n{('-' * 80)}"
 
+def check_file(cla, fhr, mem=''):
+    ''' Given the command line arguments, the forecast hour, and a potential
+    ensemble member, build a full path to the file and ensure it exists. '''
+
+    grib_path = os.path.join(cla.data_root[0],
+                             cla.file_tmpl[0]).format(FCST_TIME=fhr,
+                                                      mem=str(mem))
+
+    print(f'Checking on file {grib_path}')
+    old_enough = utils.old_enough(cla.data_age, grib_path) if \
+        os.path.exists(grib_path) else False
+    return grib_path, old_enough
+
 def create_skewt(cla, fhr, grib_path, workdir):
 
     ''' Generate arguments for parallel processing of Skew T graphics,
@@ -225,7 +238,7 @@ def parse_args():
     # Positional argument
     parser.add_argument(
         'graphic_type',
-        choices=['maps', 'skewts'],
+        choices=['maps', 'skewts', 'enspanel'],
         help='The type of graphics to create.',
         )
 
@@ -246,7 +259,6 @@ def parse_args():
         --file_tmpl flag.',
         nargs='+',
         required=True,
-        type=utils.path_exists,
         )
     parser.add_argument(
         '-f',
@@ -362,6 +374,15 @@ def parse_args():
         'plus all of the sub domains. ' \
         f'Choices: {["full", "all"] + maps.FULL_TILES + list(maps.TILE_DEFS.keys())}',
         nargs='+',
+        )
+
+    # Ensemble panel-specific args
+    map_group = parser.add_argument_group('Ensemble Panel Arguments')
+    map_group.add_argument(
+        '--ens_size',
+        default=10,
+        help='Number of ensemble members.',
+        type=int,
         )
     return parser.parse_args()
 
@@ -559,12 +580,7 @@ def pre_proc_grib_files(cla, fhr):
 
     if len(cla.data_root) == 1 and len(cla.file_tmpl) == 1:
         # Nothing to do, return the original file location
-        grib_path = os.path.join(cla.data_root[0],
-                                 cla.file_tmpl[0].format(FCST_TIME=fhr))
-
-        old_enough = utils.old_enough(cla.data_age, grib_path) if \
-            os.path.exists(grib_path) else False
-        return grib_path, old_enough
+        return check_file(cla, fhr)
 
     # Generate a list of files to be joined.
     file_list = [os.path.join(*path).format(FCST_TIME=fhr) for path in
@@ -736,6 +752,11 @@ def zip_pngs(fhr, workdir, zipfiles):
 @utils.timer
 def graphics_driver(cla):
 
+    # pylint: disable=too-many-statements
+    # This whole script has likely reached the point of neededing refactoring
+    # into an object oriented design....each graphics type is it's own object
+    # sharing a base class.
+
     '''
     Function that interprets the command line arguments to locate the input grib
     file, create the output directory, and call the graphic-specifc function.
@@ -782,12 +803,24 @@ def graphics_driver(cla):
     # new files as they become available.
     while fcst_hours:
         timer_sleep = time.time()
+        old_enough = False
         for fhr in sorted(fcst_hours):
-            grib_path, old_enough = pre_proc_grib_files(cla, fhr)
+            if cla.graphic_type == 'enspanel':
+                # Expand template to create a list of ensemble member files and
+                # check if they exist and that they're old enough
+                grib_paths = []
+                ens_members = list(range(1, cla.ens_size+1))
+                for mem in ens_members:
+                    mem_path, mem_old_enough = check_file(cla, fhr, mem=mem)
+                    if mem_old_enough:
+                        grib_paths.append(mem_path)
+                    old_enough = len(grib_paths) == cla.ens_size
+            else:
+                grib_path, old_enough = pre_proc_grib_files(cla, fhr)
 
             # UPP is most likely done writing if it hasn't written in data_age
             # mins (default is 3 to address most CONUS-sized domains)
-            if os.path.exists(grib_path) and old_enough:
+            if old_enough:
                 fcst_hours.remove(fhr)
             else:
                 if cla.all_leads:
@@ -805,7 +838,7 @@ def graphics_driver(cla):
                         print(f'Waiting for {grib_path} to be available.')
                         break
                 # It's safe to continue on processing the next forecast hour
-                print(f'Cannot find {grib_path}, continuing to check on \n \
+                print(f'Cannot find specified file(s), continuing to check on \n \
                     next forecast hour.')
                 continue
 
@@ -815,19 +848,27 @@ def graphics_driver(cla):
             os.makedirs(workdir, exist_ok=True)
 
             print(f'{LOG_BREAK}\n',
-                  f'Graphics will be created for input file: {grib_path}\n',
+                  f'Graphics will be created for input files\n',
                   f'Output graphics directory: {workdir} \n'
                   f'{LOG_BREAK}')
 
             if cla.graphic_type == 'skewts':
                 create_skewt(cla, fhr, grib_path, workdir)
-            else:
+            elif cla.graphic_type == 'maps':
                 gribfiles = gather_gribfiles(cla, fhr, grib_path, gribfiles)
                 create_maps(cla,
                             fhr=fhr,
                             gribfiles=gribfiles,
                             workdir=workdir,
                             )
+            else:
+                gribfiles = gribfile.GribFiles(
+                    coord_dims={'ens_mem': ens_members},
+                    filenames={'free_fcst': grib_paths},
+                    filetype=cla.file_type,
+                    model=cla.images[0],
+                    )
+                print(gribfiles.contents)
 
             # Zip png files and remove the originals in a subprocess
             if cla.zip_dir:
@@ -874,7 +915,7 @@ if __name__ == '__main__':
             raise OSError(errmsg)
 
     # Only need to load the default in memory if we're making maps.
-    if CLARGS.graphic_type == 'maps':
+    if CLARGS.graphic_type in ['maps', 'enspanel']:
         CLARGS.specs = load_specs(CLARGS.specs)
 
         CLARGS.images = load_images(CLARGS.images)
