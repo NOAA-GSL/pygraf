@@ -616,8 +616,6 @@ class fieldData(UPPData):
         elif self.grid_suffix == 'GLL0':
             attrs = []
             grid_info['projection'] = 'cyl'
-            grid_info['lon_0'] = 0
-            grid_info['lat_0'] = 90
         else:
             attrs = []
             grid_info['projection'] = 'rotpole'
