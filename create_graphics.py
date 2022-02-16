@@ -125,7 +125,7 @@ def gather_gribfiles(cla, fhr, filename, gribfiles):
 
     fcst_hour = int(fhr)
 
-    first_fcst = 6 if cla.images[0] == 'global' else 1
+    first_fcst = 6 if 'global' in cla.images[0] else 1
     if fcst_hour <= first_fcst:
         filenames['01fcst'].append(filename)
     else:
@@ -451,6 +451,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
         ax=ax,
         grid_info=field.grid_info(),
         model=model,
+        plot_airports=spec.get('plot_airports', True),
         tile=tile,
         )
 
@@ -765,8 +766,8 @@ def graphics_driver(cla):
     # This is not an operational feature. Exit if files don't exist.
 
     if cla.graphic_type == 'maps':
-        first_fcst = 6 if cla.images[0] == 'global' else 0
-        fcst_inc = 6 if cla.images[0] == 'global' else 1
+        first_fcst = 6 if 'global' in cla.images[0] else 0
+        fcst_inc = 6 if 'global' in cla.images[0] else 1
         if len(cla.fcst_hour) == 1 and cla.all_leads:
             for fhr in range(first_fcst, int(cla.fcst_hour[0]), fcst_inc):
                 grib_path, old_enough = pre_proc_grib_files(cla, fhr)

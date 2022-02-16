@@ -35,6 +35,8 @@
 #
 #   ncl_name: the name of the variable as expected by NCL
 #
+#   plot_airports: bool to enable/disable plotting of airports. defaults to True
+#
 #   print_units: bool for printing the units in the map title
 #
 #   ticks: the number of tick marks on the colorbar
@@ -828,6 +830,10 @@ pres:
     colors: ps_colors
     ncl_name:
       global: PRMSL_P0_L101_{grid}
+      globalAK: PRMSL_P0_L101_{grid}
+      globalCONUS: PRMSL_P0_L101_{grid}
+      globalNHemi: PRMSL_P0_L101_{grid}
+      globalSHemi: PRMSL_P0_L101_{grid}
       hrrr: MSLMA_P0_L101_{grid}
       hrrrhi: MSLMA_P0_L101_{grid}
       hrrrcar: MSLMA_P0_L101_{grid}
@@ -1070,7 +1076,7 @@ snmr: # Snow Mixing Ratio
 snod: # Snow Depth
   sfc:
     <<: *snow
-    ncl_name: SNOD_P0_L1_GLC0
+    ncl_name: SNOD_P0_L1_{grid}
     title:  Cycled Snow Depth
 soilm: # Soil Moisture Availability
   sfc:
@@ -1078,7 +1084,6 @@ soilm: # Soil Moisture Availability
     cmap: Spectral
     colors: soilm_colors
     ncl_name:
-      global: SOILM_P0_2L106_{grid}
       hrrr: MSTAV_P0_L106_{grid}
       hrrrhi: MSTAV_P0_L106_{grid}
       hrrrcar: MSTAV_P0_L106_{grid}
@@ -1323,6 +1328,7 @@ trc1:
     clevs: [1, 4, 7, 11, 15, 20, 25, 30, 40, 50, 75, 150, 250, 500]
     colors: smoke_colors
     ncl_name: COLMD_P0_L200_{grid}
+    plot_airports: False
     ticks: 0
     title: Vertically Integrated Smoke
     transform: conversions.to_micro
@@ -1331,6 +1337,7 @@ trc1:
     clevs: [1, 2, 4, 6, 8, 12, 16, 20, 25, 30, 40, 60, 100, 200]
     colors: smoke_colors
     ncl_name: MASSDEN_P0_L105_{grid}
+    plot_airports: False
     ticks: 0
     title: 1000ft AGL Smoke
     transform: conversions.to_micrograms_per_m3
@@ -1345,6 +1352,7 @@ trc1:
     clevs: [1, 2, 4, 6, 8, 12, 16, 20, 25, 30, 40, 60, 100, 200]
     colors: smoke_colors
     ncl_name: MASSDEN_P0_L103_{grid}
+    plot_airports: False
     title: Near-Surface Smoke
     transform: conversions.to_micrograms_per_m3
     ticks: 0

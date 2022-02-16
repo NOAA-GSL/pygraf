@@ -1,5 +1,5 @@
 hourly:
-  model: global
+  model: globalCONUS
   variables:
     1ref:
       - 1000m

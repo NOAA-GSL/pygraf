@@ -20,14 +20,16 @@ import numpy as np
 
 import adb_graphics.utils as utils
 
-# FULL_TILES is a list strings that includes the labels GSL attaches to some of
-# the wgrib2 cutouts used for larger domains like RAP and RRFS NA.
+# FULL_TILES is a list of strings that includes the labels GSL attaches to some of
+# the wgrib2 cutouts used for larger domains like RAP, RRFS NA, and global.
 FULL_TILES = [
     "AK",
+    "CONUS",
     "conus",
     "full",
     "hrrr",
     "hrrrak",
+    "NHemi",
     ]
 # TILE_DEFS is a dict of dicts with predefined tiles specifying the corners of the grid
 #     to be plotted, and the stride and length of the wind barbs.
@@ -41,7 +43,8 @@ TILE_DEFS = {
     'SE': {'corners': [22, 37, -93.5, -72], 'stride': 10, 'length': 4},
     'SW': {'corners': [24.5, 45, -122, -103], 'stride': 10, 'length': 4},
     'Africa': {'corners': [-40, 40, -40, 60], 'stride': 7, 'length': 5},
-    'AKZoom': {'corners': [52, 73, -162, -132], 'stride': 4, 'length': 4},
+    'AKZoom': {'corners': [52, 73, -162, -132], 'stride': 4, 'length': 5},
+    'AKZoom2': {'corners': [37.9, 80.8, 180, -105.7], 'stride': 8, 'length': 5},
     'AKRange': {'corners': [59.722, 65.022, -153.583, -144.289], 'stride': 4, 'length': 4},
     'Anchorage': {'corners': [58.59, 62.776, -152.749, -146.218], 'stride': 4, 'length': 4},
     'ATL': {'corners': [31.2, 35.8, -87.4, -79.8], 'stride': 4, 'length': 4},
@@ -71,6 +74,7 @@ TILE_DEFS = {
 
 
 class Map():
+    # pylint: disable=too-many-instance-attributes
 
     '''
     Class includes utilities needed to create a Basemap object, add airport
@@ -91,6 +95,8 @@ class Map():
                              ll_lat, ur_lat, ll_lon, ur_lon
           model         model designation used to trigger higher resolution maps if needed
                         also used to turn off plotting of airports on global maps
+          plot_airports bool to allow airport plotting to be turned off for
+                        certain plots, default is True
           tile          a string corresponding to a pre-defined tile in the
                         TILE_DEFS dictionary
     '''
@@ -100,6 +106,7 @@ class Map():
         self.ax = ax
         self.grid_info = kwargs.get('grid_info', {})
         self.model = kwargs.get('model')
+        self.plot_airports = kwargs.get('plot_airports', True)
         self.tile = kwargs.get('tile', 'full')
         self.airports = self.load_airports(airport_fn)
 
@@ -124,7 +131,7 @@ class Map():
         try:
             self.m.drawcoastlines(linewidth=0.5)
         except ValueError:
-            self.m.drawcounties(color='k',
+            self.m.drawcounties(color='gray',
                                 linewidth=0.4,
                                 zorder=2,
                                 )
@@ -143,7 +150,7 @@ class Map():
         ''' Draw a map with political boundaries and airports only. '''
 
         self.boundaries()
-        if self.model not in ['global']: # airports are too dense in global
+        if self.plot_airports and 'global' not in self.model: # airports are too dense in global
             self.draw_airports()
 
     def draw_airports(self):
@@ -320,7 +327,7 @@ class DataMap():
 
         # Add field values at airports
         annotate = self.field.vspec.get('annotate', False)
-        if annotate and self.map.model not in ['global']: # airports are too dense in global
+        if annotate and 'global' not in self.map.model: # too dense in global
             self._draw_field_values(ax)
 
         # Finish with the title
@@ -384,7 +391,7 @@ class DataMap():
         '''
 
         x, y = self._xy_mesh(field)
-        vals = field.values()[::]
+        vals = field.values()
 
         # For global lat-lon models, make 2D arrays for x and y
         # Shift the map and data if needed
@@ -525,36 +532,30 @@ class DataMap():
 
     def _wind_barbs(self, level):
 
-        ''' Draws the wind barbs. '''
+        ''' Draws the wind barbs. A decent stride can be found if you divide the
+            number of grid points on the shorter side by 35. Subdomains are defined
+            by lat,lon so the stride is set in the TILE_DEFS. For the globalCONUS
+            subdomains, further dividing by 2.5 works well. '''
 
         u, v = self.field.wind(level)
 
-        model = self.model_name
         tile = self.map.tile
 
         full_tile = tile in FULL_TILES
 
         # Set the stride and size of the barbs to be plotted with a masked array.
-        if self.map.m.projection == 'lcc' and full_tile:
-            if model == 'HRRR-HI':
-                stride = 12
-                length = 4
+        if full_tile:
+            if u.shape[0] < u.shape[1]:
+                stride = int(round(u.shape[0] / 35))
             else:
-                stride = 30
-                length = 5
-        elif self.map.m.projection == 'rotpole' and full_tile:
-            if model == 'RRFS_NA_3km':
-                stride = 50
-                length = 4
-            else:
-                stride = 15
-                length = 4
-        elif self.map.model == 'global' and full_tile:
-            stride = 20
-            length = 4
+                stride = int(round(u.shape[1] / 35))
+            length = 5
         else:
             stride = TILE_DEFS[tile]["stride"]
             length = TILE_DEFS[tile]["length"]
+            if self.map.model == 'globalCONUS':
+                stride = int(round(stride / 2.5))
+                length = 5
 
         mask = np.ones_like(u)
         mask[::stride, ::stride] = 0

@@ -277,7 +277,7 @@ class UPPData(specs.VarSpec):
 
         if x <= 0 or y <= 0 or x >= max_x or y >= max_y:
             print(f'site location is outside your domain! {site_lat} {site_lon}')
-            return(-1.E10, -1.E10)
+            return(-1, -1)
 
         return (x, y)
 
@@ -613,7 +613,6 @@ class fieldData(UPPData):
             attrs = ['Lov']
             grid_info['projection'] = 'stere'
             grid_info['lat_0'] = 90
-            grid_info['lat_ts'] = 90
         elif self.grid_suffix == 'GLL0':
             attrs = []
             grid_info['projection'] = 'cyl'
