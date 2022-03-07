@@ -553,7 +553,7 @@ class fieldData(UPPData):
         dewpt_depression = temp - dewpt
         dewpt_depression = np.where(dewpt_depression < 0, 0, dewpt_depression)
         dewpt_depression = np.maximum(15.0, dewpt_depression)
-        gust = np.maximum(3.0, gust)
+        gust_max = np.maximum(3.0, gust)
 
         snowc = (25.0 - weasd) / 25.0
         snowc = np.where(snowc > 0.0, snowc, 0.0)
@@ -567,11 +567,11 @@ class fieldData(UPPData):
         # Set all others vegetation types to 1
         veg = np.where(veg > 0, 1, veg)
 
-        fwi = veg * \
-                (2.15 * gust *
-                dewpt_depression *
-                (mois ** 6.42) *
-                snowc)
+        fwi = veg * (2.15 *
+                     gust_max *
+                     dewpt_depression *
+                     (mois ** 6.42) *
+                     snowc)
 
         fwi = fwi / 10.0
 
