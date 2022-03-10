@@ -481,14 +481,14 @@ ffldro: # Ensemble flash flood runoff
     title: Probability of 6-hr Precipitation > RFC flash flood guidance within 40 km
 firewx: # Fire Weather Index
   sfc:
-    clevs: [1, 500, 2500, 5000, 7500, 10000, 12500, 15000, 17500, 20000, 22500, 25000]
+    clevs: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 100]
     cmap: gist_ncar
-    colors: vort_colors
+    colors: rainbow12_colors
     ncl_name: VGTYP_P0_L1_{grid} # choosing one of the un-transformed values in the algorithm
     ticks: 0
     title: Hourly Wildfire Potential
     transform: fire_weather_index
-    unit: $K^{0.2} m^{2} / s^{2}$
+    unit: "%"
 flru: # Aviation Flight Rules
   sfc:
     clevs: [0.0, 1.0, 2.0, 3.0, 4.0]
