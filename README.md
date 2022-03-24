@@ -64,7 +64,6 @@ https://www.noaa.gov/organization/information-technology/list-of-big-data-progra
 
 ### Creating maps
 
-
 #### Configure the list of fields
 
 The real-time graphics produce more than 100 maps for each model at each
@@ -78,16 +77,87 @@ interested in.
 
 You will provide this file path when you run the graphics in the next step.
 
+#### Submitting the run script
+
+See a full list of command line arguments by running the following command:
+
+```
+python create_graphics.py -h
+```
+
+If you are creating only a couple of maps using RRFS data as an example you can
+run on the front-end nodes (or on your laptop) with a command like this:
+
+```
+python create_graphics.py \
+         maps \
+         --all_leads \
+         -d /path/to/input/data \
+         -f 0 6 \
+         --file_type prs \
+         --file_tmpl "RRFS_NA_3km.t15z.bgdawpf{FCST_TIME:03d}.tm00.grib2" \
+         --images ./image_lists/rrfs_subset.yml hourly \
+         -m "My RRFS Retro" \
+         -n 4 \
+         -o /path/to/output/images \
+         -s 2021052315 \
+         --tiles full
+```
+
+If you have a larger set of maps to create, you might use a Slurm batch script
+that looks like this, and is submitted from the pygraf directory:
+
+```
+#!/bin/bash
+
+#SBATCH --account=my_jet_account
+#SBATCH --qos=batch
+#SBATCH --nodes=1-1
+#SBATCH --exclusive
+#SBATCH --partition=kjet,xjet,tjet,ujet
+#SBATCH -t 1:30:00
+#SBATCH --job-name=maps
+
+source pre.sh
+
+python create_graphics.py \
+         maps \
+         --all_leads \
+         -d /path/to/input/data \
+         -f 0 12 \
+         --file_type prs \
+         --file_tmpl "RRFS_NA_3km.t15z.bgdawpf{FCST_TIME:03d}.tm00.grib2" \
+         --images ./image_lists/rrfs_subset.yml hourly \
+         -m "My RRFS Retro" \
+         -n ${SLURM_CPUS_ON_NODE:-12} \
+         -o /path/to/output/images \
+         -s 2021052315 \
+         --tiles full,ATL,CA-NV,CentralCA
+
+```
+NOTE: The graphics already run as a worflow step in the RRFS Retros! They may be
+zipped by default, so you can unzip those files to see you images on disk.
 
 
+# Troubleshooting
 
+- Getting an error like this?
 
+```
+      File "create_graphics.py", line 41
+        LOG_BREAK = f"{('-' * 80)}\n{('-' * 80)}"
+                                                ^
+    SyntaxError: invalid syntax
+```
+  You don't have the conda environment loaded, and the system default Python 2 is trying to run Python 3 code.
+  You may also see an error like this when you've loaded the module, but haven't activated the pygraf environment:
 
-
-
-
-
-
+```
+    Traceback (most recent call last):
+      File "create_graphics.py", line 7, in <module>
+        import matplotlib as mpl
+    ModuleNotFoundError: No module named 'matplotlib'
+```
 
 # Contributing
 
