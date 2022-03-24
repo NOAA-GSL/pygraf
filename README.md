@@ -204,10 +204,9 @@ maps example above to run this command.
                                                 ^
     SyntaxError: invalid syntax
 ```
-    You probably don't have the conda environment loaded, and the system default
-    Python 2 is trying to run Python 3 code.  You may also see an error like
-    this when you've loaded the module, but haven't activated the pygraf
-    environment:
+You probably don't have the conda environment loaded, and the system default
+Python 2 is trying to run Python 3 code.  You may also see an error like this
+when you've loaded the module, but haven't activated the pygraf environment:
 
 ```
     Traceback (most recent call last):
