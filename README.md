@@ -3,29 +3,40 @@
 > Note: This repository is under heavy development. Use at your own risk!
 
 This repository houses a Python-based implementation of the graphics package
-that is responsible for generating maps for the RAP/HRRR/FV3 data. It is
-eventually meant to replace the NCL Graphics suite currently populating the
-real-time pages (https://rapidrefresh.noaa.gov/hrrr/).
+that is responsible for generating maps for the RAP/HRRR/FV3/RRFS data. It has
+replaced NCL as the real-time graphics creation package at NOAA GSL for maps and
+SkewT diagrams.
 
 # Overview
 
 The adb_grapics Python package currently includes tools to create SkewT diagrams
-and a subset of the total plan-view maps created for real-time experimental HRRR
-runs available on the [HRRR Page](https://rapidrefresh.noaa.gov/hrrr/). These
-graphics are not yet fully operational, so will vary sligthly from the graphics
-on the HRRR Page.
-
+and the total plan-view maps created for real-time experimental HRRR runs
+available on the [HRRR Page](https://rapidrefresh.noaa.gov/hrrr/).
 
 # Getting Started
 
-In addition to the information below, checkout the the ADB Python Graphics
-[Google Doc](https://docs.google.com/document/d/1mlLSmFZ-gkNXuF7HmD58WEwJgJVHNcKsicrWXpryFEU/edit#)
-for more information.
+## Download the source code
+
+The repo contains large files totaling 1.2 Gb or more and they are managed by
+GIT LFS that are used for testing purposes. To avoid downloading these files
+when you clone, use the following command:
+
+```
+GIT_LFS_SKIP_SMUDGE=1 git clone https://github.com/NOAA-GSL/pygraf
+```
+
+If you have the disk space, internet data, and/or would like to run the test
+suite included with the package, clone the standard way:
+
+```
+git clone https://github.com/NOAA-GSL/pygraf
+```
+
 
 ## Python environment
 
 A Python environment is available on NOAA RDHPCS Platforms ready to use. To
-activate this environment, to the following:
+activate this environment, do the following:
 
 ```
 module use -a /contrib/miniconda3/modulefiles
@@ -33,16 +44,50 @@ module load miniconda3
 conda activate pygraf
 ```
 
+
+## Stage data
+
+
+There are several real-time data locations on RDHPCS Platforms, but they store only a short
+rolling window. If your desired data is available currently, copy it to your
+space.
+
+Otherwise, you can retrieve it from HPSS or even the NOAA Big Data Project cloud
+buckets.
+
+An example of pulling a wgrib file for HRRR from BDP:
+
+Check out list of available NOAA BDP data sets here at [this link](
+https://www.noaa.gov/organization/information-technology/list-of-big-data-program-datasets)
+
 ## Run the package
 
-An example script has been included for generating a single figure, and serves
-as an example for how to call the package for an upper air map. To run the
-example script in the top-level repo directory, type:
+### Creating maps
 
-```
-conda activate pygraf
-python plot_example.py
-```
+
+#### Configure the list of fields
+
+The real-time graphics produce more than 100 maps for each model at each
+forecast lead time. The list of maps is configured in the pygraf subdirectory
+`image_lists/` where you will find a set of yaml files for a variety of
+supported NWP systems run at GSL.
+
+Start with the one that matches the model you'd like to plot, and remove or
+comment (add a `#` at the beginning of the line) out the fields you are not
+interested in.
+
+You will provide this file path when you run the graphics in the next step.
+
+
+
+
+
+
+
+
+
+
+
 
 # Contributing
 
