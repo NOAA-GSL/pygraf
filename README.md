@@ -135,8 +135,63 @@ python create_graphics.py \
          --tiles full,ATL,CA-NV,CentralCA
 
 ```
-NOTE: The graphics already run as a worflow step in the RRFS Retros! They may be
-zipped by default, so you can unzip those files to see you images on disk.
+NOTE: The graphics already run as a workflow step in the RRFS Retros! They may be
+zipped by default, so you can unzip those files to see your images on disk.
+
+### Creating Skew-T Diagrams
+
+#### Configure the list of locations
+
+The real-time graphics produce a set of about 100 Skew Ts at predefined
+locations. You can use those locations, or create your own. The standard
+locations are defined in the `static` directory under `pygraf` and each line
+in the file represents a single location.
+
+The format of each line is crucial for the columns leading up to the Site Name.
+The Site Name can be any string, but must start on or after position 37 of the
+line.
+
+Here is an example for Las Vegas, NV:
+
+``` VEF   3120 72388  36.05 115.18  693 Las Vegas, NV```
+
+Station ID: VEF
+Column 2: Unused number
+Site Number: 72388
+Lat: 36.05
+Lon: 115.18
+Column 6: Unused number
+Site Name: Las Vegas, NV
+
+
+#### Submitting the run script
+
+See a full list of command line arguments by running the following command:
+
+```
+python create_graphics.py -h
+```
+
+If you are creating only a couple of maps using RRFS data as an example you can
+run on the front-end nodes (or on your laptop) with a command like this:
+
+```
+python create_graphics.py \
+         skewts \
+         -d /path/to/input/data \
+         -f 6 \
+         --file_type nat \
+         --file_tmpl "RRFS_NA_3km.t15z.bgrd3df{FCST_TIME:03d}.tm00.grib2" \
+         --max_plev 100 \
+         -m "My RRFS Retro" \
+         -n 4 \
+         -o /path/to/output/images \
+         -s 2021052315 \
+         --sites ./static/sites_file.txt \
+```
+
+If you are creating many Skew-Ts, please submit a batch job. You can modify the
+maps example above to run this command.
 
 
 # Troubleshooting
@@ -149,8 +204,10 @@ zipped by default, so you can unzip those files to see you images on disk.
                                                 ^
     SyntaxError: invalid syntax
 ```
-  You don't have the conda environment loaded, and the system default Python 2 is trying to run Python 3 code.
-  You may also see an error like this when you've loaded the module, but haven't activated the pygraf environment:
+    You probably don't have the conda environment loaded, and the system default
+    Python 2 is trying to run Python 3 code.  You may also see an error like
+    this when you've loaded the module, but haven't activated the pygraf
+    environment:
 
 ```
     Traceback (most recent call last):
