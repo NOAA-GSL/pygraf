@@ -223,7 +223,7 @@ when you've loaded the module, but haven't activated the pygraf environment:
 ```
 
 
-## View the output files
+# View the output files
 
 You have several options to view the resulting PNG files that are created on
 RDHPCS platforms. You can do the standard data transfer to a local machine, use
@@ -245,7 +245,23 @@ conda activate pygraf
 jupyter notebook --no-browser --port=8809
 ```
 
+The `jupyter notebook` command will provide you with a secure URL that you can
+drop into your web browser to view your notebook.
+
 Now you can continue on with the instructions for Window 2.
+
+## Troubleshooting
+
+- For the tunneling to work, you cannot have any other connections open on the
+platform where you are attempting to tunnel. When you are opening your "Window
+1" in the RDHPCS docs, and see the following message when you log on, you won't
+be able to connect to your notebook. Shut down all connections and try again.
+
+```
+bind: Address already in use
+channel_setup_fwd_listener_tcpip: cannot listen to port: 21952
+Could not request local forwarding.
+```
 
 
 # Contributing
