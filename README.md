@@ -61,7 +61,7 @@ An example of pulling a wgrib file for HRRR from BDP:
 wget https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20220214/conus/hrrr.t00z.wrfprsf06.grib2
 ```
 
-Check out list of available NOAA BDP data sets here at [this link](
+Check out the list of available NOAA BDP data sets here at [this link](
 https://www.noaa.gov/organization/information-technology/list-of-big-data-program-datasets)
 
 When you are browsing the AWS buckets, you can find the appropriate file path to
