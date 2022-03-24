@@ -468,7 +468,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
     dm.draw(show=True)
 
     # Build the output path
-    png_suffix = level if level != 'ua' else ''
+    png_suffix = level
     png_file = f'{variable}_{tile}_{png_suffix}_f{fhr:03d}.png'
     png_file = png_file.replace("__", "_")
     png_path = os.path.join(workdir, png_file)
