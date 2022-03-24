@@ -222,6 +222,32 @@ when you've loaded the module, but haven't activated the pygraf environment:
     ModuleNotFoundError: No module named 'matplotlib'
 ```
 
+
+## View the output files
+
+You have several options to view the resulting PNG files that are created on
+RDHPCS platforms. You can do the standard data transfer to a local machine, use
+the Linux utility `display` with the appropriate ssh connection flags, or you
+can spin up a Jupyter Notebook through ssh tunneling.
+
+Follow along with RDHPCS Docs for [using Jupyter notebooks over
+SSH](https://rdhpcs-common-docs.rdhpcs.noaa.gov/wiki/index.php/Anaconda#Jupyter_Notebooks_over_SSH_and_front-end_nodes)
+to set up your connection with *one slight modification*.
+
+Once you setup your first window, you will spin up your Jupyter Notebook
+instance in the scratch space where your PNG file lives by doing the following:
+
+```
+cd /my/scratch/space
+module use -a /contrib/miniconda3/modulefiles
+module load miniconda3
+conda activate pygraf
+jupyter notebook --no-browser --port=8809
+```
+
+Now you can continue on with the instructions for Window 2.
+
+
 # Contributing
 
 When contributing code to this repo, please keep in mind the following style
