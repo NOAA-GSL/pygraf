@@ -391,7 +391,6 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
       model      model name: rap, hrrr, hrrre, rrfs, rtma
       spec       the dictionary of specifications for the given variable
                  and level
-      imsiz      resolution of output image in DPI units
       variable   the name of the variable section in the specs file
       workdir    output directory
     '''
