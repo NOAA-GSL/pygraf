@@ -231,6 +231,14 @@ def parse_args():
 
     # Short args
     parser.add_argument(
+        '-r',
+        dest='img_res',
+        default=75,
+        required=False,
+        help='Resolution of output images in DPI. Recommended to stay below 1000. Default = 75',
+        type=int,
+        )
+    parser.add_argument(
         '-a',
         dest='data_age',
         default=3,
@@ -383,6 +391,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
       model      model name: rap, hrrr, hrrre, rrfs, rtma
       spec       the dictionary of specifications for the given variable
                  and level
+      imsiz      resolution of output image in DPI units
       variable   the name of the variable section in the specs file
       workdir    output directory
     '''
@@ -480,7 +489,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
     plt.savefig(
         png_path,
         bbox_inches='tight',
-        dpi=72,
+        dpi=cla.img_res,
         format='png',
         orientation='landscape',
         pil_kwargs={'optimize': True},
@@ -531,7 +540,7 @@ def parallel_skewt(cla, fhr, ds, site, workdir):
     plt.savefig(
         png_path,
         bbox_inches='tight',
-        dpi='figure',
+        dpi=cla.img_res,
         format='png',
         orientation='landscape',
         )
