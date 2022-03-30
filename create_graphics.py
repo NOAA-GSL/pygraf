@@ -233,9 +233,9 @@ def parse_args():
     parser.add_argument(
         '-r',
         dest='img_res',
-        default=75,
+        default=72,
         required=False,
-        help='Resolution of output images in DPI. Recommended to stay below 1000. Default = 75',
+        help='Resolution of output images in DPI. Recommended to stay below 1000. Default = 72',
         type=int,
         )
     parser.add_argument(
