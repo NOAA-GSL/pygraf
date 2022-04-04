@@ -231,6 +231,14 @@ def parse_args():
 
     # Short args
     parser.add_argument(
+        '-r',
+        dest='img_res',
+        default=72,
+        required=False,
+        help='Resolution of output images in DPI. Recommended to stay below 1000. Default = 72',
+        type=int,
+        )
+    parser.add_argument(
         '-a',
         dest='data_age',
         default=3,
@@ -480,7 +488,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
     plt.savefig(
         png_path,
         bbox_inches='tight',
-        dpi=72,
+        dpi=cla.img_res,
         format='png',
         orientation='landscape',
         pil_kwargs={'optimize': True},
@@ -531,7 +539,7 @@ def parallel_skewt(cla, fhr, ds, site, workdir):
     plt.savefig(
         png_path,
         bbox_inches='tight',
-        dpi='figure',
+        dpi=cla.img_res,
         format='png',
         orientation='landscape',
         )
