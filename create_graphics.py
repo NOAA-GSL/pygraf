@@ -541,7 +541,7 @@ def parallel_skewt(cla, fhr, ds, site, workdir):
     print('*' * 80)
     print(f"Creating csv file: {csv_path}")
     print('*' * 80)
-    skew.create_output()
+    skew.create_output(csv_path)
 
     plt.close()
 

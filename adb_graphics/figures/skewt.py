@@ -17,6 +17,7 @@ import metpy.calc as mpcalc
 from metpy.plots import Hodograph, SkewT
 from metpy.units import units
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+import pandas as pd
 
 import adb_graphics.datahandler.gribdata as gribdata
 import adb_graphics.errors as errors
@@ -298,13 +299,12 @@ class SkewTDiagram(gribdata.profileData):
         self._add_thermo_inset(skew)
         self._add_hydrometeors(hydro_subplot)
 
-    def create_output(self):
+    def create_output(self, csv_path):
 
         ''' Calls the private methods for writing each the SkewT Data. '''
 
         #don't actually want to make a plot so need something like skew but instead a file to write data.
-        skew, hydro_subplot = self._setup_diagram()
-        self._write_profile(skew)
+        self._write_profile(csv_path)
 
     def _plot_hodograph(self, skew):
 
@@ -366,7 +366,7 @@ class SkewTDiagram(gribdata.profileData):
         skew.ax.set_xlabel('Temperature (F)')
         skew.ax.set_ylabel('Pressure (hPa)')
 
-    def _write_profile(self, skew):
+    def _write_profile(self, csv_path):
 
         profiles = self.atmo_profiles # dictionary
         pres = profiles.get('pres').get('data')
@@ -375,12 +375,23 @@ class SkewTDiagram(gribdata.profileData):
         temp = profiles.get('temp').get('data').to('degC')
         sphum = profiles.get('sphum').get('data')
 
-        dewpt = mpcalc.dewpoint_from_specific_humidity(sphum, temp, pres).to('degC')
-        wspd = mpcalc.wind_speed(u,v)
-        wdir = mpcalc.wind_direction(u,v)
+        dewpt = np.array(mpcalc.dewpoint_from_specific_humidity(sphum, temp,
+            pres).to('degC'))
+        wspd = np.array(mpcalc.wind_speed(u,v))
+        wdir = np.array(mpcalc.wind_direction(u,v))
 
-        print(f'test print {pres}')
-        print(type(pres))
+        pres = np.array(pres)
+        temp = np.array(temp)
+
+        profile = pd.DataFrame({
+            'LEVEL': pres,
+            'TEMP': temp,
+            'DWPT': dewpt,
+            'WDIR': wdir,
+            'WSPD': wspd,
+            })
+
+        profile.to_csv(csv_path, index=False, float_format="%10.2f")
 
     def _plot_profile(self, skew):
 
