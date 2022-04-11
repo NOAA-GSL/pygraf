@@ -416,85 +416,102 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
       workdir    output directory
     '''
 
-    # Object to be plotted on the map in filled contours.
-    field = gribdata.fieldData(
-        ds=ds,
-        fhr=fhr,
-        filetype=cla.file_type,
-        level=level,
-        model=model,
-        short_name=variable,
-        )
-
-    try:
-        field.field
-    except errors.GribReadError:
-        print(f'Cannot find grib2 variable for {variable} at {level}. Skipping.')
-        return
-
-    # Create a list of fieldData objects for each contour field requested
-    # These will show up as line contours on the plot.
-    contours = spec.get('contours')
-    contour_fields = []
-    if contours is not None:
-        for contour, contour_kwargs in contours.items():
-            if '_' in contour:
-                var, lev = contour.split('_')
-            else:
-                var, lev = contour, level
-
-            contour_fields.append(gribdata.fieldData(
-                ds=ds,
-                fhr=fhr,
-                level=lev,
-                model=model,
-                contour_kwargs=contour_kwargs,
-                short_name=var,
-                ))
-
-    # Create a list of fieldData objects for each hatched area requested
-    hatches = spec.get('hatches')
-    hatch_fields = []
-    if hatches is not None:
-        for hatch, hatch_kwargs in hatches.items():
-            var, lev = hatch.split('_')
-            hatch_fields.append(gribdata.fieldData(
-                ds=ds,
-                fhr=fhr,
-                level=lev,
-                model=model,
-                contour_kwargs=hatch_kwargs,
-                short_name=var,
-                ))
+    print(f' CREATE_GRAPHICS, parallel_maps:level = {level}')
 
     if cla.model_name == "HRRR-HI":
         inches = 12.2
     else:
         inches = 10
 
-    fig, ax = plt.subplots(1, 1, figsize=(inches, inches))
+    if level == "esbl":
+        nrows = 3
+        ncols = 4
+        inches = 20
+    else:
+        nrows = 1
+        ncols = 1
+    fig, ax = plt.subplots(nrows, ncols, figsize=(inches, 0.8*inches))
 
-    # Generate a map object
-    m = maps.Map(
-        airport_fn=AIRPORTS,
-        ax=ax,
-        grid_info=field.grid_info(),
-        model=model,
-        plot_airports=spec.get('plot_airports', True),
-        tile=tile,
-        )
+    for row_ind in range(nrows):
+        for col_ind in range(ncols):
+            index = row_ind*4+col_ind
+            if level == 'esbl':
+                current_ax = ax[row_ind, col_ind] # use coordinates for the current index
+            else:
+                current_ax = ax
 
-    # Send all objects (map, field, contours, hatches) to a DataMap object
-    dm = maps.DataMap(
-        field=field,
-        contour_fields=contour_fields,
-        hatch_fields=hatch_fields,
-        map_=m,
-        model_name=cla.model_name,
-        )
+            # Object to be plotted on the map in filled contours.
+            field = gribdata.fieldData(
+                ds=ds,
+                fhr=fhr,
+                filetype=cla.file_type,
+                level=level,
+                model=model,
+                short_name=variable,
+                )
 
-    # Draw the map
-    dm.draw(show=True)
+            try:
+                field.field
+            except errors.GribReadError:
+                print(f'Cannot find grib2 variable for {variable} at {level}. Skipping.')
+                return
+
+            # Create a list of fieldData objects for each contour field requested
+            # These will show up as line contours on the plot.
+            contours = spec.get('contours')
+            contour_fields = []
+            if contours is not None:
+                for contour, contour_kwargs in contours.items():
+                    if '_' in contour:
+                        var, lev = contour.split('_')
+                    else:
+                        var, lev = contour, level
+
+                    contour_fields.append(gribdata.fieldData(
+                        ds=ds,
+                        fhr=fhr,
+                        level=lev,
+                        model=model,
+                        contour_kwargs=contour_kwargs,
+                        short_name=var,
+                        ))
+
+            # Create a list of fieldData objects for each hatched area requested
+            hatches = spec.get('hatches')
+            hatch_fields = []
+            if hatches is not None:
+                for hatch, hatch_kwargs in hatches.items():
+                    var, lev = hatch.split('_')
+                    hatch_fields.append(gribdata.fieldData(
+                        ds=ds,
+                        fhr=fhr,
+                        level=lev,
+                        model=model,
+                        contour_kwargs=hatch_kwargs,
+                        short_name=var,
+                        ))
+
+            # Generate a map object
+            m = maps.Map(
+                airport_fn=AIRPORTS,
+                ax=current_ax,
+                grid_info=field.grid_info(),
+                model=model,
+                plot_airports=spec.get('plot_airports', True),
+                tile=tile,
+                )
+
+            # Send all objects (map, field, contours, hatches) to a DataMap object
+            dm = maps.DataMap(
+                field=field,
+                contour_fields=contour_fields,
+                hatch_fields=hatch_fields,
+                map_=m,
+                model_name=cla.model_name,
+                )
+
+            # Draw the map
+            dm.draw(show=True)
 
     # Build the output path
     png_file = f'{variable}_{tile}_{level}_f{fhr:03d}.png'
