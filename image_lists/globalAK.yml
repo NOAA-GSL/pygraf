@@ -1,5 +1,5 @@
 hourly:
-  model: global
+  model: globalAK
   variables:
     1ref:
       - 1000m

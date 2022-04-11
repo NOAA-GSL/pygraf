@@ -277,7 +277,7 @@ class UPPData(specs.VarSpec):
 
         if x <= 0 or y <= 0 or x >= max_x or y >= max_y:
             print(f'site location is outside your domain! {site_lat} {site_lon}')
-            return(-1.E10, -1.E10)
+            return(-1, -1)
 
         return (x, y)
 
@@ -547,16 +547,18 @@ class fieldData(UPPData):
         dewpt = self.values(name='dewp', level='2m', do_transform=False)
         weasd = self.values(name='weasd', level='sfc', do_transform=False)
         gust = self.values(name='gust', level='10m', do_transform=False)
-        soilw = self.values(name='soilw', level='0cm', do_transform=False)
+        soilm = self.values(name='soilm', level='sfc', do_transform=False)
 
         # A few derived fields
         dewpt_depression = temp - dewpt
         dewpt_depression = np.where(dewpt_depression < 0, 0, dewpt_depression)
+        dewpt_depression = np.maximum(15.0, dewpt_depression)
+        gust_max = np.maximum(3.0, gust)
 
         snowc = (25.0 - weasd) / 25.0
         snowc = np.where(snowc > 0.0, snowc, 0.0)
 
-        mois = 1.0 - soilw
+        mois = 0.01*(100.0 - soilm)
 
         # Set urban (13), snow/ice (15), barren (16), and water (17) to 0.
         for vegtype in [13, 15, 16, 17]:
@@ -565,18 +567,19 @@ class fieldData(UPPData):
         # Set all others vegetation types to 1
         veg = np.where(veg > 0, 1, veg)
 
-        fwi = veg * \
-                (333.23 + \
-                 65.46 * (gust ** 1.97) * \
-                (dewpt_depression ** 0.31) * \
-                (mois ** 13.55) * \
-                snowc)
+        fwi = veg * (2.15 *
+                     gust_max *
+                     dewpt_depression *
+                     (mois ** 6.42) *
+                     snowc)
+
+        fwi = fwi / 10.0
 
         temp.close()
         dewpt.close()
         weasd.close()
         gust.close()
-        soilw.close()
+        soilm.close()
 
         return fwi
 
@@ -613,7 +616,6 @@ class fieldData(UPPData):
             attrs = ['Lov']
             grid_info['projection'] = 'stere'
             grid_info['lat_0'] = 90
-            grid_info['lat_ts'] = 90
         elif self.grid_suffix == 'GLL0':
             attrs = []
             grid_info['projection'] = 'cyl'

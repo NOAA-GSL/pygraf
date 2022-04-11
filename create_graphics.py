@@ -138,7 +138,7 @@ def gather_gribfiles(cla, fhr, filename, gribfiles):
 
     fcst_hour = int(fhr)
 
-    first_fcst = 6 if cla.images[0] == 'global' else 1
+    first_fcst = 6 if 'global' in cla.images[0] else 1
     if fcst_hour <= first_fcst:
         filenames['01fcst'].append(filename)
     else:
@@ -243,6 +243,14 @@ def parse_args():
         )
 
     # Short args
+    parser.add_argument(
+        '-r',
+        dest='img_res',
+        default=72,
+        required=False,
+        help='Resolution of output images in DPI. Recommended to stay below 1000. Default = 72',
+        type=int,
+        )
     parser.add_argument(
         '-a',
         dest='data_age',
@@ -472,6 +480,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
         ax=ax,
         grid_info=field.grid_info(),
         model=model,
+        plot_airports=spec.get('plot_airports', True),
         tile=tile,
         )
 
@@ -488,8 +497,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
     dm.draw(show=True)
 
     # Build the output path
-    png_suffix = level if level != 'ua' else ''
-    png_file = f'{variable}_{tile}_{png_suffix}_f{fhr:03d}.png'
+    png_file = f'{variable}_{tile}_{level}_f{fhr:03d}.png'
     png_file = png_file.replace("__", "_")
     png_path = os.path.join(workdir, png_file)
 
@@ -501,7 +509,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
     plt.savefig(
         png_path,
         bbox_inches='tight',
-        dpi=72,
+        dpi=cla.img_res,
         format='png',
         orientation='landscape',
         pil_kwargs={'optimize': True},
@@ -552,7 +560,7 @@ def parallel_skewt(cla, fhr, ds, site, workdir):
     plt.savefig(
         png_path,
         bbox_inches='tight',
-        dpi='figure',
+        dpi=cla.img_res,
         format='png',
         orientation='landscape',
         )
@@ -786,8 +794,8 @@ def graphics_driver(cla):
     # This is not an operational feature. Exit if files don't exist.
 
     if cla.graphic_type == 'maps':
-        first_fcst = 6 if cla.images[0] == 'global' else 0
-        fcst_inc = 6 if cla.images[0] == 'global' else 1
+        first_fcst = 6 if 'global' in cla.images[0] else 0
+        fcst_inc = 6 if 'global' in cla.images[0] else 1
         if len(cla.fcst_hour) == 1 and cla.all_leads:
             for fhr in range(first_fcst, int(cla.fcst_hour[0]), fcst_inc):
                 grib_path, old_enough = pre_proc_grib_files(cla, fhr)

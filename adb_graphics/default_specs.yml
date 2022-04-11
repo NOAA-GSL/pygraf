@@ -35,6 +35,8 @@
 #
 #   ncl_name: the name of the variable as expected by NCL
 #
+#   plot_airports: bool to enable/disable plotting of airports. defaults to True
+#
 #   print_units: bool for printing the units in the map title
 #
 #   ticks: the number of tick marks on the colorbar
@@ -479,14 +481,14 @@ ffldro: # Ensemble flash flood runoff
     title: Probability of 6-hr Precipitation > RFC flash flood guidance within 40 km
 firewx: # Fire Weather Index
   sfc:
-    clevs: [1, 500, 2500, 5000, 7500, 10000, 12500, 15000, 17500, 20000, 22500, 25000]
+    clevs: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 100]
     cmap: gist_ncar
-    colors: vort_colors
+    colors: rainbow12_colors
     ncl_name: VGTYP_P0_L1_{grid} # choosing one of the un-transformed values in the algorithm
     ticks: 0
     title: Hourly Wildfire Potential
     transform: fire_weather_index
-    unit: $K^{0.2} m^{2} / s^{2}$
+    unit: "%"
 flru: # Aviation Flight Rules
   sfc:
     clevs: [0.0, 1.0, 2.0, 3.0, 4.0]
@@ -690,7 +692,7 @@ hlcytot:
   mn03:
     <<: *hlcy_mn03
     accumulate: True
-    title: Run Total 0-6km Min Updraft Helicity
+    title: Run Total 0-3km Min Updraft Helicity
     transform: run_total
   mn16:
     <<: *hlcy_mn16
@@ -710,7 +712,7 @@ hlcytot:
   mx03:
     <<: *hlcy_mx03
     accumulate: True
-    title: Run Total 0-6km Max Updraft Helicity
+    title: Run Total 0-3km Max Updraft Helicity
     transform: run_total
   mx16:
     <<: *hlcy_mx16
@@ -805,6 +807,7 @@ mfrp: # Fire radiative power
     clevs: [0, 10, 25, 50, 100, 250]
     colors: fire_power_colors
     ncl_name: CFNSF_P0_L1_{grid}
+    plot_airports: False
     ticks: 0
     title: Fire Radiative Power
     unit: MW
@@ -828,6 +831,10 @@ pres:
     colors: ps_colors
     ncl_name:
       global: PRMSL_P0_L101_{grid}
+      globalAK: PRMSL_P0_L101_{grid}
+      globalCONUS: PRMSL_P0_L101_{grid}
+      globalNHemi: PRMSL_P0_L101_{grid}
+      globalSHemi: PRMSL_P0_L101_{grid}
       hrrr: MSLMA_P0_L101_{grid}
       hrrrhi: MSLMA_P0_L101_{grid}
       hrrrcar: MSLMA_P0_L101_{grid}
@@ -1070,7 +1077,7 @@ snmr: # Snow Mixing Ratio
 snod: # Snow Depth
   sfc:
     <<: *snow
-    ncl_name: SNOD_P0_L1_GLC0
+    ncl_name: SNOD_P0_L1_{grid}
     title:  Cycled Snow Depth
 soilm: # Soil Moisture Availability
   sfc:
@@ -1078,7 +1085,6 @@ soilm: # Soil Moisture Availability
     cmap: Spectral
     colors: soilm_colors
     ncl_name:
-      global: SOILM_P0_2L106_{grid}
       hrrr: MSTAV_P0_L106_{grid}
       hrrrhi: MSTAV_P0_L106_{grid}
       hrrrcar: MSTAV_P0_L106_{grid}
@@ -1323,6 +1329,7 @@ trc1:
     clevs: [1, 4, 7, 11, 15, 20, 25, 30, 40, 50, 75, 150, 250, 500]
     colors: smoke_colors
     ncl_name: COLMD_P0_L200_{grid}
+    plot_airports: False
     ticks: 0
     title: Vertically Integrated Smoke
     transform: conversions.to_micro
@@ -1331,6 +1338,7 @@ trc1:
     clevs: [1, 2, 4, 6, 8, 12, 16, 20, 25, 30, 40, 60, 100, 200]
     colors: smoke_colors
     ncl_name: MASSDEN_P0_L105_{grid}
+    plot_airports: False
     ticks: 0
     title: 1000ft AGL Smoke
     transform: conversions.to_micrograms_per_m3
@@ -1345,6 +1353,7 @@ trc1:
     clevs: [1, 2, 4, 6, 8, 12, 16, 20, 25, 30, 40, 60, 100, 200]
     colors: smoke_colors
     ncl_name: MASSDEN_P0_L103_{grid}
+    plot_airports: False
     title: Near-Surface Smoke
     transform: conversions.to_micrograms_per_m3
     ticks: 0

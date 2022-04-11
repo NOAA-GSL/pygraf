@@ -1,5 +1,5 @@
 hourly:
-  model: global
+  model: globalNHemi
   variables:
     1ref:
       - 1000m
