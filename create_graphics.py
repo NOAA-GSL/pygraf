@@ -397,6 +397,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
 
     print(f' CREATE_GRAPHICS, parallel_maps:level = {level}')
 
+    # testing this next section as a loop - CSH
     if cla.model_name == "HRRR-HI":
         inches = 12.2
     else:
