@@ -329,6 +329,11 @@ def parse_args():
         default='nat',
         help='Type of levels contained in grib file.',
         )
+    parser.add_argument(
+        '--multipanel',
+        action='store_true',
+        help='Use --multipanel for ensemble model graphics that use multiple panels.',
+        )
 
     # SkewT-specific args
     skewt_group = parser.add_argument_group('SkewT Arguments')
@@ -395,7 +400,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
       workdir    output directory
     '''
 
-    print(f' CREATE_GRAPHICS, parallel_maps:level = {level}')
+    print(f' CREATE_GRAPHICS, parallel_maps: multipanel = {cla.multipanel}')
 
     # testing this next section as a loop - CSH
     if cla.model_name == "HRRR-HI":
@@ -403,7 +408,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
     else:
         inches = 10
 
-    if level == "esbl":
+    if cla.multipanel:
         nrows = 3
         ncols = 4
         inches = 20
@@ -415,7 +420,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
     for row_ind in range(nrows):
         for col_ind in range(ncols):
             index = row_ind*4+col_ind
-            if level == 'esbl':
+            if cla.multipanel:
                 current_ax = ax[row_ind, col_ind] # use coordinates for the current index
             else:
                 current_ax = ax
@@ -488,10 +493,23 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
                 hatch_fields=hatch_fields,
                 map_=m,
                 model_name=cla.model_name,
+                multipanel=cla.multipanel,
                 )
 
             # Draw the map
             dm.draw(show=True)
+
+    if cla.multipanel:
+        # once all the subplots are ready, adjust to remove white space and make room for color bar
+        plt.subplots_adjust(bottom=0.15, top=0.90, wspace=0, hspace=0)
+        # add the color bar (based on last contour, but all should be the same)
+        cax = plt.axes([0.15, 0.040, 0.70, 0.041])
+#        plt.colorbar(contour, orientation='horizontal', cax=cax)
+
+        # plot title
+        title = "Ensemble plot"
+        unit = "dbZ"
+        fig.suptitle(f'{title} ({unit})', fontsize=18)
 
     # Build the output path
     png_file = f'{variable}_{tile}_{level}_f{fhr:03d}.png'

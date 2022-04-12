@@ -231,13 +231,14 @@ class DataMap():
 
     '''
 
-    def __init__(self, field, map_, contour_fields=None, hatch_fields=None, model_name=None):
+    def __init__(self, field, map_, contour_fields=None, hatch_fields=None, model_name=None, multipanel=False):
 
         self.field = field
         self.contour_fields = contour_fields
         self.hatch_fields = hatch_fields
         self.map = map_
         self.model_name = model_name
+        self.multipanel = multipanel
 
 
     @staticmethod
@@ -304,7 +305,8 @@ class DataMap():
                               func=self.map.m.contourf,
                               levels=self.field.clevs,
                               )
-        self._colorbar(ax=ax, cc=cf)
+        if not(self.multipanel):
+            self._colorbar(ax=ax, cc=cf)
 
         not_labeled = [self.field.short_name]
         if self.hatch_fields:
@@ -331,14 +333,16 @@ class DataMap():
             self._draw_field_values(ax)
 
         # Finish with the title
-        self._title()
+        if not(self.multipanel):
+            self._title()
 
         # Create a pop-up to display the figure, if show=True
         if show:
             plt.tight_layout()
             plt.show()
 
-        self.add_logo(ax)
+        if not(self.multipanel):
+            self.add_logo(ax)
 
         return cf
 
