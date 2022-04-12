@@ -1,5 +1,10 @@
 # pylint: disable=invalid-name
 '''
+                create_maps(cla,
+                            fhr=fhr,
+                            gribfiles=gribfiles,
+                            workdir=workdir,
+                            )
 Driver for creating all the SkewT diagrams needed for a specific input dataset.
 '''
 
@@ -23,6 +28,7 @@ import time
 import zipfile
 
 import matplotlib.pyplot as plt
+import numpy as np
 import yaml
 
 from adb_graphics.datahandler import gribfile
@@ -40,13 +46,15 @@ TMP_FN = 'combined_{fhr:03d}_{uniq}.tmp.grib2'
 
 LOG_BREAK = f"{('-' * 80)}\n{('-' * 80)}"
 
-def check_file(cla, fhr, mem=''):
+def check_file(cla, fhr, mem=None):
     ''' Given the command line arguments, the forecast hour, and a potential
     ensemble member, build a full path to the file and ensure it exists. '''
 
-    grib_path = os.path.join(cla.data_root[0],
-                             cla.file_tmpl[0]).format(FCST_TIME=fhr,
-                                                      mem=str(mem))
+    grib_path = os.path.join(cla.data_root[0], cla.file_tmpl[0])
+    if mem is not None:
+       grib_path = grib_path.format(FCST_TIME=fhr, mem=mem)
+    else:
+       grib_path = grib_path.format(FCST_TIME=fhr)
 
     print(f'Checking on file {grib_path}')
     old_enough = utils.old_enough(cla.data_age, grib_path) if \
@@ -423,95 +431,108 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
     else:
         inches = 10
 
-    if level == "esbl":
+    # A 12 panel plot to accommodate 10 ensemble members, or a single panel
+    if cla.graphic_type == 'enspanel':
         nrows = 3
         ncols = 4
         inches = 20
     else:
         nrows = 1
         ncols = 1
+
+    # Create a rectangle shape
     fig, ax = plt.subplots(nrows, ncols, figsize=(inches, 0.8*inches))
+    # Flatten the 2D array and number panel axes from top left to bottom right
+    # sequentially
+    ax = ax.flatten() if isinstance(ax, np.ndarray) else [ax]
 
-    for row_ind in range(nrows):
-        for col_ind in range(ncols):
-            index = row_ind*4+col_ind
-            if level == 'esbl':
-                current_ax = ax[row_ind, col_ind] # use coordinates for the current index
-            else:
-                current_ax = ax
+    for index, current_ax in enumerate(ax):
 
-            # Object to be plotted on the map in filled contours.
-            field = gribdata.fieldData(
-                ds=ds,
-                fhr=fhr,
-                filetype=cla.file_type,
-                level=level,
-                model=model,
-                short_name=variable,
-                )
+        mem = None
+        if cla.graphic_type == 'enspanel':
+            # Don't put data in the top left or bottom left panels.
+            if index in (0, 8):
+                continue
+            # Shenanigans to match ensemble member to panel index
+            mem = 0 if index == 4 else index
+            mem = mem if mem < 4 else index - 1
+            mem = mem if mem < 8 else index - 2
 
-            try:
-                field.field
-            except errors.GribReadError:
-                print(f'Cannot find grib2 variable for {variable} at {level}. Skipping.')
-                return
+        # Object to be plotted on the map in filled contours.
+        field = gribdata.fieldData(
+            ds=ds,
+            fhr=fhr,
+            filetype=cla.file_type,
+            level=level,
+            mem=mem,
+            model=model,
+            short_name=variable,
+            )
 
-            # Create a list of fieldData objects for each contour field requested
-            # These will show up as line contours on the plot.
-            contours = spec.get('contours')
-            contour_fields = []
-            if contours is not None:
-                for contour, contour_kwargs in contours.items():
-                    if '_' in contour:
-                        var, lev = contour.split('_')
-                    else:
-                        var, lev = contour, level
+        try:
+            field.field
+        except errors.GribReadError:
+            print(f'Cannot find grib2 variable for {variable} at {level}. Skipping.')
+            return
 
-                    contour_fields.append(gribdata.fieldData(
-                        ds=ds,
-                        fhr=fhr,
-                        level=lev,
-                        model=model,
-                        contour_kwargs=contour_kwargs,
-                        short_name=var,
-                        ))
+        # Create a list of fieldData objects for each contour field requested
+        # These will show up as line contours on the plot.
+        contours = spec.get('contours')
+        contour_fields = []
+        if contours is not None:
+            for contour, contour_kwargs in contours.items():
+                if '_' in contour:
+                    var, lev = contour.split('_')
+                else:
+                    var, lev = contour, level
 
-            # Create a list of fieldData objects for each hatched area requested
-            hatches = spec.get('hatches')
-            hatch_fields = []
-            if hatches is not None:
-                for hatch, hatch_kwargs in hatches.items():
-                    var, lev = hatch.split('_')
-                    hatch_fields.append(gribdata.fieldData(
-                        ds=ds,
-                        fhr=fhr,
-                        level=lev,
-                        model=model,
-                        contour_kwargs=hatch_kwargs,
-                        short_name=var,
-                        ))
+                contour_fields.append(gribdata.fieldData(
+                    ds=ds,
+                    fhr=fhr,
+                    level=lev,
+                    mem=mem,
+                    model=model,
+                    contour_kwargs=contour_kwargs,
+                    short_name=var,
+                    ))
 
-            # Generate a map object
-            m = maps.Map(
-                airport_fn=AIRPORTS,
-                ax=current_ax,
-                grid_info=field.grid_info(),
-                model=model,
-                plot_airports=spec.get('plot_airports', True),
-                tile=tile,
-                )
+        # Create a list of fieldData objects for each hatched area requested
+        hatches = spec.get('hatches')
+        hatch_fields = []
+        if hatches is not None:
+            for hatch, hatch_kwargs in hatches.items():
+                var, lev = hatch.split('_')
+                hatch_fields.append(gribdata.fieldData(
+                    ds=ds,
+                    fhr=fhr,
+                    level=lev,
+                    mem=mem,
+                    model=model,
+                    contour_kwargs=hatch_kwargs,
+                    short_name=var,
+                    ))
 
-            # Send all objects (map, field, contours, hatches) to a DataMap object
-            dm = maps.DataMap(
-                field=field,
-                contour_fields=contour_fields,
-                hatch_fields=hatch_fields,
-                map_=m,
-                model_name=cla.model_name,
-                )
+        # Generate a map object
+        m = maps.Map(
+            airport_fn=AIRPORTS,
+            ax=current_ax,
+            grid_info=field.grid_info(),
+            model=model,
+            plot_airports=spec.get('plot_airports', True),
+            tile=tile,
+            )
 
-            # Draw the map
-            dm.draw(show=True)
+        # Send all objects (map, field, contours, hatches) to a DataMap object
+        dm = maps.DataMap(
+            field=field,
+            contour_fields=contour_fields,
+            hatch_fields=hatch_fields,
+            map_=m,
+            model_name=cla.model_name,
+            )
+
+        # Draw the map
+        dm.draw(show=True)
 
     # Build the output path
     png_file = f'{variable}_{tile}_{level}_f{fhr:03d}.png'
@@ -834,7 +855,7 @@ def graphics_driver(cla):
                 # Expand template to create a list of ensemble member files and
                 # check if they exist and that they're old enough
                 grib_paths = []
-                ens_members = list(range(1, cla.ens_size+1))
+                ens_members = list(range(cla.ens_size))
                 for mem in ens_members:
                     mem_path, mem_old_enough = check_file(cla, fhr, mem=mem)
                     if mem_old_enough:
@@ -893,6 +914,11 @@ def graphics_driver(cla):
                     filetype=cla.file_type,
                     model=cla.images[0],
                     )
+                create_maps(cla,
+                            fhr=fhr,
+                            gribfiles=gribfiles,
+                            workdir=workdir,
+                            )
                 print(gribfiles.contents)
 
             # Zip png files and remove the originals in a subprocess
