@@ -1,0 +1,5 @@
+hourly:
+  model: rrfs
+  variables:
+    cref:
+      - sfc
