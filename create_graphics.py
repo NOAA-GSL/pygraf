@@ -424,8 +424,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
       workdir    output directory
     '''
 
-    print(f' CREATE_GRAPHICS, parallel_maps:level = {level}')
-
+    # testing this next section as a loop - CSH
     if cla.model_name == "HRRR-HI":
         inches = 12.2
     else:
@@ -532,6 +531,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
             hatch_fields=hatch_fields,
             map_=m,
             model_name=cla.model_name,
+            multipanel=cla.graphic_type == 'enspanel',
             )
 
         # Draw the map
@@ -565,12 +565,23 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
             hatch_fields=[],
             map_=m,
             model_name=cla.model_name,
+            multipanel=cla.graphic_type == 'enspanel',
             )
 
         # Draw the map
-        dm.draw()
+        dm.draw(show=True)
 
+    if cla.graphic_type == 'enspanel':
+        # once all the subplots are ready, adjust to remove white space and make room for color bar
+        plt.subplots_adjust(bottom=0.15, top=0.90, wspace=0, hspace=0)
+        # add the color bar (based on last contour, but all should be the same)
+        cax = plt.axes([0.15, 0.040, 0.70, 0.041])
+#        plt.colorbar(contour, orientation='horizontal', cax=cax)
 
+        # plot title
+        title = "Ensemble plot"
+        unit = "dbZ"
+        fig.suptitle(f'{title} ({unit})', fontsize=18)
 
     # Build the output path
     png_file = f'{variable}_{tile}_{level}_f{fhr:03d}.png'
