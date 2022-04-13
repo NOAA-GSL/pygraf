@@ -441,10 +441,12 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
         ncols = 1
 
     # Create a rectangle shape
-    fig, ax = plt.subplots(nrows, ncols, figsize=(inches, 0.8*inches))
+    fig, ax = plt.subplots(nrows, ncols, figsize=(inches, 0.8*inches),)
+#            sharex=True, sharey=True)
     # Flatten the 2D array and number panel axes from top left to bottom right
     # sequentially
     ax = ax.flatten() if isinstance(ax, np.ndarray) else [ax]
+
 
     for index, current_ax in enumerate(ax):
 
@@ -452,6 +454,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
         if cla.graphic_type == 'enspanel':
             # Don't put data in the top left or bottom left panels.
             if index in (0, 8):
+                #current_ax.axis('off')
                 continue
             # Shenanigans to match ensemble member to panel index
             mem = 0 if index == 4 else index
@@ -464,7 +467,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
             fhr=fhr,
             filetype=cla.file_type,
             level=level,
-            mem=mem,
+            member=mem,
             model=model,
             short_name=variable,
             )
@@ -490,7 +493,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
                     ds=ds,
                     fhr=fhr,
                     level=lev,
-                    mem=mem,
+                    member=mem,
                     model=model,
                     contour_kwargs=contour_kwargs,
                     short_name=var,
@@ -506,7 +509,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
                     ds=ds,
                     fhr=fhr,
                     level=lev,
-                    mem=mem,
+                    member=mem,
                     model=model,
                     contour_kwargs=hatch_kwargs,
                     short_name=var,
@@ -532,7 +535,42 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
             )
 
         # Draw the map
-        dm.draw(show=True)
+        dm.draw()
+
+    if True:
+        # Let's plot the radar obs.
+        filename = '/scratch2/BMC/wrfruc/cholt/data/mrms/20220412-210040.MRMS_MergedReflectivityQComposite_00.50_20220412-210040.grib2'
+        gribobs = gribfile.GribFile(filename=filename)
+        proj_info = field.grid_info()
+        field = gribdata.fieldData(
+            ds=gribobs.contents,
+            fhr=0,
+            filetype='nat',
+            level='obs',
+            model='obs',
+            short_name='cref',
+            )
+        print(f'OBS Field: {gribobs.contents}')
+        m = maps.Map(
+            airport_fn=AIRPORTS,
+            ax=ax[8],
+            grid_info=proj_info,
+            model='obs',
+            plot_airports=spec.get('plot_airports', True),
+            tile=tile,
+            )
+        dm = maps.DataMap(
+            field=field,
+            contour_fields=[],
+            hatch_fields=[],
+            map_=m,
+            model_name=cla.model_name,
+            )
+
+        # Draw the map
+        dm.draw()
+
+
 
     # Build the output path
     png_file = f'{variable}_{tile}_{level}_f{fhr:03d}.png'

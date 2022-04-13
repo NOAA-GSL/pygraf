@@ -190,6 +190,7 @@ class Map():
                 ))
 
         basemap_args.update(get_basemap_kwargs)
+        print(basemap_args)
 
         return Basemap(**basemap_args)
 
@@ -585,5 +586,9 @@ class DataMap():
         ''' Helper function to create mesh for various plot. '''
 
         lat, lon = field.latlons()
+        if self.map.model == 'obs':
+            lat, lon = np.meshgrid(lat, lon, sparse=False, indexing='ij')
+            print(f'OBS LAT/LONG: {lat.shape} {lon.shape}')
+
         adjust = 360 if np.any(lon < 0) else 0
         return self.map.m(adjust + lon, lat)

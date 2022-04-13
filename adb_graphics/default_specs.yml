@@ -420,6 +420,10 @@ cref: # Composite reflectivity
     <<: *refl
     ncl_name: REFC_P0_L10_{grid}
     title: Ensemble Composite Reflectivity
+  obs:
+    <<: *refl
+    ncl_name: MergedReflectivityQCComposite_P0_L102_GLL0
+    title: Observed Composite Reflectivity
   sfc:
     <<: *refl
     ncl_name: REFC_P0_L{level_type}_{grid}
