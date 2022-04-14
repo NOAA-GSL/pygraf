@@ -136,6 +136,7 @@ class TestDefaultSpecs():
             'cmap': self.is_a_cmap,
             'colors': self.is_a_color,
             'contours': self.is_a_contour_dict,
+            'include_obs': self.is_bool,
             'hatches': self.is_a_contourf_dict,
             'labels': self.is_a_contourf_dict,
             'ncl_name': True,

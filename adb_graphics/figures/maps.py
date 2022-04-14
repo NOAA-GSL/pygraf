@@ -19,6 +19,7 @@ from mpl_toolkits.basemap import shiftgrid
 import numpy as np
 
 import adb_graphics.utils as utils
+from adb_graphics.datahandler.gribdata import fieldData
 
 # FULL_TILES is a list of strings that includes the labels GSL attaches to some of
 # the wgrib2 cutouts used for larger domains like RAP, RRFS NA, and global.
@@ -232,11 +233,11 @@ class DataMap():
 
     '''
 
-    def __init__(self, field, map_, contour_fields=None, hatch_fields=None, model_name=None, multipanel=False):
+    def __init__(self, map_fields, map_, model_name=None, multipanel=False):
 
-        self.field = field
-        self.contour_fields = contour_fields
-        self.hatch_fields = hatch_fields
+        self.field = map_fields.main_field
+        self.contour_fields = map_fields.contours
+        self.hatch_fields = map_fields.hatches
         self.map = map_
         self.model_name = model_name
         self.multipanel = multipanel
@@ -596,3 +597,49 @@ class DataMap():
 
         adjust = 360 if np.any(lon < 0) else 0
         return self.map.m(adjust + lon, lat)
+
+class MapFields():
+    ''' Class that packages all the field objects need for producing
+    desired map content, i.e. an object that contains all filled
+    contours, hatched spaces, and overlayed contours needed for a full
+    product. '''
+
+    def __init__(self, main_field, fields_spec=None):
+
+        self.main_field = main_field
+        self.fields_spec = fields_spec if fields_spec != None else {}
+
+    @property
+    def contours(self):
+        ''' Return the list of contour fieldData objects'''
+
+        return self._overlay_fields('contours')
+
+    @property
+    def hatches(self):
+        ''' Return the list of hatch fieldData objects'''
+
+        return self._overlay_fields('hatches')
+
+    def _overlay_fields(self, spec_sect):
+
+        ''' Generate a list of fieldData objects for the specified type
+        of overlay -- hatches or contours '''
+        overlays = self.fields_spec.get(spec_sect)
+        overlay_fields = []
+        if overlays is not None:
+            for overlay, overlay_kwargs in overlays.items():
+                if '_' in overlay:
+                    var, lev = overlay.split('_')
+                else:
+                    var, lev = overlay, self.main_field.level
+
+                # Make a copy of the main object, and change the
+                # attributes to match the overlay field
+                overlay_obj = copy.deepcopy(self.main_field)
+                overlay_obj.contour_kwargs = overlay_kwargs
+                overlay_obj.short_name = var
+                overlay_obj.level = lev
+
+                overlay_fields.append(overlay_obj)
+        return overlay_fields

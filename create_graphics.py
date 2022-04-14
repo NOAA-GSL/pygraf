@@ -46,6 +46,34 @@ TMP_FN = 'combined_{fhr:03d}_{uniq}.tmp.grib2'
 
 LOG_BREAK = f"{('-' * 80)}\n{('-' * 80)}"
 
+def add_obs_panel(ax, model_name, obs_file, proj_info, short_name, tile):
+        # Let's plot the radar obs.
+        gribobs = gribfile.GribFile(filename=obs_file)
+        field = gribdata.fieldData(
+            ds=gribobs.contents,
+            fhr=0,
+            level='obs',
+            model='obs',
+            short_name='cref',
+            )
+        map_fields = maps.MapFields(main_field=field)
+        m = maps.Map(
+            airport_fn=AIRPORTS,
+            ax=ax,
+            grid_info=proj_info,
+            model='obs',
+            tile=tile,
+            )
+        dm = maps.DataMap(
+            map_fields=map_fields,
+            map_=m,
+            model_name=model_name,
+            multipanel=True,
+            )
+
+        # Draw the map
+        dm.draw(show=True)
+
 def check_file(cla, fhr, mem=None):
     ''' Given the command line arguments, the forecast hour, and a potential
     ensemble member, build a full path to the file and ensure it exists. '''
@@ -373,6 +401,13 @@ def parse_args():
         nargs=2,
         )
     map_group.add_argument(
+        '--obs_file_path',
+        help='Path to an observation file. Currently this \
+        feature is only supported for ensemble panel plots and \
+        composite reflectivity.',
+        type=utils.path_exists,
+        )
+    map_group.add_argument(
         '--specs',
         default='adb_graphics/default_specs.yml',
         help='Path to the specs YAML file.',
@@ -402,14 +437,15 @@ def parse_args():
         )
     return parser.parse_args()
 
+
 def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
                   tile='full'):
 
     # pylint: disable=too-many-arguments,too-many-locals
 
     '''
-    Function that creates a single plan-view map. Can be used in
-    parallel.
+    Function that creates plan-view maps, either a single panel, or
+    multipanel for a forecast ensemble. Can be used in parallel.
 
     Input:
 
@@ -424,36 +460,15 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
       workdir    output directory
     '''
 
-    # testing this next section as a loop - CSH
-    if cla.model_name == "HRRR-HI":
-        inches = 12.2
-    else:
-        inches = 10
+    fig, axes = set_figure(cla.model_name, cla.graphic_type)
 
-    # A 12 panel plot to accommodate 10 ensemble members, or a single panel
-    if cla.graphic_type == 'enspanel':
-        nrows = 3
-        ncols = 4
-        inches = 20
-    else:
-        nrows = 1
-        ncols = 1
-
-    # Create a rectangle shape
-    fig, ax = plt.subplots(nrows, ncols, figsize=(inches, 0.8*inches),)
-#            sharex=True, sharey=True)
-    # Flatten the 2D array and number panel axes from top left to bottom right
-    # sequentially
-    ax = ax.flatten() if isinstance(ax, np.ndarray) else [ax]
-
-
-    for index, current_ax in enumerate(ax):
+    for index, current_ax in enumerate(axes):
 
         mem = None
         if cla.graphic_type == 'enspanel':
             # Don't put data in the top left or bottom left panels.
             if index in (0, 8):
-                #current_ax.axis('off')
+                current_ax.axis('off')
                 continue
             # Shenanigans to match ensemble member to panel index
             mem = 0 if index == 4 else index
@@ -477,42 +492,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
             print(f'Cannot find grib2 variable for {variable} at {level}. Skipping.')
             return
 
-        # Create a list of fieldData objects for each contour field requested
-        # These will show up as line contours on the plot.
-        contours = spec.get('contours')
-        contour_fields = []
-        if contours is not None:
-            for contour, contour_kwargs in contours.items():
-                if '_' in contour:
-                    var, lev = contour.split('_')
-                else:
-                    var, lev = contour, level
-
-                contour_fields.append(gribdata.fieldData(
-                    ds=ds,
-                    fhr=fhr,
-                    level=lev,
-                    member=mem,
-                    model=model,
-                    contour_kwargs=contour_kwargs,
-                    short_name=var,
-                    ))
-
-        # Create a list of fieldData objects for each hatched area requested
-        hatches = spec.get('hatches')
-        hatch_fields = []
-        if hatches is not None:
-            for hatch, hatch_kwargs in hatches.items():
-                var, lev = hatch.split('_')
-                hatch_fields.append(gribdata.fieldData(
-                    ds=ds,
-                    fhr=fhr,
-                    level=lev,
-                    member=mem,
-                    model=model,
-                    contour_kwargs=hatch_kwargs,
-                    short_name=var,
-                    ))
+        map_fields = maps.MapFields(main_field=field, fields_spec=spec)
 
         # Generate a map object
         m = maps.Map(
@@ -524,11 +504,9 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
             tile=tile,
             )
 
-        # Send all objects (map, field, contours, hatches) to a DataMap object
+        # Send all objects (map_field, contours, hatches) to a DataMap object
         dm = maps.DataMap(
-            field=field,
-            contour_fields=contour_fields,
-            hatch_fields=hatch_fields,
+            map_fields=map_fields,
             map_=m,
             model_name=cla.model_name,
             multipanel=cla.graphic_type == 'enspanel',
@@ -537,39 +515,16 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
         # Draw the map
         dm.draw()
 
-    if True:
-        # Let's plot the radar obs.
-        filename = '/scratch2/BMC/wrfruc/cholt/data/mrms/20220412-210040.MRMS_MergedReflectivityQComposite_00.50_20220412-210040.grib2'
-        gribobs = gribfile.GribFile(filename=filename)
-        proj_info = field.grid_info()
-        field = gribdata.fieldData(
-            ds=gribobs.contents,
-            fhr=0,
-            filetype='nat',
-            level='obs',
-            model='obs',
-            short_name='cref',
-            )
-        print(f'OBS Field: {gribobs.contents}')
-        m = maps.Map(
-            airport_fn=AIRPORTS,
-            ax=ax[8],
-            grid_info=proj_info,
-            model='obs',
-            plot_airports=spec.get('plot_airports', True),
+    # Add observation panel to lower left. Currently only supported for
+    # composite reflectivity.
+    if cla.graphic_type == 'enspanel' and spec.get('include_obs', False):
+        add_obs_panel(ax=axes[8],
+            model_name=cla.model_name,
+            obs_file=cla.obs_file_path,
+            proj_info=field.grid_info(),
+            short_name=variable,
             tile=tile,
             )
-        dm = maps.DataMap(
-            field=field,
-            contour_fields=[],
-            hatch_fields=[],
-            map_=m,
-            model_name=cla.model_name,
-            multipanel=cla.graphic_type == 'enspanel',
-            )
-
-        # Draw the map
-        dm.draw(show=True)
 
     if cla.graphic_type == 'enspanel':
         # once all the subplots are ready, adjust to remove white space and make room for color bar
@@ -771,6 +726,33 @@ def remove_proc_grib_files(cla):
         for file_path in combined_files:
             print(f'  {file_path}')
             os.remove(file_path)
+
+def set_figure(model_name, graphic_type):
+
+    ''' Create the figure and subplots appropriate for the model and
+    graphics type. Return the figure handle and list of axes. '''
+
+    if model_name == "HRRR-HI":
+        inches = 12.2
+    else:
+        inches = 10
+
+    # A 12 panel plot to accommodate 10 ensemble members, or a single panel
+    if graphic_type == 'enspanel':
+        nrows = 3
+        ncols = 4
+        inches = 20
+    else:
+        nrows = 1
+        ncols = 1
+
+    # Create a rectangle shape
+    fig, ax = plt.subplots(nrows, ncols, figsize=(inches, 0.8*inches),)
+    # Flatten the 2D array and number panel axes from top left to bottom right
+    # sequentially
+    ax = ax.flatten() if isinstance(ax, np.ndarray) else [ax]
+
+    return fig, ax
 
 def stage_zip_files(tiles, zip_dir):
 
