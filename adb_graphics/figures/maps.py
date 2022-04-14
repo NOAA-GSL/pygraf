@@ -19,7 +19,6 @@ from mpl_toolkits.basemap import shiftgrid
 import numpy as np
 
 import adb_graphics.utils as utils
-from adb_graphics.datahandler.gribdata import fieldData
 
 # FULL_TILES is a list of strings that includes the labels GSL attaches to some of
 # the wgrib2 cutouts used for larger domains like RAP, RRFS NA, and global.
@@ -307,7 +306,7 @@ class DataMap():
                               func=self.map.m.contourf,
                               levels=self.field.clevs,
                               )
-        if not(self.multipanel):
+        if not self.multipanel:
             self._colorbar(ax=ax, cc=cf)
 
         not_labeled = [self.field.short_name]
@@ -335,7 +334,7 @@ class DataMap():
             self._draw_field_values(ax)
 
         # Finish with the title
-        if not(self.multipanel):
+        if not self.multipanel:
             self._title()
 
         # Create a pop-up to display the figure, if show=True
@@ -343,7 +342,7 @@ class DataMap():
             plt.tight_layout()
             plt.show()
 
-        if not(self.multipanel):
+        if not self.multipanel:
             self.add_logo(ax)
 
         return cf
@@ -607,7 +606,7 @@ class MapFields():
     def __init__(self, main_field, fields_spec=None):
 
         self.main_field = main_field
-        self.fields_spec = fields_spec if fields_spec != None else {}
+        self.fields_spec = fields_spec if fields_spec is not None else {}
 
     @property
     def contours(self):

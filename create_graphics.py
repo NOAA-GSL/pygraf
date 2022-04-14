@@ -47,32 +47,35 @@ TMP_FN = 'combined_{fhr:03d}_{uniq}.tmp.grib2'
 LOG_BREAK = f"{('-' * 80)}\n{('-' * 80)}"
 
 def add_obs_panel(ax, model_name, obs_file, proj_info, short_name, tile):
-        # Let's plot the radar obs.
-        gribobs = gribfile.GribFile(filename=obs_file)
-        field = gribdata.fieldData(
-            ds=gribobs.contents,
-            fhr=0,
-            level='obs',
-            model='obs',
-            short_name='cref',
-            )
-        map_fields = maps.MapFields(main_field=field)
-        m = maps.Map(
-            airport_fn=AIRPORTS,
-            ax=ax,
-            grid_info=proj_info,
-            model='obs',
-            tile=tile,
-            )
-        dm = maps.DataMap(
-            map_fields=map_fields,
-            map_=m,
-            model_name=model_name,
-            multipanel=True,
-            )
 
-        # Draw the map
-        dm.draw(show=True)
+    ''' Plot observation data provided by the obs_file
+    path using the assigned projection. '''
+
+    gribobs = gribfile.GribFile(filename=obs_file)
+    field = gribdata.fieldData(
+        ds=gribobs.contents,
+        fhr=0,
+        level='obs',
+        model='obs',
+        short_name=short_name,
+        )
+    map_fields = maps.MapFields(main_field=field)
+    m = maps.Map(
+        airport_fn=AIRPORTS,
+        ax=ax,
+        grid_info=proj_info,
+        model='obs',
+        tile=tile,
+        )
+    dm = maps.DataMap(
+        map_fields=map_fields,
+        map_=m,
+        model_name=model_name,
+        multipanel=True,
+        )
+
+    # Draw the map
+    dm.draw(show=True)
 
 def check_file(cla, fhr, mem=None):
     ''' Given the command line arguments, the forecast hour, and a potential
@@ -80,9 +83,9 @@ def check_file(cla, fhr, mem=None):
 
     grib_path = os.path.join(cla.data_root[0], cla.file_tmpl[0])
     if mem is not None:
-       grib_path = grib_path.format(FCST_TIME=fhr, mem=mem)
+        grib_path = grib_path.format(FCST_TIME=fhr, mem=mem)
     else:
-       grib_path = grib_path.format(FCST_TIME=fhr)
+        grib_path = grib_path.format(FCST_TIME=fhr)
 
     print(f'Checking on file {grib_path}')
     old_enough = utils.old_enough(cla.data_age, grib_path) if \
@@ -518,7 +521,8 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
     # Add observation panel to lower left. Currently only supported for
     # composite reflectivity.
     if cla.graphic_type == 'enspanel' and spec.get('include_obs', False):
-        add_obs_panel(ax=axes[8],
+        add_obs_panel(
+            ax=axes[8],
             model_name=cla.model_name,
             obs_file=cla.obs_file_path,
             proj_info=field.grid_info(),
@@ -1009,6 +1013,4 @@ if __name__ == '__main__':
     for name, val in CLARGS.__dict__.items():
         if name not in ['specs', 'sites']:
             print(f"{name:>15s}: {val}")
-
-
     graphics_driver(CLARGS)
