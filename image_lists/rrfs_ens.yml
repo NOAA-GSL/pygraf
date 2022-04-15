@@ -1,5 +1,33 @@
 hourly:
   model: rrfs
   variables:
+    acsnod:
+      - sfc
+    acsnw:
+      - sfc
+    cape:
+      - mu
+      - mul
+      - mx90mb
+      - sfc
+    cin:
+      - sfc
+    cloudcover:
+      - total
     cref:
       - sfc
+    dewp:
+      - 2m
+    gust:
+      - 10m
+    lcl:
+      - sfc
+    shear:
+      - 01km
+      - 06km
+    temp:
+      - 2m
+    totp:
+      - sfc
+    wspeed:
+      - 10m
