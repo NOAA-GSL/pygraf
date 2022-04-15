@@ -52,6 +52,7 @@ def add_obs_panel(ax, model_name, obs_file, proj_info, short_name, tile):
     path using the assigned projection. '''
 
     gribobs = gribfile.GribFile(filename=obs_file)
+    ax.axis('on')
     field = gribdata.fieldData(
         ds=gribobs.contents,
         fhr=0,
@@ -506,7 +507,8 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
             print(f'Cannot find grib2 variable for {variable} at {level}. Skipping.')
             return
 
-        map_fields = maps.MapFields(main_field=field, fields_spec=spec)
+        map_fields = maps.MapFields(main_field=field, fields_spec=spec,
+                map_type=cla.graphic_type)
 
         # Generate a map object
         m = maps.Map(
@@ -528,7 +530,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
             )
 
         # Draw the map
-        dm.draw()
+        dm.draw(show=True)
 
     # Add observation panel to lower left. Currently only supported for
     # composite reflectivity.
@@ -755,7 +757,8 @@ def set_figure(model_name, graphic_type):
         ncols = 1
 
     # Create a rectangle shape
-    fig, ax = plt.subplots(nrows, ncols, figsize=(inches, 0.5*inches),)
+    fig, ax = plt.subplots(nrows, ncols, figsize=(inches, 0.5*inches),
+            sharex=True, sharey=True)
     # Flatten the 2D array and number panel axes from top left to bottom right
     # sequentially
     ax = ax.flatten() if isinstance(ax, np.ndarray) else [ax]
@@ -958,7 +961,6 @@ def graphics_driver(cla):
                             gribfiles=gribfiles,
                             workdir=workdir,
                             )
-                print(gribfiles.contents)
 
             # Zip png files and remove the originals in a subprocess
             if cla.zip_dir:

@@ -190,7 +190,6 @@ class Map():
                 ))
 
         basemap_args.update(get_basemap_kwargs)
-        print(basemap_args)
 
         return Basemap(**basemap_args)
 
@@ -292,7 +291,6 @@ class DataMap():
 
         cbar.ax.set_xticklabels(ticks, fontsize=12)
 
-    @utils.timer
     def draw(self, show=False): # pylint: disable=too-many-locals, too-many-branches
 
         ''' Main method for creating the plot. Set show=True to display the
@@ -333,7 +331,7 @@ class DataMap():
 
         # Add wind barbs, if requested
         add_wind = self.field.vspec.get('wind', False)
-        if add_wind:
+        if add_wind and not self.multipanel:
             self._wind_barbs(add_wind)
 
         # Add field values at airports
@@ -600,7 +598,6 @@ class DataMap():
         lat, lon = field.latlons()
         if self.map.model == 'obs':
             lat, lon = np.meshgrid(lat, lon, sparse=False, indexing='ij')
-            print(f'OBS LAT/LONG: {lat.shape} {lon.shape}')
 
         adjust = 360 if np.any(lon < 0) else 0
         return self.map.m(adjust + lon, lat)
@@ -611,15 +608,18 @@ class MapFields():
     contours, hatched spaces, and overlayed contours needed for a full
     product. '''
 
-    def __init__(self, main_field, fields_spec=None):
+    def __init__(self, main_field, fields_spec=None, map_type=None):
 
         self.main_field = main_field
         self.fields_spec = fields_spec if fields_spec is not None else {}
+        self.map_type = map_type
 
     @property
     def contours(self):
         ''' Return the list of contour fieldData objects'''
 
+        if self.map_type == 'enspanel':
+            return []
         return self._overlay_fields('contours')
 
     @property
