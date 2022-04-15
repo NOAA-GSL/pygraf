@@ -229,10 +229,12 @@ class DataMap():
         hatch_fields      list of datahandler object fields to hatch over shaded
                           fields
         map               maps object
+        multipanel        flag for single vs multipanel plots
+        last_panel        flag for multipanel plots to esginate last panel drawn
 
     '''
 
-    def __init__(self, map_fields, map_, model_name=None, multipanel=False):
+    def __init__(self, map_fields, map_, model_name=None, multipanel=False, last_panel=False):
 
         self.field = map_fields.main_field
         self.contour_fields = map_fields.contours
@@ -240,6 +242,7 @@ class DataMap():
         self.map = map_
         self.model_name = model_name
         self.multipanel = multipanel
+        self.last_panel = last_panel
 
 
     @staticmethod
@@ -308,6 +311,11 @@ class DataMap():
                               )
         if not self.multipanel:
             self._colorbar(ax=ax, cc=cf)
+
+        if self.multipanel and self.last_panel:
+            cax = plt.axes([0.0, 0.0, 1.0, 0.2])
+            self._colorbar(ax=cax, cc=cf)
+            cax.axis('off')
 
         not_labeled = [self.field.short_name]
         if self.hatch_fields:

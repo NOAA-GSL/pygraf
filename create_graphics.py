@@ -465,12 +465,23 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
 
     fig, axes = set_figure(cla.model_name, cla.graphic_type)
 
+    # set last_panel to send into DataMap for colorbar control
+    last_panel = False
+
     for index, current_ax in enumerate(axes):
 
+        if index == 11:
+            last_panel = True
         mem = None
         if cla.graphic_type == 'enspanel':
             # Don't put data in the top left or bottom left panels.
             if index in (0, 8):
+                if index == 0:
+                    title = "Ensemble plot"
+                    unit = "dbZ"
+                    date = "2022041300"
+                    current_ax.text(0.5, 0.5, f'{title} ({unit})\n{date} {fhr}', fontsize=12, horizontalalignment='center',
+                                    verticalalignment='center', transform=current_ax.transAxes)
                 current_ax.axis('off')
                 continue
             # Shenanigans to match ensemble member to panel index
@@ -513,6 +524,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
             map_=m,
             model_name=cla.model_name,
             multipanel=cla.graphic_type == 'enspanel',
+            last_panel=last_panel
             )
 
         # Draw the map
@@ -531,16 +543,8 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
             )
 
     if cla.graphic_type == 'enspanel':
-        # once all the subplots are ready, adjust to remove white space and make room for color bar
-        plt.subplots_adjust(bottom=0.15, top=0.90, wspace=0, hspace=0)
-        # add the color bar (based on last contour, but all should be the same)
-        cax = plt.axes([0.15, 0.040, 0.70, 0.041])
-#        plt.colorbar(contour, orientation='horizontal', cax=cax)
-
-        # plot title
-        title = "Ensemble plot"
-        unit = "dbZ"
-        fig.suptitle(f'{title} ({unit})', fontsize=18)
+        # add NOAA logo
+        maps.DataMap.add_logo(axes[0])
 
     # Build the output path
     png_file = f'{variable}_{tile}_{level}_f{fhr:03d}.png'
@@ -751,7 +755,7 @@ def set_figure(model_name, graphic_type):
         ncols = 1
 
     # Create a rectangle shape
-    fig, ax = plt.subplots(nrows, ncols, figsize=(inches, 0.8*inches),)
+    fig, ax = plt.subplots(nrows, ncols, figsize=(inches, 0.5*inches),)
     # Flatten the 2D array and number panel axes from top left to bottom right
     # sequentially
     ax = ax.flatten() if isinstance(ax, np.ndarray) else [ax]
