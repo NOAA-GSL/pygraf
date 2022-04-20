@@ -18,8 +18,6 @@ from mpl_toolkits.basemap import Basemap
 from mpl_toolkits.basemap import shiftgrid
 import numpy as np
 
-import adb_graphics.utils as utils
-
 # FULL_TILES is a list of strings that includes the labels GSL attaches to some of
 # the wgrib2 cutouts used for larger domains like RAP, RRFS NA, and global.
 FULL_TILES = [
@@ -231,7 +229,7 @@ class DataMap():
 
     '''
 
-    def __init__(self, map_fields, map_, model_name=None, **kwargs):
+    def __init__(self, map_fields, map_, model_name=None):
 
         self.field = map_fields.main_field
         self.contour_fields = map_fields.contours
@@ -291,7 +289,7 @@ class DataMap():
         ''' Main method for creating the plot. Set show=True to display the
         figure from the command line. '''
 
-        cf = self._draw_panel(show)
+        cf = self._draw_panel()
 
         # Draw colorbar
         self._colorbar(ax=self.map.ax, cc=cf)
@@ -306,7 +304,7 @@ class DataMap():
 
         self.add_logo(self.map.ax)
 
-    def _draw_panel(self, wind_barbs=True, show=False): # pylint: disable=too-many-locals, too-many-branches
+    def _draw_panel(self, wind_barbs=True): # pylint: disable=too-many-locals, too-many-branches
 
         ax = self.map.ax
 
@@ -623,7 +621,7 @@ class MultiPanelDataMap(DataMap):
         ''' Main method for creating the plot. Set show=True to display the
         figure from the command line. '''
 
-        cf = self._draw_panel(show=show, wind_barbs=False)
+        cf = self._draw_panel(wind_barbs=False)
 
         self._label_member()
 
@@ -712,7 +710,7 @@ class MapFields():
     product. '''
 
     def __init__(self, main_field, fields_spec=None, map_type=None,
-            **kwargs):
+                 **kwargs):
 
         self.main_field = main_field
         self.fields_spec = fields_spec if fields_spec is not None else {}

@@ -15,10 +15,9 @@ mpl.use('Agg')
 
 import argparse
 import copy
-import gc
 
 import glob
-from multiprocessing import Pool, Process
+from multiprocessing import Pool
 import os
 import random
 import string
@@ -27,15 +26,12 @@ import sys
 import time
 import zipfile
 
-import matplotlib.pyplot as plt
-import numpy as np
 import yaml
 
 from adb_graphics.datahandler import gribfile
-from adb_graphics.datahandler import gribdata
 import adb_graphics.errors as errors
+from adb_graphics.figure_builders import parallel_maps, parallel_skewt
 from adb_graphics.figures import maps
-from adb_graphics.figures import skewt
 import adb_graphics.utils as utils
 
 
@@ -45,38 +41,6 @@ COMBINED_FN = 'combined_{fhr:03d}_{uniq}.grib2'
 TMP_FN = 'combined_{fhr:03d}_{uniq}.tmp.grib2'
 
 LOG_BREAK = f"{('-' * 80)}\n{('-' * 80)}"
-
-def add_obs_panel(ax, model_name, obs_file, proj_info, short_name, tile):
-
-    ''' Plot observation data provided by the obs_file
-    path using the assigned projection. '''
-
-    gribobs = gribfile.GribFile(filename=obs_file)
-    ax.axis('on')
-    field = gribdata.fieldData(
-        ds=gribobs.contents,
-        fhr=0,
-        level='obs',
-        model='obs',
-        short_name=short_name,
-        )
-    map_fields = maps.MapFields(main_field=field)
-    m = maps.Map(
-        airport_fn=AIRPORTS,
-        ax=ax,
-        grid_info=proj_info,
-        model='obs',
-        tile=tile,
-        )
-    dm = maps.MultiPanelDataMap(
-        map_fields=map_fields,
-        map_=m,
-        member='obs',
-        model_name=model_name,
-        )
-
-    # Draw the map
-    dm.draw(show=True)
 
 def check_file(cla, fhr, mem=None):
     ''' Given the command line arguments, the forecast hour, and a potential
@@ -132,41 +96,6 @@ def create_maps(cla, fhr, gribfiles, workdir):
         print(f'Queueing {len(args)} maps')
         with Pool(processes=cla.nprocs) as pool:
             pool.starmap(parallel_maps, args)
-
-def create_zip(png_files, zipf):
-
-    ''' Create a zip file. Use a locking mechanism -- write a lock file to disk. '''
-
-    lock_file = f'{zipf}._lock'
-    retry = 2
-    count = 0
-    while True:
-        if not os.path.exists(lock_file):
-            fd = open(lock_file, 'w')
-            print(f'Writing to zip file {zipf} for files like: {png_files[0][-10:]}')
-
-            try:
-                with zipfile.ZipFile(zipf, 'a', zipfile.ZIP_DEFLATED) as zfile:
-                    for png_file in png_files:
-                        if os.path.exists(png_file):
-                            zfile.write(png_file, os.path.basename(png_file))
-            except: # pylint: disable=bare-except
-                print(f'Error on writing zip file! {sys.exc_info()[0]}')
-                count += 1
-                if count >= retry:
-                    raise
-            else:
-                # When zipping is successful, remove png_files
-                for png_file in png_files:
-                    if os.path.exists(png_file):
-                        os.remove(png_file)
-            finally:
-                fd.close()
-                if os.path.exists(lock_file):
-                    os.remove(lock_file)
-            break
-        # Wait before trying to obtain the lock on the file
-        time.sleep(5)
 
 def gather_gribfiles(cla, fhr, filename, gribfiles):
 
@@ -244,28 +173,6 @@ def load_images(arg):
         images = yaml.load(fn, Loader=yaml.Loader)[image_set]
 
     return [images.get('model'), images.get('variables')]
-
-def load_sites(arg):
-
-    ''' Check that the sites file exists, and return its contents. '''
-
-    # Check that the file exists
-    path = utils.path_exists(arg)
-
-    with open(path, 'r') as sites_file:
-        sites = sites_file.readlines()
-    return sites
-
-def load_specs(arg):
-
-    ''' Check to make sure arg file exists. Return its contents. '''
-
-    spec_file = utils.path_exists(arg)
-
-    with open(spec_file, 'r') as fn:
-        specs = yaml.load(fn, Loader=yaml.Loader)
-
-    return specs
 
 def parse_args():
 
@@ -392,7 +299,7 @@ def parse_args():
     skewt_group.add_argument(
         '--sites',
         help='Path to a sites file.',
-        type=load_sites,
+        type=utils.load_sites,
         )
 
     # Map-specific args
@@ -440,188 +347,6 @@ def parse_args():
         type=int,
         )
     return parser.parse_args()
-
-
-def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
-                  tile='full'):
-
-    # pylint: disable=too-many-arguments,too-many-locals
-
-    '''
-    Function that creates plan-view maps, either a single panel, or
-    multipanel for a forecast ensemble. Can be used in parallel.
-
-    Input:
-
-      fhr        forecast hour
-      ds         xarray dataset from the grib file
-      level      the vertical level of the variable to be plotted
-                 corresponding to a key in the specs file
-      model      model name: rap, hrrr, hrrre, rrfs, rtma
-      spec       the dictionary of specifications for the given variable
-                 and level
-      variable   the name of the variable section in the specs file
-      workdir    output directory
-
-    Optional:
-      tile       the label of the tile being plotted
-    '''
-
-    fig, axes = set_figure(cla.model_name, cla.graphic_type, tile)
-
-    # set last_panel to send into DataMap for colorbar control
-    last_panel = False
-
-    # Declare the type of object depending on graphic type
-    map_class = maps.MultiPanelDataMap if cla.graphic_type == \
-        'enspanel' else maps.DataMap
-
-    for index, current_ax in enumerate(axes):
-
-        if current_ax is axes[-1]:
-            last_panel = True
-        mem = None
-        if cla.graphic_type == 'enspanel':
-            # Don't put data in the top left or bottom left panels.
-            if index in (0, 8):
-                current_ax.axis('off')
-
-            # Shenanigans to match ensemble member to panel index
-            mem = 0 if index == 4 else index
-            mem = mem if mem < 4 else index - 1
-            mem = mem if mem < 8 else index - 2
-
-        # Object to be plotted on the map in filled contours.
-        field = gribdata.fieldData(
-            ds=ds,
-            fhr=fhr,
-            filetype=cla.file_type,
-            level=level,
-            member=mem,
-            model=model,
-            short_name=variable,
-            )
-
-        try:
-            field.field
-        except errors.GribReadError:
-            print(f'Cannot find grib2 variable for {variable} at {level}. Skipping.')
-            return
-
-        map_fields = maps.MapFields(main_field=field, fields_spec=spec,
-                map_type=cla.graphic_type, model=model, tile=tile)
-
-        # Generate a map object
-        m = maps.Map(
-            airport_fn=AIRPORTS,
-            ax=current_ax,
-            grid_info=field.grid_info(),
-            model=model,
-            plot_airports=spec.get('plot_airports', True),
-            tile=tile,
-            )
-
-        # Send all objects (map_field, contours, hatches) to a DataMap object
-        dm = map_class(
-            map_fields=map_fields,
-            map_=m,
-            member=mem,
-            model_name=cla.model_name,
-            last_panel=last_panel
-            )
-
-        # Draw the map
-        if cla.graphic_type == 'enspanel':
-            if index == 0:
-                dm.title()
-                dm.add_logo(current_ax)
-            elif index == 8:
-                if spec.get('include_obs', False):
-                    # Add observation panel to lower left. Currently only
-                    # supported for composite reflectivity.
-                    add_obs_panel(
-                        ax=axes[8],
-                        model_name=cla.model_name,
-                        obs_file=cla.obs_file_path,
-                        proj_info=field.grid_info(),
-                        short_name=variable,
-                        tile=tile,
-                        )
-            else:
-                dm.draw(show=True)
-        else:
-            dm.draw(show=True)
-
-
-    # Build the output path
-    png_file = f'{variable}_{tile}_{level}_f{fhr:03d}.png'
-    png_file = png_file.replace("__", "_")
-    png_path = os.path.join(workdir, png_file)
-
-    print('*' * 120)
-    print(f"Creating image file: {png_path}")
-    print('*' * 120)
-
-    # Save the png file to disk
-    plt.savefig(
-        png_path,
-        bbox_inches='tight',
-        dpi=cla.img_res,
-        format='png',
-        orientation='landscape',
-        pil_kwargs={'optimize': True},
-        )
-
-
-    fig.clear()
-    # Clear the current axes.
-    plt.cla()
-    # Clear the current figure.
-    plt.clf()
-    # Closes all the figure windows.
-    plt.close('all')
-    del field
-    del m
-    gc.collect()
-
-def parallel_skewt(cla, fhr, ds, site, workdir):
-
-    '''
-    Function that creates a single SkewT plot. Can be used in parallel.
-    Input:
-
-      cla        command line arguments Namespace object
-      ds         the XArray dataset
-      fhr        the forecast hour integer
-      site       the string representation of the site from the sites file
-      workdir    output directory
-    '''
-
-    skew = skewt.SkewTDiagram(
-        ds=ds,
-        fhr=fhr,
-        filetype=cla.file_type,
-        loc=site,
-        max_plev=cla.max_plev,
-        model_name=cla.model_name,
-        )
-    skew.create_diagram()
-    outfile = f"{skew.site_code}_{skew.site_num}_skewt_f{fhr:03d}.png"
-    png_path = os.path.join(workdir, outfile)
-
-    print('*' * 80)
-    print(f"Creating image file: {png_path}")
-    print('*' * 80)
-
-    # pylint: disable=duplicate-code
-    plt.savefig(
-        png_path,
-        bbox_inches='tight',
-        dpi=cla.img_res,
-        format='png',
-        orientation='landscape',
-        )
-    plt.close()
 
 def pre_proc_grib_files(cla, fhr):
 
@@ -686,7 +411,7 @@ def pre_proc_grib_files(cla, fhr):
     wgrib2_list = output.stdout.decode("utf-8").split('\n')
 
     # Create a unique list of grib fields.
-    wgrib2_list = uniq_wgrib2_list(wgrib2_list)
+    wgrib2_list = utils.uniq_wgrib2_list(wgrib2_list)
 
     # Remove duplicate grib2 entries in grib file
     cmd = f'wgrib2 -i {tmp_fp} -GRIB {combined_fp}'
@@ -742,42 +467,6 @@ def remove_proc_grib_files(cla):
             print(f'  {file_path}')
             os.remove(file_path)
 
-def set_figure(model_name, graphic_type, tile):
-
-    ''' Create the figure and subplots appropriate for the model and
-    graphics type. Return the figure handle and list of axes. '''
-
-    if model_name == "HRRR-HI":
-        inches = 12.2
-    else:
-        inches = 10
-
-    x_aspect = 1
-    y_aspect = 1
-    nrows = 1
-    ncols = 1
-    # A 12 panel plot to accommodate 10 ensemble members, or a single panel
-    if graphic_type == 'enspanel':
-        nrows = 3
-        ncols = 4
-        inches = 20
-        y_aspect = 0.8
-        x_aspect = 1
-        if tile in ['full', 'NW']:
-            y_aspect = 0.5
-        if tile in ['SE']:
-            x_axpect = 1.2
-
-
-    # Create a rectangle shape
-    fig, ax = plt.subplots(nrows, ncols, figsize=(x_aspect*inches, y_aspect*inches),
-            sharex=True, sharey=True)
-    # Flatten the 2D array and number panel axes from top left to bottom right
-    # sequentially
-    ax = ax.flatten() if isinstance(ax, np.ndarray) else [ax]
-
-    return fig, ax
-
 def stage_zip_files(tiles, zip_dir):
 
     ''' Stage the zip files in the appropriate directory for each tile to be
@@ -805,50 +494,6 @@ def stage_zip_files(tiles, zip_dir):
         os.makedirs(tile_zip_dir, exist_ok=True)
         zipfiles[tile] = tile_zip_file
     return zipfiles
-
-def uniq_wgrib2_list(inlist):
-
-    ''' Given a list of wgrib2 output fields, returns a uniq list of fields for
-    simplifying a grib2 dataset. Uniqueness is defined by the wgrib output from
-    field 3 (colon delimted) onward, although the original full grib record must
-    be included in the wgrib2 command below.
-    '''
-
-    uniq_field_set = set()
-    uniq_list = []
-    for infield in inlist:
-        infield_info = infield.split(':')
-        if len(infield_info) <= 3:
-            continue
-        infield_str = ':'.join(infield_info[3:])
-        if infield_str not in uniq_field_set:
-            uniq_list.append(infield)
-        uniq_field_set.add(infield_str)
-
-    return uniq_list
-
-def zip_pngs(fhr, workdir, zipfiles):
-
-    ''' Spin up a subprocess to zip all the png files into the staged zip files.
-
-    Input:
-
-        fhr         integer forecast hour
-        workdir     path to the png files
-        zipfiles    dictionary of tile keys, and zip directory values.
-
-    Output:
-        None
-    '''
-
-    for tile, zipf in zipfiles.items():
-        png_files = glob.glob(os.path.join(workdir, f'*_{tile}_*{fhr:02d}.png'))
-        zip_proc = Process(group=None,
-                           target=create_zip,
-                           args=(png_files, zipf),
-                           )
-        zip_proc.start()
-        zip_proc.join()
 
 @utils.timer
 def graphics_driver(cla):
@@ -977,7 +622,7 @@ def graphics_driver(cla):
 
             # Zip png files and remove the originals in a subprocess
             if cla.zip_dir:
-                zip_pngs(fhr, workdir, zipfiles)
+                utils.zip_pngs(fhr, workdir, zipfiles)
 
             # Keep track of last time we did something useful
             timer_end = time.time()
@@ -1021,7 +666,7 @@ if __name__ == '__main__':
 
     # Only need to load the default in memory if we're making maps.
     if CLARGS.graphic_type in ['maps', 'enspanel']:
-        CLARGS.specs = load_specs(CLARGS.specs)
+        CLARGS.specs = utils.load_specs(CLARGS.specs)
 
         CLARGS.images = load_images(CLARGS.images)
         CLARGS.tiles = generate_tile_list(CLARGS.tiles)
