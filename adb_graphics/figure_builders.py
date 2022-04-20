@@ -16,7 +16,7 @@ import adb_graphics.errors as errors
 from adb_graphics.figures import maps
 from adb_graphics.figures import skewt
 
-AIRPORTS = '../static/Airports_locs.txt'
+AIRPORTS = 'static/Airports_locs.txt'
 
 def add_obs_panel(ax, model_name, obs_file, proj_info, short_name, tile):
 
@@ -265,8 +265,8 @@ def set_figure(model_name, graphic_type, tile):
             y_aspect = 0.5
         if tile in ['SE']:
             # Vertical rectangle subdomains can use a bit more height
-            # than width.
-            y_aspect = 1.2
+            # than the others
+            y_aspect = 0.95
 
     fig, ax = plt.subplots(nrows, ncols,
                            figsize=(x_aspect*inches, y_aspect*inches),

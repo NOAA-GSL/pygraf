@@ -611,7 +611,7 @@ class fieldData(UPPData):
 
         grid_info = {}
         grid_info['corners'] = self.corners
-        if self.grid_suffix in ['GLC0', 'GLL0']:
+        if self.grid_suffix in ['GLC0']:
             attrs = ['Latin1', 'Latin2', 'Lov']
             grid_info['projection'] = 'lcc'
             grid_info['lat_0'] = 39.0
