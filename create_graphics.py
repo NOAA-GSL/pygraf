@@ -1,10 +1,5 @@
 # pylint: disable=invalid-name
 '''
-                create_maps(cla,
-                            fhr=fhr,
-                            gribfiles=gribfiles,
-                            workdir=workdir,
-                            )
 Driver for creating all the SkewT diagrams needed for a specific input dataset.
 '''
 
