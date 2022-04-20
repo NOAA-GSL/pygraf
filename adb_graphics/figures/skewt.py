@@ -299,11 +299,10 @@ class SkewTDiagram(gribdata.profileData):
         self._add_thermo_inset(skew)
         self._add_hydrometeors(hydro_subplot)
 
-    def create_output(self, csv_path):
+    def create_csv(self, csv_path):
 
-        ''' Calls the private methods for writing each the SkewT Data. '''
+        ''' Calls the private methods for writing each of the SkewT Data. '''
 
-        #don't actually want to make a plot so need something like skew but instead a file to write data.
         self._write_profile(csv_path)
 
     def _plot_hodograph(self, skew):
@@ -375,10 +374,10 @@ class SkewTDiagram(gribdata.profileData):
         temp = profiles.get('temp').get('data').to('degC')
         sphum = profiles.get('sphum').get('data')
 
-        dewpt = np.array(mpcalc.dewpoint_from_specific_humidity(sphum, temp,
-            pres).to('degC'))
-        wspd = np.array(mpcalc.wind_speed(u,v))
-        wdir = np.array(mpcalc.wind_direction(u,v))
+        dewpt = np.array(mpcalc.dewpoint_from_specific_humidity(
+            sphum, temp, pres).to('degC'))
+        wspd = np.array(mpcalc.wind_speed(u, v))
+        wdir = np.array(mpcalc.wind_direction(u, v))
 
         pres = np.array(pres)
         temp = np.array(temp)
