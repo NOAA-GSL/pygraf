@@ -68,11 +68,11 @@ def add_obs_panel(ax, model_name, obs_file, proj_info, short_name, tile):
         model='obs',
         tile=tile,
         )
-    dm = maps.DataMap(
+    dm = maps.MultiPanelDataMap(
         map_fields=map_fields,
         map_=m,
+        member='obs',
         model_name=model_name,
-        multipanel=True,
         )
 
     # Draw the map
@@ -462,29 +462,30 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
                  and level
       variable   the name of the variable section in the specs file
       workdir    output directory
+
+    Optional:
+      tile       the label of the tile being plotted
     '''
 
-    fig, axes = set_figure(cla.model_name, cla.graphic_type)
+    fig, axes = set_figure(cla.model_name, cla.graphic_type, tile)
 
     # set last_panel to send into DataMap for colorbar control
     last_panel = False
 
+    # Declare the type of object depending on graphic type
+    map_class = maps.MultiPanelDataMap if cla.graphic_type == \
+        'enspanel' else maps.DataMap
+
     for index, current_ax in enumerate(axes):
 
-        if index == 11:
+        if current_ax is axes[-1]:
             last_panel = True
         mem = None
         if cla.graphic_type == 'enspanel':
             # Don't put data in the top left or bottom left panels.
             if index in (0, 8):
-                if index == 0:
-                    title = "Ensemble plot"
-                    unit = "dbZ"
-                    date = "2022041300"
-                    current_ax.text(0.5, 0.5, f'{title} ({unit})\n{date} {fhr}', fontsize=12, horizontalalignment='center',
-                                    verticalalignment='center', transform=current_ax.transAxes)
                 current_ax.axis('off')
-                continue
+
             # Shenanigans to match ensemble member to panel index
             mem = 0 if index == 4 else index
             mem = mem if mem < 4 else index - 1
@@ -508,7 +509,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
             return
 
         map_fields = maps.MapFields(main_field=field, fields_spec=spec,
-                map_type=cla.graphic_type)
+                map_type=cla.graphic_type, model=model, tile=tile)
 
         # Generate a map object
         m = maps.Map(
@@ -521,32 +522,36 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
             )
 
         # Send all objects (map_field, contours, hatches) to a DataMap object
-        dm = maps.DataMap(
+        dm = map_class(
             map_fields=map_fields,
             map_=m,
+            member=mem,
             model_name=cla.model_name,
-            multipanel=cla.graphic_type == 'enspanel',
             last_panel=last_panel
             )
 
         # Draw the map
-        dm.draw(show=True)
+        if cla.graphic_type == 'enspanel':
+            if index == 0:
+                dm.title()
+                dm.add_logo(current_ax)
+            elif index == 8:
+                if spec.get('include_obs', False):
+                    # Add observation panel to lower left. Currently only
+                    # supported for composite reflectivity.
+                    add_obs_panel(
+                        ax=axes[8],
+                        model_name=cla.model_name,
+                        obs_file=cla.obs_file_path,
+                        proj_info=field.grid_info(),
+                        short_name=variable,
+                        tile=tile,
+                        )
+            else:
+                dm.draw(show=True)
+        else:
+            dm.draw(show=True)
 
-    # Add observation panel to lower left. Currently only supported for
-    # composite reflectivity.
-    if cla.graphic_type == 'enspanel' and spec.get('include_obs', False):
-        add_obs_panel(
-            ax=axes[8],
-            model_name=cla.model_name,
-            obs_file=cla.obs_file_path,
-            proj_info=field.grid_info(),
-            short_name=variable,
-            tile=tile,
-            )
-
-    if cla.graphic_type == 'enspanel':
-        # add NOAA logo
-        maps.DataMap.add_logo(axes[0])
 
     # Build the output path
     png_file = f'{variable}_{tile}_{level}_f{fhr:03d}.png'
@@ -737,7 +742,7 @@ def remove_proc_grib_files(cla):
             print(f'  {file_path}')
             os.remove(file_path)
 
-def set_figure(model_name, graphic_type):
+def set_figure(model_name, graphic_type, tile):
 
     ''' Create the figure and subplots appropriate for the model and
     graphics type. Return the figure handle and list of axes. '''
@@ -747,17 +752,25 @@ def set_figure(model_name, graphic_type):
     else:
         inches = 10
 
+    x_aspect = 1
+    y_aspect = 1
+    nrows = 1
+    ncols = 1
     # A 12 panel plot to accommodate 10 ensemble members, or a single panel
     if graphic_type == 'enspanel':
         nrows = 3
         ncols = 4
         inches = 20
-    else:
-        nrows = 1
-        ncols = 1
+        y_aspect = 0.8
+        x_aspect = 1
+        if tile in ['full', 'NW']:
+            y_aspect = 0.5
+        if tile in ['SE']:
+            x_axpect = 1.2
+
 
     # Create a rectangle shape
-    fig, ax = plt.subplots(nrows, ncols, figsize=(inches, 0.5*inches),
+    fig, ax = plt.subplots(nrows, ncols, figsize=(x_aspect*inches, y_aspect*inches),
             sharex=True, sharey=True)
     # Flatten the 2D array and number panel axes from top left to bottom right
     # sequentially
