@@ -375,6 +375,7 @@ class TestDefaultSpecs():
             'mul',     # most unstable layer
             'mup',     # maximum upward
             'mu',      # most unstable
+            'obs',     # observations
             'pw',      # wrt precipitable water
             'sat',     # satellite
             'sfc',     # surface
