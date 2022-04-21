@@ -13,9 +13,9 @@ from multiprocessing import Process
 import os
 import sys
 import time
+import zipfile
 
 import numpy as np
-
 import yaml
 
 
@@ -262,16 +262,17 @@ def zip_products(fhr, workdir, zipfiles):
 
     for tile, zipf in zipfiles.items():
         if tile == 'skewt_csv':
-            file_tmpl = f'*_skewt_f{fhr:03d}.csv'
+            file_tmpl = f'*.skewt.*_f{fhr:03d}.csv'
         else:
             file_tmpl = f'*_{tile}_*{fhr:02d}.png'
         product_files = glob.glob(os.path.join(workdir, file_tmpl))
-        zip_proc = Process(group=None,
-                           target=create_zip,
-                           args=(product_files, zipf),
-                           )
-        zip_proc.start()
-        zip_proc.join()
+        if product_files:
+            zip_proc = Process(group=None,
+                               target=create_zip,
+                               args=(product_files, zipf),
+                               )
+            zip_proc.start()
+            zip_proc.join()
 
 def load_specs(arg):
 
