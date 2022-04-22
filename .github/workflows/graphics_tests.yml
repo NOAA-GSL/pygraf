@@ -20,8 +20,7 @@ jobs:
           lfs: true
       - name: Install Conda environment with Micromamba
         uses: mamba-org/provision-with-micromamba@main
-        with:
-          environment-file: environment.yml
+      - run: micromamba create -n pygraf -f /home/runner/work/pygraf/pygraf/environment.yml
       - run: conda env list
       - run: pylint *.py
       - run: pylint adb_graphics
