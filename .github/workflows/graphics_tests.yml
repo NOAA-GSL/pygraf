@@ -22,8 +22,8 @@ jobs:
         uses: mamba-org/provision-with-micromamba@main
         with:
           environment-file: false
-      - run: micromamba create -n pygraf -y -f /home/runner/work/pygraf/pygraf/environment.yml && mamba activate /home/runner/micromamba/envs/pygraf
-      - run: mamba env list
+      - run: micromamba create -n pygraf -y -f /home/runner/work/pygraf/pygraf/environment.yml && micromamba activate /home/runner/micromamba/envs/pygraf
+      - run: micromamba list
       - run: pylint *.py
       - run: pylint adb_graphics
       - run: pylint tests
