@@ -26,8 +26,7 @@ jobs:
           cache-env: true
       - run: micromamba create -n pygraf -y -f /home/runner/work/pygraf/pygraf/environment.yml
       - run: micromamba list
-      - run: micromamba activate pygraf
-      - run: pylint *.py
+      - run: micromamba activate pygraf && pylint *.py
       - run: pylint adb_graphics
       - run: pylint tests
       - run: python -m pytest --nat-file tests/data/wrfnat_hrconus_07.grib2 --prs-file tests/data/wrfprs_hrconus_07.grib2
