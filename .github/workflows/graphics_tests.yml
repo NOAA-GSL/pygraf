@@ -29,7 +29,7 @@ jobs:
       - name: Lint code
         run: |
          micromamba activate pygraf
-         find . -type f -not -path "./venv/*" -name "*.py" | xargs pylint
+         find . -type f -name "*.py" | xargs pylint
       - name: Test code
         run: |
          micromamba activate pygraf
