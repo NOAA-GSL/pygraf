@@ -55,44 +55,6 @@ def create_zip(files_to_zip, zipf):
         # Wait before trying to obtain the lock on the file
         time.sleep(5)
 
-import yaml
-
-
-def create_zip(png_files, zipf):
-
-    ''' Create a zip file. Use a locking mechanism -- write a lock file to disk. '''
-
-    lock_file = f'{zipf}._lock'
-    retry = 2
-    count = 0
-    while True:
-        if not os.path.exists(lock_file):
-            fd = open(lock_file, 'w')
-            print(f'Writing to zip file {zipf} for files like: {png_files[0][-10:]}')
-
-            try:
-                with zipfile.ZipFile(zipf, 'a', zipfile.ZIP_DEFLATED) as zfile:
-                    for png_file in png_files:
-                        if os.path.exists(png_file):
-                            zfile.write(png_file, os.path.basename(png_file))
-            except: # pylint: disable=bare-except
-                print(f'Error on writing zip file! {sys.exc_info()[0]}')
-                count += 1
-                if count >= retry:
-                    raise
-            else:
-                # When zipping is successful, remove png_files
-                for png_file in png_files:
-                    if os.path.exists(png_file):
-                        os.remove(png_file)
-            finally:
-                fd.close()
-                if os.path.exists(lock_file):
-                    os.remove(lock_file)
-            break
-        # Wait before trying to obtain the lock on the file
-        time.sleep(5)
-
 def fhr_list(args):
 
     '''
