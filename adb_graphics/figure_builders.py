@@ -242,6 +242,7 @@ def parallel_skewt(cla, fhr, ds, site, workdir):
     print(f"Creating csv file: {csv_path}")
     print('*' * 80)
     skew.create_csv(csv_path)
+
     plt.close()
 
 def set_figure(model_name, graphic_type, tile):
