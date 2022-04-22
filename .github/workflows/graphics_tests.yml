@@ -22,8 +22,6 @@ jobs:
         uses: mamba-org/provision-with-micromamba@main
         with:
           environment-name: pygraf
-          cache-env: true
-          cache-downloads: true
           environment-file: environment.yml
       - run: conda env list
       - run: pylint *.py
