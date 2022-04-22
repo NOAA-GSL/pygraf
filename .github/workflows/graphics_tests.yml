@@ -18,16 +18,19 @@ jobs:
         uses: actions/checkout@v2
         with:
           lfs: true
-      - name: Install Conda environment with Micromamba
+      - name: Install Micromamba with no environment
         uses: mamba-org/provision-with-micromamba@main
         with:
           environment-file: false
           cache-downloads: true
           cache-env: true
-      - run: micromamba create -n pygraf -y -f /home/runner/work/pygraf/pygraf/environment.yml
-      - run: |
+      - name: Install pygraf environment
+        run: micromamba create -n pygraf -y -f /home/runner/work/pygraf/pygraf/environment.yml
+      - name: Lint code
+        run: |
          micromamba activate pygraf
-         pylint *.py
-         pylint adb_graphics
-         pylint tests
+         find . -type f -not -path "./venv/*" -name "*.py" | xargs pylint
+      - name: Test code
+        run: |
+         micromamba activate pygraf
          python -m pytest --nat-file tests/data/wrfnat_hrconus_07.grib2 --prs-file tests/data/wrfprs_hrconus_07.grib2
