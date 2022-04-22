@@ -229,6 +229,7 @@ class DataMap():
 
     '''
 
+    #pylint: disable=unused-argument
     def __init__(self, map_fields, map_, model_name=None, **kwargs):
 
         self.field = map_fields.main_field

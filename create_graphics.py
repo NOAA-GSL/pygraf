@@ -17,9 +17,7 @@ import os
 import random
 import string
 import subprocess
-import sys
 import time
-import zipfile
 
 import yaml
 
