@@ -511,6 +511,8 @@ def graphics_driver(cla):
     # Create an empty zip file
     if cla.zip_dir:
         tiles = cla.tiles if cla.graphic_type == "maps" else ['skewt']
+        if 'skewt' in tiles:
+            tiles.append('skewt_csv')
         zipfiles = stage_zip_files(tiles, cla.zip_dir)
 
     fcst_hours = copy.deepcopy(cla.fcst_hour)
@@ -615,7 +617,7 @@ def graphics_driver(cla):
 
             # Zip png files and remove the originals in a subprocess
             if cla.zip_dir:
-                utils.zip_pngs(fhr, workdir, zipfiles)
+                utils.zip_products(fhr, workdir, zipfiles)
 
             # Keep track of last time we did something useful
             timer_end = time.time()

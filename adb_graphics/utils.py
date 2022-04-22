@@ -13,8 +13,47 @@ from multiprocessing import Process
 import os
 import sys
 import time
+import zipfile
 
 import numpy as np
+import yaml
+
+
+def create_zip(files_to_zip, zipf):
+
+    ''' Create a zip file. Use a locking mechanism -- write a lock file to disk. '''
+
+    lock_file = f'{zipf}._lock'
+    retry = 2
+    count = 0
+    while True:
+        if not os.path.exists(lock_file):
+            fd = open(lock_file, 'w')
+            print(f'Writing to zip file {zipf} for files like: {files_to_zip[0][-10:]}')
+
+            try:
+                with zipfile.ZipFile(zipf, 'a', zipfile.ZIP_DEFLATED) as zfile:
+                    for file_to_zip in files_to_zip:
+                        if os.path.exists(file_to_zip):
+                            zfile.write(file_to_zip,
+                                        os.path.basename(file_to_zip))
+            except: # pylint: disable=bare-except
+                print(f'Error on writing zip file! {sys.exc_info()[0]}')
+                count += 1
+                if count >= retry:
+                    raise
+            else:
+                # When zipping is successful, remove files_to_zip
+                for file_to_zip in files_to_zip:
+                    if os.path.exists(file_to_zip):
+                        os.remove(file_to_zip)
+            finally:
+                fd.close()
+                if os.path.exists(lock_file):
+                    os.remove(lock_file)
+            break
+        # Wait before trying to obtain the lock on the file
+        time.sleep(5)
 
 import yaml
 
@@ -245,14 +284,14 @@ def uniq_wgrib2_list(inlist):
 
     return uniq_list
 
-def zip_pngs(fhr, workdir, zipfiles):
+def zip_products(fhr, workdir, zipfiles):
 
-    ''' Spin up a subprocess to zip all the png files into the staged zip files.
+    ''' Spin up a subprocess to zip all the product files into the staged zip files.
 
     Input:
 
         fhr         integer forecast hour
-        workdir     path to the png files
+        workdir     path to the product files
         zipfiles    dictionary of tile keys, and zip directory values.
 
     Output:
@@ -260,13 +299,18 @@ def zip_pngs(fhr, workdir, zipfiles):
     '''
 
     for tile, zipf in zipfiles.items():
-        png_files = glob.glob(os.path.join(workdir, f'*_{tile}_*{fhr:02d}.png'))
-        zip_proc = Process(group=None,
-                           target=create_zip,
-                           args=(png_files, zipf),
-                           )
-        zip_proc.start()
-        zip_proc.join()
+        if tile == 'skewt_csv':
+            file_tmpl = f'*.skewt.*_f{fhr:03d}.csv'
+        else:
+            file_tmpl = f'*_{tile}_*{fhr:02d}.png'
+        product_files = glob.glob(os.path.join(workdir, file_tmpl))
+        if product_files:
+            zip_proc = Process(group=None,
+                               target=create_zip,
+                               args=(product_files, zipf),
+                               )
+            zip_proc.start()
+            zip_proc.join()
 
 def load_specs(arg):
 
