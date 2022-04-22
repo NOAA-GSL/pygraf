@@ -31,6 +31,9 @@
 #            to be hatched, and may have a different level separated by an
 #            underscore, e.g. rh_850mb would hatch the 850mb level.
 #
+#   include_obs: bool to enable plotting observations (provided via
+#                command line arguments) to an ensemble panel plot.
+#
 #   labels:  primarily used for the legend labels of hatched areas
 #
 #   ncl_name: the name of the variable as expected by NCL
@@ -420,10 +423,15 @@ cref: # Composite reflectivity
     <<: *refl
     ncl_name: REFC_P0_L10_{grid}
     title: Ensemble Composite Reflectivity
+  obs:
+    <<: *refl
+    ncl_name: MergedReflectivityQCComposite_P0_L102_GLL0
+    title: Observed Composite Reflectivity
   sfc:
     <<: *refl
     ncl_name: REFC_P0_L{level_type}_{grid}
     title: Composite Reflectivity
+    include_obs: True
 csnow: # Categorical Snow
   sfc:
     ncl_name: CSNOW_P0_L1_{grid}

@@ -18,8 +18,6 @@ from mpl_toolkits.basemap import Basemap
 from mpl_toolkits.basemap import shiftgrid
 import numpy as np
 
-import adb_graphics.utils as utils
-
 # FULL_TILES is a list of strings that includes the labels GSL attaches to some of
 # the wgrib2 cutouts used for larger domains like RAP, RRFS NA, and global.
 FULL_TILES = [
@@ -231,14 +229,14 @@ class DataMap():
 
     '''
 
-    def __init__(self, field, map_, contour_fields=None, hatch_fields=None, model_name=None):
+    #pylint: disable=unused-argument
+    def __init__(self, map_fields, map_, model_name=None, **kwargs):
 
-        self.field = field
-        self.contour_fields = contour_fields
-        self.hatch_fields = hatch_fields
+        self.field = map_fields.main_field
+        self.contour_fields = map_fields.contours
+        self.hatch_fields = map_fields.hatches
         self.map = map_
         self.model_name = model_name
-
 
     @staticmethod
     def add_logo(ax):
@@ -287,11 +285,27 @@ class DataMap():
 
         cbar.ax.set_xticklabels(ticks, fontsize=12)
 
-    @utils.timer
-    def draw(self, show=False): # pylint: disable=too-many-locals, too-many-branches
+    def draw(self, show=False):
 
         ''' Main method for creating the plot. Set show=True to display the
         figure from the command line. '''
+
+        cf = self._draw_panel()
+
+        # Draw colorbar
+        self._colorbar(ax=self.map.ax, cc=cf)
+
+        # Finish with the title
+        self._title()
+
+        # Create a pop-up to display the figure, if show=True
+        if show:
+            plt.tight_layout()
+            plt.show()
+
+        self.add_logo(self.map.ax)
+
+    def _draw_panel(self, wind_barbs=True): # pylint: disable=too-many-locals, too-many-branches
 
         ax = self.map.ax
 
@@ -304,14 +318,11 @@ class DataMap():
                               func=self.map.m.contourf,
                               levels=self.field.clevs,
                               )
-        self._colorbar(ax=ax, cc=cf)
 
         not_labeled = [self.field.short_name]
         if self.hatch_fields:
             not_labeled.extend([h.short_name for h in self.hatch_fields])
 
-        if self.map.model in ['global'] and self.map.tile in ['full']:
-            self.contour_fields = False
         # Contour secondary fields, if requested
         if self.contour_fields:
             self._draw_contours(ax, not_labeled)
@@ -322,23 +333,13 @@ class DataMap():
 
         # Add wind barbs, if requested
         add_wind = self.field.vspec.get('wind', False)
-        if add_wind:
+        if add_wind and wind_barbs:
             self._wind_barbs(add_wind)
 
         # Add field values at airports
         annotate = self.field.vspec.get('annotate', False)
         if annotate and 'global' not in self.map.model: # too dense in global
             self._draw_field_values(ax)
-
-        # Finish with the title
-        self._title()
-
-        # Create a pop-up to display the figure, if show=True
-        if show:
-            plt.tight_layout()
-            plt.show()
-
-        self.add_logo(ax)
 
         return cf
 
@@ -471,13 +472,12 @@ class DataMap():
         if self.field.short_name == 'ptyp':
             plt.legend(handles=handles, loc=[0.25, 0.03])
 
-    def _title(self):
+    def _set_overlay_string(self):
 
-        ''' Creates the standard annotation for a plot. '''
+        ''' Creates the main title of the plot with select hatched and
+        contoured fields defined. '''
 
         f = self.field
-        atime = f.date_to_str(f.anl_dt)
-        vtime = f.date_to_str(f.valid_dt)
 
         # Create a descriptor string for the first hatched field, if one exists
         contoured = []
@@ -503,6 +503,16 @@ class DataMap():
         if contoured_units:
             contoured = f"{contoured} ({', '.join(contoured_units)}, contoured)"
 
+        return contoured
+
+    def _title(self):
+
+        ''' Draw the title for a map. '''
+
+        f = self.field
+        atime = f.date_to_str(f.anl_dt)
+        vtime = f.date_to_str(f.valid_dt)
+
         # Analysis time (top) and forecast hour with Valid Time (bottom) on the left
         plt.title(f"{self.model_name}: {atime}\nFcst Hr: {f.fhr}, Valid Time {vtime}",
                   alpha=None,
@@ -525,6 +535,7 @@ class DataMap():
         plt.title(f"{title}", position=(0.5, 1.08), fontsize=18)
 
         # Two lines for hatched data (top), and contoured data (bottom) on the right
+        contoured = self._set_overlay_string()
         plt.title(f"{contoured}",
                   loc='right',
                   fontsize=14,
@@ -585,5 +596,168 @@ class DataMap():
         ''' Helper function to create mesh for various plot. '''
 
         lat, lon = field.latlons()
+        if self.map.model == 'obs':
+            lat, lon = np.meshgrid(lat, lon, sparse=False, indexing='ij')
+
         adjust = 360 if np.any(lon < 0) else 0
         return self.map.m(adjust + lon, lat)
+
+class MultiPanelDataMap(DataMap):
+    '''
+    Class that extends a DataMap for handling multiple panels.
+
+    Keyword arguments:
+        last_panel        flag for multipanel plots to designate last panel drawn
+    '''
+
+    def __init__(self, map_fields, map_, member, model_name=None, **kwargs):
+
+        super().__init__(map_fields, map_, model_name=model_name)
+
+        self.last_panel = kwargs.get('last_panel', False)
+        self.member = str(member)
+
+    def draw(self, show=False):
+
+        ''' Main method for creating the plot. Set show=True to display the
+        figure from the command line. '''
+
+        cf = self._draw_panel(wind_barbs=False)
+
+        self._label_member()
+
+        # Finish with the colorbar on the last panel only
+        # Plot it on the full figure scale.
+        if self.last_panel:
+            cax = plt.axes([0.0, 0.0, 1.0, 0.2])
+            self._colorbar(ax=cax, cc=cf)
+            cax.axis('off')
+
+        # Create a pop-up to display the figure, if show=True
+        if show:
+            plt.tight_layout()
+            plt.show()
+
+        return cf
+
+    def _label_member(self):
+
+        ''' Add the member label to the top left of the plot '''
+
+        ax = self.map.ax
+        ax.text(
+            0.05, 0.90,
+            self.member,
+            fontsize=18,
+            fontweight='bold',
+            backgroundcolor="white",
+            transform=ax.transAxes,
+            )
+
+    def title(self):
+
+        ''' Draw the title for a map. '''
+
+        f = self.field
+        atime = f.date_to_str(f.anl_dt)
+        vtime = f.date_to_str(f.valid_dt)
+        ax = self.map.ax
+
+        # Analysis time (top) and forecast hour with Valid Time (bottom) on the left
+        ax.text(0.0, 0.5,
+                f"{self.model_name}: {atime}\nFcst Hr: {f.fhr}, Valid Time {vtime}",
+                alpha=None,
+                fontsize=14,
+                horizontalalignment='left',
+                verticalalignment='top',
+                transform=ax.transAxes,
+                )
+
+        level, lev_unit = f.numeric_level(index_match=False)
+        if f.vspec.get('print_units', True):
+            units = f'({f.units}, shaded)'
+        else:
+            units = f''
+
+        # Title or Atmospheric level and unit in the high center
+        if f.vspec.get('title'):
+            title = f"{f.vspec.get('title')} {units}"
+        else:
+            level = level if not isinstance(level, list) else level[0]
+            title = f'{level} {lev_unit} {f.field.long_name} {units}'
+        ax.text(0, 0.7,
+                f"{title}",
+                horizontalalignment='left',
+                verticalalignment='top',
+                fontsize=16,
+                transform=ax.transAxes,
+                )
+
+        # Two lines for hatched data (top), and contoured data (bottom) on the right
+        contoured = self._set_overlay_string()
+        ax.text(0, 0.6,
+                f"{contoured}",
+                horizontalalignment='left',
+                verticalalignment='top',
+                fontsize=14,
+                transform=ax.transAxes,
+                )
+
+
+class MapFields():
+    ''' Class that packages all the field objects need for producing
+    desired map content, i.e. an object that contains all filled
+    contours, hatched spaces, and overlayed contours needed for a full
+    product. '''
+
+    def __init__(self, main_field, fields_spec=None, map_type=None,
+                 **kwargs):
+
+        self.main_field = main_field
+        self.fields_spec = fields_spec if fields_spec is not None else {}
+        self.map_type = map_type
+        self.model = kwargs.get('model')
+        self.tile = kwargs.get('tile', 'full')
+
+    @property
+    def contours(self):
+        ''' Return the list of contour fieldData objects'''
+
+        # We won't plot contours on multipanel plots, or full global
+        # plots.
+        if self.map_type == 'enspanel':
+            return []
+
+        if self.model in ['global'] and self.tile in ['full']:
+            return []
+
+        return self._overlay_fields('contours')
+
+    @property
+    def hatches(self):
+        ''' Return the list of hatch fieldData objects'''
+
+        return self._overlay_fields('hatches')
+
+    def _overlay_fields(self, spec_sect):
+
+        ''' Generate a list of fieldData objects for the specified type
+        of overlay -- hatches or contours '''
+        overlays = self.fields_spec.get(spec_sect)
+        overlay_fields = []
+        if overlays is not None:
+            for overlay, overlay_kwargs in overlays.items():
+                if '_' in overlay:
+                    var, lev = overlay.split('_')
+                else:
+                    var, lev = overlay, self.main_field.level
+
+                # Make a copy of the main object, and change the
+                # attributes to match the overlay field
+                overlay_obj = copy.deepcopy(self.main_field)
+                overlay_obj.contour_kwargs = overlay_kwargs
+                overlay_obj.short_name = var
+                overlay_obj.level = lev
+
+                overlay_fields.append(overlay_obj)
+        return overlay_fields

@@ -175,7 +175,7 @@ class GribFiles():
                     )
 
                 renaming = self.free_fcst_names(dataset, fcst_type)
-                if renaming and self.model != 'hrrre':
+                if renaming and self.model not in ['hrrre', 'rrfse']:
                     print(f'RENAMING VARIABLES:')
                     for old_name, new_name in renaming.items():
                         print(f'  {old_name:>30s}  -> {new_name}')

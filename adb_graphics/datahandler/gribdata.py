@@ -453,6 +453,8 @@ class fieldData(UPPData):
 
     Keyword Arguments:
         config:      path to a user-specified configuration file
+        member:      integer describing the ensemble member number to
+                     grab data for
     '''
 
     def __init__(self, ds, level, short_name, **kwargs):
@@ -461,6 +463,7 @@ class fieldData(UPPData):
 
         self.level = level
         self.contour_kwargs = kwargs.get('contour_kwargs', {})
+        self.mem = kwargs.get('member', None)
 
     def aviation_flight_rules(self, values, **kwargs):
         # pylint: disable=unused-argument
@@ -522,7 +525,7 @@ class fieldData(UPPData):
         '''
 
         lat, lon = self.latlons()
-        if self.model == 'global':
+        if self.model in ['global', 'obs']:
             ret = [lat[-1], lat[0], lon[0], lon[-1]]
         else:
             ret = [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
@@ -728,9 +731,10 @@ class fieldData(UPPData):
 
         Keyword Args:
             do_transform    bool flag. to call, or not, the transform specified
-                            in specs
-            ncl_name        the NCL-assigned Grib2 name
+                            in specs (default: True)
+            ncl_name        the NCL-assigned Grib2 name (default: '')
             one_lev         bool flag. if True, get the single level of the variable
+                            (default: True)
             vertical_index  the index (int) of the desired vertical level
         '''
 
@@ -743,7 +747,6 @@ class fieldData(UPPData):
         ncl_name = ncl_name.format(fhr=self.fhr, grid=self.grid_suffix)
 
         do_transform = kwargs.get('do_transform', True)
-
 
         if name is None and not ncl_name:
 
@@ -783,6 +786,9 @@ class fieldData(UPPData):
                     print(f'Error for {vals.name} : {dim_name} {lev} \
                             {level} {spec}')
                     raise
+
+        if self.mem is not None:
+            vals = vals.isel(**{'ens_mem': self.mem})
 
         # Select a single forecast hour (only if there are many)
         if not spec.get('accumulate', False):

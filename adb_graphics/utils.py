@@ -1,3 +1,4 @@
+# pylint: disable=invalid-name
 '''
 A set of generic utilities available to all the adb_graphics components.
 '''
@@ -5,13 +6,53 @@ A set of generic utilities available to all the adb_graphics components.
 import argparse
 import datetime as dt
 import functools
+import glob
 import importlib as il
 from math import atan2, degrees
+from multiprocessing import Process
 import os
 import sys
 import time
 
 import numpy as np
+
+import yaml
+
+
+def create_zip(png_files, zipf):
+
+    ''' Create a zip file. Use a locking mechanism -- write a lock file to disk. '''
+
+    lock_file = f'{zipf}._lock'
+    retry = 2
+    count = 0
+    while True:
+        if not os.path.exists(lock_file):
+            fd = open(lock_file, 'w')
+            print(f'Writing to zip file {zipf} for files like: {png_files[0][-10:]}')
+
+            try:
+                with zipfile.ZipFile(zipf, 'a', zipfile.ZIP_DEFLATED) as zfile:
+                    for png_file in png_files:
+                        if os.path.exists(png_file):
+                            zfile.write(png_file, os.path.basename(png_file))
+            except: # pylint: disable=bare-except
+                print(f'Error on writing zip file! {sys.exc_info()[0]}')
+                count += 1
+                if count >= retry:
+                    raise
+            else:
+                # When zipping is successful, remove png_files
+                for png_file in png_files:
+                    if os.path.exists(png_file):
+                        os.remove(png_file)
+            finally:
+                fd.close()
+                if os.path.exists(lock_file):
+                    os.remove(lock_file)
+            break
+        # Wait before trying to obtain the lock on the file
+        time.sleep(5)
 
 def fhr_list(args):
 
@@ -76,8 +117,6 @@ def label_line(ax, label, segment, **kwargs):
 
     '''
     Label a single line with line2D label data.
-
-    Input:
 
     Input:
 
@@ -174,6 +213,71 @@ def label_lines(ax, lines, labels, offset=0, **kwargs):
     for i, line in enumerate(lines.get_segments()):
         label = int(labels[i])
         label_line(ax, label, line, align=True, offset=offset, **kwargs)
+
+def load_sites(arg):
+
+    ''' Check that the sites file exists, and return its contents. '''
+
+    # Check that the file exists
+    path = path_exists(arg)
+
+    with open(path, 'r') as sites_file:
+        sites = sites_file.readlines()
+    return sites
+
+def uniq_wgrib2_list(inlist):
+    ''' Given a list of wgrib2 output fields, returns a uniq list of fields for
+    simplifying a grib2 dataset. Uniqueness is defined by the wgrib output from
+    field 3 (colon delimted) onward, although the original full grib record must
+    be included in the wgrib2 command below.
+    '''
+
+    uniq_field_set = set()
+    uniq_list = []
+    for infield in inlist:
+        infield_info = infield.split(':')
+        if len(infield_info) <= 3:
+            continue
+        infield_str = ':'.join(infield_info[3:])
+        if infield_str not in uniq_field_set:
+            uniq_list.append(infield)
+        uniq_field_set.add(infield_str)
+
+    return uniq_list
+
+def zip_pngs(fhr, workdir, zipfiles):
+
+    ''' Spin up a subprocess to zip all the png files into the staged zip files.
+
+    Input:
+
+        fhr         integer forecast hour
+        workdir     path to the png files
+        zipfiles    dictionary of tile keys, and zip directory values.
+
+    Output:
+        None
+    '''
+
+    for tile, zipf in zipfiles.items():
+        png_files = glob.glob(os.path.join(workdir, f'*_{tile}_*{fhr:02d}.png'))
+        zip_proc = Process(group=None,
+                           target=create_zip,
+                           args=(png_files, zipf),
+                           )
+        zip_proc.start()
+        zip_proc.join()
+
+def load_specs(arg):
+
+    ''' Check to make sure arg file exists. Return its contents. '''
+
+    spec_file = path_exists(arg)
+
+    with open(spec_file, 'r') as fn:
+        specs = yaml.load(fn, Loader=yaml.Loader)
+
+    return specs
 
 def old_enough(age, file_path):
 
