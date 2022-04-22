@@ -21,7 +21,6 @@ jobs:
       - name: Install Conda environment with Micromamba
         uses: mamba-org/provision-with-micromamba@main
         with:
-          environment-name: pygraf
           environment-file: environment.yml
       - run: conda env list
       - run: pylint *.py
