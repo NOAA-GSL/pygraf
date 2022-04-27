@@ -806,8 +806,18 @@ mfrp: # Fire radiative power
   sfc:
     clevs: [0, 10, 25, 50, 100, 250]
     colors: fire_power_colors
+    # cmap: fire_power_colors
     ncl_name: CFNSF_P0_L1_{grid}
     plot_airports: False
+    plot_scatter: True
+    scatter_args:
+      mfrp_sfc:
+        alpha: 0.5
+        # colors: fire_power_colors
+        # cmap: jet
+        # s: 40
+        # vmin: 0
+        # vmax: 250
     ticks: 0
     title: Fire Radiative Power
     unit: MW
