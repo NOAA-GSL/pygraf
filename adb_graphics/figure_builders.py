@@ -151,7 +151,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
                 dm.title()
                 dm.add_logo(current_ax)
             elif index == 8:
-                if spec.get('include_obs', False):
+                if spec.get('include_obs', False) and cla.obs_file_path:
                     # Add observation panel to lower left. Currently only
                     # supported for composite reflectivity.
                     add_obs_panel(
