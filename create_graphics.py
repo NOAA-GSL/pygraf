@@ -510,7 +510,7 @@ def graphics_driver(cla):
 
     # Create an empty zip file
     if cla.zip_dir:
-        tiles = cla.tiles if cla.graphic_type == "maps" else ['skewt']
+        tiles = cla.tiles if cla.graphic_type in ["maps", "enspanel"]  else ['skewt']
         if 'skewt' in tiles:
             tiles.append('skewt_csv')
         zipfiles = stage_zip_files(tiles, cla.zip_dir)
