@@ -303,10 +303,7 @@ class VarSpec(abc.ABC):
 
         ''' Default color map for min helicity '''
 
-        grays = cm.get_cmap('Greys', 2)([0])
-        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
-                          ([120, 100, 90, 85, 80, 70, 60, 50, 25, 20, 18, 15])
-        return np.concatenate((ncar, grays))
+        return np.flip(self.rainbow12_colors, 0)
 
     @property
     def shear_colors(self) -> np.ndarray:
