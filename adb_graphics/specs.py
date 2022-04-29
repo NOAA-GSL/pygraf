@@ -299,6 +299,16 @@ class VarSpec(abc.ABC):
         return np.concatenate((grays, ncar))
 
     @property
+    def rainbow12_reverse(self) -> np.ndarray:
+
+        ''' Default color map for min helicity '''
+
+        grays = cm.get_cmap('Greys', 2)([0])
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          ([120, 100, 90, 85, 80, 70, 60, 50, 25, 20, 18, 15])
+        return np.concatenate((ncar, grays))
+
+    @property
     def shear_colors(self) -> np.ndarray:
 
         ''' Default color map for Vertical Shear '''

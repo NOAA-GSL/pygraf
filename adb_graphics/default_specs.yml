@@ -625,27 +625,29 @@ hlcy: # Helicity
     title: 2-5km Updraft Helicity
   mn02: &hlcy_mn02 # Hourly minimum of updraft helicity over 0-2 km layer
     <<: *hlcy
-    clevs: !!python/object/apply:numpy.arange [12.5, 150.5, 12.5]
+    clevs: [-300,-275,-250,-225,-200,-175,-150,-125,-100,-75,-50,-25]
+    colors: rainbow12_reverse
     ncl_name: VAR_0_7_200_P8_2L103_{grid}_min1h
     split: True
-    ticks: 12.5
     title: 0-2km Min Updraft Helicity (over prv hr)
   mn03: &hlcy_mn03 # Hourly minimum of updraft helicity over 0-3 km layer
     <<: *hlcy
-    clevs: !!python/object/apply:numpy.arange [12.5, 150.5, 12.5]
+    clevs: [-300,-275,-250,-225,-200,-175,-150,-125,-100,-75,-50,-25]
+    colors: rainbow12_reverse
     ncl_name: VAR_0_7_200_P8_2L103_{grid}_min1h
     split: True
-    ticks: 12.5
     title: 0-3km Min Updraft Helicity (over prv hr)
   mn16: &hlcy_mn16 # Hourly minimum of updraft helicity over 1-6 km layer
     <<: *hlcy
-    clevs: !!python/object/apply:numpy.arange [25, 301, 25]
+    clevs: [-300,-275,-250,-225,-200,-175,-150,-125,-100,-75,-50,-25]
+    colors: rainbow12_reverse
     ncl_name: VAR_0_7_200_P8_2L103_{grid}_min1h
     split: True
     title: 1-6km Min Updraft Helicity (over prv hr)
   mn25: &hlcy_mn25 # Hourly minimum of updraft helicity over 2-5 km layer
     <<: *hlcy
-    clevs: !!python/object/apply:numpy.arange [25, 301, 25]
+    clevs: [-300,-275,-250,-225,-200,-175,-150,-125,-100,-75,-50,-25]
+    colors: rainbow12_reverse
     split: True
     ncl_name: VAR_0_7_200_P8_2L103_{grid}_min1h
     title: 2-5km Min Updraft Helicity (over prv hr)
