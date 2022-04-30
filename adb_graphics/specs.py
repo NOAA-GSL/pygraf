@@ -299,6 +299,13 @@ class VarSpec(abc.ABC):
         return np.concatenate((grays, ncar))
 
     @property
+    def rainbow12_reverse(self) -> np.ndarray:
+
+        ''' Default color map for min helicity '''
+
+        return np.flip(self.rainbow12_colors, 0)
+
+    @property
     def shear_colors(self) -> np.ndarray:
 
         ''' Default color map for Vertical Shear '''
