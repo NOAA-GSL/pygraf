@@ -306,18 +306,6 @@ class DataMap():
 
         # Draw a map and add the shaded field
         self.map.draw()
-        # if not self.plot_scatter:
-        #     cf = self._draw_field(ax=ax,
-        #                           colors=self.field.colors,
-        #                           extend='both',
-        #                           field=self.field,
-        #                           func=self.map.m.contourf,
-        #                           levels=self.field.clevs,
-        #                           )
-
-        #     self._colorbar(ax=ax, cc=cf)
-        # else:
-        #     cf = None
         cf = self._draw_field(ax=ax,
                               colors=self.field.colors,
                               extend='both',
@@ -342,16 +330,7 @@ class DataMap():
         if self.hatch_fields:
             self._draw_hatches(ax)
         # Make a scatter plot, if requested
-        # if self.plot_scatter:
-        print(f'checking name = {self.field.short_name} for scatter_fields')
-        if self.scatter_fields:
-            print(f'do we get here?')
-            # self._draw_scatter(ax=ax,
-            #                    # colors=self.field.colors,
-            #                    extend='both',
-            #                    field=self.field,
-            #                    func=self.map.m.contourf,
-            #                    )
+        if self.plot_scatter:
             self._draw_scatter(ax)
 
         # Add wind barbs, if requested
@@ -380,6 +359,7 @@ class DataMap():
 
         ''' Draw the contour fields requested. '''
 
+        print(f'in draw_contours')
         for contour_field in self.contour_fields:
             levels = contour_field.contour_kwargs.pop('levels',
                                                       contour_field.clevs)
@@ -437,7 +417,6 @@ class DataMap():
                 vals, x = shiftgrid(180., vals, x, start=False)
             y, x = np.meshgrid(y, x, sparse=False, indexing='ij')
 
-        print(f'in draw_field kwargs are {kwargs}')
         ret = func(x, y, vals,
                    ax=ax,
                    **kwargs,
@@ -508,221 +487,35 @@ class DataMap():
         if self.field.short_name == 'ptyp':
             plt.legend(handles=handles, loc=[0.25, 0.03])
 
-    # def _draw_scatter(self, ax, field, func, **kwargs):
     def _draw_scatter(self, ax):
 
         ''' Plot dots at locations on the map that meet a threshold. '''
 
-        cmap = self.field.colors
-        # print(f'cmap = {cmap}')
-        # print(f'name = {self.field.short_name}')
-        # for field in self.contour_fields:
-        # alpha_val = self.field.scatter_kwargs.get('alpha', 0)
-        # print(f'alpha_val = {alpha_val}')
-        for field in self.scatter_fields:
-            print(f'field = {field}')
-            # colors = field.contour_kwargs.get('colors', 'k')
-            # alpha_val = field.scatter_kwargs.get('alpha', 0)
-            # print(f'alpha_val = {alpha_val}')
-            # cmap = field.contour_kwargs.get('cmap', 'k')
-            # print(f'cmap = {cmap}')
-
-        # colors = field.scatter_kwargs.get('c', 'k')
-        # size = field.scatter_kwargs.get('s', 10)
-        # print(f'drawing scatter plot')
-        # print(f'field.scatter_kwargs = {field.scatter_kwargs}')
-        # x, y = self._xy_mesh(field)
-        # lon, lat = self._xy_mesh(field)
-        vals = field.values()
-        # vals2 = copy.copy(vals)
-        # colors = ['white', 'lightblue', 'blue', 'green', 'orange', 'red', 'brown']
+        field = self.field
+        levels = self.field.clevs
+        alpha_val = 0.5
+        vals = self.field.values()
         colors = ['white','lightskyblue','darkblue','green','darkorange','indianred','firebrick']
+
         ci = copy.copy(vals)
         ci = np.full_like(ci, colors[0], dtype='object')
-        ci = np.where((field.values() > 0) & (field.values() <= 10), colors[1], ci)
-        ci = np.where((field.values() > 10) & (field.values() <= 25), colors[2], ci)
-        ci = np.where((field.values() > 25) & (field.values() <= 50), colors[3], ci)
-        ci = np.where((field.values() > 50) & (field.values() <= 100), colors[4], ci)
-        ci = np.where((field.values() > 100) & (field.values() <= 250), colors[5], ci)
-        ci = np.where(field.values() > 250, colors[6], ci)
-        # si = copy.copy(vals)
-        # si = np.full_like(si, 20 + np.log10(vals) * 100, dtype='float')
+        ci = np.where((vals > levels[0]) & (vals <= levels[1]), colors[1], ci)
+        ci = np.where((vals > levels[1]) & (vals <= levels[2]), colors[2], ci)
+        ci = np.where((vals > levels[2]) & (vals <= levels[3]), colors[3], ci)
+        ci = np.where((vals > levels[3]) & (vals <= levels[4]), colors[4], ci)
+        ci = np.where((vals > levels[4]) & (vals <= levels[5]), colors[5], ci)
+        ci = np.where(vals > levels[5], colors[6], ci)
 
-        # ci1d = np.ravel(ci)
-        # vals1d = np.ravel(vals)
-        # for val in vals1d:
-        #     if val > 100: 
-        #         print(f'val > 100 = {val}')
-        # for val in vals1d:
-        #     if val > 250: 
-        #         print(f'val > 250 = {val}')
-        # for col in ci1d:
-        #     if col != 'white': 
-        #         print(f'col = {col}')
-        # print(f'ci = {ci}')  # vals is a xarray.DataArray
-        levels = np.array([0, 10, 25, 50, 100, 250])
-        nlev = len(levels)
-        # colors = ['white', 'lightblue', 'blue', 'green', 'orange', 'red', 'brown']
-
-        # nfrp = len(vals1d)
-        # frp_col_list=['         ']*nfrp
-        # frp_col=np.array(frp_col_list)
-        # frp_col = []
-        # ci1d = np.where(vals1d == levels[0])[0]
-        # frp_col[ci1d] = colors[0]
-        # print(f'nlev = {nlev}  len(vals1d) = {nfrp}')
-        # for i in range(nlev):
-        #     print(f'i = {i}')
-        #     ci1d=np.where(vals1d > levels[i])[0]
-        #     for j in range(len(ci1d)):
-        #         frp_col.append(colors[i])
-        # frp_scale = []
-        # for i in range(len(vals1d)):
-        #     if (vals1d[i] > 0):
-        #         frp_scale.append(20 + np.log10(vals1d[i]) * 100)
-
-        lats, lons = self.field.latlons()
-        # # print(f'lats = {lats}')
-        # lats1d = np.ravel(lats)
-        # # lats1d = np.ravel(lat)
-        # # print(f'lats1d = {lats1d}')
-        # lons1d = np.ravel(lons)
-        # # lons1d = np.ravel(lon)
-        # frp_lats = []
-        # frp_lons = []
-        # lv1d = len(vals1d)
-        # print(f'length of vals1d = {lv1d}')
-        # # for i in range(len(vals1d)):
-        #     # print(f'i = {i} val = {vals1d[i]}')
-        # for i in range(len(vals1d)):
-        #     # print(f'i = {i} val = {vals1d[i]}')
-        #     if (vals1d[i] > 10):
-        #         print(f'i = {i} val = {vals1d[i]}')
-        #         scale = 20 + np.log10(vals1d[i]) * 100
-        #         constant_size = 40
-        #         print(f'                  appending {scale} to frp_scale')
-        #         frp_scale.append(20 + np.log10(vals1d[i]) * 100)
-        #         # frp_scale.append(constant_size)
-        #         print(f'                  appending {lats1d[i]} to frp_lats')
-        #         frp_lats.append(lats1d[i])
-        #         print(f'                  appending {lons1d[i]} to frp_lons')
-        #         frp_lons.append(lons1d[i])
-        #         # print(f'val = {vals1d[i]} appending {colors[2]} to frp_col')
-        #         # frp_col.append(colors[2])
-        #         for j in range(nlev):
-        #             print(f'                  Before: j = {j}, nlev = {nlev}, levels[j] = {levels[j]}')
-        #             if (vals1d[i] > levels[j]):
-        #                 if (j == nlev-1):
-        #                     frp_col.append(colors[nlev])
-        #                     print(f'                  appending {colors[nlev]} to frp_col')
-        #                     break
-        #                 else:
-        #                     if (vals1d[i] <= levels[j+1]):
-        #                         frp_col.append(colors[j])
-        #                         print(f'                  appending {colors[j]} to frp_col')
-        #                         break
-                    # jp1 = j + 1
-                    # if (vals1d[i] > levels[j]) and (jp1 == nlev):  
-                    #     print(f'in the problem if')
-                    #     frp_col.append(colors[j+1])
-                    #     print(f'                  appending {colors[j+1]} to frp_col')
-                    # print(f'                  After : j = {j}, nlev = {nlev}, levels[j] = {levels[j]}')
-            # else:
-            #     print(f'                  appending 1 to frp_scale')
-            #     frp_scale.append(1)
-            #     print(f'                  appending {lats1d[i]} to frp_lats')
-            #     frp_lats.append(lats1d[i])
-            #     print(f'                  appending {lons1d[i]} to frp_lons')
-            #     frp_lons.append(lons1d[i])
-            #     print(f'                  appending white to frp_col')
-            #     frp_col.append('white')
-                     
-        # print(f'frp_lats length = {len(frp_lats)}')
-        # print(f'frp_lons length = {len(frp_lons)}')
-        # print(f'frp_scale length = {len(frp_scale)}')
-        # print(f'frp_col length = {len(frp_col)}')
-        # print(f'nfrp = {nfrp}')
-        # frp_col_list=['         ']*nfrp
-        # print(f'frp_col_list = {frp_col_list}')
-        # frp_col=np.array(frp_col_list)
-        # print(f'frp_col = {frp_col}')
-        # ci = np.where(frp == levels[0])[0]
-        # frp_col[ci] = colors[0]
-        # for i in range(nlev):
-        #     ci=np.where(frp > levels[i])[0]
-        #     for j in range(len(ci)):
-        #         frp_col[ci[j]] = colors[i+1]
-        # frp_scale = []
-        # for i in range(len(vals1d)):
-        #     if (vals1d[i] > 0):
-        #         frp_scale.append(20 + np.log10(vals1d[i]) * 100)
-        #         # print(f'leg 1 appending val {vals1d[i]} in place {i}')
-        #     else:
-        #         frp_scale.append(vals1d[i])
-        #         # print(f'appending val {vals1d[i]} in place {i}')
-        # print(f'frp_scale = {frp_scale}')
-
-        # cf = self._draw_field(ax=ax,
-        #                       c=vals,
-        #                       cmap="jet",
-        #                       # s=40,
-        #                       # extend='both',
-        #                       field=field,
-        #                       func=self.map.m.scatter,
-        #                       # func=self.map.m.plot,
-        #                       **field.contour_kwargs,
-        #                       )
-        # x, y = self.map.m(lons, lats)
-        # self.map.m.plot(x, y, 'ko',
-        #                 ax=ax,
-        #                 color='r',
-        #                 fillstyle='full',
-        # #                 markeredgecolor='r',
-        # #                 markeredgewidth=0.5,
-        #                 markersize=8,
-        #                 )
-        #
-        # cmap = mpl.colors.ListedColormap(['lightblue', 'blue', 'green', 'orange', 'red'])
-        # cmap.set_over('brown')
-        # cmap.set_under('white')
+        lats, lons = field.latlons()
 
         ci1d = np.ravel(ci)
-        # si1d = np.ravel(si)
-        # print(f'si1d = {si1d}')
-        # vals1d = np.ravel(vals)
-        # constant_size = 40
-        # self.map.m.scatter(x, y,
-        print('calling scatter')
-        # self.map.m.scatter(lons, lats,
-        #                    # alpha=0.5,
-        #                    # ax=ax,
-        #                    c=ci1d,
-        #                    # c=frp_col,
-        #                    s=40,
-        #                    # s=constant_size,
-        #                    # edgecolors='none'
-        #                    # cmap=cmap,
-        #                    # vmin=0,
-        #                    # vmax=250,
-        #                    )
-        # sf = self._draw_field(frp_lons, frp_lats,
-        # sf = self._draw_field(lons, lats,
         sf = self._draw_field(ax=ax,
-                              # extend='both',
                               field=field,
-                              # c=frp_col,
-                              alpha=0.5,
+                              alpha=alpha_val,
                               c=ci1d,
-                              # s=si1d,
-                              # s=40,
-                              # field=vals1d,
                               func=self.map.m.scatter,
-                              # func=self.map.m.plot,
                               **field.contour_kwargs,
-                              # **field.scatter_kwargs,
                               )
-        del x
-        del y
 
     def _title(self):
 

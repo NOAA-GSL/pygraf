@@ -60,14 +60,10 @@ def create_maps(cla, fhr, gribfiles, workdir):
     generate a pool of workers to complete the task. '''
 
 
-    print(f'in create_maps')
     model = cla.images[0]
     for tile in cla.tiles:
         args = []
         for variable, levels in cla.images[1].items():
-            print(f'tile = {tile}')
-            print(f'variable = {variable}')
-            print(f'levels = {levels}')
             for level in levels:
 
                 # Load the spec for the current variable
@@ -88,7 +84,6 @@ def create_zip(png_files, zipf):
 
     ''' Create a zip file. Use a locking mechanism -- write a lock file to disk. '''
 
-    print(f'in create_zip')
     lock_file = f'{zipf}._lock'
     retry = 2
     count = 0
@@ -126,8 +121,6 @@ def gather_gribfiles(cla, fhr, filename, gribfiles):
     generated -- whether it's for a single forecast time or all forecast lead
     times. '''
 
-    print(f'in gather_gribfiles')
-
     filenames = {'01fcst': [], 'free_fcst': []}
 
     fcst_hour = int(fhr)
@@ -163,7 +156,6 @@ def generate_tile_list(arg_list):
     the list. If no arg is provided, defaults to the full domain, and if 'all'
     is provided, the full domain, and all subdomains are plotted. '''
 
-    print(f'in generate_tile_list')
     if not arg_list:
         return ['full']
 
@@ -184,8 +176,6 @@ def load_images(arg):
     requested section. Return a 2-list (required by argparse) of the
     file path and dictionary of images to be created.
     '''
-
-    print(f'in load_images')
 
     # Agument is expected to be a 2-list of file name and internal
     # section name.
@@ -217,8 +207,6 @@ def load_specs(arg):
 
     ''' Check to make sure arg file exists. Return its contents. '''
 
-    print(f'in load_specs')
-
     spec_file = utils.path_exists(arg)
 
     with open(spec_file, 'r') as fn:
@@ -230,8 +218,6 @@ def parse_args():
 
     ''' Set up argparse command line arguments, and return the Namespace
         containing the settings. '''
-
-    print(f'in parse_args')
 
     parser = argparse.ArgumentParser(description='Script to drive the \
                                      creation of graphices files.')
@@ -401,8 +387,6 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
       workdir    output directory
     '''
 
-    print(f'in parallel_maps')
-
     # Object to be plotted on the map in filled contours.
     field = gribdata.fieldData(
         ds=ds,
@@ -423,7 +407,6 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
     # These will show up as line contours on the plot.
     contours = spec.get('contours')
     contour_fields = []
-    print(f'contours = {contours}')
     if contours is not None:
         for contour, contour_kwargs in contours.items():
             if '_' in contour:
@@ -442,7 +425,6 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
 
     # Create a list of fieldData objects for each hatched area requested
     hatches = spec.get('hatches')
-    print(f'hatches = {hatches}')
     hatch_fields = []
     if hatches is not None:
         for hatch, hatch_kwargs in hatches.items():
@@ -604,8 +586,6 @@ def pre_proc_grib_files(cla, fhr):
                      by default
     '''
 
-    print(f'in pre_proc_grib_files')
-
     if len(cla.data_root) == 1 and len(cla.file_tmpl) == 1:
         # Nothing to do, return the original file location
         grib_path = os.path.join(cla.data_root[0],
@@ -679,8 +659,6 @@ def remove_accumulated_images(cla):
     accumulate entry set to True and removes them from the list of images to
     create. '''
 
-    print(f'in remove_accumulated_images')
-
     for variable, levels in cla.images[1].items():
         for level in levels:
             spec = cla.specs.get(variable, {}).get(level)
@@ -748,7 +726,6 @@ def uniq_wgrib2_list(inlist):
     be included in the wgrib2 command below.
     '''
 
-    print(f'in uniq_wgrib2_list')
     uniq_field_set = set()
     uniq_list = []
     for infield in inlist:
@@ -776,7 +753,6 @@ def zip_pngs(fhr, workdir, zipfiles):
         None
     '''
 
-    print(f'in zip_pngs')
     for tile, zipf in zipfiles.items():
         png_files = glob.glob(os.path.join(workdir, f'*_{tile}_*{fhr:02d}.png'))
         zip_proc = Process(group=None,
@@ -800,8 +776,6 @@ def graphics_driver(cla):
     '''
 
     # pylint: disable=too-many-branches, too-many-locals
-
-    print(f'in graphics_driver')
 
     # Create an empty zip file
     if cla.zip_dir:
