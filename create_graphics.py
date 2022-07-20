@@ -78,6 +78,7 @@ def create_maps(cla, fhr, gribfiles, workdir):
 
                 # Load the spec for the current variable
                 spec = cla.specs.get(variable, {}).get(level)
+                # print(f'in create_maps spec = {spec}')
 
                 if not spec:
                     msg = f'graphics: {variable} {level}'

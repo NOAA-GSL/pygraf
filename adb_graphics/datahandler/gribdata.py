@@ -463,6 +463,8 @@ class fieldData(UPPData):
 
         self.level = level
         self.contour_kwargs = kwargs.get('contour_kwargs', {})
+        # The following print statement always shows {} for self.contour_kwargs
+        # print(f'in fieldData: short_name = {short_name} self.contour_kwargs = {self.contour_kwargs}')
         self.mem = kwargs.get('member', None)
 
     def aviation_flight_rules(self, values, **kwargs):

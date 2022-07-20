@@ -234,7 +234,9 @@ class DataMap():
 
         self.field = map_fields.main_field
         self.contour_fields = map_fields.contours
+        print(f'self.contour_fields = {self.contour_fields}')
         self.hatch_fields = map_fields.hatches
+        print(f'self.hatch_fields = {self.hatch_fields}')
         self.map = map_
         self.model_name = model_name
 
@@ -715,8 +717,11 @@ class MapFields():
 
         self.main_field = main_field
         self.fields_spec = fields_spec if fields_spec is not None else {}
+        print(f'self.fields_spec = {self.fields_spec}')
         self.map_type = map_type
         self.model = kwargs.get('model')
+        self.plot_scatter = self.fields_spec.get('plot_scatter', False)
+        print(f'in MapFields, self.plot_scatter = {self.plot_scatter}')
         self.tile = kwargs.get('tile', 'full')
 
     @property
@@ -731,19 +736,27 @@ class MapFields():
         if self.model in ['global'] and self.tile in ['full']:
             return []
 
+        if self.plot_scatter:
+            print(f'plot_scatter is available')
+            return []
+
+        print(f'returning contours')
         return self._overlay_fields('contours')
 
     @property
     def hatches(self):
         ''' Return the list of hatch fieldData objects'''
 
+        print(f'returning hatches')
         return self._overlay_fields('hatches')
 
     def _overlay_fields(self, spec_sect):
 
         ''' Generate a list of fieldData objects for the specified type
         of overlay -- hatches or contours '''
+        print(f'spec_sect = {spec_sect}')
         overlays = self.fields_spec.get(spec_sect)
+        print(f'overlays = {overlays}')
         overlay_fields = []
         if overlays is not None:
             for overlay, overlay_kwargs in overlays.items():
@@ -751,13 +764,18 @@ class MapFields():
                     var, lev = overlay.split('_')
                 else:
                     var, lev = overlay, self.main_field.level
+                print(f'var = {var}')
+                print(f'lev = {lev}')
 
                 # Make a copy of the main object, and change the
                 # attributes to match the overlay field
                 overlay_obj = copy.deepcopy(self.main_field)
                 overlay_obj.contour_kwargs = overlay_kwargs
+                print(f'overlay_obj.contour_kwargs = {overlay_obj.contour_kwargs}')
                 overlay_obj.short_name = var
+                print(f'overlay_obj.short_name = {overlay_obj.short_name}')
                 overlay_obj.level = lev
+                print(f'overlay_obj.level = {overlay_obj.level}')
 
                 overlay_fields.append(overlay_obj)
         return overlay_fields

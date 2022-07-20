@@ -101,6 +101,13 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
             mem = mem if mem < 8 else index - 2
 
         # Object to be plotted on the map in filled contours.
+        print(f'calling fieldData')
+        print(f'  fhr = {fhr}')
+        print(f'  filetype = {cla.file_type}')
+        print(f'  level = {level}')
+        print(f'  member = {mem}')
+        print(f'  model = {model}')
+        print(f'  short_name = {variable}')
         field = gribdata.fieldData(
             ds=ds,
             fhr=fhr,
@@ -117,14 +124,19 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
             print(f'Cannot find grib2 variable for {variable} at {level}. Skipping.')
             return
 
-
+        plsc = spec.get('plot_scatter')
+        print(f'before map_fields call, plot_scatter = {plsc}')
         map_fields = maps.MapFields(
             fields_spec=spec,
             main_field=field,
             map_type=cla.graphic_type,
             model=model,
+            plot_scatter=spec.get('plot_scatter', False),
             tile=tile,
             )
+        plot_scatter = map_fields.fields_spec.get('plot_scatter')
+        print(f'map_fields.fields_spec = {map_fields.fields_spec}')
+        print(f'after map_fields call, plot_scatter = {plot_scatter}')
 
         # Generate a map object
         m = maps.Map(
