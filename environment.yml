@@ -8,7 +8,7 @@ dependencies:
   - basemap-data-hires=1.2*
   - pynio=1.5.5
   - matplotlib=3.2*
-  - metpy=0.12.1
+  - metpy=0.12*
   - pylint=2.4*
   - pytest=6.1*
   - pyyaml=5.3*
