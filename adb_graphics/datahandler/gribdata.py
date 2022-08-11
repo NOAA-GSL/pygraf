@@ -288,7 +288,6 @@ class UPPData(specs.VarSpec):
         in the file. This should correspond to the grid tag. '''
 
         for var in self.ds.keys():
-            vsplit = var.split('_')
             for sub in var.split('_'):
                 if len(sub) == 4 and sub[0] == 'G':
                     return sub
@@ -345,6 +344,7 @@ class UPPData(specs.VarSpec):
 
         name = name if isinstance(name, list) else [name]
 
+        try_name = ''
         for try_name in name:
             try_name = try_name.format(fhr=self.fhr,
                                        grid=self.grid_suffix,
