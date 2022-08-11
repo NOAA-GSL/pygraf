@@ -479,12 +479,9 @@ def stage_zip_files(tiles, zip_dir):
     zipfiles = {}
     for tile in tiles:
         tile_zip_dir = os.path.join(zip_dir, tile)
-        tile_zip_file = os.path.join(tile_zip_dir, 'files.zip')
-        print(f"checking for {tile_zip_file}")
-        if os.path.isfile(tile_zip_file):
-            os.remove(tile_zip_file)
-            print(f"{tile_zip_file} found and removed")
         os.makedirs(tile_zip_dir, exist_ok=True)
+
+        tile_zip_file = os.path.join(tile_zip_dir, 'files.zip')
         zipfiles[tile] = tile_zip_file
     return zipfiles
 

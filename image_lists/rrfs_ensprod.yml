@@ -1,0 +1,29 @@
+hourly:
+  model: rrfse
+  variables:
+    acpcp:
+      - ens1
+      - ens24
+      - ens6
+    acpcpens1:
+      - 50.8mm
+      - 25.4mm
+      - 12.7mm
+    acpcpens24:
+      - 127.0mm
+      - 76.2mm
+      - 50.8mm
+      - 25.4mm
+    acpcpens3:
+      - 76.2mm
+      - 50.8mm
+      - 25.4mm
+      - 12.7mm
+    acpcpens6:
+      - 76.2mm
+      - 50.8mm
+      - 25.4mm
+    ffldro:
+      - ens24
+      - ens3
+      - ens6
