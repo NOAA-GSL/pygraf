@@ -292,6 +292,8 @@ class DataMap():
         ''' Main method for creating the plot. Set show=True to display the
         figure from the command line. '''
 
+        self.plot_scatter = self.field.vspec.get('plot_scatter', False)
+        print(f'in DMdraw, self.plot_scatter = {self.plot_scatter}')
         cf = self._draw_panel()
 
         # Draw colorbar
@@ -343,6 +345,12 @@ class DataMap():
         if annotate and 'global' not in self.map.model: # too dense in global
             self._draw_field_values(ax)
 
+        # Add scatter plot
+        plot_scatter = self.field.vspec.get('plot_scatter', False)
+        if plot_scatter:
+            self._draw_scatter(ax)
+
+
         return cf
 
     def _draw_contours(self, ax, not_labeled):
@@ -374,6 +382,35 @@ class DataMap():
                     print(f'Cannot add contour labels to map for {self.field.short_name} \
                             {self.field.level}')
 
+    def _draw_scatter(self, ax):
+
+        ''' Plot dots at locations on the map that meet a threshold. '''
+
+        field = self.field
+        levels = self.field.clevs
+        alpha_val = 0.5
+        vals = self.field.values()
+        colors = ['white','lightskyblue','darkblue','green','darkorange','indianred','firebrick']
+
+        ci = copy.copy(vals)
+        ci = np.full_like(ci, colors[0], dtype='object')
+        ci = np.where((vals > levels[0]) & (vals <= levels[1]), colors[1], ci)
+        ci = np.where((vals > levels[1]) & (vals <= levels[2]), colors[2], ci)
+        ci = np.where((vals > levels[2]) & (vals <= levels[3]), colors[3], ci)
+        ci = np.where((vals > levels[3]) & (vals <= levels[4]), colors[4], ci)
+        ci = np.where((vals > levels[4]) & (vals <= levels[5]), colors[5], ci)
+        ci = np.where(vals > levels[5], colors[6], ci)
+
+        lats, lons = field.latlons()
+
+        ci1d = np.ravel(ci)
+        sf = self._draw_field(ax=ax,
+                              field=field,
+                              alpha=alpha_val,
+                              c=ci1d,
+                              func=self.map.m.scatter,
+                              **field.contour_kwargs,
+                              )
 
     def _draw_field(self, ax, field, func, **kwargs):
 
@@ -395,6 +432,10 @@ class DataMap():
 
         x, y = self._xy_mesh(field)
         vals = field.values()
+        plot_scatter = self.field.vspec.get('plot_scatter', False)
+        print(f'in _draw_field, plot_scatter = {plot_scatter}')
+        if plot_scatter:
+            vals = np.full_like(vals, np.log10(vals) * 20, dtype='float')
 
         # For global lat-lon models, make 2D arrays for x and y
         # Shift the map and data if needed

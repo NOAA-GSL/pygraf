@@ -124,18 +124,18 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
             print(f'Cannot find grib2 variable for {variable} at {level}. Skipping.')
             return
 
-        plsc = spec.get('plot_scatter')
-        print(f'before map_fields call, plot_scatter = {plsc}')
+        # plsc = spec.get('plot_scatter')
+        # print(f'before map_fields call, plot_scatter = {plsc}')
         map_fields = maps.MapFields(
             fields_spec=spec,
             main_field=field,
             map_type=cla.graphic_type,
             model=model,
-            plot_scatter=spec.get('plot_scatter', False),
+            # plot_scatter=spec.get('plot_scatter', False),
             tile=tile,
             )
         plot_scatter = map_fields.fields_spec.get('plot_scatter')
-        print(f'map_fields.fields_spec = {map_fields.fields_spec}')
+        # print(f'map_fields.fields_spec = {map_fields.fields_spec}')
         print(f'after map_fields call, plot_scatter = {plot_scatter}')
 
         # Generate a map object
