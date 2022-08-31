@@ -502,7 +502,7 @@ flru: # Aviation Flight Rules
     clevs: [0.0, 1.0, 2.0, 3.0, 4.0]
     cmap: gist_ncar
     colors: flru_colors
-    ncl_name: HGT_P0_L215_GLC0
+    ncl_name: HGT_P0_L215_{grid}
     ticks: 1
     title: Aviation Flight Rules
     transform:
