@@ -288,9 +288,9 @@ class UPPData(specs.VarSpec):
         in the file. This should correspond to the grid tag. '''
 
         for var in self.ds.keys():
-            vsplit = var.split('_')
-            if len(vsplit) == 4:
-                return vsplit[-1]
+            for sub in var.split('_'):
+                if len(sub) == 4 and sub[0] == 'G':
+                    return sub
         return 'GRID NOT FOUND'
 
 
@@ -344,6 +344,7 @@ class UPPData(specs.VarSpec):
 
         name = name if isinstance(name, list) else [name]
 
+        try_name = ''
         for try_name in name:
             try_name = try_name.format(fhr=self.fhr,
                                        grid=self.grid_suffix,
@@ -356,7 +357,7 @@ class UPPData(specs.VarSpec):
             else:
                 return try_name
 
-        msg = f'Could not find any of {name} in input file'
+        msg = f'Could not find any of {try_name} in input file'
         raise errors.GribReadError(msg)
 
     def numeric_level(self, index_match=True, level=None, split=None):
