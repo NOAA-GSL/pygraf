@@ -22,6 +22,7 @@ jobs:
         uses: mamba-org/provision-with-micromamba@main
         with:
           environment-file: false
+          channel-priority: flexible
           cache-downloads: true
           cache-env: true
       - name: Install pygraf environment
