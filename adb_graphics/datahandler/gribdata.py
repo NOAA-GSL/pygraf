@@ -112,17 +112,24 @@ class UPPData(specs.VarSpec):
 
         return diff
 
-    def field_mean(self, values, variable, levels, **kwargs):
+    def field_mean(self, values, variable, levels, global_levels, **kwargs):
 
         # pylint: disable=unused-argument
 
         ''' Returns the mean of the values. '''
 
         fsum = np.zeros_like(values)
-        for level in levels:
-            val_lev = self.values(name=variable, level=level)
-            fsum = fsum + val_lev
-            val_lev.close()
+
+        if 'global' in self.model:
+            for level in global_levels:
+                val_lev = self.values(name=variable, level=level)
+                fsum = fsum + val_lev
+                val_lev.close()
+        else:
+            for level in levels:
+                val_lev = self.values(name=variable, level=level)
+                fsum = fsum + val_lev
+                val_lev.close()
 
         return fsum / len(levels)
 

@@ -440,7 +440,7 @@ ctop: # Cloud top height
     clevs: !!python/object/apply:numpy.arange [0, 61, 5]
     cmap: gist_ncar
     colors: ceil_colors
-    ncl_name: HGT_P0_L3_{grid}
+    ncl_name: HGT_P0_L3_{grid} 
     ticks: 0
     title: Cloud Top Height
     transform: conversions.m_to_kft
@@ -539,7 +539,7 @@ G124bt: # GOES-E Brightness temperature, infrared (Ch 4)
     title: GOES-E Brightness Temperature, Infrared
     unit: ch 4
 gh: # Geopotential height
-  250mb: &ua_gh
+  5mb: &ua_gh
     clevs: !!python/object/apply:numpy.arange [6, 1170, 6]
     cmap: precipitation
     colors: terrain_colors
@@ -549,6 +549,12 @@ gh: # Geopotential height
     ticks: 4
     transform: conversions.m_to_dm
     unit: dm
+  10mb:
+    <<: *ua_gh
+  20mb:
+    <<: *ua_gh
+  250mb:
+    <<: *ua_gh
   500mb:
     <<: *ua_gh
   700mb:
@@ -1001,6 +1007,7 @@ rh: # Relative Humidity
       kwargs:
         variable: rh
         levels: [500mb, 525mb, 550mb, 575mb, 600mb, 625mb, 650mb, 675mb, 700mb, 725mb, 750mb, 775mb, 800mb, 825mb, 850mb]
+        global_levels: [500mb, 550mb, 600mb, 650mb, 700mb, 750mb, 800mb, 850mb]
     vertical_index: 0 # Not used in mean computation, but is used to initialize new array for summing levels
     wind: 700mb
   pw: # RH wrt Precipitable Water
@@ -1364,11 +1371,14 @@ u:
     ncl_name: UGRD_P0_L103_{grid}
     transform: conversions.ms_to_kt
   80m: *agl_uwind
-  250mb: &ua_uwind
+  5mb: &ua_uwind
     ncl_name:
       prs: UGRD_P0_L100_{grid}
       nat: UGRD_P0_L105_{grid}
     transform: conversions.ms_to_kt
+  10mb: *ua_uwind
+  20mb: *ua_uwind
+  250mb: *ua_uwind
   500mb: *ua_uwind
   700mb: *ua_uwind
   850mb: *ua_uwind
@@ -1423,11 +1433,14 @@ v:
     ncl_name: VGRD_P0_L103_{grid}
     transform: conversions.ms_to_kt
   80m: *agl_wind
-  250mb: &ua_vwind
+  5mb: &ua_vwind
     ncl_name:
       prs: VGRD_P0_L100_{grid}
       nat: VGRD_P0_L105_{grid}
     transform: conversions.ms_to_kt
+  10mb: *ua_vwind
+  20mb: *ua_vwind
+  250mb: *ua_vwind
   500mb: *ua_vwind
   700mb: *ua_vwind
   850mb: *ua_vwind
@@ -1546,6 +1559,42 @@ wspeed: # Wind Speed
         field2: VGRD_P0_L103_{grid}
     unit: kt
     wind: True
+  5mb:
+    <<: *ua_wspeed
+    contours:
+      gh:
+        colors: white
+        linewidths: 1.2
+    ncl_name: UGRD_P0_L100_{grid}
+    title: 5mb Wind
+    transform:
+      funcs: [vector_magnitude, conversions.ms_to_kt]
+      kwargs:
+        field2: VGRD_P0_L100_{grid}
+  10mb:
+    <<: *ua_wspeed
+    contours:
+      gh:
+        colors: white
+        linewidths: 1.2
+    ncl_name: UGRD_P0_L100_{grid}
+    title: 10mb Wind
+    transform:
+      funcs: [vector_magnitude, conversions.ms_to_kt]
+      kwargs:
+        field2: VGRD_P0_L100_{grid}
+  20mb:
+    <<: *ua_wspeed
+    contours:
+      gh:
+        colors: white
+        linewidths: 1.2
+    ncl_name: UGRD_P0_L100_{grid}
+    title: 20mb Wind
+    transform:
+      funcs: [vector_magnitude, conversions.ms_to_kt]
+      kwargs:
+        field2: VGRD_P0_L100_{grid}
   250mb:
     <<: *ua_wspeed
     clevs: [20, 40, 60, 70, 80, 90, 100, 110, 120, 140, 160, 180, 200]
