@@ -398,13 +398,16 @@ class VarSpec(abc.ABC):
         VFR (Visual Flight Rules) -- greater than 5 miles
         '''
 
-        lifr = cm.get_cmap('RdPu_r', 20)(range(0, 11))
+        lifr = cm.get_cmap('RdPu_r', 20)(range(0, 10))
         ifr = cm.get_cmap('autumn', 30)(range(0, 30))
         mvfr = cm.get_cmap('Blues', 20)(range(10, 20))
         vfr1 = cm.get_cmap('YlGn_r', 60)(range(0, 50))
-        vfr2 = cm.get_cmap('Reds', 15)(np.full(51, 1))
+        vfr2 = cm.get_cmap('Greys', 20)(np.full(100, 9))
+        hi01 = cm.get_cmap('Greys', 20)(np.full(100, 6))
+        hi02 = cm.get_cmap('Greys', 20)(np.full(200, 3))
+        hi03 = cm.get_cmap('Greys', 20)(np.full(1, 0))
 
-        return np.concatenate((lifr, ifr, mvfr, vfr1, vfr2))
+        return np.concatenate((lifr, ifr, mvfr, vfr1, vfr2, hi01, hi02, hi03))
 
     @property
     def vvel_colors(self) -> np.ndarray:
