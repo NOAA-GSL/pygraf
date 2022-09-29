@@ -541,7 +541,7 @@ G124bt: # GOES-E Brightness temperature, infrared (Ch 4)
 gh: # Geopotential height
   5mb: &ua_gh
     clevs: !!python/object/apply:numpy.arange [6, 1170, 6]
-    cmap: precipitation
+    cmap: rainbow
     colors: terrain_colors
     ncl_name:
       prs: HGT_P0_L100_{grid}
@@ -557,6 +557,8 @@ gh: # Geopotential height
     <<: *ua_gh
   500mb:
     <<: *ua_gh
+    clevs: !!python/object/apply:numpy.arange [504, 601, 6]
+    ticks: 6
   700mb:
     <<: *ua_gh
     clevs: !!python/object/apply:numpy.arange [201, 373, 3]

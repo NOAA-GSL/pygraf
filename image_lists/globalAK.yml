@@ -1,5 +1,5 @@
 hourly:
-  model: global
+  model: globalAK
   variables:
     1ref:
       - 1000m
@@ -23,8 +23,8 @@ hourly:
       - sfc
     dewp:
       - 2m
-    # gh:
-      # - 500mb  # color table and intervals not good for global scale
+    gh:
+      - 500mb
     gust:
       - 10m
     hlcy:
