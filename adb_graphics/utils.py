@@ -115,6 +115,14 @@ def get_func(val: str):
     fun = getattr(module, fun_name)
     return fun
 
+def join_ranges(loader, node):
+
+    ''' merge two different ranges into a single array for color bar clevs. '''
+
+    return np.concatenate((np.arange(0, 10, 0.1), np.arange(10, 51, 1.0)), axis=0)
+
+
+yaml.add_constructor("!join_ranges", join_ranges, Loader=yaml.Loader)
 
 # pylint: disable=invalid-name, too-many-locals
 def label_line(ax, label, segment, **kwargs):
