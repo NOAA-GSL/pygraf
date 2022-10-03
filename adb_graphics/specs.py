@@ -398,7 +398,7 @@ class VarSpec(abc.ABC):
         VFR (Visual Flight Rules) -- greater than 5 miles
         '''
 
-        lifr = cm.get_cmap('RdPu_r', 20)(range(0, 10))
+        lifr = cm.get_cmap('RdPu_r', 20)(range(0, 11))
         ifr = cm.get_cmap('autumn', 30)(range(0, 30))
         mvfr = cm.get_cmap('Blues', 20)(range(10, 20))
         vfr1 = cm.get_cmap('YlGn_r', 60)(range(0, 50))
