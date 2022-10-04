@@ -382,8 +382,6 @@ class VarSpec(abc.ABC):
 
         ''' Default color map for Terrain '''
 
-        # ctable = ctables.colortables.get_colortable(self.vspec.get('cmap')) \
-                    # (range(0, 21, 1))
         ctable = ctables.colortables.get_colortable(self.vspec.get('cmap')) \
                     (range(54, 157, 6))
         return ctable

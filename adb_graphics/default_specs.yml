@@ -440,7 +440,7 @@ ctop: # Cloud top height
     clevs: !!python/object/apply:numpy.arange [0, 61, 5]
     cmap: gist_ncar
     colors: ceil_colors
-    ncl_name: HGT_P0_L3_{grid} 
+    ncl_name: HGT_P0_L3_{grid}
     ticks: 0
     title: Cloud Top Height
     transform: conversions.m_to_kft

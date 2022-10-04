@@ -532,7 +532,6 @@ class fieldData(UPPData):
         '''
 
         lat, lon = self.latlons()
-        print(f'self.model = {self.model}')
         if self.model in ['global', 'obs'] and self.model != 'globalAK':
             ret = [lat[-1], lat[0], lon[0], lon[-1]]
         else:
