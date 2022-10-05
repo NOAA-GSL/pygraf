@@ -121,12 +121,21 @@ def test_join_ranges_constructor():
     yaml.add_constructor('!join_ranges', utils.join_ranges, Loader=yaml.SafeLoader)
     yaml_str = '''
     foo: !join_ranges [[0, 15, 0.1], [20, 61, 20]]
+    foo2: !join_ranges [[0, 15, 0.1]]
+    foo3: !join_ranges [[0, 15, 0.1], [20, 40, 10], [40, 61, 20]]
     '''
     cfg = yaml.load(yaml_str, Loader=yaml.SafeLoader)
 
-    expected = np.concatenate((np.arange(0, 15, 0.1), np.arange(20, 61, 20)), axis=0)
+    expected = np.concatenate((np.arange(0, 15, 0.1),
+                               np.arange(20, 61, 20)), axis=0)
+    expected2 = np.arange(0, 15, 0.1)
+    expected3 = np.concatenate((np.arange(0, 15, 0.1),
+                                np.arange(20, 40, 10),
+                                np.arange(40, 61, 20)), axis=0)
 
     assert np.array_equal(expected, cfg['foo'])
+    assert np.array_equal(expected2, cfg['foo2'])
+    assert np.array_equal(expected3, cfg['foo3'])
 
 
 class TestDefaultSpecs():
