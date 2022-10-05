@@ -115,12 +115,32 @@ def get_func(val: str):
     fun = getattr(module, fun_name)
     return fun
 
+# pylint: disable=unused-argument
 def join_ranges(loader, node):
 
-    ''' merge two different ranges into a single array for color bar clevs. '''
+    '''
+    Merge two or more different ranges into a single array for color bar clevs.
 
-    return np.concatenate((np.arange(0, 10, 0.1), np.arange(10, 51, 1.0)), axis=0)
+    e.g.: in default_specs.yml, clevs for visibility can be assigned as
 
+        clevs: !join_ranges [[0, 10, 0.1], [10, 51, 1.0]]
+
+    The join_ranges method concatenates these ranges into a single array of levels.
+    This can be useful for plots where one part of the color ranges requires higher
+    resolution than the rest, while keeping the colorbar from looking squished.
+
+    Note that a "yaml.add_constructor" is required, as shown after the method.
+    '''
+
+    list_ = []
+    for seq_node in node.value:
+        range_args = []
+        for scalar_node in seq_node.value:
+            range_args.append(float(scalar_node.value))
+
+        list_.append(np.arange(*range_args))
+
+    return np.concatenate(list_, axis=0)
 
 yaml.add_constructor("!join_ranges", join_ranges, Loader=yaml.Loader)
 
