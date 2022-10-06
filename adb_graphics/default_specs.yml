@@ -1470,7 +1470,8 @@ vil: # Vertically Integrated Liquid
     title: Vertically Integrated Liquid
 vis: # Visibility
   sfc:
-    clevs: !!python/object/apply:numpy.arange [0., 15., 0.1]
+    # see the description provided in adb_graphics/utils.py, for the join_ranges method.
+    clevs: !join_ranges [[0, 10, 0.1], [10, 51, 1.0]]
     cmap: gist_ncar
     colors: vis_colors
     ncl_name: VIS_P0_L1_{grid}
