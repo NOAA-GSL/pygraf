@@ -396,6 +396,8 @@ class VarSpec(abc.ABC):
         IFR (Instrument Flight Rules) -- 1 mile to less than 3 miles
         MVFR (Marginal Visual Flight Rules) -- 3 to 5 miles
         VFR (Visual Flight Rules) -- greater than 5 miles
+
+        the gray range is arbitrary compared to the official flight levels
         '''
 
         lifr = cm.get_cmap('RdPu_r', 20)(range(0, 11))

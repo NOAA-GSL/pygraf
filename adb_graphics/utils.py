@@ -142,6 +142,7 @@ def join_ranges(loader, node):
 
     return np.concatenate(list_, axis=0)
 
+# SafeLoader doesn't seem compatible with our numpy contructors, using Loader here
 yaml.add_constructor("!join_ranges", join_ranges, Loader=yaml.Loader)
 
 # pylint: disable=invalid-name, too-many-locals
