@@ -1,6 +1,8 @@
 hourly:
   model: hrrr
   variables:
+    slw:
+      - sfc
     trc1:
       - 1000ft
       - 6000ft
