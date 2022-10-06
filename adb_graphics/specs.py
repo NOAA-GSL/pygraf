@@ -320,10 +320,11 @@ class VarSpec(abc.ABC):
 
         ''' Default color map for smoke plots. '''
 
-        blues = cm.get_cmap('Blues', 6)(range(5))
+        white = cm.get_cmap('Greys', 2)([0])
+        blues = cm.get_cmap('Blues', 6)(range(1, 5))
         green_yellow_red = cm.get_cmap('RdYlGn_r', 18)([1, 3, 5, 9, 12, 13, 14, 16, 18])
         purple = np.array([mpcolors.to_rgba('xkcd:vivid purple')])
-        return np.concatenate((blues, green_yellow_red, purple))
+        return np.concatenate((white, blues, green_yellow_red, purple))
 
 
     @property
