@@ -174,6 +174,25 @@ class VarSpec(abc.ABC):
         return np.concatenate((grays, ctable))
 
     @property
+    def icprb_colors(self) -> np.ndarray:
+
+        ''' Default color map for Icing Probability '''
+
+        grays = cm.get_cmap('Greys', 2)([0])
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          ([25, 35, 50, 60, 70, 80, 85, 90, 100])
+        return np.concatenate((grays, ncar))
+
+    def icsev_colors(self) -> np.ndarray:
+
+        ''' Default color map for Icing  Severity '''
+
+        white = cm.get_cmap('Greys', 2)([0])
+        blues = cm.get_cmap(self.vspec.get('cmap'), 9) \
+                          ([2, 3, 4, 6, 8])
+        return np.concatenate((white, blues))
+
+    @property
     def lcl_colors(self) -> np.ndarray:
 
         ''' Default color map for Lifted Condensation Level '''
