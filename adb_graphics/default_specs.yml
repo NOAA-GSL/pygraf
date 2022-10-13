@@ -826,9 +826,9 @@ pres:
     transform: conversions.pa_to_hpa
     unit: hPa
   msl:
-    clevs: !!python/object/apply:numpy.arange [650, 1051, 4]
-    cmap: gist_ncar
-    colors: ps_colors
+    clevs: !!python/object/apply:numpy.arange [976, 1051, 4]
+    cmap: Spectral_r
+    colors: pmsl_colors
     ncl_name:
       global: PRMSL_P0_L101_{grid}
       globalAK: PRMSL_P0_L101_{grid}
@@ -840,9 +840,10 @@ pres:
       hrrrcar: MSLMA_P0_L101_{grid}
       rap: MSLMA_P0_L101_{grid}
       rrfs: PRMSL_P0_L101_{grid}
-    ticks: 20
+    ticks: 0
     transform: conversions.pa_to_hpa
     unit: hPa
+    wind: 10m
   ua:
     ncl_name: PRES_P0_L105_{grid}
 ptmp: # Potential temperature
