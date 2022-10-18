@@ -120,18 +120,13 @@ class UPPData(specs.VarSpec):
 
         fsum = np.zeros_like(values)
 
-        if 'global' in self.model:
-            for level in global_levels:
-                val_lev = self.values(name=variable, level=level)
-                fsum = fsum + val_lev
-                val_lev.close()
-        else:
-            for level in levels:
-                val_lev = self.values(name=variable, level=level)
-                fsum = fsum + val_lev
-                val_lev.close()
+        chosen_levels = global_levels if 'global' in self.model else levels
+        for level in global_levels:
+            val_lev = self.values(name=variable, level=level)
+            fsum = fsum + val_lev
+            val_lev.close()
 
-        return fsum / len(levels)
+        return fsum / len(chosen_levels)
 
     def _get_data_levels(self, vertical_dim):
 
@@ -533,7 +528,7 @@ class fieldData(UPPData):
         '''
 
         lat, lon = self.latlons()
-        if self.model in ['global', 'obs'] and self.model != 'globalAK':
+        if self.model in ['global', 'obs']:
             ret = [lat[-1], lat[0], lon[0], lon[-1]]
         else:
             ret = [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]

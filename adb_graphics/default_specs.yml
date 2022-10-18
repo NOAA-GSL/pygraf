@@ -540,7 +540,7 @@ G124bt: # GOES-E Brightness temperature, infrared (Ch 4)
     unit: ch 4
 gh: # Geopotential height
   5mb: &ua_gh
-    clevs: !!python/object/apply:numpy.arange [6, 1170, 6]
+    clevs: !!python/object/apply:numpy.arange [6, 4680, 6]
     cmap: rainbow
     colors: terrain_colors
     ncl_name:
@@ -1562,8 +1562,10 @@ wspeed: # Wind Speed
         field2: VGRD_P0_L103_{grid}
     unit: kt
     wind: True
-  5mb:
-    <<: *ua_wspeed
+  5mb: &shaded_ua_wspeed
+    clevs: !!python/object/apply:numpy.arange [5, 95, 5]
+    cmap: gist_ncar
+    colors: wind_colors
     contours:
       gh:
         colors: white
@@ -1574,30 +1576,14 @@ wspeed: # Wind Speed
       funcs: [vector_magnitude, conversions.ms_to_kt]
       kwargs:
         field2: VGRD_P0_L100_{grid}
+    unit: kt
+    wind: True
   10mb:
-    <<: *ua_wspeed
-    contours:
-      gh:
-        colors: white
-        linewidths: 1.2
-    ncl_name: UGRD_P0_L100_{grid}
+    <<: *shaded_ua_wspeed
     title: 10mb Wind
-    transform:
-      funcs: [vector_magnitude, conversions.ms_to_kt]
-      kwargs:
-        field2: VGRD_P0_L100_{grid}
   20mb:
-    <<: *ua_wspeed
-    contours:
-      gh:
-        colors: white
-        linewidths: 1.2
-    ncl_name: UGRD_P0_L100_{grid}
+    <<: *shaded_ua_wspeed
     title: 20mb Wind
-    transform:
-      funcs: [vector_magnitude, conversions.ms_to_kt]
-      kwargs:
-        field2: VGRD_P0_L100_{grid}
   250mb:
     <<: *ua_wspeed
     clevs: [20, 40, 60, 70, 80, 90, 100, 110, 120, 140, 160, 180, 200]
