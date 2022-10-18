@@ -239,6 +239,16 @@ class VarSpec(abc.ABC):
         return np.concatenate((grays, ncar))
 
     @property
+    def pmsl_colors(self) -> np.ndarray:
+
+        ''' Default color map for Surface Pressure '''
+
+        ncolors = len(self.vspec.get('clevs'))
+        incr = 128 // ncolors
+        colors = cm.get_cmap(self.vspec.get('cmap'), 128)(range(incr, 128, incr))
+        return np.asarray(colors)
+
+    @property
     def ps_colors(self) -> np.ndarray:
 
         ''' Default color map for Surface Pressure '''
