@@ -740,6 +740,42 @@ icmr: # Ice Water Mixing Ratio
         - ICMR_P0_L105_{grid}
         - CIMIXR_P0_L105_{grid}
       prs: ICMR_P0_L100_{grid}
+icprb: # Icing Probability
+  500ft: &icprb
+    clevs: !!python/object/apply:numpy.arange [0.05, 0.86, 0.10]
+    cmap: gist_ncar
+    colors: icprb_colors
+    ncl_name: ICPRB_P0_L102_{grid}
+    ticks: 0.1
+    vertical_index: 0   # grib2 vertical levels are in meters,
+                        # so using index here to avoid errors from conversions
+  1000ft:
+    <<: *icprb
+    vertical_index: 1
+  9000ft:
+    <<: *icprb
+    vertical_index: 17
+  15000ft:
+    <<: *icprb
+    vertical_index: 29
+icsev: # Icing Severity
+  500ft: &icsev
+    clevs: [0.0, 0.5, 1.0, 2.0, 3.0]
+    cmap: Blues
+    colors: icsev_colors
+    ncl_name: ICSEV_P0_L102_{grid}
+    ticks: 0
+    vertical_index: 0   # grib2 vertical levels are in meters,
+                        # so using index here to avoid errors from conversions
+  1000ft:
+    <<: *icsev
+    vertical_index: 1
+  9000ft:
+    <<: *icsev
+    vertical_index: 17
+  15000ft:
+    <<: *icsev
+    vertical_index: 29
 lcl: # Lifted condensation level
   sfc: &lcl
     clevs: !!python/object/apply:numpy.arange [0, 5000, 250]
@@ -1059,6 +1095,24 @@ shtfl: # Sensible Heat Net Flux
     ticks: 0
     title: Sensible Heat Net Flux
     unit: W/m$^{2}$
+sipd: # Supercooled Large Droplet Icing
+  500ft: &sipd
+    clevs: [0, .10, .20, .30, .40, .50, .60, .70, .80, .90, 1.0, 1.1]
+    cmap: gist_ncar
+    colors: rainbow12_colors
+    ncl_name: SIPD_P0_L102_{grid}
+    ticks: 0.1
+    vertical_index: 0   # grib2 vertical levels are in meters,
+                        # so using index here to avoid errors from conversions
+  1000ft:
+    <<: *sipd
+    vertical_index: 1
+  9000ft:
+    <<: *sipd
+    vertical_index: 17
+  15000ft:
+    <<: *sipd
+    vertical_index: 29
 slw: # Supercooled Liquid Water
   sfc:
     clevs: [0.05, 0.1, 0.2, .3, .4, .5, .75, 1., 1.25, 1.5, 2., 3., 4., 5., 6.]
