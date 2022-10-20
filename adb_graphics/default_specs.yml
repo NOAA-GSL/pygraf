@@ -742,11 +742,13 @@ icmr: # Ice Water Mixing Ratio
       prs: ICMR_P0_L100_{grid}
 icprb: # Icing Probability
   500ft: &icprb
-    clevs: !!python/object/apply:numpy.arange [0.05, 0.86, 0.10]
+    clevs: !!python/object/apply:numpy.arange [5, 86, 10]
     cmap: gist_ncar
     colors: icprb_colors
     ncl_name: ICPRB_P0_L102_{grid}
-    ticks: 0.1
+    ticks: 10
+    transform: conversions.percent
+    unit: "%"
     vertical_index: 0   # grib2 vertical levels are in meters,
                         # so using index here to avoid errors from conversions
   1000ft:
@@ -1097,11 +1099,13 @@ shtfl: # Sensible Heat Net Flux
     unit: W/m$^{2}$
 sipd: # Supercooled Large Droplet Icing
   500ft: &sipd
-    clevs: [0, .10, .20, .30, .40, .50, .60, .70, .80, .90, 1.0, 1.1]
+    clevs: !!python/object/apply:numpy.arange [5, 86, 10]
     cmap: gist_ncar
-    colors: rainbow12_colors
+    colors: icprb_colors
     ncl_name: SIPD_P0_L102_{grid}
-    ticks: 0.1
+    ticks: 10
+    transform: conversions.percent
+    unit: "%"
     vertical_index: 0   # grib2 vertical levels are in meters,
                         # so using index here to avoid errors from conversions
   1000ft:
