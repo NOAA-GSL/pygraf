@@ -804,6 +804,7 @@ ltg3: # Lightning Threat (LTG1 ... LTG2)
     unit: flashes / km$^{2}$ / 5 min
 mfrp: # Fire radiative power
   sfc:
+    alpha: 0.5
     clevs: [0, 10, 25, 50, 100, 250]
     colors: fire_power_colors
     ncl_name: CFNSF_P0_L1_{grid}

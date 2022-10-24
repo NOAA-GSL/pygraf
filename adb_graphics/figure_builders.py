@@ -143,7 +143,6 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
             member=mem,
             model_name=cla.model_name,
             last_panel=last_panel,
-            plot_scatter=spec.get('plot_scatter', False),
             )
 
         # Draw the map

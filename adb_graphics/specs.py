@@ -111,9 +111,11 @@ class VarSpec(abc.ABC):
 
         ''' Default color map for fire power plot. '''
 
-        blues = cm.get_cmap('Blues', 3)(range(3))
-        green_orange = cm.get_cmap('RdYlGn_r', 10)([1, 7, 8, 9])
-        return np.concatenate((blues, green_orange))
+        # The scatter plot utility won't accept anything but named colors
+        colors = ['white', 'lightskyblue', 'darkblue', 'green', 'darkorange', \
+                  'indianred', 'firebrick']
+
+        return colors
 
     def flru_colors(self) -> np.ndarray:
 
