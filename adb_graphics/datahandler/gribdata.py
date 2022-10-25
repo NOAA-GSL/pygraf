@@ -1,4 +1,4 @@
-# pylint: disable=invalid-name,too-few-public-methods
+# pylint: disable=invalid-name,too-few-public-methods, too-many-lines
 
 '''
 Classes that handle the specifics of grib files from UPP.
@@ -113,6 +113,8 @@ class UPPData(specs.VarSpec):
         return diff
 
     def field_column_max(self, values, variable, **kwargs):
+
+        # pylint: disable=unused-argument
 
         ''' Returns the column max of the values. '''
 
