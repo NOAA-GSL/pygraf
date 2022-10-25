@@ -390,45 +390,13 @@ class DataMap():
         alpha = self.alpha
         vals = self.field.values()
 
-        # value_to_color = np.full_like(vals, colors[0], dtype='object')
-        # value_to_color = np.where((vals > levels[0]) & \
-        #     (vals <= levels[1]), colors[1], value_to_color)
-        # value_to_color = np.where((vals > levels[1]) & \
-        #     (vals <= levels[2]), colors[2], value_to_color)
-        # value_to_color = np.where((vals > levels[2]) & \
-        #     (vals <= levels[3]), colors[3], value_to_color)
-        # value_to_color = np.where((vals > levels[3]) & \
-        #     (vals <= levels[4]), colors[4], value_to_color)
-        # value_to_color = np.where((vals > levels[4]) & \
-        #     (vals <= levels[5]), colors[5], value_to_color)
-        # value_to_color = np.where(vals > levels[5], colors[6], value_to_color)
-
-        # value_to_color = np.full_like(vals, colors[0], dtype='object')
-        # for i, color in enumerate(colors):
-        #     print(f'i = {i}, color = {color}, len colors = {len(colors)}')
-        #     if (i == len(colors) - 1):
-        #         print(f'in leg 1')
-        #         # value_to_color = np.where(vals > levels[5], colors[6], \
-        #             # value_to_color)
-        #     else:
-        #         print(f'in leg 2')
-        #         # print(f'i = {i}, color = {color}')
-        #         # print(f'checking vals between levels {levels[i]} and {levels[i+1]}')
-        #         value_to_color = np.where(levels[i] < vals.all() <= levels[i+1], \
-        #             colors[i+1], value_to_color)
-
         value_to_color = np.full_like(vals, colors[0], dtype='object')
-        value_to_color = np.where((levels[0] < vals.any() <= levels[1]), \
-            colors[1], value_to_color)
-        value_to_color = np.where((levels[1] < vals.any() <= levels[2]), \
-            colors[2], value_to_color)
-        value_to_color = np.where((levels[2] < vals.any() <= levels[3]), \
-            colors[3], value_to_color)
-        value_to_color = np.where((levels[3] < vals.any() <= levels[4]), \
-            colors[4], value_to_color)
-        value_to_color = np.where((levels[4] < vals.any() <= levels[5]), \
-            colors[5], value_to_color)
-        # value_to_color = np.where(vals > levels[5], colors[6], value_to_color)
+        for i, level in enumerate(levels):
+            if (i != len(levels) - 1):
+                value_to_color = np.where((vals > levels[i]) & \
+                    (vals <= levels[i+1]), colors[i+1], value_to_color)
+            else:
+                value_to_color = np.where(vals > levels[i], colors[i+1], value_to_color)
 
         vtc1d = np.ravel(value_to_color)
         self._draw_field(ax=ax,
