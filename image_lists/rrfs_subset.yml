@@ -42,6 +42,9 @@ hourly:
       - ua
     dewp:
       - 2m
+    dust:
+      - int
+      - sfc
     echotop:
       - sfc
     firewx:
@@ -141,6 +144,9 @@ hourly:
       - 925mb
       - sfc
     totp:
+      - sfc
+    trc1:
+      - int
       - sfc
     ulwrf:
       - sfc
