@@ -112,6 +112,15 @@ class UPPData(specs.VarSpec):
 
         return diff
 
+    def field_column_max(self, variable, **kwargs):
+
+        ''' Returns the column max of the values. '''
+
+        icprb = self.values(name='sipd', level='1000ft', one_lev=False)
+        maxvals = icprb.max(axis=0)
+
+        return maxvals
+
     def field_mean(self, values, variable, levels, **kwargs):
 
         # pylint: disable=unused-argument

@@ -760,6 +760,12 @@ icprb: # Icing Probability
   15000ft:
     <<: *icprb
     vertical_index: 29
+  max:
+    <<: *icprb
+    transform:
+      funcs: field_column_max
+      kwargs:
+        variable2: icprb
 icsev: # Icing Severity
   500ft: &icsev
     clevs: [0.0, 0.5, 1.0, 2.0, 3.0]
@@ -778,6 +784,12 @@ icsev: # Icing Severity
   15000ft:
     <<: *icsev
     vertical_index: 29
+  max:
+    <<: *icsev
+    transform:
+      funcs: field_column_max
+      kwargs:
+        variable2: icsev
 lcl: # Lifted condensation level
   sfc: &lcl
     clevs: !!python/object/apply:numpy.arange [0, 5000, 250]
@@ -1117,6 +1129,9 @@ sipd: # Supercooled Large Droplet Icing
   15000ft:
     <<: *sipd
     vertical_index: 29
+  max:
+    <<: *sipd
+    transform: field_column_max
 slw: # Supercooled Liquid Water
   sfc:
     clevs: [0.05, 0.1, 0.2, .3, .4, .5, .75, 1., 1.25, 1.5, 2., 3., 4., 5., 6.]
