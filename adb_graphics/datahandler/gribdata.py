@@ -305,6 +305,16 @@ class UPPData(specs.VarSpec):
         return 'GRID NOT FOUND'
 
 
+    def icing_adjust_trace(self, values, **kwargs):
+
+        # pylint: disable=unused-argument
+
+        ''' Changes the value of ICSEV trace from 4.0 to 0.5, to maintain ascending order '''
+
+        vals = np.where(values == 4.0, 0.5, values)
+
+        return vals
+
     def latlons(self):
 
         ''' Returns the set of latitudes and longitudes '''

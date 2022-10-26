@@ -773,6 +773,7 @@ icsev: # Icing Severity
     colors: icsev_colors
     ncl_name: ICSEV_P0_L102_{grid}
     ticks: 0
+    transform: icing_adjust_trace
     vertical_index: 0   # grib2 vertical levels are in meters,
                         # so using index here to avoid errors from conversions
   1000ft:

@@ -398,10 +398,6 @@ class DataMap():
         x, y = self._xy_mesh(field)
         vals = field.values()
 
-        # this step is done to allow proper order of icing severity levels (trace before light)
-        if self.field.short_name == 'icsev':
-            vals = np.where(vals == 4.0, 0.5, vals)
-
         # For global lat-lon models, make 2D arrays for x and y
         # Shift the map and data if needed
         if self.map.model in ['global']:
