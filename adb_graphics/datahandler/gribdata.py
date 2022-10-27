@@ -659,10 +659,9 @@ class fieldData(UPPData):
 
         return grid_info
 
-    @staticmethod
-    def icing_adjust_trace(values, **kwargs):
+    def icing_adjust_trace(self, values, **kwargs):
 
-        # pylint: disable=unused-argument
+        # pylint: disable=unused-argument,no-self-use
 
         ''' Changes the value of ICSEV trace from 4.0 to 0.5, to maintain ascending order '''
 
