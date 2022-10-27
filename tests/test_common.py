@@ -287,12 +287,14 @@ class TestDefaultSpecs():
         # Check datahandler.gribdata objects if a single word is provided
         if len(func.split('.')) == 1:
 
-            funcs = []
+            # Check all the classes in the gribdata module
             for attr in dir(gribdata):
                 # pylint: disable=no-member
+                # Check the methods in each class
                 if func in dir(gribdata.__getattribute__(attr)):
-                    funcs.append(gribdata.__getattribute__(attr).__dict__.get(func))
-            return funcs
+                    method = gribdata.__getattribute__(attr).__dict__.get(func)
+                    if method is not None:
+                        return method
 
         if callable(utils.get_func(func)):
             return utils.get_func(func)
