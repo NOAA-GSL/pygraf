@@ -1,4 +1,4 @@
-# pylint: disable=invalid-name,too-few-public-methods, too-many-lines
+# pylint: disable=invalid-name,too-few-public-methods, too-many-public-methods, too-many-lines
 
 '''
 Classes that handle the specifics of grib files from UPP.
@@ -304,16 +304,6 @@ class UPPData(specs.VarSpec):
                     return sub
         return 'GRID NOT FOUND'
 
-
-    def icing_adjust_trace(self, values, **kwargs):
-
-        # pylint: disable=unused-argument
-
-        ''' Changes the value of ICSEV trace from 4.0 to 0.5, to maintain ascending order '''
-
-        vals = np.where(values == 4.0, 0.5, values)
-
-        return vals
 
     def latlons(self):
 
@@ -668,6 +658,17 @@ class fieldData(UPPData):
         del lat
 
         return grid_info
+
+    @staticmethod
+    def icing_adjust_trace(values, **kwargs):
+
+        # pylint: disable=unused-argument
+
+        ''' Changes the value of ICSEV trace from 4.0 to 0.5, to maintain ascending order '''
+
+        vals = np.where(values == 4.0, 0.5, values)
+
+        return vals
 
     def run_total(self, values, **kwargs):
 
