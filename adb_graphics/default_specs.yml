@@ -455,6 +455,26 @@ dewp: # Dew point temperature
     transform: conversions.k_to_f
     unit: F
     wind: 10m
+dust:
+  int:
+    clevs: [0.5, 1, 2, 3, 4, 6, 8, 10, 15, 20, 30, 50, 100, 200]
+    colors: smoke_colors
+    ncl_name: COLMD_P48_L200_{grid}_A62001
+    plot_airports: False
+    ticks: 0
+    title: Vertically Integrated Dust
+    transform: conversions.to_micro
+    unit: $mg/m^2$
+  sfc:
+    clevs: [0.5, 1, 2, 3, 4, 6, 8, 10, 12, 15, 20, 30, 50, 100]
+    colors: smoke_colors
+    ncl_name: MASSDEN_P48_L103_{grid}_A62001
+    plot_airports: False
+    title: Near-Surface Dust
+    transform: conversions.to_micrograms_per_m3
+    ticks: 0
+    unit: $\mu g/m^3$
+    wind: 10m
 echotop: # Echo Top
   sfc:
     clevs: !!python/object/apply:numpy.arange [4, 50, 3]
@@ -1338,7 +1358,10 @@ trc1:
   int:
     clevs: [1, 4, 7, 11, 15, 20, 25, 30, 40, 50, 75, 150, 250, 500]
     colors: smoke_colors
-    ncl_name: COLMD_P0_L200_{grid}
+    ncl_name:
+      hrrr:  COLMD_P0_L200_{grid}
+      rap:  COLMD_P0_L200_{grid}
+      rrfs: COLMD_P48_L200_{grid}_A62010
     plot_airports: False
     ticks: 0
     title: Vertically Integrated Smoke
@@ -1362,7 +1385,10 @@ trc1:
   sfc:
     clevs: [1, 2, 4, 6, 8, 12, 16, 20, 25, 30, 40, 60, 100, 200]
     colors: smoke_colors
-    ncl_name: MASSDEN_P0_L103_{grid}
+    ncl_name:
+      hrrr: MASSDEN_P0_L103_{grid}
+      rap: MASSDEN_P0_L103_{grid}
+      rrfs: MASSDEN_P48_L103_{grid}_A62010
     plot_airports: False
     title: Near-Surface Smoke
     transform: conversions.to_micrograms_per_m3
