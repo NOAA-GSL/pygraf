@@ -100,6 +100,17 @@ class UPPData(specs.VarSpec):
 
         return self._get_field(self.ncl_name(self.vspec))
 
+    def field_column_max(self, values, variable, level, **kwargs):
+
+        # pylint: disable=unused-argument
+
+        ''' Returns the column max of the values. '''
+
+        vals = self.values(name=variable, level=level, one_lev=False)
+        maxvals = vals.max(axis=0)
+
+        return maxvals
+
     def field_diff(self, values, variable2, level2, **kwargs):
 
         # pylint: disable=unused-argument
@@ -111,17 +122,6 @@ class UPPData(specs.VarSpec):
         value2.close()
 
         return diff
-
-    def field_column_max(self, values, variable, **kwargs):
-
-        # pylint: disable=unused-argument
-
-        ''' Returns the column max of the values. '''
-
-        vals = self.values(name=variable, level='1000ft', one_lev=False)
-        maxvals = vals.max(axis=0)
-
-        return maxvals
 
     def field_mean(self, values, variable, levels, **kwargs):
 

@@ -765,6 +765,7 @@ icprb: # Icing Probability
     transform: 
       funcs: field_column_max
       kwargs:
+        level: 1000ft
         variable: icprb
 icsev: # Icing Severity
   500ft: &icsev
@@ -790,6 +791,7 @@ icsev: # Icing Severity
     transform: 
       funcs: field_column_max
       kwargs:
+        level: 1000ft
         variable: icsev
 lcl: # Lifted condensation level
   sfc: &lcl
@@ -1043,6 +1045,13 @@ rh: # Relative Humidity
       pres_sfc:
         hatches: ['', '...']
         levels: [0, 850]
+  max:
+    <<: *rh
+    transform:
+      funcs: field_column_max
+      kwargs:
+        level: 700mb
+        variable: rh
   mean: # Mean RH 850mb to 500mb
     <<: *rh
     print_units: false
@@ -1135,6 +1144,7 @@ sipd: # Supercooled Large Droplet Icing
     transform: 
       funcs: field_column_max
       kwargs:
+        level: 1000ft
         variable: sipd
 slw: # Supercooled Liquid Water
   sfc:
