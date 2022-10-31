@@ -1,4 +1,4 @@
-# pylint: disable=invalid-name,too-few-public-methods
+# pylint: disable=invalid-name,too-few-public-methods,too-many-lines
 
 '''
 Classes that handle the specifics of grib files from UPP.
@@ -112,19 +112,21 @@ class UPPData(specs.VarSpec):
 
         return diff
 
-    def field_mean(self, values, variable, levels, **kwargs):
+    def field_mean(self, values, variable, levels, global_levels, **kwargs):
 
         # pylint: disable=unused-argument
 
         ''' Returns the mean of the values. '''
 
         fsum = np.zeros_like(values)
-        for level in levels:
+
+        chosen_levels = global_levels if 'global' in self.model else levels
+        for level in global_levels:
             val_lev = self.values(name=variable, level=level)
             fsum = fsum + val_lev
             val_lev.close()
 
-        return fsum / len(levels)
+        return fsum / len(chosen_levels)
 
     def _get_data_levels(self, vertical_dim):
 
@@ -288,9 +290,9 @@ class UPPData(specs.VarSpec):
         in the file. This should correspond to the grid tag. '''
 
         for var in self.ds.keys():
-            vsplit = var.split('_')
-            if len(vsplit) == 4:
-                return vsplit[-1]
+            for sub in var.split('_'):
+                if len(sub) == 4 and sub[0] == 'G':
+                    return sub
         return 'GRID NOT FOUND'
 
 
@@ -344,6 +346,7 @@ class UPPData(specs.VarSpec):
 
         name = name if isinstance(name, list) else [name]
 
+        try_name = ''
         for try_name in name:
             try_name = try_name.format(fhr=self.fhr,
                                        grid=self.grid_suffix,
@@ -356,7 +359,7 @@ class UPPData(specs.VarSpec):
             else:
                 return try_name
 
-        msg = f'Could not find any of {name} in input file'
+        msg = f'Could not find any of {try_name} in input file'
         raise errors.GribReadError(msg)
 
     def numeric_level(self, index_match=True, level=None, split=None):

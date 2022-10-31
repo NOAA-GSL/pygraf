@@ -241,6 +241,16 @@ class VarSpec(abc.ABC):
         return np.concatenate((grays, ncar))
 
     @property
+    def pmsl_colors(self) -> np.ndarray:
+
+        ''' Default color map for Surface Pressure '''
+
+        ncolors = len(self.vspec.get('clevs'))
+        incr = 128 // ncolors
+        colors = cm.get_cmap(self.vspec.get('cmap'), 128)(range(incr, 128, incr))
+        return np.asarray(colors)
+
+    @property
     def ps_colors(self) -> np.ndarray:
 
         ''' Default color map for Surface Pressure '''
@@ -322,10 +332,11 @@ class VarSpec(abc.ABC):
 
         ''' Default color map for smoke plots. '''
 
-        blues = cm.get_cmap('Blues', 6)(range(5))
+        white = cm.get_cmap('Greys', 2)([0])
+        blues = cm.get_cmap('Blues', 6)(range(1, 5))
         green_yellow_red = cm.get_cmap('RdYlGn_r', 18)([1, 3, 5, 9, 12, 13, 14, 16, 18])
         purple = np.array([mpcolors.to_rgba('xkcd:vivid purple')])
-        return np.concatenate((blues, green_yellow_red, purple))
+        return np.concatenate((white, blues, green_yellow_red, purple))
 
 
     @property
@@ -385,7 +396,7 @@ class VarSpec(abc.ABC):
         ''' Default color map for Terrain '''
 
         ctable = ctables.colortables.get_colortable(self.vspec.get('cmap')) \
-                    (range(0, 21, 1))
+                    (range(54, 157, 6))
         return ctable
 
     @property
@@ -398,15 +409,20 @@ class VarSpec(abc.ABC):
         IFR (Instrument Flight Rules) -- 1 mile to less than 3 miles
         MVFR (Marginal Visual Flight Rules) -- 3 to 5 miles
         VFR (Visual Flight Rules) -- greater than 5 miles
+
+        the gray range is arbitrary compared to the official flight levels
         '''
 
         lifr = cm.get_cmap('RdPu_r', 20)(range(0, 11))
         ifr = cm.get_cmap('autumn', 30)(range(0, 30))
         mvfr = cm.get_cmap('Blues', 20)(range(10, 20))
         vfr1 = cm.get_cmap('YlGn_r', 60)(range(0, 50))
-        vfr2 = cm.get_cmap('Reds', 15)(np.full(51, 1))
+        vfr2 = cm.get_cmap('Greys', 25)(np.full(10, 9))
+        hi01 = cm.get_cmap('Greys', 25)(np.full(10, 6))
+        hi02 = cm.get_cmap('Greys', 25)(np.full(20, 3))
+        hi03 = cm.get_cmap('Greys', 25)(np.full(1, 0))
 
-        return np.concatenate((lifr, ifr, mvfr, vfr1, vfr2))
+        return np.concatenate((lifr, ifr, mvfr, vfr1, vfr2, hi01, hi02, hi03))
 
     @property
     def vvel_colors(self) -> np.ndarray:
