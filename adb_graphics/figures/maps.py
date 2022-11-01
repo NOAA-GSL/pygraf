@@ -391,8 +391,9 @@ class DataMap():
         vals = self.field.values()
 
         value_to_color = np.full_like(vals, colors[0], dtype='object')
-        for i, level in enumerate(levels):
-            if (i != len(levels) - 1):
+        num_levels = len(levels)
+        for i in range(num_levels):
+            if i != num_levels - 1:
                 value_to_color = np.where((vals > levels[i]) & \
                     (vals <= levels[i+1]), colors[i+1], value_to_color)
             else:
