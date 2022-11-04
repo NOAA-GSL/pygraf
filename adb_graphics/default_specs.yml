@@ -1360,6 +1360,7 @@ trc1:
     colors: smoke_colors
     ncl_name:
       hrrr:  COLMD_P0_L200_{grid}
+      hrrrcar:  COLMD_P0_L200_{grid}
       rap:  COLMD_P0_L200_{grid}
       rrfs: COLMD_P48_L200_{grid}_A62010
     plot_airports: False
@@ -1387,6 +1388,7 @@ trc1:
     colors: smoke_colors
     ncl_name:
       hrrr: MASSDEN_P0_L103_{grid}
+      hrrrcar: MASSDEN_P0_L103_{grid}
       rap: MASSDEN_P0_L103_{grid}
       rrfs: MASSDEN_P48_L103_{grid}_A62010
     plot_airports: False
