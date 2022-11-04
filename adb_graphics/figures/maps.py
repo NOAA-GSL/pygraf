@@ -105,7 +105,6 @@ class Map():
         self.grid_info = kwargs.get('grid_info', {})
         self.model = kwargs.get('model')
         self.plot_airports = kwargs.get('plot_airports', True)
-        self.alpha = kwargs.get('alpha')
         self.tile = kwargs.get('tile', 'full')
         self.airports = self.load_airports(airport_fn)
 
@@ -240,7 +239,6 @@ class DataMap():
         self.map = map_
         self.model_name = model_name
         self.plot_scatter = map_fields.fields_spec.get('plot_scatter', False)
-        self.alpha = map_fields.fields_spec.get('alpha', 1.0)
 
     @staticmethod
     def add_logo(ax):
@@ -387,7 +385,6 @@ class DataMap():
         field = self.field
         levels = self.field.clevs
         colors = self.field.colors
-        alpha = self.alpha
         vals = self.field.values()
 
         value_to_color = np.full_like(vals, colors[0], dtype='object')
@@ -402,7 +399,7 @@ class DataMap():
         vtc1d = np.ravel(value_to_color)
         self._draw_field(ax=ax,
                          field=field,
-                         alpha=alpha,
+                         alpha=1.0,
                          c=vtc1d,
                          func=self.map.m.scatter,
                          **field.contour_kwargs,

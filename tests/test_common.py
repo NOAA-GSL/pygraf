@@ -155,7 +155,6 @@ class TestDefaultSpecs():
 
         return {
             'accumulate': self.is_bool,
-            'alpha': self.is_number,
             'annotate': self.is_bool,
             'annotate_decimal': self.is_int,
             'clevs': self.is_a_clev,
