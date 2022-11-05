@@ -457,7 +457,7 @@ dewp: # Dew point temperature
     wind: 10m
 dust:
   int:
-    clevs: [0.5, 1, 2, 3, 4, 6, 8, 10, 15, 20, 30, 50, 100, 200]
+    clevs: [1, 2, 3, 4, 6, 8, 10, 15, 20, 30, 50, 75, 110, 150]
     colors: smoke_colors
     ncl_name: COLMD_P48_L200_{grid}_A62001
     plot_airports: False
@@ -466,7 +466,7 @@ dust:
     transform: conversions.to_micro
     unit: $mg/m^2$
   sfc:
-    clevs: [0.5, 1, 2, 3, 4, 6, 8, 10, 12, 15, 20, 30, 50, 100]
+    clevs: [1, 2, 3, 4, 6, 8, 10, 12, 15, 20, 30, 50, 75, 100]
     colors: smoke_colors
     ncl_name: MASSDEN_P48_L103_{grid}_A62001
     plot_airports: False
@@ -509,9 +509,9 @@ ffldro: # Ensemble flash flood runoff
     title: Prob of 6-hr Precip > RFC flash flood guidance w/in 40 km
 firewx: # Fire Weather Index
   sfc:
-    clevs: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 100]
+    clevs: [10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 100]
     cmap: gist_ncar
-    colors: rainbow12_colors
+    colors: rainbow11_colors
     ncl_name: VGTYP_P0_L1_{grid} # choosing one of the un-transformed values in the algorithm
     ticks: 0
     title: Hourly Wildfire Potential
