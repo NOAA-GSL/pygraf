@@ -299,6 +299,16 @@ class VarSpec(abc.ABC):
         return np.concatenate((ncar, grays))
 
     @property
+    def rainbow11_colors(self) -> np.ndarray:
+
+        ''' Default color map for Hourly Wildfire Potential '''
+
+        grays = cm.get_cmap('Greys', 2)([0])
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          ([18, 20, 25, 50, 60, 70, 80, 85, 90, 100, 120])
+        return np.concatenate((grays, ncar))
+
+    @property
     def rainbow12_colors(self) -> np.ndarray:
 
         ''' Default color map for ACPCP, ACSNOD, HLCY, RH, and SNOD '''
