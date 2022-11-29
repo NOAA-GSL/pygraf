@@ -840,6 +840,17 @@ mfrp: # Fire radiative power
     ticks: 0
     title: Fire Radiative Power
     unit: MW
+emissions: # Smoke emissions
+  sfc:
+    clevs: [0, 10, 25, 50, 100, 250]
+    colors: fire_power_colors
+    ncl_name: AEMFLX_P48_L1_{grid}_A62010
+    plot_airports: False
+    plot_scatter: True
+    ticks: 0
+    title: Fire Radiative Power
+    transform: conversions.to_micrograms_per_m3
+    unit: $\mu g/m^3$
 mref: # Maximum reflectivity for past hour at 1 km AGL
   sfc:
     <<: *refl
