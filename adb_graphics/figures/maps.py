@@ -392,7 +392,7 @@ class DataMap():
         '''
 
         x, y = self._xy_mesh(field)
-        vals = field.values
+        vals = field.data
 
         # For global lat-lon models, make 2D arrays for x and y
         # Shift the map and data if needed
@@ -423,7 +423,7 @@ class DataMap():
         lats = self.map.airports[:, 0]
         lons = 360 + self.map.airports[:, 1]
         x, y = self.map.m(lons, lats)
-        data_values = self.field.values
+        data_values = self.field.data
         crnrs = copy.copy(self.map.corners)
         if crnrs[2] < 0:
             crnrs[2] = 360 + crnrs[2]
@@ -645,8 +645,8 @@ class DiffMap(DataMap):
     def _eq_contours(self):
         ''' Center the contours based on the data min/max '''
 
-        minval = np.amin(self.field.values)
-        maxval = np.amax(self.field.values)
+        minval = np.amin(self.field.data)
+        maxval = np.amax(self.field.data)
         if minval == maxval == 0:
             return np.array([-1, 0, 1])
         maxval = max(abs(minval), abs(maxval))

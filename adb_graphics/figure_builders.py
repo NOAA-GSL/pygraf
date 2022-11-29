@@ -140,7 +140,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
                        '2nd set of files. Skipping.'))
                 return
 
-            field.values = field.values() - field2.values()
+            field.data = field.values() - field2.values()
 
 
         map_fields = maps.MapFields(
