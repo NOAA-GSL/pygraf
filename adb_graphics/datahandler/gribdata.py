@@ -724,6 +724,8 @@ class fieldData(UPPData):
 
     @property
     def data(self):
+        ''' Sets the data property on the object for use when we need to update
+        the values associated with a given object -- helpful for differences.'''
         if not hasattr(self, '_data'):
             return self.values()
         return self._data
