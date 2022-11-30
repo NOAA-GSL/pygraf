@@ -13,10 +13,13 @@ supported.
 Plotting values from two different models (e.g. HRRR and RRFS) is not tested,
 and not supported at this time. Try at your own risk.
 
+Be careful with the differences of vector fields and categorical fields. Those
+will not likely be valid answers. The plotted value is the result of a simple
+difference between two numerical fields.
 
 # Getting Started
 
-Please see README.md for more detailed information on setting up the environment
+Please see `README.md` for more detailed information on setting up the environment
 for pygraf and running create_graphics.py
 
 
@@ -28,7 +31,7 @@ for pygraf and running create_graphics.py
 
 The real-time graphics produce more than 100 maps for each model at each
 forecast lead time. The list of maps is configured in the pygraf subdirectory
-image_lists/ where you will find a set of yaml files for a variety of supported
+`image_lists/` where you will find a set of yaml files for a variety of supported
 NWP systems run at GSL.
 
 Start with the one that matches the model you'd like to plot, and remove or
@@ -96,3 +99,13 @@ python -u create_graphics.py \
          -s 2021052315 \
          --tiles full,ATL,CA-NV,CentralCA
 ```
+
+
+To set your own min/max levels for contours, here's a bit of a hack...
+
+- Open your copy of `pygraf/adb_graphics/figures/maps.py` for editing.
+- Find the `_eq_contours` method.
+- Set `minval` and `maxval` to your desired values.
+
+
+
