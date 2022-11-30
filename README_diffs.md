@@ -24,7 +24,7 @@ for pygraf and running create_graphics.py
 
 ### Create difference maps
 
-#### Configure the list of feilds
+#### Configure the list of fields
 
 The real-time graphics produce more than 100 maps for each model at each
 forecast lead time. The list of maps is configured in the pygraf subdirectory
@@ -96,10 +96,3 @@ python -u create_graphics.py \
          -s 2021052315 \
          --tiles full,ATL,CA-NV,CentralCA
 ```
-
-
-
-
-
-
-- 
