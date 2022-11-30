@@ -290,9 +290,9 @@ class UPPData(specs.VarSpec):
         in the file. This should correspond to the grid tag. '''
 
         for var in self.ds.keys():
-            for sub in var.split('_'):
-                if len(sub) == 4 and sub[0] == 'G':
-                    return sub
+            vsplit = var.split('_')
+            if len(vsplit) == 4:
+                return vsplit[-1]
         return 'GRID NOT FOUND'
 
 
