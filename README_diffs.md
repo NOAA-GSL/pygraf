@@ -48,7 +48,7 @@ See a full list of command line arguments by running the following command:
 python create_graphics.py -h
 ```
 
-Please see the README.md for an example of a Slurm batch script for running
+Please see the `README.md` for an example of a Slurm batch script for running
 pygraf in a batch job (recommended for large sets of graphics).
 
 
