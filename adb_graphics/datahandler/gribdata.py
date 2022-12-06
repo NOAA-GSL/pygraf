@@ -290,9 +290,9 @@ class UPPData(specs.VarSpec):
         in the file. This should correspond to the grid tag. '''
 
         for var in self.ds.keys():
-            for sub in var.split('_'):
-                if len(sub) == 4 and sub[0] == 'G':
-                    return sub
+            vsplit = var.split('_')
+            if len(vsplit) == 4:
+                return vsplit[-1]
         return 'GRID NOT FOUND'
 
 
@@ -721,6 +721,18 @@ class fieldData(UPPData):
         specified in the yaml file, returns the value set in the Grib file. '''
 
         return self.vspec.get('unit', self.field.units)
+
+    @property
+    def data(self):
+        ''' Sets the data property on the object for use when we need to update
+        the values associated with a given object -- helpful for differences.'''
+        if not hasattr(self, '_data'):
+            return self.values()
+        return self._data
+
+    @data.setter
+    def data(self, value):
+        self._data = value
 
     def values(self, level=None, name=None, **kwargs):
 

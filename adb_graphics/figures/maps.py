@@ -59,6 +59,7 @@ TILE_DEFS = {
     'GreatLakes': {'corners': [37, 50, -96, -70], 'stride': 10, 'length': 4},
     'HI': {'corners': [16.6, 24.6, -157.6, -157.5], 'stride': 1, 'length': 4},
     'Juneau': {'corners': [55.741, 59.629, -140.247, -129.274], 'stride': 4, 'length': 4},
+    'NW-large': {'corners': [29.5787, 52.6127, -121.666, -96.5617], 'stride': 4, 'length': 4},
     'NYC-BOS': {'corners': [39, 43.5, -77, -66.5], 'stride': 4, 'length': 4},
     'PuertoRico': {'corners': [15.5257, 24.0976, -74.6703, -61.848], 'stride': 10, 'length': 5},
     'SEA-POR': {'corners': [43, 50, -125, -119], 'stride': 4, 'length': 4},
@@ -423,7 +424,7 @@ class DataMap():
         '''
 
         x, y = self._xy_mesh(field)
-        vals = field.values()
+        vals = field.data
 
         # Scatter plot dots are sized by value. Doing this here alters the size
         # without altering the colors.
@@ -459,7 +460,7 @@ class DataMap():
         lats = self.map.airports[:, 0]
         lons = 360 + self.map.airports[:, 1]
         x, y = self.map.m(lons, lats)
-        data_values = self.field.values()
+        data_values = self.field.data
         crnrs = copy.copy(self.map.corners)
         if crnrs[2] < 0:
             crnrs[2] = 360 + crnrs[2]
@@ -637,6 +638,86 @@ class DataMap():
 
         adjust = 360 if np.any(lon < 0) else 0
         return self.map.m(adjust + lon, lat)
+
+class DiffMap(DataMap):
+    '''
+    Extends DataMap for handling difference plots, which need different titles,
+    and will not plot overlays and such.
+    '''
+
+    def _colorbar(self, cc, ax):
+
+        ''' Set the colorbar for a difference field. '''
+
+        plt.colorbar(
+            cc,
+            ax=ax,
+            orientation='horizontal',
+            pad=0.02,
+            shrink=1.0,
+            )
+
+    def _draw_panel(self, wind_barbs=False):
+
+        ''' Draw a map of the difference field. '''
+
+        ax = self.map.ax
+
+        # Draw a map and add the shaded field
+        self.map.draw()
+
+        # The number of levels (nlev) here, should be the same number as is used
+        # in the linspace call in self._eq_contours. 21 seems reasonable, but is
+        # arbitrary.
+        colors = self.field.centered_diff(cmap='Spectral_r', nlev=21)
+        cf = self._draw_field(ax=ax,
+                              colors=colors,
+                              extend='both',
+                              field=self.field,
+                              func=self.map.m.contourf,
+                              levels=self._eq_contours(),
+                              )
+        return cf
+
+    def _eq_contours(self):
+        ''' Center the contours based on the data min/max '''
+
+        minval = np.amin(self.field.data)
+        maxval = np.amax(self.field.data)
+        if minval == maxval == 0:
+            return np.array([-1, 0, 1])
+        maxval = max(abs(minval), abs(maxval))
+        return np.linspace(-maxval, maxval, 21)
+
+    def _title(self):
+        ''' Draw the title for a map. '''
+
+        f = self.field
+        atime = f.date_to_str(f.anl_dt)
+        vtime = f.date_to_str(f.valid_dt)
+
+        # Analysis time (top) and forecast hour with Valid Time (bottom) on the left
+        plt.title(f"{self.model_name}: {atime}\nFcst Hr: {f.fhr}, Valid Time {vtime}",
+                  alpha=None,
+                  fontsize=14,
+                  loc='left',
+                  )
+
+        level, lev_unit = f.numeric_level(index_match=False)
+        if f.vspec.get('print_units', True):
+            units = f'({f.units}, shaded)'
+        else:
+            units = f''
+
+        # Title or Atmospheric level and unit in the high center
+        if f.vspec.get('title'):
+            title = f"Diff: {f.vspec.get('title')} {units}"
+        else:
+            level = level if not isinstance(level, list) else level[0]
+            title = f'Diff: {level} {lev_unit} {f.field.long_name} {units}'
+        plt.title(f"{title}", position=(0.5, 1.08), fontsize=18)
+
+
 
 class MultiPanelDataMap(DataMap):
     '''

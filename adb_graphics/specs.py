@@ -26,15 +26,19 @@ class VarSpec(abc.ABC):
         with open(config, 'r') as cfg:
             self.yml = yaml.load(cfg, Loader=yaml.Loader)
 
-    def centered_diff(self):
+    def centered_diff(self, cmap=None, nlev=None):
 
         ''' Returns the colors specified by levels and cmap in default spec, but
         with white center. '''
 
-        clevs = self.vspec.get('clevs')
-        nlev = len(clevs) + 1
+        if nlev is None:
+            clevs = self.vspec.get('clevs')
+            nlev = len(clevs) + 1
 
-        colors = cm.get_cmap(self.vspec.get('cmap'), nlev)(range(nlev))
+        if cmap is None:
+            cmap = self.vspec.get('cmap')
+
+        colors = cm.get_cmap(cmap, nlev)(range(nlev))
         mid = nlev // 2
 
         colors[mid] = [1, 1, 1, 1]
@@ -299,6 +303,16 @@ class VarSpec(abc.ABC):
                             (range(0, 40))
         grays = cm.get_cmap('Greys', 100)(range(10, 100))
         return np.concatenate((ncar, grays))
+
+    @property
+    def rainbow11_colors(self) -> np.ndarray:
+
+        ''' Default color map for Hourly Wildfire Potential '''
+
+        grays = cm.get_cmap('Greys', 2)([0])
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          ([18, 20, 25, 50, 60, 70, 80, 85, 90, 100, 120])
+        return np.concatenate((grays, ncar))
 
     @property
     def rainbow12_colors(self) -> np.ndarray:

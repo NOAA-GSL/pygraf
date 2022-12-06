@@ -127,6 +127,7 @@ that looks like this, and is submitted from the pygraf directory:
 
 source pre.sh
 
+set -x
 python create_graphics.py \
          maps \
          --all_leads \

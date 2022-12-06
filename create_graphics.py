@@ -35,11 +35,16 @@ TMP_FN = 'combined_{fhr:03d}_{uniq}.tmp.grib2'
 
 LOG_BREAK = f"{('-' * 80)}\n{('-' * 80)}"
 
-def check_file(cla, fhr, mem=None):
+def check_file(cla, fhr, data_root=None, file_tmpl=None, mem=None):
     ''' Given the command line arguments, the forecast hour, and a potential
     ensemble member, build a full path to the file and ensure it exists. '''
 
-    grib_path = os.path.join(cla.data_root[0], cla.file_tmpl[0])
+    if data_root is None:
+        data_root = cla.data_root[0]
+    if file_tmpl is None:
+        file_tmpl = cla.file_tmpl[0]
+
+    grib_path = os.path.join(data_root, file_tmpl)
     if mem is not None:
         grib_path = grib_path.format(FCST_TIME=fhr, mem=mem)
     else:
@@ -64,11 +69,10 @@ def create_skewt(cla, fhr, grib_path, workdir):
     with Pool(processes=cla.nprocs) as pool:
         pool.starmap(parallel_skewt, args)
 
-def create_maps(cla, fhr, gribfiles, workdir):
+def create_maps(cla, fhr, grib_contents, workdir, grib_contents2=None):
 
     ''' Generate arguments for parallel processing of plan-view maps and
     generate a pool of workers to complete the task. '''
-
 
     model = cla.images[0]
     for tile in cla.tiles:
@@ -83,8 +87,8 @@ def create_maps(cla, fhr, gribfiles, workdir):
                     msg = f'graphics: {variable} {level}'
                     raise errors.NoGraphicsDefinitionForVariable(msg)
 
-                args.append((cla, fhr, gribfiles.contents, level, model, spec,
-                             variable, workdir, tile))
+                args.append((cla, fhr, grib_contents, level, model, spec,
+                             variable, workdir, tile, grib_contents2))
 
         print(f'Queueing {len(args)} maps')
         with Pool(processes=cla.nprocs) as pool:
@@ -178,7 +182,7 @@ def parse_args():
     # Positional argument
     parser.add_argument(
         'graphic_type',
-        choices=['maps', 'skewts', 'enspanel'],
+        choices=['maps', 'skewts', 'enspanel', 'diff'],
         help='The type of graphics to create.',
         )
 
@@ -332,19 +336,33 @@ def parse_args():
         )
 
     # Ensemble panel-specific args
-    map_group = parser.add_argument_group('Ensemble Panel Arguments')
-    map_group.add_argument(
+    ens_group = parser.add_argument_group('Ensemble Panel Arguments')
+    ens_group.add_argument(
         '--ens_size',
         default=10,
         help='Number of ensemble members.',
         type=int,
+        )
+
+    # Diff args
+    diff_group = parser.add_argument_group('Difference Maps Arguments')
+    diff_group.add_argument(
+        '--data_root2',
+        help='Cycle-independant data directory location. The order of the ' \
+        'difference will be generated in order: data_root - data_root2.',
+        )
+    diff_group.add_argument(
+        '--file_tmpl2',
+        default='wrfnat_hrconus_{FCST_TIME:02d}.grib2',
+        help='File naming convention for second set of files used in \
+        difference maps. Use FCST_TIME to indicate forecast hour.',
         )
     return parser.parse_args()
 
 def pre_proc_grib_files(cla, fhr):
 
     ''' Use the command line argument object (cla) to determine the grib file
-    loaction at a given forecast hour. If multiple data input paths and file
+    location at a given forecast hour. If multiple data input paths and file
     templates are provided by user, concatenate the files and remove the
     duplicates. Return the file path of the file to be used by the graphics data
     handler, and whether the file is old enough. Files making it through the
@@ -518,6 +536,7 @@ def graphics_driver(cla):
     timer_end = time.time()
 
     gribfiles = None
+    gribfiles2 = None
 
     # When accummulating variables for preparing a single lead time,
     # load all of those into gribfiles up front.
@@ -554,6 +573,7 @@ def graphics_driver(cla):
                         grib_paths.append(mem_path)
                     old_enough = len(grib_paths) == cla.ens_size
             else:
+                # Only checks existence/age of base file for diffs
                 grib_path, old_enough = pre_proc_grib_files(cla, fhr)
 
             # UPP is most likely done writing if it hasn't written in data_age
@@ -596,7 +616,22 @@ def graphics_driver(cla):
                 gribfiles = gather_gribfiles(cla, fhr, grib_path, gribfiles)
                 create_maps(cla,
                             fhr=fhr,
-                            gribfiles=gribfiles,
+                            grib_contents=gribfiles.contents,
+                            workdir=workdir,
+                            )
+            elif cla.graphic_type == 'diff':
+                gribfiles = gather_gribfiles(cla, fhr, grib_path, gribfiles)
+                grib_path2, _ = check_file(
+                    cla,
+                    fhr,
+                    data_root=cla.data_root2,
+                    file_tmpl=cla.file_tmpl2,)
+                gribfiles2 = gather_gribfiles(cla, fhr, grib_path2, gribfiles2)
+
+                create_maps(cla,
+                            fhr=fhr,
+                            grib_contents=gribfiles.contents,
+                            grib_contents2=gribfiles2.contents,
                             workdir=workdir,
                             )
             else:
@@ -608,7 +643,7 @@ def graphics_driver(cla):
                     )
                 create_maps(cla,
                             fhr=fhr,
-                            gribfiles=gribfiles,
+                            grib_contents=gribfiles.contents,
                             workdir=workdir,
                             )
 
@@ -643,8 +678,7 @@ if __name__ == '__main__':
 
     # Check that the same number of entries exists in -d and --file_tmpl
     if len(CLARGS.data_root) != len(CLARGS.file_tmpl):
-        errmsg = 'Must specify the same number of arguments for -d and --file_tmpl'
-        print(errmsg)
+        print('Must specify the same number of arguments for -d and --file_tmpl')
         raise argparse.ArgumentError
 
     # Ensure wgrib command is available in environment before getting too far
@@ -652,16 +686,27 @@ if __name__ == '__main__':
     if len(CLARGS.data_root) > 1:
         retcode = subprocess.run('which wgrib2', shell=True, check=True)
         if retcode.returncode != 0:
-            errmsg = 'Could not find wgrib2, please make sure it is loaded \n \
+            errmsg = 'Could not find wgrib2, please make sure it is loaded \
             in your environment.'
             raise OSError(errmsg)
 
     # Only need to load the default in memory if we're making maps.
-    if CLARGS.graphic_type in ['maps', 'enspanel']:
+    if CLARGS.graphic_type in ['maps', 'enspanel', 'diff']:
         CLARGS.specs = utils.load_specs(CLARGS.specs)
 
         CLARGS.images = load_images(CLARGS.images)
         CLARGS.tiles = generate_tile_list(CLARGS.tiles)
+
+    # Make sure the second data root is provided when doint diffs
+    if CLARGS.graphic_type == 'diff':
+        if not CLARGS.data_root2:
+            errmsg = "Must specify a second data root for creating difference maps"
+            print(errmsg)
+            raise argparse.ArgumentError
+        if CLARGS.all_leads:
+            warning = ("Warning! Plotting differences in graphics-accumulated ",
+                       "fields is not supported!")
+            print(warning)
 
     print(f"Running script for {CLARGS.graphic_type} with args: ",
           f"{LOG_BREAK}")
