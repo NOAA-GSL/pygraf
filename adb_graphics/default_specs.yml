@@ -334,7 +334,7 @@ ceil: # Ceiling
 ceilexp: # Ceiling - experimental
   ua:
     <<: *ceil
-    ncl_name: CEIL_P0_{grid}
+    ncl_name: CEIL_P0_L215_{grid}
     title: Ceiling (exp)
 ceilexp2: # Ceiling - experimental no.2
   ua:
