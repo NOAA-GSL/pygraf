@@ -1062,9 +1062,9 @@ shtfl: # Sensible Heat Net Flux
 slw: # Supercooled Liquid Water
   sfc:
     clevs: [0.05, 0.1, 0.2, .3, .4, .5, .75, 1., 1.25, 1.5, 2., 3., 4., 5., 6.]
-    cmap: NWSReflectivity
-    colors: cref_colors
-    ncl_name: VIL_P0_L10_{grid}
+    cmap: gist_ncar
+    colors: slw_colors
+    ncl_name: TMP_P0_L1_{grid}
     ticks: 0
     title: Supercooled Liquid Water
     transform: supercooled_liquid_water
