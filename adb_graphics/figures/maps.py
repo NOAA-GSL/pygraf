@@ -397,6 +397,11 @@ class DataMap():
                 value_to_color = np.where(vals > levels[i], colors[i+1], value_to_color)
 
         vtc1d = np.ravel(value_to_color)
+
+        # Scatter plot dots are sized by value. Doing this here alters the size
+        # without altering the colors we just set.
+        field.data = np.log10(field.values()) * 20
+
         self._draw_field(ax=ax,
                          field=field,
                          alpha=1.0,
@@ -425,11 +430,6 @@ class DataMap():
 
         x, y = self._xy_mesh(field)
         vals = field.data
-
-        # Scatter plot dots are sized by value. Doing this here alters the size
-        # without altering the colors.
-        if self.plot_scatter:
-            vals = np.full_like(vals, np.log10(vals) * 20, dtype='float')
 
         # For global lat-lon models, make 2D arrays for x and y
         # Shift the map and data if needed

@@ -47,8 +47,6 @@ hourly:
       - sfc
     echotop:
       - sfc
-    emissions:
-      - sfc
     firewx:
       - sfc
     flru:
