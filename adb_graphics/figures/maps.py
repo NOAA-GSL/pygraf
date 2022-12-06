@@ -226,7 +226,6 @@ class DataMap():
         hatch_fields      list of datahandler object fields to hatch over shaded
                           fields
         map               maps object
-        plot_scatter      bool to plot data as a scatter plot if desired, default is False
 
     '''
 
