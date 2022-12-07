@@ -167,7 +167,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
             map_=m,
             member=mem,
             model_name=cla.model_name,
-            last_panel=last_panel
+            last_panel=last_panel,
             )
 
         # Draw the map

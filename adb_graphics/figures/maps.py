@@ -238,6 +238,7 @@ class DataMap():
         self.hatch_fields = map_fields.hatches
         self.map = map_
         self.model_name = model_name
+        self.plot_scatter = map_fields.fields_spec.get('plot_scatter', False)
 
     @staticmethod
     def add_logo(ax):
@@ -342,6 +343,10 @@ class DataMap():
         if annotate and 'global' not in self.map.model: # too dense in global
             self._draw_field_values(ax)
 
+        # Add scatter plot, if requested
+        if self.plot_scatter:
+            self._draw_scatter(ax)
+
         return cf
 
     def _draw_contours(self, ax, not_labeled):
@@ -373,6 +378,37 @@ class DataMap():
                     print(f'Cannot add contour labels to map for {self.field.short_name} \
                             {self.field.level}')
 
+    def _draw_scatter(self, ax):
+
+        ''' Plot dots at locations on the map that meet a threshold. '''
+
+        field = self.field
+        levels = self.field.clevs
+        colors = self.field.colors
+        vals = self.field.values()
+
+        value_to_color = np.full_like(vals, colors[0], dtype='object')
+        num_levels = len(levels)
+        for i in range(num_levels):
+            if i != num_levels - 1:
+                value_to_color = np.where((vals > levels[i]) & \
+                    (vals <= levels[i+1]), colors[i+1], value_to_color)
+            else:
+                value_to_color = np.where(vals > levels[i], colors[i+1], value_to_color)
+
+        vtc1d = np.ravel(value_to_color)
+
+        # Scatter plot dots are sized by value. Doing this here alters the size
+        # without altering the colors we just set.
+        field.data = np.log10(field.values()) * 20
+
+        self._draw_field(ax=ax,
+                         field=field,
+                         alpha=1.0,
+                         c=vtc1d,
+                         func=self.map.m.scatter,
+                         **field.contour_kwargs,
+                         )
 
     def _draw_field(self, ax, field, func, **kwargs):
 
