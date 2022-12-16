@@ -121,6 +121,19 @@ class VarSpec(abc.ABC):
 
         return colors
 
+    @property
+    def smoke_emissions_colors(self) -> np.ndarray:
+
+        ''' Default color map for smoke emissions plot. '''
+
+        # The scatter plot utility won't accept anything but named colors
+        colors = ['white', 'rebeccapurple', 'royalblue', 'cadetblue', \
+                  'yellowgreen', 'mediumaquamarine', 'lightgreen', 'yellow', \
+                  'gold', 'orange', 'darkorange', 'orangered', 'red', \
+                  'firebrick']
+
+        return colors
+
     def flru_colors(self) -> np.ndarray:
 
         ''' Default color map for Ceiling '''
