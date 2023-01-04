@@ -342,6 +342,17 @@ class VarSpec(abc.ABC):
         return ctable
 
     @property
+    def slw_colors(self) -> np.ndarray:
+
+        ''' Default color map for Max Vertically Integrated Graupel '''
+
+        white = cm.get_cmap('Greys', 3)([0])
+        purples = cm.get_cmap('nipy_spectral', 30)([3, 1])
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 15) \
+                          ([2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
+        return np.concatenate((white, purples, ncar))
+
+    @property
     def smoke_colors(self) -> np.ndarray:
 
         ''' Default color map for smoke plots. '''
