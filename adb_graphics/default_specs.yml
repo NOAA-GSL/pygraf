@@ -349,7 +349,7 @@ cfrzr: # Categorical Freezing Rain
     ncl_name: CFRZR_P0_L1_{grid}
 cicep: # Categorical Ice Pellets
   sfc:
-    ncl_name: CFRZR_P0_L1_{grid}
+    ncl_name: CICEP_P0_L1_{grid}
 cin: # Surface Convective Inhibition
   mu:
     clevs: [-300, -200, -150, -100, -75, -50, -40, -30, -20, -10, -1]
