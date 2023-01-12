@@ -73,6 +73,8 @@ class GribFiles():
 
         ret = {}
 
+        fhr = self.coord_dims['fcst_hr'][-1]
+
         special_suffixes = ['max', 'min', 'acc', 'avg']
         for var in ds.variables:
             suffix = var.split('_')[-1]
@@ -123,6 +125,17 @@ class GribFiles():
                         variable == 'LRGHR' and \
                         suffix == f'{suf}1h':
                         contains_suffix.append(suf)
+
+                    # For the RAP CONUS domains, the APCP, WEASD, and FROZR
+                    # variables all have 3h accumulation fields in addition to
+                    # the 1h accumulation fields. This causes problems with the
+                    # renaming, so just drop those fields from the dataset.
+                    if self.model == 'rap' and fhr != 3:
+                        if var == 'APCP_P8_L1_GLC0_acc3h' or \
+                            var == 'WEASD_P8_L1_GLC0_acc3h' or \
+                            var == 'FROZR_P8_L1_GLC0_acc3h':
+                            ds.drop(var)
+                            continue
 
                     # All the variables that need to be renamed. In most cases,
                     # exclude the "1h" ("6h" for global) accumulated variables
