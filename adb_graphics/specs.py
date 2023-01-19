@@ -121,6 +121,19 @@ class VarSpec(abc.ABC):
 
         return colors
 
+    @property
+    def smoke_emissions_colors(self) -> np.ndarray:
+
+        ''' Default color map for smoke emissions plot. '''
+
+        # The scatter plot utility won't accept anything but named colors
+        colors = ['white', 'rebeccapurple', 'royalblue', 'cadetblue', \
+                  'yellowgreen', 'mediumaquamarine', 'lightgreen', 'yellow', \
+                  'gold', 'orange', 'darkorange', 'orangered', 'red', \
+                  'firebrick']
+
+        return colors
+
     def flru_colors(self) -> np.ndarray:
 
         ''' Default color map for Ceiling '''
@@ -340,6 +353,17 @@ class VarSpec(abc.ABC):
                           (range(5, 15))
         ctable[9] = [1, 1, 1, 1]
         return ctable
+
+    @property
+    def slw_colors(self) -> np.ndarray:
+
+        ''' Default color map for Max Vertically Integrated Graupel '''
+
+        white = cm.get_cmap('Greys', 3)([0])
+        purples = cm.get_cmap('nipy_spectral', 30)([3, 1])
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 15) \
+                          ([2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
+        return np.concatenate((white, purples, ncar))
 
     @property
     def smoke_colors(self) -> np.ndarray:
