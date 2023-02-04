@@ -82,7 +82,10 @@
     clevs: [0.03, 0.05, 0.1, 0.5, 1, 2, 3, 4, 5, 6, 7, 8]
     cmap: gist_ncar
     colors: snow_colors
-    ncl_name: WEASD_P8_L1_{grid}_acc1h
+    ncl_name:
+      rrfs: WEASD_P8_L1_{grid}_acc
+      hrrr: WEASD_P8_L1_{grid}_acc1h
+      rap: WEASD_P8_L1_{grid}_acc1h
     ticks: 0
     title: 1 hr Accumulated Snow Using 10:1 Ratio
     transform: [conversions.kgm2_to_in, conversions.weasd_to_1hsnw]
@@ -334,7 +337,7 @@ ceil: # Ceiling
 ceilexp: # Ceiling - experimental
   ua:
     <<: *ceil
-    ncl_name: CEIL_P0_{grid}
+    ncl_name: CEIL_P0_L215_{grid}
     title: Ceiling (exp)
 ceilexp2: # Ceiling - experimental no.2
   ua:
@@ -346,7 +349,7 @@ cfrzr: # Categorical Freezing Rain
     ncl_name: CFRZR_P0_L1_{grid}
 cicep: # Categorical Ice Pellets
   sfc:
-    ncl_name: CFRZR_P0_L1_{grid}
+    ncl_name: CICEP_P0_L1_{grid}
 cin: # Surface Convective Inhibition
   mu:
     clevs: [-300, -200, -150, -100, -75, -50, -40, -30, -20, -10, -1]
@@ -455,6 +458,26 @@ dewp: # Dew point temperature
     transform: conversions.k_to_f
     unit: F
     wind: 10m
+dust:
+  int:
+    clevs: [1, 2, 3, 4, 6, 8, 10, 15, 20, 30, 50, 75, 110, 150]
+    colors: smoke_colors
+    ncl_name: COLMD_P48_L200_{grid}_A62001
+    plot_airports: False
+    ticks: 0
+    title: Vertically Integrated Dust
+    transform: conversions.to_micro
+    unit: $mg/m^2$
+  sfc:
+    clevs: [1, 2, 3, 4, 6, 8, 10, 12, 15, 20, 30, 50, 75, 100]
+    colors: smoke_colors
+    ncl_name: MASSDEN_P48_L103_{grid}_A62001
+    plot_airports: False
+    title: Near-Surface Dust
+    transform: conversions.to_micrograms_per_m3
+    ticks: 0
+    unit: $\mu g/m^3$
+    wind: 10m
 echotop: # Echo Top
   sfc:
     clevs: !!python/object/apply:numpy.arange [4, 50, 3]
@@ -489,9 +512,9 @@ ffldro: # Ensemble flash flood runoff
     title: Prob of 6-hr Precip > RFC flash flood guidance w/in 40 km
 firewx: # Fire Weather Index
   sfc:
-    clevs: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 100]
+    clevs: [10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 100]
     cmap: gist_ncar
-    colors: rainbow12_colors
+    colors: rainbow11_colors
     ncl_name: VGTYP_P0_L1_{grid} # choosing one of the un-transformed values in the algorithm
     ticks: 0
     title: Hourly Wildfire Potential
@@ -539,9 +562,9 @@ G124bt: # GOES-E Brightness temperature, infrared (Ch 4)
     title: GOES-E Brightness Temperature, Infrared
     unit: ch 4
 gh: # Geopotential height
-  250mb: &ua_gh
-    clevs: !!python/object/apply:numpy.arange [6, 1170, 6]
-    cmap: precipitation
+  5mb: &ua_gh
+    clevs: !!python/object/apply:numpy.arange [6, 4680, 6]
+    cmap: rainbow
     colors: terrain_colors
     ncl_name:
       prs: HGT_P0_L100_{grid}
@@ -549,8 +572,16 @@ gh: # Geopotential height
     ticks: 4
     transform: conversions.m_to_dm
     unit: dm
+  10mb:
+    <<: *ua_gh
+  20mb:
+    <<: *ua_gh
+  250mb:
+    <<: *ua_gh
   500mb:
     <<: *ua_gh
+    clevs: !!python/object/apply:numpy.arange [504, 601, 6]
+    ticks: 6
   700mb:
     <<: *ua_gh
     clevs: !!python/object/apply:numpy.arange [201, 373, 3]
@@ -868,9 +899,21 @@ mfrp: # Fire radiative power
     colors: fire_power_colors
     ncl_name: CFNSF_P0_L1_{grid}
     plot_airports: False
+    plot_scatter: True
     ticks: 0
     title: Fire Radiative Power
     unit: MW
+emissions: # Smoke emissions
+  sfc:
+    clevs: [0, 5, 10, 20, 30, 40, 80, 100, 150, 200, 300, 400, 500]
+    colors: smoke_emissions_colors
+    ncl_name: AEMFLX_P48_L1_{grid}_A62010
+    plot_airports: False
+    plot_scatter: True
+    ticks: 0
+    title: Smoke Emissions
+    transform: conversions.to_micrograms_per_m3
+    unit: $\mu g/m^3$
 mref: # Maximum reflectivity for past hour at 1 km AGL
   sfc:
     <<: *refl
@@ -886,9 +929,9 @@ pres:
     transform: conversions.pa_to_hpa
     unit: hPa
   msl:
-    clevs: !!python/object/apply:numpy.arange [650, 1051, 4]
-    cmap: gist_ncar
-    colors: ps_colors
+    clevs: !!python/object/apply:numpy.arange [976, 1051, 4]
+    cmap: Spectral_r
+    colors: pmsl_colors
     ncl_name:
       global: PRMSL_P0_L101_{grid}
       globalAK: PRMSL_P0_L101_{grid}
@@ -900,9 +943,10 @@ pres:
       hrrrcar: MSLMA_P0_L101_{grid}
       rap: MSLMA_P0_L101_{grid}
       rrfs: PRMSL_P0_L101_{grid}
-    ticks: 20
+    ticks: 0
     transform: conversions.pa_to_hpa
     unit: hPa
+    wind: 10m
   ua:
     ncl_name: PRES_P0_L105_{grid}
 ptmp: # Potential temperature
@@ -1068,6 +1112,7 @@ rh: # Relative Humidity
       kwargs:
         variable: rh
         levels: [500mb, 525mb, 550mb, 575mb, 600mb, 625mb, 650mb, 675mb, 700mb, 725mb, 750mb, 775mb, 800mb, 825mb, 850mb]
+        global_levels: [500mb, 550mb, 600mb, 650mb, 700mb, 750mb, 800mb, 850mb]
     vertical_index: 0 # Not used in mean computation, but is used to initialize new array for summing levels
     wind: 700mb
   pw: # RH wrt Precipitable Water
@@ -1158,9 +1203,9 @@ sipd: # Supercooled Large Droplet Icing
 slw: # Supercooled Liquid Water
   sfc:
     clevs: [0.05, 0.1, 0.2, .3, .4, .5, .75, 1., 1.25, 1.5, 2., 3., 4., 5., 6.]
-    cmap: NWSReflectivity
-    colors: cref_colors
-    ncl_name: VIL_P0_L10_{grid}
+    cmap: gist_ncar
+    colors: slw_colors
+    ncl_name: TMP_P0_L1_{grid}
     ticks: 0
     title: Supercooled Liquid Water
     transform: supercooled_liquid_water
@@ -1424,7 +1469,11 @@ trc1:
   int:
     clevs: [1, 4, 7, 11, 15, 20, 25, 30, 40, 50, 75, 150, 250, 500]
     colors: smoke_colors
-    ncl_name: COLMD_P0_L200_{grid}
+    ncl_name:
+      hrrr:  COLMD_P0_L200_{grid}
+      hrrrcar:  COLMD_P0_L200_{grid}
+      rap:  COLMD_P0_L200_{grid}
+      rrfs: COLMD_P48_L200_{grid}_A62010
     plot_airports: False
     ticks: 0
     title: Vertically Integrated Smoke
@@ -1448,7 +1497,11 @@ trc1:
   sfc:
     clevs: [1, 2, 4, 6, 8, 12, 16, 20, 25, 30, 40, 60, 100, 200]
     colors: smoke_colors
-    ncl_name: MASSDEN_P0_L103_{grid}
+    ncl_name:
+      hrrr: MASSDEN_P0_L103_{grid}
+      hrrrcar: MASSDEN_P0_L103_{grid}
+      rap: MASSDEN_P0_L103_{grid}
+      rrfs: MASSDEN_P48_L103_{grid}_A62010
     plot_airports: False
     title: Near-Surface Smoke
     transform: conversions.to_micrograms_per_m3
@@ -1460,11 +1513,14 @@ u:
     ncl_name: UGRD_P0_L103_{grid}
     transform: conversions.ms_to_kt
   80m: *agl_uwind
-  250mb: &ua_uwind
+  5mb: &ua_uwind
     ncl_name:
       prs: UGRD_P0_L100_{grid}
       nat: UGRD_P0_L105_{grid}
     transform: conversions.ms_to_kt
+  10mb: *ua_uwind
+  20mb: *ua_uwind
+  250mb: *ua_uwind
   500mb: *ua_uwind
   700mb: *ua_uwind
   850mb: *ua_uwind
@@ -1519,11 +1575,14 @@ v:
     ncl_name: VGRD_P0_L103_{grid}
     transform: conversions.ms_to_kt
   80m: *agl_wind
-  250mb: &ua_vwind
+  5mb: &ua_vwind
     ncl_name:
       prs: VGRD_P0_L100_{grid}
       nat: VGRD_P0_L105_{grid}
     transform: conversions.ms_to_kt
+  10mb: *ua_vwind
+  20mb: *ua_vwind
+  250mb: *ua_vwind
   500mb: *ua_vwind
   700mb: *ua_vwind
   850mb: *ua_vwind
@@ -1643,6 +1702,28 @@ wspeed: # Wind Speed
         field2: VGRD_P0_L103_{grid}
     unit: kt
     wind: True
+  5mb: &shaded_ua_wspeed
+    clevs: !!python/object/apply:numpy.arange [5, 95, 5]
+    cmap: gist_ncar
+    colors: wind_colors
+    contours:
+      gh:
+        colors: white
+        linewidths: 1.2
+    ncl_name: UGRD_P0_L100_{grid}
+    title: 5mb Wind
+    transform:
+      funcs: [vector_magnitude, conversions.ms_to_kt]
+      kwargs:
+        field2: VGRD_P0_L100_{grid}
+    unit: kt
+    wind: True
+  10mb:
+    <<: *shaded_ua_wspeed
+    title: 10mb Wind
+  20mb:
+    <<: *shaded_ua_wspeed
+    title: 20mb Wind
   250mb:
     <<: *ua_wspeed
     clevs: [20, 40, 60, 70, 80, 90, 100, 110, 120, 140, 160, 180, 200]

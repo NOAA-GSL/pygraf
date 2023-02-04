@@ -52,9 +52,10 @@ def add_obs_panel(ax, model_name, obs_file, proj_info, short_name, tile):
     dm.draw(show=True)
 
 def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
-                  tile='full'):
+                  tile='full', ds2=None):
 
     # pylint: disable=too-many-arguments,too-many-locals
+    # pylint: disable=too-many-branches,too-many-statements
 
     '''
     Function that creates plan-view maps, either a single panel, or
@@ -82,8 +83,11 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
     last_panel = False
 
     # Declare the type of object depending on graphic type
-    map_class = maps.MultiPanelDataMap if cla.graphic_type == \
-        'enspanel' else maps.DataMap
+    map_classes = {
+        "enspanel": maps.MultiPanelDataMap,
+        "diff": maps.DiffMap,
+        }
+    map_class = map_classes.get(cla.graphic_type, maps.DataMap)
 
     for index, current_ax in enumerate(axes):
 
@@ -117,6 +121,27 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
             print(f'Cannot find grib2 variable for {variable} at {level}. Skipping.')
             return
 
+        if cla.graphic_type == "diff":
+
+            field2 = gribdata.fieldData(
+                ds=ds2,
+                fhr=fhr,
+                filetype=cla.file_type,
+                level=level,
+                member=mem,
+                model=model,
+                short_name=variable,
+                )
+
+            try:
+                field2.field
+            except errors.GribReadError:
+                print((f'Cannot find grib2 variable for {variable} at {level} in',
+                       '2nd set of files. Skipping.'))
+                return
+
+            field.data = field.values() - field2.values()
+
 
         map_fields = maps.MapFields(
             fields_spec=spec,
@@ -142,7 +167,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
             map_=m,
             member=mem,
             model_name=cla.model_name,
-            last_panel=last_panel
+            last_panel=last_panel,
             )
 
         # Draw the map

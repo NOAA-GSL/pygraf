@@ -87,6 +87,8 @@ class GribFiles():
                     'FRZR',
                     'LRGHR',
                     ]
+                if self.model == 'rrfs':
+                    odd_variables.append('WEASD')
                 if self.model != 'rrfs':
                     odd_variables.extend([
                         'CDLYR',
@@ -106,6 +108,8 @@ class GribFiles():
                     'TCDC',
                     'WEASD',
                     ]
+                if self.model == 'rrfs':
+                    odd_variables.remove('WEASD')
                 variable = var.split('_')[0]
                 needs_renaming = variable in odd_variables
                 contains_suffix = []

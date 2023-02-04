@@ -26,15 +26,19 @@ class VarSpec(abc.ABC):
         with open(config, 'r') as cfg:
             self.yml = yaml.load(cfg, Loader=yaml.Loader)
 
-    def centered_diff(self):
+    def centered_diff(self, cmap=None, nlev=None):
 
         ''' Returns the colors specified by levels and cmap in default spec, but
         with white center. '''
 
-        clevs = self.vspec.get('clevs')
-        nlev = len(clevs) + 1
+        if nlev is None:
+            clevs = self.vspec.get('clevs')
+            nlev = len(clevs) + 1
 
-        colors = cm.get_cmap(self.vspec.get('cmap'), nlev)(range(nlev))
+        if cmap is None:
+            cmap = self.vspec.get('cmap')
+
+        colors = cm.get_cmap(cmap, nlev)(range(nlev))
         mid = nlev // 2
 
         colors[mid] = [1, 1, 1, 1]
@@ -111,9 +115,24 @@ class VarSpec(abc.ABC):
 
         ''' Default color map for fire power plot. '''
 
-        blues = cm.get_cmap('Blues', 3)(range(3))
-        green_orange = cm.get_cmap('RdYlGn_r', 10)([1, 7, 8, 9])
-        return np.concatenate((blues, green_orange))
+        # The scatter plot utility won't accept anything but named colors
+        colors = ['white', 'lightskyblue', 'darkblue', 'green', 'darkorange', \
+                  'indianred', 'firebrick']
+
+        return colors
+
+    @property
+    def smoke_emissions_colors(self) -> np.ndarray:
+
+        ''' Default color map for smoke emissions plot. '''
+
+        # The scatter plot utility won't accept anything but named colors
+        colors = ['white', 'rebeccapurple', 'royalblue', 'cadetblue', \
+                  'yellowgreen', 'mediumaquamarine', 'lightgreen', 'yellow', \
+                  'gold', 'orange', 'darkorange', 'orangered', 'red', \
+                  'firebrick']
+
+        return colors
 
     def flru_colors(self) -> np.ndarray:
 
@@ -258,6 +277,16 @@ class VarSpec(abc.ABC):
         return np.concatenate((grays, ncar))
 
     @property
+    def pmsl_colors(self) -> np.ndarray:
+
+        ''' Default color map for Surface Pressure '''
+
+        ncolors = len(self.vspec.get('clevs'))
+        incr = 128 // ncolors
+        colors = cm.get_cmap(self.vspec.get('cmap'), 128)(range(incr, 128, incr))
+        return np.asarray(colors)
+
+    @property
     def ps_colors(self) -> np.ndarray:
 
         ''' Default color map for Surface Pressure '''
@@ -308,6 +337,16 @@ class VarSpec(abc.ABC):
         return np.concatenate((ncar, grays))
 
     @property
+    def rainbow11_colors(self) -> np.ndarray:
+
+        ''' Default color map for Hourly Wildfire Potential '''
+
+        grays = cm.get_cmap('Greys', 2)([0])
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          ([18, 20, 25, 50, 60, 70, 80, 85, 90, 100, 120])
+        return np.concatenate((grays, ncar))
+
+    @property
     def rainbow12_colors(self) -> np.ndarray:
 
         ''' Default color map for ACPCP, ACSNOD, HLCY, RH, and SNOD '''
@@ -333,6 +372,17 @@ class VarSpec(abc.ABC):
                           (range(5, 15))
         ctable[9] = [1, 1, 1, 1]
         return ctable
+
+    @property
+    def slw_colors(self) -> np.ndarray:
+
+        ''' Default color map for Max Vertically Integrated Graupel '''
+
+        white = cm.get_cmap('Greys', 3)([0])
+        purples = cm.get_cmap('nipy_spectral', 30)([3, 1])
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 15) \
+                          ([2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
+        return np.concatenate((white, purples, ncar))
 
     @property
     def smoke_colors(self) -> np.ndarray:
@@ -403,7 +453,7 @@ class VarSpec(abc.ABC):
         ''' Default color map for Terrain '''
 
         ctable = ctables.colortables.get_colortable(self.vspec.get('cmap')) \
-                    (range(0, 21, 1))
+                    (range(54, 157, 6))
         return ctable
 
     @property

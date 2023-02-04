@@ -16,8 +16,8 @@ hourly:
       - ua
     ceilexp:
       - ua
-#    ceilexp2:
-#      - ua
+    ceilexp2:
+      - ua
     cin:
       - sfc
     cloudcover:

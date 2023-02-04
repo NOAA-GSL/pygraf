@@ -123,19 +123,21 @@ class UPPData(specs.VarSpec):
 
         return diff
 
-    def field_mean(self, values, variable, levels, **kwargs):
+    def field_mean(self, values, variable, levels, global_levels, **kwargs):
 
         # pylint: disable=unused-argument
 
         ''' Returns the mean of the values. '''
 
         fsum = np.zeros_like(values)
-        for level in levels:
+
+        chosen_levels = global_levels if 'global' in self.model else levels
+        for level in global_levels:
             val_lev = self.values(name=variable, level=level)
             fsum = fsum + val_lev
             val_lev.close()
 
-        return fsum / len(levels)
+        return fsum / len(chosen_levels)
 
     def _get_data_levels(self, vertical_dim):
 
@@ -299,9 +301,9 @@ class UPPData(specs.VarSpec):
         in the file. This should correspond to the grid tag. '''
 
         for var in self.ds.keys():
-            for sub in var.split('_'):
-                if len(sub) == 4 and sub[0] == 'G':
-                    return sub
+            vsplit = var.split('_')
+            if len(vsplit) == 4:
+                return vsplit[-1]
         return 'GRID NOT FOUND'
 
 
@@ -740,6 +742,18 @@ class fieldData(UPPData):
         specified in the yaml file, returns the value set in the Grib file. '''
 
         return self.vspec.get('unit', self.field.units)
+
+    @property
+    def data(self):
+        ''' Sets the data property on the object for use when we need to update
+        the values associated with a given object -- helpful for differences.'''
+        if not hasattr(self, '_data'):
+            return self.values()
+        return self._data
+
+    @data.setter
+    def data(self, value):
+        self._data = value
 
     def values(self, level=None, name=None, **kwargs):
 
