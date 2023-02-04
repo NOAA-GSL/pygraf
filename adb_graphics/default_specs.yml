@@ -771,6 +771,66 @@ icmr: # Ice Water Mixing Ratio
         - ICMR_P0_L105_{grid}
         - CIMIXR_P0_L105_{grid}
       prs: ICMR_P0_L100_{grid}
+icprb: # Icing Probability
+  # levels chosen are arbitrary based on initial plot samples
+  # additional levels may be requested in the future.
+  500ft: &icprb
+    clevs: !!python/object/apply:numpy.arange [5, 86, 10]
+    cmap: gist_ncar
+    colors: icprb_colors
+    ncl_name: ICPRB_P0_L102_{grid}
+    ticks: 10
+    transform: conversions.percent
+    unit: "%"
+    vertical_index: 0   # grib2 vertical levels are in meters,
+                        # so using index here to avoid errors from conversions
+  1000ft:
+    <<: *icprb
+    vertical_index: 1
+  9000ft:
+    <<: *icprb
+    vertical_index: 17
+  15000ft:
+    <<: *icprb
+    vertical_index: 29
+  max:
+    <<: *icprb
+    transform: 
+      funcs: field_column_max
+      kwargs:
+        level: 1000ft
+        variable: icprb
+icsev: # Icing Severity
+  # levels chosen are arbitrary based on initial plot samples
+  # additional levels may be requested in the future.
+  500ft: &icsev
+    # these clevs get mapped into categorical levels in maps.py
+    # the data 0.5 level is out of proper order for plotting, this
+    # is also handled in maps.py
+    clevs: [0.0, 0.5, 1.0, 2.0, 3.0]
+    cmap: Blues
+    colors: icsev_colors
+    ncl_name: ICSEV_P0_L102_{grid}
+    ticks: 0
+    transform: icing_adjust_trace
+    vertical_index: 0   # grib2 vertical levels are in meters,
+                        # so using index here to avoid errors from conversions
+  1000ft:
+    <<: *icsev
+    vertical_index: 1
+  9000ft:
+    <<: *icsev
+    vertical_index: 17
+  15000ft:
+    <<: *icsev
+    vertical_index: 29
+  max:
+    <<: *icsev
+    transform: 
+      funcs: field_column_max
+      kwargs:
+        level: 1000ft
+        variable: icsev
 lcl: # Lifted condensation level
   sfc: &lcl
     clevs: !!python/object/apply:numpy.arange [0, 5000, 250]
@@ -1036,6 +1096,13 @@ rh: # Relative Humidity
       pres_sfc:
         hatches: ['', '...']
         levels: [0, 850]
+  max:
+    <<: *rh
+    transform:
+      funcs: field_column_max
+      kwargs:
+        level: 700mb
+        variable: rh
   mean: # Mean RH 850mb to 500mb
     <<: *rh
     print_units: false
@@ -1104,6 +1171,35 @@ shtfl: # Sensible Heat Net Flux
     ticks: 0
     title: Sensible Heat Net Flux
     unit: W/m$^{2}$
+sipd: # Supercooled Large Droplet Icing
+  # levels chosen are arbitrary based on initial plot samples
+  # additional levels may be requested in the future.
+  500ft: &sipd
+    clevs: !!python/object/apply:numpy.arange [5, 86, 10]
+    cmap: gist_ncar
+    colors: icprb_colors
+    ncl_name: SIPD_P0_L102_{grid}
+    ticks: 10
+    transform: conversions.percent
+    unit: "%"
+    vertical_index: 0   # grib2 vertical levels are in meters,
+                        # so using index here to avoid errors from conversions
+  1000ft:
+    <<: *sipd
+    vertical_index: 1
+  9000ft:
+    <<: *sipd
+    vertical_index: 17
+  15000ft:
+    <<: *sipd
+    vertical_index: 29
+  max:
+    <<: *sipd
+    transform: 
+      funcs: field_column_max
+      kwargs:
+        level: 1000ft
+        variable: sipd
 slw: # Supercooled Liquid Water
   sfc:
     clevs: [0.05, 0.1, 0.2, .3, .4, .5, .75, 1., 1.25, 1.5, 2., 3., 4., 5., 6.]
