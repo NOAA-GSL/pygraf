@@ -741,6 +741,8 @@ icmr: # Ice Water Mixing Ratio
         - CIMIXR_P0_L105_{grid}
       prs: ICMR_P0_L100_{grid}
 icprb: # Icing Probability
+  # levels chosen are arbitrary based on initial plot samples
+  # additional levels may be requested in the future.
   500ft: &icprb
     clevs: !!python/object/apply:numpy.arange [5, 86, 10]
     cmap: gist_ncar
@@ -768,7 +770,12 @@ icprb: # Icing Probability
         level: 1000ft
         variable: icprb
 icsev: # Icing Severity
+  # levels chosen are arbitrary based on initial plot samples
+  # additional levels may be requested in the future.
   500ft: &icsev
+    # these clevs get mapped into categorical levels in maps.py
+    # the data 0.5 level is out of proper order for plotting, this
+    # is also handled in maps.py
     clevs: [0.0, 0.5, 1.0, 2.0, 3.0]
     cmap: Blues
     colors: icsev_colors
@@ -1120,6 +1127,8 @@ shtfl: # Sensible Heat Net Flux
     title: Sensible Heat Net Flux
     unit: W/m$^{2}$
 sipd: # Supercooled Large Droplet Icing
+  # levels chosen are arbitrary based on initial plot samples
+  # additional levels may be requested in the future.
   500ft: &sipd
     clevs: !!python/object/apply:numpy.arange [5, 86, 10]
     cmap: gist_ncar

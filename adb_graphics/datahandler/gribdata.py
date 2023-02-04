@@ -1,4 +1,4 @@
-# pylint: disable=invalid-name,too-few-public-methods, too-many-public-methods, too-many-lines
+# pylint: disable=invalid-name, too-many-public-methods, too-many-lines
 
 '''
 Classes that handle the specifics of grib files from UPP.
