@@ -671,6 +671,22 @@ class fieldData(UPPData):
 
         return vals
 
+    def run_max(self, values, **kwargs):
+
+        ''' Finds the max hourly value over all the forecast lead times available. '''
+
+        # pylint: disable=unused-argument,no-self-use
+
+        return values.max(dim='fcst_hr')
+
+    def run_min(self, values, **kwargs):
+
+        ''' Finds the min (largest negative) hourly value over all the forecast lead times available. '''
+
+        # pylint: disable=unused-argument,no-self-use
+
+        return values.min(dim='fcst_hr')
+
     def run_total(self, values, **kwargs):
 
         ''' Sums over all the forecast lead times available. '''
