@@ -711,7 +711,8 @@ if __name__ == '__main__':
     # Make sure both required arguments (--max_plev, --sites) are provided when doing skewTs
     if CLARGS.graphic_type == 'skewts':
         if not CLARGS.max_plev:
-            argparse.ArgumentParser.exit(0, "Must specify maximum pressure level (--max_plev) when creating skewTs")
+            argparse.ArgumentParser.exit(0, "Must specify maximum pressure level \
+                (--max_plev) when creating skewTs")
         if not CLARGS.sites:
             argparse.ArgumentParser.exit(0, "Must specify sites (--sites) when creating skewTs")
 
