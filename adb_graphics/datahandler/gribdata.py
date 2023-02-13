@@ -681,7 +681,7 @@ class fieldData(UPPData):
 
     def run_min(self, values, **kwargs):
 
-        ''' Finds the min (largest negative) hourly value over all the forecast lead times available. '''
+        ''' Finds the min hourly value over all the forecast lead times available. '''
 
         # pylint: disable=unused-argument,no-self-use
 
