@@ -1702,15 +1702,16 @@ wspeed: # Wind Speed
         field2: VGRD_P0_L103_{grid}
     unit: kt
     wind: True
-  5mb: &shaded_ua_wspeed
-    clevs: !!python/object/apply:numpy.arange [5, 95, 5]
+  5mb: &ua_wspeed_high
+    clevs: [20, 40, 60, 70, 80, 90, 100, 110, 120, 140, 160, 180, 200]
     cmap: gist_ncar
-    colors: wind_colors
+    colors: wind_colors_high
     contours:
       gh:
         colors: white
         linewidths: 1.2
     ncl_name: UGRD_P0_L100_{grid}
+    ticks: 0
     title: 5mb Wind
     transform:
       funcs: [vector_magnitude, conversions.ms_to_kt]
@@ -1719,26 +1720,14 @@ wspeed: # Wind Speed
     unit: kt
     wind: True
   10mb:
-    <<: *shaded_ua_wspeed
+    <<: *ua_wspeed_high
     title: 10mb Wind
   20mb:
-    <<: *shaded_ua_wspeed
+    <<: *ua_wspeed_high
     title: 20mb Wind
   250mb:
-    <<: *ua_wspeed
-    clevs: [20, 40, 60, 70, 80, 90, 100, 110, 120, 140, 160, 180, 200]
-    colors: wind_colors_high
-    contours:
-      gh:
-        colors: white
-        linewidths: 1.2
-    ncl_name: UGRD_P0_L100_{grid}
-    ticks: 0
+    <<: *ua_wspeed_high
     title: 250mb Wind
-    transform:
-      funcs: [vector_magnitude, conversions.ms_to_kt]
-      kwargs: 
-        field2: VGRD_P0_L100_{grid}
   80m:
     <<: *ua_wspeed
     title: 80m Wind
