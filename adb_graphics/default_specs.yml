@@ -942,7 +942,7 @@ pres:
       hrrrhi: MSLMA_P0_L101_{grid}
       hrrrcar: MSLMA_P0_L101_{grid}
       rap: MSLMA_P0_L101_{grid}
-      rrfs: PRMSL_P0_L101_{grid}
+      rrfs: MSLET_P0_L101_{grid}
     ticks: 0
     transform: conversions.pa_to_hpa
     unit: hPa
