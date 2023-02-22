@@ -166,6 +166,8 @@ hourly:
       - sfc
     vis:
       - sfc
+    visbsn:
+      - sfc
     vort:
       - 500mb
     vvel:
