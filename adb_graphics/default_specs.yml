@@ -1624,7 +1624,7 @@ vil: # Vertically Integrated Liquid
     ncl_name: VAR_0_16_201_P0_L10_{grid}
     title: Vertically Integrated Liquid
 vis: # Visibility
-  sfc:
+  sfc: &vis
     # see the description provided in adb_graphics/utils.py, for the join_ranges method.
     clevs: !join_ranges [[0, 10, 0.1], [10, 51, 1.0]]
     cmap: gist_ncar
@@ -1634,6 +1634,11 @@ vis: # Visibility
     title: Sfc Visibility
     transform: conversions.m_to_mi
     unit: mi
+visbsn: # Visibility incl. blowing snow
+  sfc:
+    <<: *vis
+    ncl_name: VAR_0_19_35_P0_L1_{grid}
+    title: Sfc Visibility incl. blowing snow (exp)
 vort: # Absolute vorticity
   500mb:
     clevs: !!python/object/apply:numpy.arange [6, 29, 2]
