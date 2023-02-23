@@ -443,7 +443,7 @@ class VarSpec(abc.ABC):
         temp4 = cm.get_cmap('RdPu_r', 8)(range(0, 8))
         temp5 = cm.get_cmap('BuPu', 5)(range(0, 4))
         temp6 = cm.get_cmap('RdYlBu_r', 10)(range(1, 10))
-        temp7 = cm.get_cmap('RdYlGn', 10)(range(0, 10))
+        temp7 = cm.get_cmap('BrBG', 20)(range(0, 10))
 
         return np.concatenate((temp1, temp2, temp3, temp4, temp5, temp6, temp7))
 
