@@ -106,6 +106,7 @@ class GribFiles():
                     'APCP',
                     'CDLYR',
                     'FROZR',
+                    'FRZR',
                     'LRGHR',
                     'TCDC',
                     'WEASD',
