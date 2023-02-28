@@ -697,12 +697,11 @@ if __name__ == '__main__':
         CLARGS.images = load_images(CLARGS.images)
         CLARGS.tiles = generate_tile_list(CLARGS.tiles)
 
-    # Make sure the second data root is provided when doint diffs
+    # Make sure the second data root is provided when doing diffs
     if CLARGS.graphic_type == 'diff':
         if not CLARGS.data_root2:
-            errmsg = "Must specify a second data root for creating difference maps"
-            print(errmsg)
-            raise argparse.ArgumentError
+            errmsg = "Must specify a second data root (--data_root2) for creating difference maps"
+            raise argparse.ArgumentError(CLARGS.data_root2, errmsg)
         if CLARGS.all_leads:
             warning = ("Warning! Plotting differences in graphics-accumulated ",
                        "fields is not supported!")
