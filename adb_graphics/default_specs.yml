@@ -1693,6 +1693,17 @@ weasd: # Water equivalent of accumulated snow depth
     title: Snow Water Equivalent
     transform: conversions.kgm2_to_in
     unit: in
+windmax:
+  10m:
+    accumulate: True
+    clevs: !!python/object/apply:numpy.arange [5, 95, 5]
+    cmap: gist_ncar
+    colors: wind_colors
+    ncl_name: WIND_P8_L103_{grid}_max1h
+    ticks: 5
+    title: 10m Wind Hourly Max
+    transform: [conversions.ms_to_kt, run_max]
+    unit: kt
 wspeed: # Wind Speed
   10m: &ua_wspeed
     clevs: !!python/object/apply:numpy.arange [5, 95, 5]
