@@ -678,8 +678,8 @@ if __name__ == '__main__':
 
     # Check that the same number of entries exists in -d and --file_tmpl
     if len(CLARGS.data_root) != len(CLARGS.file_tmpl):
-        print('Must specify the same number of arguments for -d and --file_tmpl')
-        raise argparse.ArgumentError
+        errmsg = "Must specify the same number of arguments for -d and --file_tmpl"
+        argparse.ArgumentParser.exit(0, errmsg)
 
     # Ensure wgrib command is available in environment before getting too far
     # down this path...
