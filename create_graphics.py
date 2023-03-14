@@ -17,6 +17,7 @@ import os
 import random
 import string
 import subprocess
+import sys
 import time
 
 import yaml
@@ -171,7 +172,7 @@ def load_images(arg):
 
     return [images.get('model'), images.get('variables')]
 
-def parse_args():
+def parse_args(argv):
 
     ''' Set up argparse command line arguments, and return the Namespace
         containing the settings. '''
@@ -357,7 +358,7 @@ def parse_args():
         help='File naming convention for second set of files used in \
         difference maps. Use FCST_TIME to indicate forecast hour.',
         )
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 def pre_proc_grib_files(cla, fhr):
 
@@ -671,9 +672,12 @@ def graphics_driver(cla):
 
         remove_proc_grib_files(cla)
 
-if __name__ == '__main__':
 
-    CLARGS = parse_args()
+def check_args(argv):
+    '''
+    Function to perform a series of checks on command line arguments.
+    '''
+    CLARGS = parse_args(argv)
     CLARGS.fcst_hour = utils.fhr_list(CLARGS.fcst_hour)
 
     # Check that the same number of entries exists in -d and --file_tmpl
@@ -722,3 +726,7 @@ if __name__ == '__main__':
         if name not in ['specs', 'sites']:
             print(f"{name:>15s}: {val}")
     graphics_driver(CLARGS)
+
+
+if __name__ == '__main__':
+    check_args(sys.argv[1:])
