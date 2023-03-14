@@ -673,7 +673,7 @@ def graphics_driver(cla):
         remove_proc_grib_files(cla)
 
 
-def check_args(argv):
+def create_graphics(argv):
     '''
     Function to perform a series of checks on command line arguments.
     '''
@@ -729,4 +729,4 @@ def check_args(argv):
 
 
 if __name__ == '__main__':
-    check_args(sys.argv[1:])
+    create_graphics(sys.argv[1:])
