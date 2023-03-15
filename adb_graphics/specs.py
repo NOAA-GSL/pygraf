@@ -26,6 +26,15 @@ class VarSpec(abc.ABC):
         with open(config, 'r') as cfg:
             self.yml = yaml.load(cfg, Loader=yaml.Loader)
 
+    @property
+    def aod_colors(self) -> np.ndarray:
+
+        ''' Default color map for Max Updraft '''
+
+        grays = cm.get_cmap('Greys', 2)([0])
+        others = cm.get_cmap(self.vspec.get('cmap'), 15)(range(1, 15, 1), alpha=0.6)
+        return np.concatenate((grays, others))
+
     def centered_diff(self, cmap=None, nlev=None):
 
         ''' Returns the colors specified by levels and cmap in default spec, but
