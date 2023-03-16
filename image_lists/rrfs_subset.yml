@@ -34,6 +34,9 @@ hourly:
       - low
       - mid
       - total
+    coarsedust:
+      - int
+      - sfc
     cpofp:
       - sfc
     cref:
@@ -42,12 +45,12 @@ hourly:
       - ua
     dewp:
       - 2m
-    dust:
-      - int
-      - sfc
     echotop:
       - sfc
     emissions:
+      - sfc
+    finedust:
+      - int
       - sfc
     firewx:
       - sfc
