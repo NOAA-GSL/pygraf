@@ -409,6 +409,26 @@ clwmr: # Cloud water Mixing Ratio
     ncl_name: 
       nat: CLWMR_P0_L105_{grid}
       prs: CLWMR_P0_L100_{grid}
+coarsedust:
+  int: &coldust
+    clevs: [1, 2, 3, 4, 6, 8, 10, 15, 20, 30, 50, 75, 110, 150]
+    colors: smoke_colors
+    ncl_name: COLMD_P48_L200_{grid}_A62001_1
+    plot_airports: False
+    ticks: 0
+    title: Vertically Integrated Coarse Dust
+    transform: conversions.to_micro
+    unit: $mg/m^2$
+  sfc: &sfcdust
+    clevs: [1, 2, 3, 4, 6, 8, 10, 12, 15, 20, 30, 50, 75, 100]
+    colors: smoke_colors
+    ncl_name: MASSDEN_P48_L103_{grid}_A62001_1
+    plot_airports: False
+    title: Near-Surface Coarse Dust
+    transform: conversions.to_micrograms_per_m3
+    ticks: 0
+    unit: $\mu g/m^3$
+    wind: 10m
 cpofp: # Frozen Precipitation Percentage
   sfc:
     clevs: [-0.1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
@@ -458,26 +478,15 @@ dewp: # Dew point temperature
     transform: conversions.k_to_f
     unit: F
     wind: 10m
-dust:
+finedust:
   int:
-    clevs: [1, 2, 3, 4, 6, 8, 10, 15, 20, 30, 50, 75, 110, 150]
-    colors: smoke_colors
+    <<: *coldust
     ncl_name: COLMD_P48_L200_{grid}_A62001
-    plot_airports: False
-    ticks: 0
-    title: Vertically Integrated Dust
-    transform: conversions.to_micro
-    unit: $mg/m^2$
+    title: Vertically Integrated Fine Dust
   sfc:
-    clevs: [1, 2, 3, 4, 6, 8, 10, 12, 15, 20, 30, 50, 75, 100]
-    colors: smoke_colors
+    <<: *sfcdust
     ncl_name: MASSDEN_P48_L103_{grid}_A62001
-    plot_airports: False
-    title: Near-Surface Dust
-    transform: conversions.to_micrograms_per_m3
-    ticks: 0
-    unit: $\mu g/m^3$
-    wind: 10m
+    title: Near-Surface Fine Dust
 echotop: # Echo Top
   sfc:
     clevs: !!python/object/apply:numpy.arange [4, 50, 3]
