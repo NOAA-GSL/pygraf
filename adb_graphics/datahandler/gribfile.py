@@ -140,6 +140,16 @@ class GribFiles():
                         ds.drop(var)
                         continue
 
+                    # Some global models will start producing 12h accumulations at
+                    # lead times past 246h. These cause problems with the renaming,
+                    # so we can drop those fields.
+                    bad_12h_vars = ['APCP_P8_L1_GLL0_acc12h', \
+                        'APCP_P8_L1_GLC0_acc12h', 'APCP_P8_L1_GST0_acc12h']
+                    if 'global' in self.model and fhr != 12 and var in bad_12h_vars:
+                        print(f'dropping {var}')
+                        ds.drop(var)
+                        continue
+
                     # All the variables that need to be renamed. In most cases,
                     # exclude the "1h" ("6h" for global) accumulated variables
                     accum_freq = 6 if 'global' in self.model else 1
