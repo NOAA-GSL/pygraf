@@ -1,4 +1,4 @@
-# pylint: disable=invalid-name,too-few-public-methods,too-many-locals
+# pylint: disable=invalid-name,too-few-public-methods,too-many-locals,too-many-branches
 
 '''
 Classes that load grib files.
@@ -79,7 +79,7 @@ class GribFiles():
         for var in ds.variables:
             suffix = var.split('_')[-1]
 
-            # Keeping lists of misbehaving "accumulated variables here because
+            # Keeping lists of misbehaving "accumulated" variables here because
             # there doesn't seem to be another way to know....
 
             if fcst_type == '01fcst':
