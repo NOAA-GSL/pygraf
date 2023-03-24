@@ -111,6 +111,18 @@ class UPPData(specs.VarSpec):
 
         return maxvals
 
+    def field_sum(self, values, variable2, level2, **kwargs):
+
+        # pylint: disable=unused-argument
+
+        ''' Return the sum of the values. '''
+
+        value2 = self.values(name=variable2, level=level2)
+        sum2 = values + value2
+        value2.close()
+
+        return sum2
+
     def field_diff(self, values, variable2, level2, **kwargs):
 
         # pylint: disable=unused-argument
