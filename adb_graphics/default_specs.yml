@@ -409,9 +409,9 @@ clwmr: # Cloud water Mixing Ratio
     ncl_name: 
       nat: CLWMR_P0_L105_{grid}
       prs: CLWMR_P0_L100_{grid}
-coarsedust:
+coarsedust: # Coarse dust
   int: &coldust
-    clevs: [1, 2, 3, 4, 6, 8, 10, 15, 20, 30, 50, 75, 110, 150]
+    clevs: [1, 4, 7, 11, 15, 20, 25, 30, 40, 50, 75, 150, 250, 500]
     colors: smoke_colors
     ncl_name: COLMD_P48_L200_{grid}_A62001_1
     plot_airports: False
@@ -420,7 +420,7 @@ coarsedust:
     transform: conversions.to_micro
     unit: $mg/m^2$
   sfc: &sfcdust
-    clevs: [1, 2, 3, 4, 6, 8, 10, 12, 15, 20, 30, 50, 75, 100]
+    clevs: [10, 20, 30, 40, 60, 80, 100, 120, 150, 200, 300, 500, 750, 1000]
     colors: smoke_colors
     ncl_name: MASSDEN_P48_L103_{grid}_A62001_1
     plot_airports: False
@@ -478,15 +478,26 @@ dewp: # Dew point temperature
     transform: conversions.k_to_f
     unit: F
     wind: 10m
-finedust:
+finedust: # Fine dust
   int:
     <<: *coldust
     ncl_name: COLMD_P48_L200_{grid}_A62001
     title: Vertically Integrated Fine Dust
   sfc:
     <<: *sfcdust
+    clevs: [1, 2, 4, 6, 8, 12, 16, 20, 25, 30, 40, 60, 100, 200]
     ncl_name: MASSDEN_P48_L103_{grid}_A62001
     title: Near-Surface Fine Dust
+fullintdust: # Full vertically integrated dusts (Fine dust + Coarse dust)
+  int:
+    <<: *coldust
+    ncl_name: COLMD_P48_L200_{grid}_A62001_1
+    title: Vertically Integrated Dusts
+    transform:
+      funcs: [conversions.to_micro, field_sum]
+      kwargs:
+        variable2: finedust
+        level2: int
 echotop: # Echo Top
   sfc:
     clevs: !!python/object/apply:numpy.arange [4, 50, 3]

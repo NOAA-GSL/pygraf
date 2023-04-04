@@ -35,7 +35,6 @@ hourly:
       - mid
       - total
     coarsedust:
-      - int
       - sfc
     cpofp:
       - sfc
@@ -50,12 +49,13 @@ hourly:
     emissions:
       - sfc
     finedust:
-      - int
       - sfc
     firewx:
       - sfc
     flru:
       - sfc
+    fullintdust:
+      - int
     G113bt:
       - sat
     G114bt:
