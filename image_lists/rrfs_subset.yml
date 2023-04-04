@@ -54,7 +54,7 @@ hourly:
       - sfc
     flru:
       - sfc
-    full_int_dust:
+    fullintdust:
       - int
     G113bt:
       - sat
