@@ -1,4 +1,4 @@
-# pylint: disable=invalid-name,too-few-public-methods,too-many-locals
+# pylint: disable=invalid-name,too-few-public-methods,too-many-locals,too-many-branches
 
 '''
 Classes that load grib files.
@@ -79,7 +79,7 @@ class GribFiles():
         for var in ds.variables:
             suffix = var.split('_')[-1]
 
-            # Keeping lists of misbehaving "accumulated variables here because
+            # Keeping lists of misbehaving "accumulated" variables here because
             # there doesn't seem to be another way to know....
 
             if fcst_type == '01fcst':
@@ -136,6 +136,16 @@ class GribFiles():
                         'APCP_P8_L1_GST0_acc3h', 'WEASD_P8_L1_GST0_acc3h', \
                         'FROZR_P8_L1_GST0_acc3h']
                     if self.model == 'rap' and fhr != 3 and var in bad_3h_vars:
+                        print(f'dropping {var}')
+                        ds.drop(var)
+                        continue
+
+                    # Some global models will start producing 12h accumulations at
+                    # lead times past 246h. These cause problems with the renaming,
+                    # so we can drop those fields.
+                    bad_12h_vars = ['APCP_P8_L1_GLL0_acc12h', \
+                        'APCP_P8_L1_GLC0_acc12h', 'APCP_P8_L1_GST0_acc12h']
+                    if 'global' in self.model and fhr != 12 and var in bad_12h_vars:
                         print(f'dropping {var}')
                         ds.drop(var)
                         continue
