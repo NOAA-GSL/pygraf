@@ -127,6 +127,16 @@ class GribFiles():
                         suffix == f'{suf}1h':
                         contains_suffix.append(suf)
 
+                    # RRFS_A has fields that have the suffix 'acc0h' but we don't
+                    # want those. Drop them if they come up.
+                    bad_0h_vars = ['APCP_P8_L1_GLL0_acc0h', \
+                        'FROZR_P8_L1_GLC0_acc0h', 'FRZR_P8_L1_GLC0_acc0h', \
+                        'CDLYR_P8_L200_GLC0_avg0h', 'TCDC_P8_L200_GLC0_avg0h', \
+                        'APCP_P8_L1_GLC0_acc0h', 'APCP_P8_L1_GST0_acc0h']
+                    if fhr != 0 and var in bad_0h_vars:
+                        print(f'dropping {var}')
+                        ds.drop(var)
+                        continue
                     # For the RAP CONUS and AK domains, the APCP, WEASD, and FROZR
                     # variables all have 3h accumulation fields in addition to
                     # the 1h accumulation fields. This causes problems with the
@@ -145,7 +155,7 @@ class GribFiles():
                     # so we can drop those fields.
                     bad_12h_vars = ['APCP_P8_L1_GLL0_acc12h', \
                         'APCP_P8_L1_GLC0_acc12h', 'APCP_P8_L1_GST0_acc12h']
-                    if 'global' in self.model and fhr != 12 and var in bad_12h_vars:
+                    if fhr != 12 and var in bad_12h_vars:
                         print(f'dropping {var}')
                         ds.drop(var)
                         continue
