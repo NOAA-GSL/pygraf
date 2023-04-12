@@ -922,7 +922,7 @@ emissions: # Smoke emissions
     ticks: 0
     title: Smoke Emissions
     transform: conversions.to_micrograms_per_m3
-    unit: $\mu g/m^3$
+    unit: $\mu g/m^2/s$
 mref: # Maximum reflectivity for past hour at 1 km AGL
   sfc:
     <<: *refl
