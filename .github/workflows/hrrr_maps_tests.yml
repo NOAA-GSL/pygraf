@@ -48,11 +48,11 @@ jobs:
           cache-env: true
       - name: Install pygraf environment
         run: micromamba create -n pygraf -y -f /home/runner/work/pygraf/pygraf/environment.yml
-      - name: Build image list file for testing
-        run: |
-        echo -e "hourly:\n  model: hrrr\n  variables:\n    hlcytot:\n      - mn02" >> test_hrrr.yml
-      - name: Archive yaml file
-        uses: actions/upload-artifact@v2
-        with:
-          name: yaml-image-file
-          path: image_files/test_hrrr.yml
+      # - name: Build image list file for testing
+      #   run: |
+      #   echo -e "hourly:\n  model: hrrr\n  variables:\n    hlcytot:\n      - mn02" >> test_hrrr.yml
+      # - name: Archive yaml file
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     name: yaml-image-file
+      #     path: image_files/test_hrrr.yml
