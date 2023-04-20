@@ -488,11 +488,11 @@ finedust: # Fine dust
     clevs: [1, 2, 4, 6, 8, 12, 16, 20, 25, 30, 40, 60, 100, 200]
     ncl_name: MASSDEN_P48_L103_{grid}_A62001
     title: Near-Surface Fine Dust
-fullintdust: # Full vertically integrated dusts (Fine dust + Coarse dust)
+fullintdust: # Full vertically integrated dust (Fine dust + Coarse dust)
   int:
     <<: *coldust
     ncl_name: COLMD_P48_L200_{grid}_A62001_1
-    title: Vertically Integrated Dusts
+    title: Vertically Integrated Dust
     transform:
       funcs: [conversions.to_micro, field_sum]
       kwargs:
@@ -933,7 +933,7 @@ emissions: # Smoke emissions
     ticks: 0
     title: Smoke Emissions
     transform: conversions.to_micrograms_per_m3
-    unit: $\mu g/m^3$
+    unit: $\mu g/m^2/s$
 mref: # Maximum reflectivity for past hour at 1 km AGL
   sfc:
     <<: *refl
