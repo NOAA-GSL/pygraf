@@ -8,7 +8,7 @@ on:
       - main
   workflow_dispatch:
 jobs:
-  wget:
+  test_hrrr_maps:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -39,3 +39,20 @@ jobs:
         with:
           name: grib00
           path: ./input_files/hrrr.t00z.wrfprsf00.grib2
+      - name: Install Micromamba with no environment
+        uses: mamba-org/provision-with-micromamba@main
+        with:
+          environment-file: false
+          channel-priority: flexible
+          cache-downloads: true
+          cache-env: true
+      - name: Install pygraf environment
+        run: micromamba create -n pygraf -y -f /home/runner/work/pygraf/pygraf/environment.yml
+      - name: Build image list file for testing
+        run: |
+        echo -e "hourly:\n  model: hrrr\n  variables:\n    hlcytot:\n      - mn02" >> test_hrrr.yml
+      - name: Archive yaml file
+        uses: actions/upload-artifact@v2
+        with:
+          name: yaml-image-file
+          path: image_files/test_hrrr.yml
