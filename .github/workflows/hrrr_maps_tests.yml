@@ -1,0 +1,25 @@
+name: hrrr_maps_tests
+on:
+  push:
+    branches:
+      - feature
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+jobs:
+  wget:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: wget
+        run: wget -N -P ./image_files https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20230315/conus/hrrr.t00z.wrfprsf00.grib2
+      - name: Archive grib file
+        uses: actions/upload-artifact@v3
+        with:
+          name: grib00
+          path: image_files/hrrr.t00z.wrfprsf00.grib2
