@@ -1,4 +1,7 @@
 name: hrrr_maps_tests
+env: 
+  data_loc = ${GITHUB_WORKSPACE}/input_data
+  output_loc = ${GITHUB_WORKSPACE}/output
 on:
   push:
     branches:
@@ -16,9 +19,12 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
-      - name: wget
+      - name: Create output folder
+        run: mkdir -p $output_loc
+      - name: Fetch Grib Files
         run: |
-          wget -N -P ./input_files -i - << EOF
+          mkdir -p $data_loc
+          wget -N -P /input_data -i - << EOF
           https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20230315/conus/hrrr.t00z.wrfprsf00.grib2
           https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20230315/conus/hrrr.t00z.wrfprsf01.grib2
           # https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20230315/conus/hrrr.t00z.wrfprsf02.grib2
@@ -34,11 +40,6 @@ jobs:
           # https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20230315/conus/hrrr.t00z.wrfprsf12.grib2
           EOF
           ls
-      - name: Archive grib file
-        uses: actions/upload-artifact@v3
-        with:
-          name: grib00
-          path: ./input_files/hrrr.t00z.wrfprsf00.grib2
       - name: Install Micromamba with no environment
         uses: mamba-org/provision-with-micromamba@main
         with:
@@ -48,11 +49,7 @@ jobs:
           cache-env: true
       - name: Install pygraf environment
         run: micromamba create -n pygraf -y -f /home/runner/work/pygraf/pygraf/environment.yml
-      # - name: Build image list file for testing
-      #   run: |
-      #   echo -e "hourly:\n  model: hrrr\n  variables:\n    hlcytot:\n      - mn02" >> test_hrrr.yml
-      # - name: Archive yaml file
-      #   uses: actions/upload-artifact@v2
-      #   with:
-      #     name: yaml-image-file
-      #     path: image_files/test_hrrr.yml
+      - name: Test code
+        run: |
+        micromamba activate pygraf
+        python -m pytest tests/test_hrrr_maps.py
