@@ -24,20 +24,9 @@ jobs:
       - name: Fetch Grib Files
         run: |
           mkdir -p $data_loc
-          wget -N -P /input_data -i - << EOF
+          wget -N -P $data_loc -i - << EOF
           https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20230315/conus/hrrr.t00z.wrfprsf00.grib2
           https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20230315/conus/hrrr.t00z.wrfprsf01.grib2
-          # https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20230315/conus/hrrr.t00z.wrfprsf02.grib2
-          # https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20230315/conus/hrrr.t00z.wrfprsf03.grib2
-          # https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20230315/conus/hrrr.t00z.wrfprsf04.grib2
-          # https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20230315/conus/hrrr.t00z.wrfprsf05.grib2
-          # https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20230315/conus/hrrr.t00z.wrfprsf06.grib2
-          # https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20230315/conus/hrrr.t00z.wrfprsf07.grib2
-          # https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20230315/conus/hrrr.t00z.wrfprsf08.grib2
-          # https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20230315/conus/hrrr.t00z.wrfprsf09.grib2
-          # https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20230315/conus/hrrr.t00z.wrfprsf10.grib2
-          # https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20230315/conus/hrrr.t00z.wrfprsf11.grib2
-          # https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20230315/conus/hrrr.t00z.wrfprsf12.grib2
           EOF
           ls
       - name: Install Micromamba with no environment
