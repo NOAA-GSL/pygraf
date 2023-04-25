@@ -51,5 +51,5 @@ jobs:
         run: micromamba create -n pygraf -y -f /home/runner/work/pygraf/pygraf/environment.yml
       - name: Test code
         run: |
-        micromamba activate pygraf
+        conda activate pygraf
         python -m pytest tests/test_hrrr_maps.py
