@@ -85,6 +85,7 @@
     ncl_name:
       rrfs: WEASD_P8_L1_{grid}_acc
       hrrr: WEASD_P8_L1_{grid}_acc1h
+      hrrrhi: WEASD_P8_L1_{grid}_acc1h
       rap: WEASD_P8_L1_{grid}_acc1h
     ticks: 0
     title: 1 hr Accumulated Snow Using 10:1 Ratio
