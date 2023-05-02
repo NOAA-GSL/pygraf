@@ -11,7 +11,7 @@ output_loc = os.environ.get("output_loc")
 
 def test_parse_args():
     ''' Test parse_args for basic parsing success. '''
-    args = ['create_graphics', 'maps', '-d', str(data_loc), '-f', '0', '12', '1', '-o', str(output_loc),\
+    args = ['maps', '-d', str(data_loc), '-f', '0', '12', '1', '-o', str(output_loc),\
          '-s', '2021052315', '--file_tmpl', 'hrrr.t00z.wrfprsf{FCST_TIME:02d}.grib2', \
             '--images', './image_lists/hrrr_test.yml', 'hourly', '--all_leads', '--file_type=prs']
     test_args = parse_args(args)
@@ -28,7 +28,7 @@ def test_maps():
 
 def test_existence():
     ''' Test function to check for existence of output folders and files. '''
-    folder_0 = '/202303150100'
+    folder_0 = "/202303150100"
     full_path_0 = output_loc + folder_0
     p0 = os.path.isdir(full_path_0)
     print("Full path:", full_path_0)
