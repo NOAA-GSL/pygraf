@@ -1,6 +1,7 @@
 #pylint: disable=unused-variable
 ''' Tests for create_graphics driver '''
 from create_graphics import create_graphics
+from create_graphics import parse_args
 import os
 import os.path
 
@@ -30,5 +31,5 @@ def test_existence():
     folder_0 = '/202303150100'
     full_path_0 = output_loc + folder_0
     p0 = os.path.isdir(full_path_0)
-    print("Full path:", flul_path_0)
+    print("Full path:", full_path_0)
     assert p0 == True
