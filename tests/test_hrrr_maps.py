@@ -10,7 +10,9 @@ output_loc = os.environ.get("output_loc")
 
 
 def test_parse_args():
-    ''' Test parse_args for basic parsing success. '''
+    ''' Test parse_args for basic parsing success. 
+        Checks if parse_args returns 'maps' in the graphic_type field.
+    '''
     args = ['maps', '-d', str(data_loc), '-f', '0', '12', '1', '-o', str(output_loc),\
          '-s', '2021052315', '--file_tmpl', 'hrrr.t00z.wrfprsf{FCST_TIME:02d}.grib2', \
             '--images', './image_lists/hrrr_test.yml', 'hourly', '--all_leads', '--file_type=prs']
@@ -18,16 +20,15 @@ def test_parse_args():
     assert test_args.graphic_type == 'maps'
 
 
-def test_maps():
+def test_existence():
     ''' Test function to build HRRR 12-hour accumulated maps. '''
+    # Build Maps
     args = ['maps', '-d', str(data_loc), '-f', '0', '12', '1', '-o', str(output_loc),\
-         '-s', '2021052315', '--file_tmpl', 'hrrr.t00z.wrfprsf{FCST_TIME:02d}.grib2', \
+         '-s', '2023031500', '--file_tmpl', 'hrrr.t00z.wrfprsf{FCST_TIME:02d}.grib2', \
             '--images', './image_lists/hrrr_test.yml', 'hourly', '--all_leads', '--file_type=prs']
     create_graphics(args)
 
-
-def test_existence():
-    ''' Test function to check for existence of output folders and files. '''
+    # Test for existence of output folders
     folder_0 = "/202303150100"
     full_path_0 = output_loc + folder_0
     p0 = os.path.isdir(full_path_0)
