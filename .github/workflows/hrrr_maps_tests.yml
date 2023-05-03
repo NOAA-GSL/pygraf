@@ -57,3 +57,5 @@ jobs:
           export $data_loc
           export $output_loc
           python -m pytest tests/test_hrrr_maps.py
+      - name: Directory Persistence Check
+        run: ls
