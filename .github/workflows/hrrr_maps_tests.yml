@@ -1,7 +1,7 @@
 name: hrrr_maps_tests
 env: 
-  data_loc: ${{ GITHUB_WORKSPACE }}/input_data
-  output_loc: ${{ GITHUB_WORKSPACE }}/output
+  data_loc: ${{ github.workspace }}/input_data
+  output_loc: ${{ github.workspace }}/output
 on:
   push:
     branches:
