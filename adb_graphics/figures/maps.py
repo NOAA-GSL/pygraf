@@ -58,6 +58,7 @@ TILE_DEFS = {
     'Florida': {'corners': [19.2305, 29.521, -86.1119, -73.8189], 'stride': 10, 'length': 5},
     'GreatLakes': {'corners': [37, 50, -96, -70], 'stride': 10, 'length': 4},
     'HI': {'corners': [16.6, 24.6, -157.6, -157.5], 'stride': 1, 'length': 4},
+    'HI-zoom': {'corners': None, 'width': 800000, 'height': 800000, 'stride': 4, 'length': 4},
     'Juneau': {'corners': [55.741, 59.629, -140.247, -129.274], 'stride': 4, 'length': 4},
     'NW-large': {'corners': [29.5787, 52.6127, -121.666, -96.5617], 'stride': 15, 'length': 4},
     'NYC-BOS': {'corners': [39, 43.5, -77, -66.5], 'stride': 4, 'length': 4},
@@ -109,11 +110,22 @@ class Map():
         self.tile = kwargs.get('tile', 'full')
         self.airports = self.load_airports(airport_fn)
 
-        if self.tile in FULL_TILES:
-            self.corners = self.grid_info.pop('corners')
+        if self.model != 'hrrrhi':
+            if self.tile in FULL_TILES:
+                self.corners = self.grid_info.pop('corners')
+            else:
+                self.corners = self.get_corners()
+                self.grid_info.pop('corners')
         else:
-            self.corners = self.get_corners()
-            self.grid_info.pop('corners')
+            self.corners = None
+            if self.tile in FULL_TILES:
+                self.width = self.grid_info.pop('width')
+                self.height = self.grid_info.pop('height')
+            else:
+                self.width = self.get_width()
+                self.grid_info.pop('width')
+                self.height = self.get_height()
+                self.grid_info.pop('height')
 
         # Some of Hawaii's smaller islands and islands in the Caribbean don't
         # show up with a larger threshold.
@@ -122,6 +134,12 @@ class Map():
             area_thresh = 100
 
         self.m = self._get_basemap(area_thresh=area_thresh, **self.grid_info)
+
+        if self.model == 'hrrrhi':
+            parallels = np.arange(0., 81, 5.)
+            self.m.drawparallels(parallels, labels=[False, True, True, False])
+            meridians = np.arange(10., 351., 5.)
+            self.m.drawmeridians(meridians, labels=[True, False, False, True])
 
     def boundaries(self):
 
@@ -179,13 +197,18 @@ class Map():
             ax=self.ax,
             resolution='i',
             )
-        corners = self.corners
-        if corners is not None:
+        if self.corners is not None:
+            corners = self.corners
             basemap_args.update(dict(
                 llcrnrlat=corners[0],
                 llcrnrlon=corners[2],
                 urcrnrlat=corners[1],
                 urcrnrlon=corners[3],
+                ))
+        else:
+            basemap_args.update(dict(
+                width=self.width,
+                height=self.height,
                 ))
 
         basemap_args.update(get_basemap_kwargs)
@@ -203,6 +226,22 @@ class Map():
         '''
 
         return TILE_DEFS[self.tile]["corners"]
+
+    def get_width(self):
+
+        '''
+        Gather the width for a specific tile.
+        '''
+
+        return TILE_DEFS[self.tile]["width"]
+
+    def get_height(self):
+
+        '''
+        Gather the height for a specific tile.
+        '''
+
+        return TILE_DEFS[self.tile]["height"]
 
     @staticmethod
     def load_airports(fn):
@@ -464,6 +503,8 @@ class DataMap():
         lats = self.map.airports[:, 0]
         lons = 360 + self.map.airports[:, 1]
         x, y = self.map.m(lons, lats)
+        if self.map.corners is None:
+            return
         data_values = self.field.data
         crnrs = copy.copy(self.map.corners)
         if crnrs[2] < 0:
