@@ -1,7 +1,6 @@
 #pylint: disable=unused-variable
 ''' Tests for create_graphics driver '''
 import os
-import os.path
 import pytest
 from create_graphics import create_graphics
 from create_graphics import parse_args
@@ -12,8 +11,7 @@ OUTPUT_LOC = os.environ.get("data_loc")
 @pytest.fixture
 def build_maps():
     ''' Builds HRRR 12-hour accumulated maps '''
-    # Build Maps
-    args = ['maps', '-d', str(DATA_LOC), '-f', '0', '1', '1', '-o', str(OUTPUT_LOC),\
+    args = ['maps', '-d', DATA_LOC, '-f', '0', '1', '1', '-o', OUTPUT_LOC,\
          '-s', '2023031500', '--file_tmpl', 'hrrr.t00z.wrfprsf{FCST_TIME:02d}.grib2', \
             '--images', './image_lists/hrrr_test.yml', 'hourly', '--all_leads', '--file_type=prs']
     create_graphics(args)
@@ -23,21 +21,20 @@ def test_parse_args():
     ''' Test parse_args for basic parsing success.
         Checks if parse_args returns 'maps' in the graphic_type field.
     '''
-    args = ['maps', '-d', str(DATA_LOC), '-f', '0', '12', '1', '-o', str(OUTPUT_LOC),\
+    args = ['maps', '-d', DATA_LOC, '-f', '0', '12', '1', '-o', OUTPUT_LOC,\
          '-s', '2021052315', '--file_tmpl', 'hrrr.t00z.wrfprsf{FCST_TIME:02d}.grib2', \
             '--images', './image_lists/hrrr_test.yml', 'hourly', '--all_leads', '--file_type=prs']
     test_args = parse_args(args)
     assert test_args.graphic_type == 'maps'
 
 
-def test_existence(build_maps):
+def test_folder_existence(build_maps):
     ''' Tests for existence of folders.
         Can be extended to cover multiple folders.
     '''
     folder = "/202303150000"
     full_path = OUTPUT_LOC + folder
     file_path = os.path.isdir(full_path)
-    print("Full path:", full_path)
     assert file_path == True
 
 
