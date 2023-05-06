@@ -8,7 +8,7 @@ from create_graphics import parse_args
 DATA_LOC = os.environ.get("data_loc")
 OUTPUT_LOC = os.environ.get("data_loc")
 
-@pytest.fixture
+@pytest.fixture(name="_setup")
 def build_maps():
     ''' Builds HRRR 12-hour accumulated maps '''
     args = ['maps', '-d', DATA_LOC, '-f', '0', '12', '1', '-o', OUTPUT_LOC,\
@@ -28,17 +28,17 @@ def test_parse_args():
     assert test_args.graphic_type == 'maps'
 
 
-def test_folder_existence(build_maps):
+def test_folder_existence(_setup):
     ''' Tests for existence of folders.
         Can be extended to cover multiple folders.
     '''
     folder = "/202303150000"
     full_path = OUTPUT_LOC + folder
     file_path = os.path.isdir(full_path)
-    assert file_path == True
+    assert file_path
 
 
-def test_file_count(build_maps):
+def test_file_count(_setup):
     ''' Test for file count in directory.
         Can be extended to cover multiple folders.
     '''
