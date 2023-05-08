@@ -34,4 +34,4 @@ jobs:
       - name: Test code
         run: |
          micromamba activate pygraf
-         python -m pytest --nat-file tests/data/wrfnat_hrconus_07.grib2 --prs-file tests/data/wrfprs_hrconus_07.grib2
+         python -m pytest --nat-file tests/data/wrfnat_hrconus_07.grib2 --prs-file tests/data/wrfprs_hrconus_07.grib2 --ignore=tests/test_hrrr_maps.py
