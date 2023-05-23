@@ -83,10 +83,10 @@
     cmap: gist_ncar
     colors: snow_colors
     ncl_name:
-      rrfs: WEASD_P8_L1_{grid}_acc
       hrrr: WEASD_P8_L1_{grid}_acc1h
       hrrrhi: WEASD_P8_L1_{grid}_acc1h
       rap: WEASD_P8_L1_{grid}_acc1h
+      rrfs: TSNOWP_P8_L1_{grid}_acc1h
     ticks: 0
     title: 1 hr Accumulated Snow Using 10:1 Ratio
     transform: [conversions.kgm2_to_in, conversions.weasd_to_1hsnw]
@@ -232,7 +232,11 @@ acsnw: # Run Total Accumulated Snow Using 10:1 Ratio
     clevs: [0.01, 0.1, 1, 2, 3, 4, 6, 8, 10, 12, 18, 24]
     cmap: gist_ncar
     colors: snow_colors
-    ncl_name: WEASD_P8_L1_{grid}_acc
+    ncl_name:
+      hrrr: WEASD_P8_L1_{grid}_acc
+      hrrrhi: WEASD_P8_L1_{grid}_acc
+      rap: WEASD_P8_L1_{grid}_acc
+      rrfs: TSNOWP_P8_L1_{grid}_acc
     ticks: 0
     title: Run-Total Accumulated Snow Using 10:1 Ratio
     transform: [conversions.kgm2_to_in, conversions.weasd_to_1hsnw]
