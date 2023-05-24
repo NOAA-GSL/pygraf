@@ -86,8 +86,10 @@ class GribFiles():
                 # Don't rename these variables at early hours
                 odd_variables = [
                     'ASNOW',
+                    'FROZR',
                     'FRZR',
                     'LRGHR',
+                    'TSNOWP',
                     ]
                 if self.model == 'rrfs':
                     odd_variables.append('WEASD')
@@ -109,6 +111,7 @@ class GribFiles():
                     'FRZR',
                     'LRGHR',
                     'TCDC',
+                    'TSNOWP',
                     'WEASD',
                     ]
                 if self.model == 'rrfs':
