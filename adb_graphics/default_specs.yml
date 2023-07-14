@@ -1261,11 +1261,11 @@ soilm: # Soil Moisture Availability
     unit: "%"
 soilt: # Soil Temperature
   0cm: &soilt_levs
-    clevs: !!python/object/apply:numpy.arange [240, 331, 2]
-    cmap: jet
+    clevs: !!python/object/apply:numpy.arange [235, 331, 5]
+    cmap: gist_ncar
     colors: tsfc_colors
     ncl_name: TSOIL_P0_2L106_{grid}
-    ticks: 4
+    ticks: 5
     title: Soil Temperature at Sfc
     unit: K
   1cm:
@@ -1357,8 +1357,8 @@ ssrun: # Storm Surface Runoff
     unit: in
 temp: # Temperature
   2ds: # 2m - Sfc
-    clevs: !!python/object/apply:numpy.arange [-16, 17, 2]
-    cmap: seismic
+    clevs: !!python/object/apply:numpy.arange [-32, 33, 2]
+    cmap: Spectral_r
     colors: centered_diff
     ncl_name: TMP_P0_L103_{grid} # 2m Temp
     ticks: 2
@@ -1370,10 +1370,10 @@ temp: # Temperature
         level2: sfc
     unit: F
     wind: False
-  2m:
+  2m: &sfc_temp
     annotate: True
-    clevs: !!python/object/apply:numpy.arange [-60, 121, 4]
-    cmap: jet
+    clevs: !!python/object/apply:numpy.arange [-50, 141, 10]
+    cmap: gist_ncar
     colors: tsfc_colors
     ncl_name: TMP_P0_L103_{grid}
     ticks: 10
@@ -1441,13 +1441,8 @@ temp: # Temperature
         hatches: ['', '...']
         levels: [0, 925]
   sfc:
-    clevs: !!python/object/apply:numpy.arange [-60, 120, 4]
-    cmap: jet
-    colors: tsfc_colors
+    <<: *sfc_temp
     ncl_name: TMP_P0_L1_{grid}
-    ticks: 20
-    transform: conversions.k_to_f
-    unit: F
     wind: False
   ua:
     <<: *ua_temp
