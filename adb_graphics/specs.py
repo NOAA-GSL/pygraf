@@ -364,6 +364,16 @@ class VarSpec(abc.ABC):
         return np.flip(self.rainbow12_colors, 0)
 
     @property
+    def rainbow16_colors(self) -> np.ndarray:
+
+        ''' Default color map for helicity '''
+
+        grays = cm.get_cmap('Greys', 5)([0, 2])
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          ([9, 15, 18, 20, 25, 48, 57, 65, 74, 79, 87, 94, 102, 109, 120])
+        return np.concatenate((grays, ncar))
+
+    @property
     def shear_colors(self) -> np.ndarray:
 
         ''' Default color map for Vertical Shear '''

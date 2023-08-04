@@ -699,29 +699,35 @@ hlcy: # Helicity
     title: 2-5km Min Updraft Helicity (over prv hr)
   mx02: &hlcy_mx02 # Hourly maximum of updraft helicity over 0-2 km layer
     <<: *hlcy
-    clevs: !!python/object/apply:numpy.arange [12.5, 150.5, 12.5]
+    clevs: !join_ranges [[12.5, 87.6, 12.5], [100, 301, 25]]
+    colors: rainbow16_colors
     ncl_name: MXUPHL_P8_2L103_{grid}_max1h
     split: True
-    ticks: 12.5
+    ticks: 0
     title: 0-2km Max Updraft Helicity (over prv hr)
   mx03: &hlcy_mx03 # Hourly maximum of updraft helicity over 0-3 km layer
     <<: *hlcy
-    clevs: !!python/object/apply:numpy.arange [12.5, 150.5, 12.5]
+    clevs: !join_ranges [[12.5, 87.6, 12.5], [100, 301, 25]]
+    colors: rainbow16_colors
     ncl_name: MXUPHL_P8_2L103_{grid}_max1h
     split: True
-    ticks: 12.5
+    ticks: 0
     title: 0-3km Max Updraft Helicity (over prv hr)
   mx16: &hlcy_mx16 # Hourly maximum of updraft helicity over 1-6 km layer
     <<: *hlcy
-    clevs: !!python/object/apply:numpy.arange [25, 301, 25]
+    clevs: !join_ranges [[25, 176, 25], [200, 601, 50]]
+    colors: rainbow16_colors
     ncl_name: MXUPHL_P8_2L103_{grid}_max1h
     split: True
+    ticks: 0
     title: 1-6km Max Updraft Helicity (over prv hr)
   mx25: &hlcy_mx25 # Hourly maximum of updraft helicity over 2-5 km layer
     <<: *hlcy
-    clevs: !!python/object/apply:numpy.arange [25, 301, 25]
+    clevs: !join_ranges [[25, 176, 25], [200, 601, 50]]
+    colors: rainbow16_colors
     ncl_name: MXUPHL_P8_2L103_{grid}_max1h
     split: True
+    ticks: 0
     title: 2-5km Max Updraft Helicity (over prv hr)
   sr01: # 0-1 km Storm Relative Helicity
     <<: *hlcy
