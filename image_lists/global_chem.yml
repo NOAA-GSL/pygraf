@@ -70,8 +70,6 @@ hourly:
       - 10cm
       - 1m
     soilw: *soilt_levs
-    totp6h:
-      - sfc
     ulwrf:
       - sfc
     uswrf:
