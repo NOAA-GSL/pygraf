@@ -581,6 +581,7 @@ def graphics_driver(cla):
             # mins (default is 3 to address most CONUS-sized domains)
             if old_enough:
                 fcst_hours.remove(fhr)
+                fhr_as_list = [fhr]
             else:
                 if cla.all_leads:
                     # Wait on the missing file for an arbitrary 90% of wait time
@@ -637,7 +638,7 @@ def graphics_driver(cla):
                             )
             else:
                 gribfiles = gribfile.GribFiles(
-                    coord_dims={'ens_mem': ens_members},
+                    coord_dims={'ens_mem': ens_members, 'fcst_hr': fhr_as_list},
                     filenames={'free_fcst': grib_paths},
                     filetype=cla.file_type,
                     model=cla.images[0],

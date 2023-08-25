@@ -99,6 +99,10 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
             if index in (0, 8):
                 current_ax.axis('off')
 
+            # If we have less than 10 members, skip the remaining panels.
+            if index > cla.ens_size:
+                continue
+
             # Shenanigans to match ensemble member to panel index
             mem = 0 if index == 4 else index
             mem = mem if mem < 4 else index - 1
