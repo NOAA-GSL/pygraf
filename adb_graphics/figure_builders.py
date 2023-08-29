@@ -91,7 +91,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
 
     for index, current_ax in enumerate(axes):
 
-        if current_ax is axes[-1]:
+        if current_ax is axes[-1] or index == cla.ens_size:
             last_panel = True
         mem = None
         if cla.graphic_type == 'enspanel':
