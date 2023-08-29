@@ -102,15 +102,6 @@ class VarSpec(abc.ABC):
         return np.concatenate((grays, nws, white))
 
     @property
-    def dewp_colors(self) -> np.ndarray:
-
-        ''' Default color map for Dew point temperature '''
-
-        ctable = ctables.colortables.get_colortable(self.vspec.get('cmap')) \
-                    (range(0, 42, 1)) # Carbone42_r
-        return ctable
-
-    @property
     def fire_power_colors(self) -> np.ndarray:
 
         ''' Default color map for fire power plot. '''
