@@ -91,13 +91,17 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
 
     for index, current_ax in enumerate(axes):
 
-        if current_ax is axes[-1]:
+        if current_ax is axes[-1] or index == cla.ens_size:
             last_panel = True
         mem = None
         if cla.graphic_type == 'enspanel':
             # Don't put data in the top left or bottom left panels.
             if index in (0, 8):
                 current_ax.axis('off')
+
+            # If we have less than 10 members, skip the remaining panels.
+            if index > cla.ens_size:
+                continue
 
             # Shenanigans to match ensemble member to panel index
             mem = 0 if index == 4 else index
