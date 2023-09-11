@@ -1,0 +1,9 @@
+hourly:
+  model: global
+  variables:
+    temp:
+      - sfc
+      - 2m
+    pres:
+      - msl
+      - sfc
