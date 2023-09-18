@@ -1261,7 +1261,7 @@ soilm: # Soil Moisture Availability
       hrrrhi: MSTAV_P0_L106_{grid}
       hrrrcar: MSTAV_P0_L106_{grid}
       rap: MSTAV_P0_L106_{grid}
-      rrfs: MSTAV_P0_2L106_{grid}
+      rrfs: MSTAV_P0_L106_{grid}
     ticks: 0
     title: Soil Moisture Availability
     unit: "%"
