@@ -111,6 +111,18 @@ class UPPData(specs.VarSpec):
 
         return maxvals
 
+    def field_sum(self, values, variable2, level2, **kwargs):
+
+        # pylint: disable=unused-argument
+
+        ''' Return the sum of the values. '''
+
+        value2 = self.values(name=variable2, level=level2)
+        sum2 = values + value2
+        value2.close()
+
+        return sum2
+
     def field_diff(self, values, variable2, level2, **kwargs):
 
         # pylint: disable=unused-argument
@@ -624,7 +636,8 @@ class fieldData(UPPData):
         lat = self.ds[lat_var]
 
         grid_info = {}
-        grid_info['corners'] = self.corners
+        if self.model != 'hrrrhi':
+            grid_info['corners'] = self.corners
         if self.grid_suffix in ['GLC0']:
             attrs = ['Latin1', 'Latin2', 'Lov']
             grid_info['projection'] = 'lcc'
@@ -656,6 +669,12 @@ class fieldData(UPPData):
             val = val[0] if isinstance(val, np.ndarray) else val
             grid_info[bm_arg] = val
             del val
+
+            if self.model == 'hrrrhi':
+                grid_info['lat_0'] = 20.44
+                grid_info['lon_0'] = 202.54
+                grid_info['width'] = 2000000
+                grid_info['height'] = 2000000
 
         del lat
 

@@ -6,8 +6,6 @@ hourly:
     acsnw:
       - sfc
     cape:
-      - mu
-      - mul
       - mx90mb
       - sfc
     cin:
