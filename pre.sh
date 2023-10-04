@@ -6,6 +6,7 @@ module use -a /contrib/miniconda3/modulefiles
 module load miniconda3/4.5.12
 conda activate pygraf
 
-module load wgrib2/0.1.9.6a
+module load intel/2022.1.2
+module load wgrib2/2.0.8
 
 module list
