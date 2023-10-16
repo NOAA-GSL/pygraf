@@ -219,10 +219,33 @@ class GribFiles():
 
                 renaming = self.free_fcst_names(dataset, fcst_type)
                 if renaming and self.model not in ['hrrre', 'rrfse']:
-                    print(f'RENAMING VARIABLES:')
+                    print(f'RENAMING VARIABLES FOR MODEL "'+self.model+'":')
+                    names = dict([ (name,name) for name in dataset.data_vars.keys() ])
+                    filtered = dict()
+                    any_were_bad = False
                     for old_name, new_name in renaming.items():
-                        print(f'  {old_name:>30s}  -> {new_name}')
-                    dataset = dataset.rename_vars(renaming)
+                        bad = False
+                        if old_name in names:
+                            if new_name in names:
+                                print(f'  ERROR: Renaming would produce a duplicate: {old_name:>30s}  -> {new_name}')
+                                bad = True
+                                any_were_bad = True
+                        else:
+                            print(f' WARNING: Old name does not exist: {old_name:>30s}  -> {new_name}')
+                            if new_name in names:
+                                print(f'  ERROR: Renaming would produce a duplicate: {old_name:>30s}  -> {new_name}')
+                                bad = True
+                                any_were_bad = True
+                        if not bad:
+                            print(f'  {old_name:>30s}  -> {new_name}')
+                            filtered[old_name] = new_name
+                            if new_name != old_name:
+                                names[new_name] = names[old_name]
+                                del names[old_name]
+                    dataset = dataset.rename_vars(filtered)
+                    if any_were_bad:
+                        print('Internal error: free_fcst_names produced duplicate variable names. To avoid a fatal exception from xarray, some renaming has been skipped.')
+                    del bad, any_were_bad
 
                 if len(all_leads) == 1:
                     # Check that specific variables exist in the xarray that is
