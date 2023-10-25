@@ -28,6 +28,8 @@ hourly:
       - ua
     cin:
       - sfc
+    cloudbase:
+      - ua
     cloudcover:
       - bndylay
       - high
