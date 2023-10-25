@@ -17,6 +17,12 @@ hourly:
       - sfc
     aodtot:
       - sfc
+    bc:
+      - sfc
+    bc1:
+      - sfc
+    bc2:
+      - sfc
     cape:
       - mu
       - mul
@@ -51,6 +57,8 @@ hourly:
       - sfc
     cref:
       - sfc
+    fd:
+      - sfc
     gust:
       - 10m
     hlcy:
@@ -60,7 +68,19 @@ hourly:
       - sfc
     lhtfl:
       - sfc
+    oc:
+      - sfc
+    oc1:
+      - sfc
+    oc2:
+      - sfc
+    PM10:
+      - sfc
+    PM25:
+      - sfc
     pwtr:
+      - sfc
+    seasalt:
       - sfc
     shtfl:
       - sfc
@@ -70,6 +90,8 @@ hourly:
       - 10cm
       - 1m
     soilw: *soilt_levs
+    sulf:
+      - sfc
     ulwrf:
       - sfc
     uswrf:

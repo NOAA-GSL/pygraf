@@ -280,6 +280,33 @@ aodtot: # Total AOD
     <<: *aod
     ncl_name: AOTK_P48_L10_{grid}_A62000
     title: Total Aerosol Optical Depth
+bc: # Black Carbon
+  sfc: &bcsfc
+    clevs: [0.05, 0.1, 0.15, 0.2, 0.5, 1, 2, 3, 4, 5, 7, 10, 15, 20]
+    cmap: jet
+    colors: aod_colors
+    ncl_name: PMTF_P48_L105_{grid}_A62014
+    print_units: true
+    ticks: 0
+    title: Surface Black Carbon
+    transform:
+      funcs: [field_sum]
+      kwargs:
+        variable2: bc2
+        level2: sfc
+    unit: $\mu g/m^3$
+bc1: # Black Carbon 1
+  sfc:
+    <<: *bcsfc
+    ncl_name: PMTF_P48_L105_{grid}_A62014
+    title: Surface Black Carbon 1
+    transform: []
+bc2: # Black Carbon 2
+  sfc:
+    <<: *bcsfc
+    ncl_name: PMTF_P48_L105_{grid}_A62013
+    title: Surface Black Carbon 2
+    transform: []
 colbc: # Column Black Carbon
   sfc: &col
     # clevs: [0.00000005, 0.0000001, 0.00000015, 0.0000002, 0.0000005, 0.000001, 0.000002, 0.000003, 0.000004, 0.000005, 0.0000075, 0.00001, 0.000015, 0.00002]
@@ -588,6 +615,16 @@ finedust: # Fine dust
     clevs: [1, 2, 4, 6, 8, 12, 16, 20, 25, 30, 40, 60, 100, 200]
     ncl_name: MASSDEN_P48_L103_{grid}_A62001
     title: Near-Surface Fine Dust
+fd: # Fine dust, global chem
+  sfc:
+    clevs: [0.05, 0.1, 0.15, 0.2, 0.5, 1, 2, 3, 4, 5, 7, 10, 15, 20]
+    cmap: jet
+    colors: aod_colors
+    ncl_name: PMTF_P48_L1_{grid}_A62001
+    print_units: true
+    ticks: 0
+    title: Fine Dust
+    unit: $\mu g/m^3$
 fullintdust: # Full vertically integrated dust (Fine dust + Coarse dust)
   int:
     <<: *coldust
@@ -1045,6 +1082,48 @@ mref: # Maximum reflectivity for past hour at 1 km AGL
     <<: *refl
     ncl_name: MAXREF_P8_L103_{grid}_max1h
     title: Max 1km agl Reflectivity (over prev hr)
+oc: # Organic Carbon
+  sfc: &ocsfc
+    clevs: [0.05, 0.1, 0.15, 0.2, 0.5, 1, 2, 3, 4, 5, 7, 10, 15, 20]
+    cmap: jet
+    colors: aod_colors
+    ncl_name: PMTF_P48_L105_{grid}_A62014
+    print_units: true
+    ticks: 0
+    title: Surface Organic Carbon
+    transform:
+      funcs: [field_sum]
+      kwargs:
+        variable2: oc2
+        level2: sfc
+    unit: $\mu g/m^3$
+oc1: # Organic Carbon 1
+  sfc:
+    <<: *ocsfc
+    ncl_name: PMTF_P48_L105_{grid}_A62016
+    title: Surface Organic Carbon 1
+    transform: []
+oc2: # Organic Carbon 2
+  sfc:
+    <<: *ocsfc
+    ncl_name: PMTF_P48_L105_{grid}_A62015
+    title: Surface Organic Carbon 2
+    transform: []
+PM10: # PM10, global chem
+  sfc: &pmsfc
+    clevs: [0.05, 0.1, 0.15, 0.2, 0.5, 1, 2, 3, 4, 5, 7, 10, 15, 20]
+    cmap: jet
+    colors: aod_colors
+    ncl_name: PMTC_P48_L1_{grid}_A62000
+    print_units: true
+    ticks: 0
+    title: PM10
+    unit: $\mu g/m^3$
+PM25: # PM25, global chem
+  sfc:
+    <<: *pmsfc
+    ncl_name: PMTF_P48_L1_{grid}_A62000
+    title: PM25
 pres:
   sfc:
     clevs: !!python/object/apply:numpy.arange [650, 1051, 4]
@@ -1264,6 +1343,16 @@ rwmr: # Rain Mixing Ratio
     ncl_name:
       nat: RWMR_P0_L105_{grid}
       prs: RWMR_P0_L100_{grid}
+seasalt: # Fine dust, global chem
+  sfc:
+    clevs: [0.05, 0.1, 0.15, 0.2, 0.5, 1, 2, 3, 4, 5, 7, 10, 15, 20]
+    cmap: jet
+    colors: aod_colors
+    ncl_name: PMTF_P48_L1_{grid}_A62008
+    print_units: true
+    ticks: 0
+    title: Sea Salt
+    unit: $\mu g/m^3$
 shear:
   01km: &shear # 0-1 km
     clevs: !!python/object/apply:numpy.arange [5, 91, 5]
@@ -1456,6 +1545,16 @@ ssrun: # Storm Surface Runoff
     title: Storm Surface Runoff
     transform: conversions.kgm2_to_in
     unit: in
+sulf: # Sulfate, global chem
+  sfc:
+    clevs: [0.05, 0.1, 0.15, 0.2, 0.5, 1, 2, 3, 4, 5, 7, 10, 15, 20]
+    cmap: jet
+    colors: aod_colors
+    ncl_name: PMTF_P48_L105_{grid}_A62006
+    print_units: true
+    ticks: 0
+    title: Sulfate
+    unit: $\mu g/m^3$
 temp: # Temperature
   2ds: # 2m - Sfc
     clevs: !!python/object/apply:numpy.arange [-32, 33, 2]

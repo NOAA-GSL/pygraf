@@ -29,7 +29,7 @@ class VarSpec(abc.ABC):
     @property
     def aod_colors(self) -> np.ndarray:
 
-        ''' Default color map for Max Updraft '''
+        ''' Default color map for AOD products and chem products '''
 
         grays = cm.get_cmap('Greys', 2)([0])
         others = cm.get_cmap(self.vspec.get('cmap'), 15)(range(1, 15, 1), alpha=0.6)
