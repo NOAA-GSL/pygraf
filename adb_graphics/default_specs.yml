@@ -241,6 +241,72 @@ acsnw: # Run Total Accumulated Snow Using 10:1 Ratio
     title: Run-Total Accumulated Snow Using 10:1 Ratio
     transform: [conversions.kgm2_to_in, conversions.weasd_to_1hsnw]
     unit: in
+aodbc: # Black Carbon AOD
+  sfc: &aod
+    clevs: [.1, .16, .23, .29, .36, .42, .49, .55, .61, .68, .74, .81, .87, 1]
+    cmap: jet
+    colors: aod_colors
+    ncl_name: AOTK_P48_L10_{grid}_A62009
+    print_units: false
+    ticks: 0
+    title: Black Carbon Aerosol Optical Depth
+aodfd: # Fine Dust AOD
+  sfc:
+    <<: *aod
+    ncl_name: AOTK_P48_L10_{grid}_A62001
+    title: Fine Dust Aerosol Optical Depth
+aodhg: # OPT2 AOD
+  sfc:
+    <<: *aod
+    ncl_name: AOTK_P48_L10_{grid}_A62007
+    title: Total OPT2 Aerosol Optical Depth
+aodoc: # Organic Carbon AOD
+  sfc:
+    <<: *aod
+    ncl_name: AOTK_P48_L10_{grid}_A62010
+    title: Organic Carbon Aerosol Optical Depth
+aodss: # Sea Salt AOD
+  sfc:
+    <<: *aod
+    ncl_name: AOTK_P48_L10_{grid}_A62008
+    title: Sea Salt Aerosol Optical Depth
+aodsulf: # Sulfate AOD
+  sfc:
+    <<: *aod
+    ncl_name: AOTK_P48_L10_{grid}_A62006
+    title: Sulfate Aerosol Optical Depth
+aodtot: # Total AOD
+  sfc:
+    <<: *aod
+    ncl_name: AOTK_P48_L10_{grid}_A62000
+    title: Total Aerosol Optical Depth
+bc: # Black Carbon
+  sfc: &bcsfc
+    clevs: [0.05, 0.1, 0.15, 0.2, 0.5, 1, 2, 3, 4, 5, 7, 10, 15, 20]
+    cmap: jet
+    colors: aod_colors
+    ncl_name: PMTF_P48_L105_{grid}_A62014
+    print_units: true
+    ticks: 0
+    title: Surface Black Carbon
+    transform:
+      funcs: [field_sum]
+      kwargs:
+        variable2: bc2
+        level2: sfc
+    unit: $\mu g/m^3$
+bc1: # Black Carbon 1
+  sfc:
+    <<: *bcsfc
+    ncl_name: PMTF_P48_L105_{grid}_A62014
+    title: Surface Black Carbon 1
+    transform: []
+bc2: # Black Carbon 2
+  sfc:
+    <<: *bcsfc
+    ncl_name: PMTF_P48_L105_{grid}_A62013
+    title: Surface Black Carbon 2
+    transform: []
 cape:
   mu: &cape # Most Unstable CAPE
     clevs: [1, 100, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
@@ -439,6 +505,62 @@ coarsedust: # Coarse dust
     ticks: 0
     unit: $\mu g/m^3$
     wind: 10m
+colbc: # Column Black Carbon
+  sfc: &col
+    # clevs: [0.00000005, 0.0000001, 0.00000015, 0.0000002, 0.0000005, 0.000001, 0.000002, 0.000003, 0.000004, 0.000005, 0.0000075, 0.00001, 0.000015, 0.00002]
+    clevs: [0.05, 0.1, 0.15, 0.2, 0.5, 1, 2, 3, 4, 5, 7, 10, 15, 20]
+    cmap: jet
+    colors: aod_colors
+    ncl_name: COLMD_P48_L10_{grid}_A62009
+    print_units: true
+    ticks: 0
+    title: Column Black Carbon
+    transform: [conversions.to_micro]
+    unit: kg/m$^{2}$ *1e6
+colfd: # Column Fine Dust
+  sfc:
+    <<: *col
+    clevs: [2.5, 5, 7.5, 10, 25, 50, 100, 150, 200, 250, 375, 500, 750, 1000]
+    ncl_name: COLMD_P48_L10_{grid}_A62001
+    title: Column Fine Dust
+coloc: # Column Organic Carbon
+  sfc:
+    <<: *col
+    clevs: [0.05, 0.1, 0.2, 0.5, 1, 2, 3, 4, 5, 7.5, 10, 20, 30, 40]
+    ncl_name: COLMD_P48_L10_{grid}_A62010
+    title: Column Organic Carbon
+colpm10: # Column PM10
+  sfc:
+    <<: *col
+    clevs: [4, 5, 10, 20, 30, 40, 50, 100, 200, 300, 400, 500, 1000, 2000]
+    ncl_name: COLMD_P48_L10_{grid}_A62000
+    title: Column PM10
+colpm25: # Column PM25
+  sfc:
+    <<: *col
+    clevs: [0.25, 0.5, 0.75, 1, 2.5, 5, 10, 15, 20, 25, 30, 50, 75, 100]
+    ncl_name: COLMD_P48_L10_{grid}_A62000_1
+    title: Column PM25
+colss: # Column Sea Salt
+  sfc:
+    <<: *col
+    clevs: [0.1, 0.6, 3, 6, 10, 13, 16, 20, 23, 26, 30, 33, 36, 100]
+    ncl_name: COLMD_P48_L10_{grid}_A62008
+    title: Column Sea Salt
+colsu: # Column Sulfate
+  sfc:
+    <<: *col
+    clevs: [2, 3, 4, 5, 7.5, 10, 15, 20, 30, 40, 50, 100, 200, 300]
+    ncl_name: COLMD_P48_L10_{grid}_A62006
+    title: Column Sulfate
+colto: # Column Total Ozone
+  sfc:
+    <<: *col
+    clevs: [150, 175, 200, 225, 250, 275, 300, 325, 350, 375, 400, 425, 450, 475]
+    ncl_name: TOZNE_P0_L200_{grid}
+    title: Column Sulfate
+    transform: []
+    unit: DU
 cpofp: # Frozen Precipitation Percentage
   sfc:
     clevs: [-0.1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
@@ -488,6 +610,16 @@ dewp: # Dew point temperature
     transform: conversions.k_to_f
     unit: F
     wind: 10m
+fd: # Fine dust, global chem
+  sfc:
+    clevs: [0.05, 0.1, 0.15, 0.2, 0.5, 1, 2, 3, 4, 5, 7, 10, 15, 20]
+    cmap: jet
+    colors: aod_colors
+    ncl_name: PMTF_P48_L1_{grid}_A62001
+    print_units: true
+    ticks: 0
+    title: Fine Dust
+    unit: $\mu g/m^3$
 finedust: # Fine dust
   int:
     <<: *coldust
@@ -523,6 +655,17 @@ echotop: # Echo Top
     title: Echo Top
     transform: conversions.m_to_kft
     unit: kft
+emissions: # Smoke emissions
+  sfc:
+    clevs: [0, 5, 10, 20, 30, 40, 80, 100, 150, 200, 300, 400, 500]
+    colors: smoke_emissions_colors
+    ncl_name: AEMFLX_P48_L1_{grid}_A62010
+    plot_airports: False
+    plot_scatter: True
+    ticks: 0
+    title: Smoke Emissions
+    transform: conversions.to_micrograms_per_m3
+    unit: $\mu g/m^2/s$
 ffldro: # Ensemble flash flood runoff
   ens24: &flashflood_ensprob
     clevs: [0., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100.]
@@ -939,22 +1082,53 @@ mfrp: # Fire radiative power
     ticks: 0
     title: Fire Radiative Power
     unit: MW
-emissions: # Smoke emissions
-  sfc:
-    clevs: [0, 5, 10, 20, 30, 40, 80, 100, 150, 200, 300, 400, 500]
-    colors: smoke_emissions_colors
-    ncl_name: AEMFLX_P48_L1_{grid}_A62010
-    plot_airports: False
-    plot_scatter: True
-    ticks: 0
-    title: Smoke Emissions
-    transform: conversions.to_micrograms_per_m3
-    unit: $\mu g/m^2/s$
 mref: # Maximum reflectivity for past hour at 1 km AGL
   sfc:
     <<: *refl
     ncl_name: MAXREF_P8_L103_{grid}_max1h
     title: Max 1km agl Reflectivity (over prev hr)
+oc: # Organic Carbon
+  sfc: &ocsfc
+    clevs: [0.05, 0.1, 0.15, 0.2, 0.5, 1, 2, 3, 4, 5, 7, 10, 15, 20]
+    cmap: jet
+    colors: aod_colors
+    ncl_name: PMTF_P48_L105_{grid}_A62014
+    print_units: true
+    ticks: 0
+    title: Surface Organic Carbon
+    transform:
+      funcs: [field_sum]
+      kwargs:
+        variable2: oc2
+        level2: sfc
+    unit: $\mu g/m^3$
+oc1: # Organic Carbon 1
+  sfc:
+    <<: *ocsfc
+    ncl_name: PMTF_P48_L105_{grid}_A62016
+    title: Surface Organic Carbon 1
+    transform: []
+oc2: # Organic Carbon 2
+  sfc:
+    <<: *ocsfc
+    ncl_name: PMTF_P48_L105_{grid}_A62015
+    title: Surface Organic Carbon 2
+    transform: []
+PM10: # PM10, global chem
+  sfc: &pmsfc
+    clevs: [0.05, 0.1, 0.15, 0.2, 0.5, 1, 2, 3, 4, 5, 7, 10, 15, 20]
+    cmap: jet
+    colors: aod_colors
+    ncl_name: PMTC_P48_L1_{grid}_A62000
+    print_units: true
+    ticks: 0
+    title: PM10
+    unit: $\mu g/m^3$
+PM25: # PM25, global chem
+  sfc:
+    <<: *pmsfc
+    ncl_name: PMTF_P48_L1_{grid}_A62000
+    title: PM25
 pres:
   sfc:
     clevs: !!python/object/apply:numpy.arange [650, 1051, 4]
@@ -1174,6 +1348,16 @@ rwmr: # Rain Mixing Ratio
     ncl_name:
       nat: RWMR_P0_L105_{grid}
       prs: RWMR_P0_L100_{grid}
+seasalt: # Fine dust, global chem
+  sfc:
+    clevs: [0.05, 0.1, 0.15, 0.2, 0.5, 1, 2, 3, 4, 5, 7, 10, 15, 20]
+    cmap: jet
+    colors: aod_colors
+    ncl_name: PMTF_P48_L1_{grid}_A62008
+    print_units: true
+    ticks: 0
+    title: Sea Salt
+    unit: $\mu g/m^3$
 shear:
   01km: &shear # 0-1 km
     clevs: !!python/object/apply:numpy.arange [5, 91, 5]
@@ -1366,6 +1550,16 @@ ssrun: # Storm Surface Runoff
     title: Storm Surface Runoff
     transform: conversions.kgm2_to_in
     unit: in
+sulf: # Sulfate, global chem
+  sfc:
+    clevs: [0.05, 0.1, 0.15, 0.2, 0.5, 1, 2, 3, 4, 5, 7, 10, 15, 20]
+    cmap: jet
+    colors: aod_colors
+    ncl_name: PMTF_P48_L105_{grid}_A62006
+    print_units: true
+    ticks: 0
+    title: Sulfate
+    unit: $\mu g/m^3$
 temp: # Temperature
   2ds: # 2m - Sfc
     clevs: !!python/object/apply:numpy.arange [-32, 33, 2]
@@ -1694,7 +1888,7 @@ vvel: # Vertical velocity
     ticks: 5
     transform: conversions.vvel_scale
     unit: -Pa/s * 10
-  mean: # Mean Vertical Veolcity
+  mean: # Mean Vertical Velocity
     clevs: [-20, -15, -10, -5, -1, -0.75, -0.5, -0.25, -0.1, 0.1, 0.25, 0.5, 0.75, 1, 5, 10, 15, 20]
     cmap: Spectral_r
     colors: mean_vvel_colors
