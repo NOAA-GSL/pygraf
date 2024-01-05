@@ -397,21 +397,16 @@ class DataMap():
         ''' Draw the contour fields requested. '''
 
         model_name = self.model_name
-        print(f'model_name = {model_name}')
         main_field = self.field.short_name
-        print(f'main_field = {main_field}')
 
         for contour_field in self.contour_fields:
             levels = contour_field.contour_kwargs.pop('levels',
                                                       contour_field.clevs)
 
-            print(f'levels are {levels}')
-            print(f'contour_field.short_name = {contour_field.short_name}')
-            print(f'self.map.tile = {self.map.tile}')
-            if model_name == "RRFS NA 3km" and main_field == "totp" and \
-               contour_field.short_name == "pres" and self.map.tile == "full":
-                levels = np.arange(650, 1051, 8)
-                print(f'levels are now {levels}')
+            if model_name in ["RAP-NCEP", "RRFS-NCEP", "RRFS NA 3km"]:
+                if main_field == "totp" and contour_field.short_name == "pres" and \
+                   self.map.tile == "full":
+                    levels = np.arange(650, 1051, 8)
 
             cc = self._draw_field(ax=ax,
                                   field=contour_field,
@@ -421,12 +416,20 @@ class DataMap():
                                   )
             if contour_field.short_name not in not_labeled:
                 try:
-                    clab = plt.clabel(cc, levels[::4],
-                                      colors='k',
-                                      fmt='%1.0f',
-                                      fontsize=10,
-                                      inline=1,
-                                      )
+                    plt.clabel(cc, levels[::4],
+                               colors='k',
+                               fmt='%1.0f',
+                               fontsize=10,
+                               inline=1,
+                               )
+                    #
+                    # #old routine, makes white text on black bounding box
+                    # clab = plt.clabel(cc, levels[::4],
+                    #                   colors='k',
+                    #                   fmt='%1.0f',
+                    #                   fontsize=10,
+                    #                   inline=1,
+                    #                   )
                     # # Set the background color for the line labels to black
                     # _ = [txt.set_bbox(dict(color='k')) for txt in clab]
 

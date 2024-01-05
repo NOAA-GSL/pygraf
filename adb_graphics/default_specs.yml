@@ -1577,8 +1577,8 @@ temp: # Temperature
     wind: False
   2m: &sfc_temp
     annotate: True
-    clevs: !!python/object/apply:numpy.arange [-50, 141, 10]
-    cmap: gist_ncar
+    clevs: !!python/object/apply:numpy.arange [-60, 121, 4] 
+    cmap: jet
     colors: tsfc_colors
     ncl_name: TMP_P0_L103_{grid}
     ticks: 10
