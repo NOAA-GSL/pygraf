@@ -422,17 +422,6 @@ class DataMap():
                                fontsize=10,
                                inline=1,
                                )
-                    #
-                    # #old routine, makes white text on black bounding box
-                    # clab = plt.clabel(cc, levels[::4],
-                    #                   colors='k',
-                    #                   fmt='%1.0f',
-                    #                   fontsize=10,
-                    #                   inline=1,
-                    #                   )
-                    # # Set the background color for the line labels to black
-                    # _ = [txt.set_bbox(dict(color='k')) for txt in clab]
-
                 except ValueError:
                     print(f'Cannot add contour labels to map for {self.field.short_name} \
                             {self.field.level}')
