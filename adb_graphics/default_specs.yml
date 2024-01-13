@@ -222,7 +222,7 @@ acsnod: # Accumulated snow
     clevs: [0.01, 0.1, 1, 2, 3, 4, 6, 8, 10, 12, 18, 24]
     cmap: gist_ncar
     colors: snow_colors
-    ncl_name: ASNOW_P8_L1_GLC0_acc
+    ncl_name: ASNOW_P8_L1_{grid}_acc
     ticks: 0
     title: Run Total Accumulated Snow Depth - var dens
     transform: conversions.m_to_in
@@ -777,6 +777,15 @@ gh: # Geopotential height
     unit: gpm
   ua:
     <<: *ua_gh
+ghtfl: # Ground Heat Flux
+  sfc: &heat_flux
+    clevs: !!python/object/apply:numpy.arange [-100, 401, 25]
+    cmap: Carbone42
+    colors: heat_flux_colors
+    ncl_name: GFLUX_P0_L1_{grid}
+    ticks: 0
+    title: Ground Heat Flux
+    unit: W/m$^{2}$
 grle: # Graupel
   ua:
     ncl_name:
@@ -1028,10 +1037,8 @@ lcl: # Lifted condensation level
     <<: *lcl
     unit: m
 lhtfl: # Latent Heat Net Flux
-  sfc: &heat_flux
-    clevs: !!python/object/apply:numpy.arange [-100, 401, 25]
-    cmap: Carbone42
-    colors: heat_flux_colors
+  sfc:
+    <<: *heat_flux
     ncl_name: LHTFL_P0_L1_{grid}
     ticks: 0
     title: Latent Heat Net Flux
@@ -1576,9 +1583,9 @@ temp: # Temperature
     unit: F
     wind: False
   2m: &sfc_temp
-    annotate: True
-    clevs: !!python/object/apply:numpy.arange [-60, 121, 4] 
-    cmap: jet
+    annotate: False
+    clevs: !!python/object/apply:numpy.arange [-50, 141, 10]
+    cmap: gist_ncar
     colors: tsfc_colors
     ncl_name: TMP_P0_L103_{grid}
     ticks: 10

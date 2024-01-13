@@ -66,6 +66,8 @@ hourly:
       - sat
     G124bt:
       - sat
+    ghtfl:
+      - sfc
     gust:
       - 10m
     hail:
