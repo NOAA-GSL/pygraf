@@ -89,7 +89,6 @@ class GribFiles():
                     'FROZR',
                     'FRZR',
                     'LRGHR',
-                    'TSNOWP',
                     ]
                 if self.model == 'rrfs':
                     odd_variables.append('WEASD')
