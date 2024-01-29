@@ -3,6 +3,8 @@ hourly:
   variables:
     1hsnw:
       - sfc
+    acsnod:
+      - sfc
     acsnw:
       - sfc
     acfrozr:

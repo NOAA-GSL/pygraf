@@ -383,8 +383,11 @@ class DataMap():
 
         # Add field values at airports
         annotate = self.field.vspec.get('annotate', False)
+        model_name = self.model_name
         if annotate and 'global' not in self.map.model: # too dense in global
-            self._draw_field_values(ax)
+            if model_name not in ['RRFS NA 3km']: # too dense in full RRFS domain
+                if model_name == 'RAP-NCEP' and self.map.tile not in ['full']:
+                    self._draw_field_values(ax)
 
         # Add scatter plot, if requested
         if self.plot_scatter:
