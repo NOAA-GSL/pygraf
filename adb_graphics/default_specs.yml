@@ -1977,10 +1977,6 @@ wspeed: # Wind Speed
   160m:
     <<: *ua_wspeed
     title: 160m Wind
-    transform:
-      funcs: [vector_magnitude, conversions.ms_to_kt]
-      kwargs:
-        field2: VGRD_P0_L103_{grid}
   20mb:
     <<: *ua_wspeed_high
     title: 20mb Wind
@@ -1990,17 +1986,9 @@ wspeed: # Wind Speed
   320m:
     <<: *ua_wspeed
     title: 320m Wind
-    transform:
-      funcs: [vector_magnitude, conversions.ms_to_kt]
-      kwargs:
-        field2: VGRD_P0_L103_{grid}
   80m:
     <<: *ua_wspeed
     title: 80m Wind
-    transform:
-      funcs: [vector_magnitude, conversions.ms_to_kt]
-      kwargs:
-        field2: VGRD_P0_L103_{grid}
   850mb:
     <<: *ua_wspeed
     contours:
