@@ -69,6 +69,8 @@ TILE_DEFS = {
     'Taiwan': {'corners': [19, 28, 116, 126], 'stride': 1, 'length': 5},
     'VortexSE': {'corners': [30, 37, -92.5, -82], 'stride': 4, 'length': 4},
     'WAtlantic': {'corners': [-0.25, 50.25, 261.75, 330.25], 'stride': 5, 'length': 5},
+    'WFIP3-d01': {'corners': [33.66, 46.86, -78.83, -61.01], 'stride': 10, 'length': 4},
+    'WFIP3-d02': {'corners': [37.84, 43.22, -74.77, -66.50], 'stride': 5, 'length': 5},
     'WPacific': {'corners': [-40, 50, 90, 240], 'stride': 10, 'length': 5},
 }
 
@@ -110,6 +112,8 @@ class Map():
         self.tile = kwargs.get('tile', 'full')
         self.airports = self.load_airports(airport_fn)
 
+        if self.model == 'hrrr' and 'WFIP3' in self.tile:
+            self.grid_info.update({'lat_1': 40.6, 'lat_2': 40.6, 'lon_0': 289.2})
         if self.model != 'hrrrhi':
             if self.tile in FULL_TILES:
                 self.corners = self.grid_info.pop('corners')
@@ -657,6 +661,12 @@ class DataMap():
             if self.map.model == 'globalCONUS':
                 stride = int(round(stride / 2.5))
                 length = 5
+            if self.map.model == 'hrrr' and self.model_name == 'WFIP3-FULL' and \
+               tile == 'WFIP3-d02':
+                stride = 6
+            if self.map.model == 'hrrr' and self.model_name == 'WFIP3-NEST' and \
+               tile == 'WFIP3-d02':
+                stride = 17
 
         mask = np.ones_like(u)
         mask[::stride, ::stride] = 0

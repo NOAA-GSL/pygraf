@@ -1745,6 +1745,8 @@ u:
     ncl_name: UGRD_P0_L103_{grid}
     transform: conversions.ms_to_kt
   80m: *agl_uwind
+  160m: *agl_uwind
+  320m: *agl_uwind
   5mb: &ua_uwind
     ncl_name:
       prs: UGRD_P0_L100_{grid}
@@ -1807,6 +1809,8 @@ v:
     ncl_name: VGRD_P0_L103_{grid}
     transform: conversions.ms_to_kt
   80m: *agl_wind
+  160m: *agl_wind
+  320m: *agl_wind
   5mb: &ua_vwind
     ncl_name:
       prs: VGRD_P0_L100_{grid}
@@ -1970,19 +1974,21 @@ wspeed: # Wind Speed
   10mb:
     <<: *ua_wspeed_high
     title: 10mb Wind
+  160m:
+    <<: *ua_wspeed
+    title: 160m Wind
   20mb:
     <<: *ua_wspeed_high
     title: 20mb Wind
   250mb:
     <<: *ua_wspeed_high
     title: 250mb Wind
+  320m:
+    <<: *ua_wspeed
+    title: 320m Wind
   80m:
     <<: *ua_wspeed
     title: 80m Wind
-    transform:
-      funcs: [vector_magnitude, conversions.ms_to_kt]
-      kwargs:
-        field2: VGRD_P0_L103_{grid}
   850mb:
     <<: *ua_wspeed
     contours:
