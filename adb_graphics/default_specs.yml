@@ -413,7 +413,12 @@ ceilexp: # Ceiling - experimental
 ceilexp2: # Ceiling - experimental no.2
   ua:
     <<: *ceil
-    ncl_name: CEIL_P0_L2_{grid}
+    ncl_name: 
+      hrrr: HGT_P0_L2_{grid}
+      hrrrhi: HGT_P0_L2_{grid}
+      hrrrcar: HGT_P0_L2_{grid}
+      rap: HGT_P0_L2_{grid}
+      rrfs: CEIL_P0_L2_{grid}
     title: Ceiling (exp-2)
 cfrzr: # Categorical Freezing Rain
   sfc:
@@ -448,7 +453,8 @@ cin: # Surface Convective Inhibition
 cloudbase: # Cloud-base height
   ua:
     <<: *ceil
-    ncl_name: HGT_P0_L2_{grid}
+    ncl_name:
+      rrfs: HGT_P0_L2_{grid}
     title: Cloud-Base Height
 cloudcover:
   bndylay: &cld_cover # PBL ... 1 km Cloud Cover
