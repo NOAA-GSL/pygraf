@@ -3,9 +3,7 @@
 module purge
 
 module use -a /contrib/miniconda3/modulefiles
-module load miniconda3/4.5.12
+module load miniconda3/4.12.0
 conda activate pygraf
-
-module load wgrib2/2.0.8
 
 module list
