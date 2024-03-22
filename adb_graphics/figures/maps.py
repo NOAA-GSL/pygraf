@@ -59,6 +59,7 @@ TILE_DEFS = {
     'GreatLakes': {'corners': [37, 50, -96, -70], 'stride': 10, 'length': 4},
     'HI': {'corners': [16.6, 24.6, -157.6, -157.5], 'stride': 1, 'length': 4},
     'HI-zoom': {'corners': None, 'width': 800000, 'height': 800000, 'stride': 4, 'length': 4},
+    'Hurr-Carr': {'corners': [21, 28, -96, -69], 'stride': 10, 'length': 4},
     'Juneau': {'corners': [55.741, 59.629, -140.247, -129.274], 'stride': 4, 'length': 4},
     'NW-large': {'corners': [29.5787, 52.6127, -121.666, -96.5617], 'stride': 15, 'length': 4},
     'NYC-BOS': {'corners': [39, 43.5, -77, -66.5], 'stride': 4, 'length': 4},
@@ -255,7 +256,6 @@ class Map():
         with open(fn, 'r') as f:
             data = f.readlines()
         return np.array([l.strip().split(',') for l in data], dtype=float)
-
 
 class DataMap():
     #pylint: disable=too-many-arguments
