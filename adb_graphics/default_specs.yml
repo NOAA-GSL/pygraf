@@ -593,6 +593,17 @@ cref: # Composite reflectivity
     ncl_name: REFC_P0_L{level_type}_{grid}
     title: Composite Reflectivity
     include_obs: True
+crefmax: # Comp reflectivity (max over forecast)
+  sfc:
+    accumulate: True
+    clevs: !!python/object/apply:numpy.arange [5, 76, 5]
+    cmap: NWSReflectivity
+    colors: cref_colors
+    ncl_name: REFC_P0_L200_{grid}
+    ticks: 5
+    title: Comp Reflectivity (max over forecast)
+    transform: run_max
+    unit: dBZ
 csnow: # Categorical Snow
   sfc:
     ncl_name: CSNOW_P0_L1_{grid}
@@ -1172,6 +1183,28 @@ pres:
     wind: 10m
   ua:
     ncl_name: PRES_P0_L105_{grid}
+presmin:
+  msl:
+    accumulate: True
+    annotate: True
+    clevs: !!python/object/apply:numpy.arange [860, 1001, 10]
+    cmap: NWSReflectivity
+    colors: cref_colors
+    ncl_name:
+      global: PRMSL_P0_L101_{grid}
+      globalAK: PRMSL_P0_L101_{grid}
+      globalCONUS: PRMSL_P0_L101_{grid}
+      globalNHemi: PRMSL_P0_L101_{grid}
+      globalSHemi: PRMSL_P0_L101_{grid}
+      hrrr: MSLMA_P0_L101_{grid}
+      hrrrhi: MSLMA_P0_L101_{grid}
+      hrrrcar: MSLMA_P0_L101_{grid}
+      rap: MSLMA_P0_L101_{grid}
+      rrfs: MSLET_P0_L101_{grid}
+    ticks: 0
+    transform: [conversions.pa_to_hpa, run_min]
+    unit: hPa
+#    wind: 10m
 ptmp: # Potential temperature
   2m:
     clevs: !!python/object/apply:numpy.arange [210, 350, 5]
