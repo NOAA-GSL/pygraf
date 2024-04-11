@@ -80,16 +80,19 @@ def create_maps(cla, fhr, grib_contents, workdir, grib_contents2=None):
         args = []
         for variable, levels in cla.images[1].items():
             for level in levels:
+                if variable == 'ptyp' and fhr == 0:
+                    print(f'skipping ptyp for fhr 0')
+                else:
 
-                # Load the spec for the current variable
-                spec = cla.specs.get(variable, {}).get(level)
+                    # Load the spec for the current variable
+                    spec = cla.specs.get(variable, {}).get(level)
 
-                if not spec:
-                    msg = f'graphics: {variable} {level}'
-                    raise errors.NoGraphicsDefinitionForVariable(msg)
+                    if not spec:
+                        msg = f'graphics: {variable} {level}'
+                        raise errors.NoGraphicsDefinitionForVariable(msg)
 
-                args.append((cla, fhr, grib_contents, level, model, spec,
-                             variable, workdir, tile, grib_contents2))
+                    args.append((cla, fhr, grib_contents, level, model, spec,
+                                 variable, workdir, tile, grib_contents2))
 
         print(f'Queueing {len(args)} maps')
         with Pool(processes=cla.nprocs) as pool:
