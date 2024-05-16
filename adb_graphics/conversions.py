@@ -25,6 +25,12 @@ def kgm2_to_in(field, **kwargs):
 
     return field * 0.03937
 
+def kg_to_g(field, **kwargs):
+
+    ''' Conversion from kg to g '''
+
+    return field * 1000.
+    
 def magnitude(a, b, **kwargs):
 
     ''' Return the magnitude of vector components '''
