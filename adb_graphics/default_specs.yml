@@ -1036,6 +1036,16 @@ icsev: # Icing Severity
       kwargs:
         level: 1000ft
         variable: icsev
+iwp: # Ice Water Path
+  sfc:
+    clevs: !!python/object/apply:numpy.arange [5, 65, 5]
+    cmap: gist_ncar
+    colors: rainbow12_colors
+    ncl_name: TCOLI_P0_L10_{grid}
+    ticks: 0
+    title: Ice Water Path
+    transform: conversions.kg_to_g
+    unit: $g/m^2$
 lcl: # Lifted condensation level
   sfc: &lcl
     clevs: !!python/object/apply:numpy.arange [0, 5000, 250]
@@ -1087,6 +1097,16 @@ lpl: # Lifted parcel level
     ncl_name: PLPL_P0_2L108_{grid}
     transform: conversions.pa_to_hpa
     unit: hPa
+lwp: # Liquid Water Path
+  sfc:
+    clevs: !!python/object/apply:numpy.arange [25, 325, 25]
+    cmap: gist_ncar
+    colors: rainbow12_colors
+    ncl_name: TCOLW_P0_L10_{grid}
+    ticks: 0
+    title: Liquid Water Path
+    transform: conversions.kg_to_g
+    unit: $g/m^2$
 ltg3: # Lightning Threat (LTG1 ... LTG2)
   sfc: 
     clevs: [0.02, 0.5, 1.0, 1.5, 2.0, 2.5, 3, 4, 5, 6, 7, 8, 10, 12]

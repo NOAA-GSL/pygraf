@@ -82,6 +82,8 @@ hourly:
       - mx25
     hpbl:
       - sfc
+    iwp:
+      - sfc
     lcl:
       - sfc
     lhtfl:
@@ -90,6 +92,8 @@ hourly:
       - best
       - sfc
     ltg3:
+      - sfc
+    lwp:
       - sfc
     mfrp:
       - sfc
