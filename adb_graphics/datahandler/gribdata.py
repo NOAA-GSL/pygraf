@@ -551,7 +551,7 @@ class fieldData(UPPData):
         '''
 
         lat, lon = self.latlons()
-        if self.model in ['global', 'obs']:
+        if self.model in ['global', 'hfip', 'obs']:
             ret = [lat[-1], lat[0], lon[0], lon[-1]]
         else:
             ret = [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
