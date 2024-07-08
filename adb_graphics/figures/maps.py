@@ -59,6 +59,7 @@ TILE_DEFS = {
     'GreatLakes': {'corners': [37, 50, -96, -70], 'stride': 10, 'length': 4},
     'HI': {'corners': [16.6, 24.6, -157.6, -157.5], 'stride': 1, 'length': 4},
     'HI-zoom': {'corners': None, 'width': 800000, 'height': 800000, 'stride': 4, 'length': 4},
+    'HFIP': {'corners': [8.35, 51.6, 244., 336.], 'stride': 30, 'length': 4},
     'Hurr-Car': {'corners': [21, 28, -96, -69], 'stride': 10, 'length': 4},
     'Juneau': {'corners': [55.741, 59.629, -140.247, -129.274], 'stride': 4, 'length': 4},
     'NW-large': {'corners': [29.5787, 52.6127, -121.666, -96.5617], 'stride': 15, 'length': 4},
@@ -158,7 +159,7 @@ class Map():
                                 zorder=2,
                                 )
         else:
-            if self.model not in ['global'] and self.tile not in FULL_TILES:
+            if self.model not in ['global', 'hfip'] and self.tile not in FULL_TILES:
                 self.m.drawcounties(antialiased=False,
                                     color='gray',
                                     linewidth=0.1,
@@ -488,7 +489,7 @@ class DataMap():
 
         # For global lat-lon models, make 2D arrays for x and y
         # Shift the map and data if needed
-        if self.map.model in ['global']:
+        if self.map.model in ['global', 'hfip']:
             tile = self.map.tile
             if tile in ['Africa', 'Europe']:
                 vals, x = shiftgrid(180., vals, x, start=False)
