@@ -99,6 +99,8 @@ hourly:
       - sfc
     ltg3:
       - sfc
+    ltng:
+      - sfc
     mref:
       - sfc
     pres:

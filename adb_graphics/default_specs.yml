@@ -674,9 +674,15 @@ echotop: # Echo Top
     unit: kft
 emissions: # Smoke emissions
   sfc:
-    clevs: [0, 5, 10, 20, 30, 40, 80, 100, 150, 200, 300, 400, 500]
+    clevs: [0, 10, 20, 30, 50, 75, 100, 150, 200, 300, 500, 750, 1000]
     colors: smoke_emissions_colors
-    ncl_name: AEMFLX_P48_L1_{grid}_A62010
+    ncl_name:
+      global: AEMFLX_P48_L1_{grid}_A62010
+      globalAK: AEMFLX_P48_L1_{grid}_A62010
+      globalCONUS: AEMFLX_P48_L1_{grid}_A62010
+      globalNHemi: AEMFLX_P48_L1_{grid}_A62010
+      globalSHemi: AEMFLX_P48_L1_{grid}_A62010
+      rrfs: AEMFLX_P48_L200_{grid}_A62010
     plot_airports: False
     plot_scatter: True
     ticks: 0
@@ -705,10 +711,9 @@ firewx: # Fire Weather Index
     clevs: [10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 100]
     cmap: gist_ncar
     colors: rainbow11_colors
-    ncl_name: VGTYP_P0_L1_{grid} # choosing one of the un-transformed values in the algorithm
+    ncl_name: VAR_2_4_26_P8_L1_{grid}_avg1h
     ticks: 0
     title: Hourly Wildfire Potential
-    transform: fire_weather_index
     unit: "%"
 flru: # Aviation Flight Rules
   sfc:
@@ -1096,6 +1101,15 @@ ltg3: # Lightning Threat (LTG1 ... LTG2)
     ticks: 0
     title: Lightning Threat
     unit: flashes / km$^{2}$ / 5 min
+ltng: # Lightning
+  sfc:
+    clevs: !!python/object/apply:numpy.arange [5, 91, 5]
+    cmap: jet
+    colors: graupel_colors
+    ncl_name: LTNG_P8_L10_{grid}_max1h
+    ticks: 0
+    title: Max Lightning (over prv hr)
+    unit: mm
 mfrp: # Fire radiative power
   sfc:
     clevs: [0, 10, 25, 50, 100, 250]
