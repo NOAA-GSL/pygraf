@@ -43,7 +43,7 @@ TILE_DEFS = {
     'Africa': {'corners': [-40, 40, -40, 60], 'stride': 7, 'length': 5},
     'AKZoom': {'corners': [52, 73, -162, -132], 'stride': 4, 'length': 5},
     'AKZoom2': {'corners': [37.9, 80.8, 180, -105.7], 'stride': 8, 'length': 5},
-    'AKRange': {'corners': [59.722, 65.022, -153.583, -144.289], 'stride': 4, 'length': 4},
+    'AKRange': {'corners': [62.0, 67.0, -152.0, -143.0], 'stride': 4, 'length': 4},
     'Anchorage': {'corners': [58.59, 62.776, -152.749, -146.218], 'stride': 4, 'length': 4},
     'ATL': {'corners': [31.2, 35.8, -87.4, -79.8], 'stride': 4, 'length': 4},
     'Beijing': {'corners': [25, 53, 102, 133], 'stride': 3, 'length': 5},
