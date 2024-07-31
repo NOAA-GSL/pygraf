@@ -795,10 +795,11 @@ gh: # Geopotential height
   ua:
     <<: *ua_gh
 ghtfl: # Ground Heat Flux
-  sfc: &heat_flux
-    clevs: !!python/object/apply:numpy.arange [-100, 401, 25]
-    cmap: Carbone42
-    colors: heat_flux_colors
+  sfc:
+    cmap: magma_r
+    clevs: [-200, -150, -100, -50, -25, 0, 25, 50, 100, 150, 200, 300]
+    cmap: PuOr
+    colors: heat_flux_colors_g
     ncl_name: GFLUX_P0_L1_{grid}
     ticks: 0
     title: Ground Heat Flux
@@ -1055,7 +1056,10 @@ lcl: # Lifted condensation level
     unit: m
 lhtfl: # Latent Heat Net Flux
   sfc:
-    <<: *heat_flux
+    cmap: magma_r
+    clevs: [-100, -50, -25, -10, 0, 10, 25, 50, 100, 150, 200, 250, 300, 400, 500, 750]
+    cmap: BrBG
+    colors: heat_flux_colors_l
     ncl_name: LHTFL_P0_L1_{grid}
     ticks: 0
     title: Latent Heat Net Flux
@@ -1432,7 +1436,10 @@ shear:
         level: 06km
 shtfl: # Sensible Heat Net Flux
   sfc:
-    <<: *heat_flux
+    cmap: magma_r
+    clevs: [-100, -50, -25, -10, 0, 10, 25, 50, 100, 150, 200, 250, 300, 400, 500, 750]
+    cmap: RdYlBu_r
+    colors: heat_flux_colors_s
     ncl_name: SHTFL_P0_L1_{grid}
     ticks: 0
     title: Sensible Heat Net Flux
