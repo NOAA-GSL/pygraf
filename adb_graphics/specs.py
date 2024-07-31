@@ -193,6 +193,33 @@ class VarSpec(abc.ABC):
         return np.concatenate((grays, ctable))
 
     @property
+    def heat_flux_colors_g(self) -> np.ndarray:
+
+        ''' Default color map for Latent/Sensible Heat Flux '''
+
+        colors = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          (range(15, 112, 8))
+        return colors
+
+    @property
+    def heat_flux_colors_l(self) -> np.ndarray:
+
+        ''' Default color map for Latent/Sensible Heat Flux '''
+
+        colors = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          (range(32, 129, 6))
+        return colors
+
+    @property
+    def heat_flux_colors_s(self) -> np.ndarray:
+
+        ''' Default color map for Latent/Sensible Heat Flux '''
+
+        colors = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          (range(32, 129, 6))
+        return colors
+
+    @property
     def icprb_colors(self) -> np.ndarray:
 
         ''' Default color map for Icing Probability '''
