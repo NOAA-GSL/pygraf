@@ -1108,8 +1108,21 @@ ltng: # Lightning
     colors: graupel_colors
     ncl_name: LTNG_P8_L10_{grid}_max1h
     ticks: 0
-    title: Max Lightning (over prv hr)
-    unit: mm
+    unit: strikes / hr
+lwtp: # Lightning with total precip
+  sfc:
+    clevs: [0.002, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 1.0, 2.0]
+    cmap: gist_ncar
+    colors: pcp_colors
+    contours:
+      ltng_sfc:
+        colors: black
+        linewidths: 1.2
+    ncl_name: APCP_P8_L1_{grid}_acc1h
+    ticks: 0
+    title: 1 hr Precip & Lightning
+    transform: conversions.kgm2_to_in
+    unit: in
 mfrp: # Fire radiative power
   sfc:
     clevs: [0, 10, 25, 50, 100, 250]
