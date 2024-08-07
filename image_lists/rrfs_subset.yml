@@ -101,6 +101,8 @@ hourly:
       - sfc
     ltng:
       - sfc
+    lwtp:
+      - sfc
     mref:
       - sfc
     pres:
