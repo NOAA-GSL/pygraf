@@ -1115,9 +1115,9 @@ ltng: # Lightning
     unit: strikes / hr
 lwtp: # Lightning with total precip
   sfc:
-    clevs: [0.002, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 1.0, 2.0]
+    clevs: [0.25, 0.50, 0.75, 1.0, 2.0]
     cmap: gist_ncar
-    colors: pcp_colors
+    colors: pcp_colors_high
     contours:
       ltng_sfc:
         colors: black

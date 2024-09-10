@@ -304,6 +304,16 @@ class VarSpec(abc.ABC):
         return np.concatenate((grays, ncar))
 
     @property
+    def pcp_colors_high(self) -> np.ndarray:
+
+        ''' High values color map for Hourly Precipitation '''
+
+        grays = cm.get_cmap('Greys', 2)([0])
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          ([70, 80, 85, 90, 115])
+        return np.concatenate((grays, ncar))
+
+    @property
     def pmsl_colors(self) -> np.ndarray:
 
         ''' Default color map for Surface Pressure '''
