@@ -50,7 +50,5 @@ jobs:
       - name: Test code
         run: |
           export GITHUB_WORKSPACE=$(pwd)
-          export $data_loc
-          export $output_loc
           python -m pytest tests/test_hrrr_maps.py
         shell: bash -el {0}  
