@@ -19,12 +19,12 @@ jobs:
         with:
           lfs: true
       - name: Install Micromamba with no environment
-        uses: mamba-org/provision-with-micromamba@main
+        uses: mamba-org/setup-micromamba@v1
         with:
           environment-file: false
           channel-priority: flexible
           cache-downloads: true
-          cache-env: true
+          cache-environment: true
       - name: Install pygraf environment
         run: micromamba create -n pygraf -y -f /home/runner/work/pygraf/pygraf/environment.yml
       - name: Lint code
