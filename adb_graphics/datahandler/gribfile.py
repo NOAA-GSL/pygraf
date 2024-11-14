@@ -104,7 +104,7 @@ class GribFiles():
                 # MASSDEN is a special case when ending in "avg_1'"
                 if var.split('_')[0] == 'MASSDEN' and var.split('_')[-2] == 'avg':
                     print(f'Special change to MASSDEN avg_1 name to avg1h_1')
-                    ret[var] = var.replace('avg','avg1h')
+                    ret[var] = var.replace('avg', 'avg1h')
             else:
                 # Only rename these variables at late hours
                 odd_variables = [
