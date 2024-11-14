@@ -41,15 +41,12 @@ jobs:
           https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20230315/conus/hrrr.t00z.wrfprsf12.grib2
           EOF
           ls
-      - name: Install Micromamba with no environment
+      - name: Install Micromamba with pygraf environment
         uses: mamba-org/provision-with-micromamba@main
         with:
-          environment-file: false
-          channel-priority: flexible
+          environment-file: environment.yml
           cache-downloads: true
           cache-env: true
-      - name: Install pygraf environment
-        run: micromamba create -n pygraf -y -f /home/runner/work/pygraf/pygraf/environment.yml
       - name: Test code
         run: |
           micromamba activate pygraf
@@ -57,3 +54,4 @@ jobs:
           export $data_loc
           export $output_loc
           python -m pytest tests/test_hrrr_maps.py
+        shell: bash -el {0}  
