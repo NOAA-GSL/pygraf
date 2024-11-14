@@ -42,7 +42,7 @@ jobs:
           EOF
           ls
       - name: Install Micromamba with pygraf environment
-        uses: mamba-org/provision-with-micromamba@main
+        uses: mamba-org/setup-micromamba@v1
         with:
           environment-file: environment.yml
           cache-downloads: true
