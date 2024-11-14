@@ -49,7 +49,6 @@ jobs:
           cache-env: true
       - name: Test code
         run: |
-          micromamba activate pygraf
           export GITHUB_WORKSPACE=$(pwd)
           export $data_loc
           export $output_loc
