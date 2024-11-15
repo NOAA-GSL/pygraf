@@ -18,20 +18,15 @@ jobs:
         uses: actions/checkout@v2
         with:
           lfs: true
-      - name: Install Micromamba with no environment
-        uses: mamba-org/provision-with-micromamba@main
+      - name: Install Micromamba with pygraf environment
+        uses: mamba-org/setup-micromamba@v1
         with:
-          environment-file: false
-          channel-priority: flexible
+          environment-file: environment.yml
           cache-downloads: true
-          cache-env: true
-      - name: Install pygraf environment
-        run: micromamba create -n pygraf -y -f /home/runner/work/pygraf/pygraf/environment.yml
+          cache-environment: true
       - name: Lint code
-        run: |
-         micromamba activate pygraf
-         find . -type f -name "*.py" | xargs pylint
+        run: find . -type f -name "*.py" | xargs pylint
+        shell: bash -el {0}
       - name: Test code
-        run: |
-         micromamba activate pygraf
-         python -m pytest --nat-file tests/data/wrfnat_hrconus_07.grib2 --prs-file tests/data/wrfprs_hrconus_07.grib2 --ignore=tests/test_hrrr_maps.py
+        run: python -m pytest --nat-file tests/data/wrfnat_hrconus_07.grib2 --prs-file tests/data/wrfprs_hrconus_07.grib2 --ignore=tests/test_hrrr_maps.py
+        shell: bash -el {0}
