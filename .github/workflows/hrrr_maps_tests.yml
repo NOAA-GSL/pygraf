@@ -1,0 +1,54 @@
+name: hrrr_maps_tests
+env: 
+  data_loc: ${{ github.workspace }}/input_data
+  output_loc: ${{ github.workspace }}/output
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+jobs:
+  test_hrrr_maps:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Create data and output folders
+        run: |
+          mkdir -p $output_loc
+          mkdir -p $data_loc
+      - name: Fetch Grib Files
+        run: |
+          wget -N -P $data_loc -i - << EOF
+          https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20230315/conus/hrrr.t00z.wrfprsf00.grib2
+          https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20230315/conus/hrrr.t00z.wrfprsf01.grib2
+          https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20230315/conus/hrrr.t00z.wrfprsf02.grib2
+          https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20230315/conus/hrrr.t00z.wrfprsf03.grib2
+          https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20230315/conus/hrrr.t00z.wrfprsf04.grib2
+          https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20230315/conus/hrrr.t00z.wrfprsf05.grib2
+          https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20230315/conus/hrrr.t00z.wrfprsf06.grib2
+          https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20230315/conus/hrrr.t00z.wrfprsf07.grib2
+          https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20230315/conus/hrrr.t00z.wrfprsf08.grib2
+          https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20230315/conus/hrrr.t00z.wrfprsf09.grib2
+          https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20230315/conus/hrrr.t00z.wrfprsf10.grib2
+          https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20230315/conus/hrrr.t00z.wrfprsf11.grib2
+          https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.20230315/conus/hrrr.t00z.wrfprsf12.grib2
+          EOF
+          ls
+      - name: Install Micromamba with pygraf environment
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-file: environment.yml
+          cache-downloads: true
+          cache-env: true
+      - name: Test code
+        run: |
+          export GITHUB_WORKSPACE=$(pwd)
+          python -m pytest tests/test_hrrr_maps.py
+        shell: bash -el {0}  

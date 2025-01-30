@@ -86,6 +86,7 @@ class GribFiles():
                 # Don't rename these variables at early hours
                 odd_variables = [
                     'ASNOW',
+                    'FROZR',
                     'FRZR',
                     'LRGHR',
                     ]
@@ -100,6 +101,10 @@ class GribFiles():
                 if suffix in special_suffixes and needs_renaming:
                     new_suffix = f'{suffix}1h' if 'global' not in self.model else f'{suffix}6h'
                     ret[var] = var.replace(suffix, new_suffix)
+                # MASSDEN is a special case when ending in "avg_1'"
+                if var.split('_')[0] == 'MASSDEN' and var.split('_')[-2] == 'avg':
+                    print(f'Special change to MASSDEN avg_1 name to avg1h_1')
+                    ret[var] = var.replace('avg', 'avg1h')
             else:
                 # Only rename these variables at late hours
                 odd_variables = [
@@ -109,6 +114,7 @@ class GribFiles():
                     'FRZR',
                     'LRGHR',
                     'TCDC',
+                    'TSNOWP',
                     'WEASD',
                     ]
                 if self.model == 'rrfs':

@@ -28,6 +28,8 @@ hourly:
       - ua
     cin:
       - sfc
+    cloudbase:
+      - ua
     cloudcover:
       - bndylay
       - high
@@ -64,6 +66,8 @@ hourly:
       - sat
     G124bt:
       - sat
+    ghtfl:
+      - sfc
     gust:
       - 10m
     hail:
@@ -94,6 +98,10 @@ hourly:
       - best
       - sfc
     ltg3:
+      - sfc
+    ltng:
+      - sfc
+    lwtp:
       - sfc
     mref:
       - sfc

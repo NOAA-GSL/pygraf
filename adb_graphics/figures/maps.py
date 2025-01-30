@@ -43,7 +43,7 @@ TILE_DEFS = {
     'Africa': {'corners': [-40, 40, -40, 60], 'stride': 7, 'length': 5},
     'AKZoom': {'corners': [52, 73, -162, -132], 'stride': 4, 'length': 5},
     'AKZoom2': {'corners': [37.9, 80.8, 180, -105.7], 'stride': 8, 'length': 5},
-    'AKRange': {'corners': [59.722, 65.022, -153.583, -144.289], 'stride': 4, 'length': 4},
+    'AKRange': {'corners': [62.0, 67.0, -152.0, -143.0], 'stride': 4, 'length': 4},
     'Anchorage': {'corners': [58.59, 62.776, -152.749, -146.218], 'stride': 4, 'length': 4},
     'ATL': {'corners': [31.2, 35.8, -87.4, -79.8], 'stride': 4, 'length': 4},
     'Beijing': {'corners': [25, 53, 102, 133], 'stride': 3, 'length': 5},
@@ -58,6 +58,9 @@ TILE_DEFS = {
     'Florida': {'corners': [19.2305, 29.521, -86.1119, -73.8189], 'stride': 10, 'length': 5},
     'GreatLakes': {'corners': [37, 50, -96, -70], 'stride': 10, 'length': 4},
     'HI': {'corners': [16.6, 24.6, -157.6, -157.5], 'stride': 1, 'length': 4},
+    'HI-zoom': {'corners': None, 'width': 800000, 'height': 800000, 'stride': 4, 'length': 4},
+    'HFIP': {'corners': [8.35, 51.6, 244., 336.], 'stride': 30, 'length': 4},
+    'Hurr-Car': {'corners': [21, 28, -96, -69], 'stride': 10, 'length': 4},
     'Juneau': {'corners': [55.741, 59.629, -140.247, -129.274], 'stride': 4, 'length': 4},
     'NW-large': {'corners': [29.5787, 52.6127, -121.666, -96.5617], 'stride': 15, 'length': 4},
     'NYC-BOS': {'corners': [39, 43.5, -77, -66.5], 'stride': 4, 'length': 4},
@@ -68,6 +71,8 @@ TILE_DEFS = {
     'Taiwan': {'corners': [19, 28, 116, 126], 'stride': 1, 'length': 5},
     'VortexSE': {'corners': [30, 37, -92.5, -82], 'stride': 4, 'length': 4},
     'WAtlantic': {'corners': [-0.25, 50.25, 261.75, 330.25], 'stride': 5, 'length': 5},
+    'WFIP3-d01': {'corners': [33.66, 46.86, -78.83, -61.01], 'stride': 10, 'length': 4},
+    'WFIP3-d02': {'corners': [37.84, 43.22, -74.77, -66.50], 'stride': 5, 'length': 5},
     'WPacific': {'corners': [-40, 50, 90, 240], 'stride': 10, 'length': 5},
 }
 
@@ -109,11 +114,24 @@ class Map():
         self.tile = kwargs.get('tile', 'full')
         self.airports = self.load_airports(airport_fn)
 
-        if self.tile in FULL_TILES:
-            self.corners = self.grid_info.pop('corners')
+        if self.model == 'hrrr' and 'WFIP3' in self.tile:
+            self.grid_info.update({'lat_1': 40.6, 'lat_2': 40.6, 'lon_0': 289.2})
+        if self.model != 'hrrrhi':
+            if self.tile in FULL_TILES:
+                self.corners = self.grid_info.pop('corners')
+            else:
+                self.corners = self.get_corners()
+                self.grid_info.pop('corners')
         else:
-            self.corners = self.get_corners()
-            self.grid_info.pop('corners')
+            self.corners = None
+            if self.tile in FULL_TILES:
+                self.width = self.grid_info.pop('width')
+                self.height = self.grid_info.pop('height')
+            else:
+                self.width = self.get_width()
+                self.grid_info.pop('width')
+                self.height = self.get_height()
+                self.grid_info.pop('height')
 
         # Some of Hawaii's smaller islands and islands in the Caribbean don't
         # show up with a larger threshold.
@@ -122,6 +140,12 @@ class Map():
             area_thresh = 100
 
         self.m = self._get_basemap(area_thresh=area_thresh, **self.grid_info)
+
+        if self.model == 'hrrrhi':
+            parallels = np.arange(0., 81, 5.)
+            self.m.drawparallels(parallels, labels=[False, True, True, False])
+            meridians = np.arange(10., 351., 5.)
+            self.m.drawmeridians(meridians, labels=[True, False, False, True])
 
     def boundaries(self):
 
@@ -135,7 +159,7 @@ class Map():
                                 zorder=2,
                                 )
         else:
-            if self.model not in ['global'] and self.tile not in FULL_TILES:
+            if self.model not in ['global', 'hfip'] and self.tile not in FULL_TILES:
                 self.m.drawcounties(antialiased=False,
                                     color='gray',
                                     linewidth=0.1,
@@ -179,13 +203,18 @@ class Map():
             ax=self.ax,
             resolution='i',
             )
-        corners = self.corners
-        if corners is not None:
+        if self.corners is not None:
+            corners = self.corners
             basemap_args.update(dict(
                 llcrnrlat=corners[0],
                 llcrnrlon=corners[2],
                 urcrnrlat=corners[1],
                 urcrnrlon=corners[3],
+                ))
+        else:
+            basemap_args.update(dict(
+                width=self.width,
+                height=self.height,
                 ))
 
         basemap_args.update(get_basemap_kwargs)
@@ -204,6 +233,22 @@ class Map():
 
         return TILE_DEFS[self.tile]["corners"]
 
+    def get_width(self):
+
+        '''
+        Gather the width for a specific tile.
+        '''
+
+        return TILE_DEFS[self.tile]["width"]
+
+    def get_height(self):
+
+        '''
+        Gather the height for a specific tile.
+        '''
+
+        return TILE_DEFS[self.tile]["height"]
+
     @staticmethod
     def load_airports(fn):
 
@@ -212,7 +257,6 @@ class Map():
         with open(fn, 'r') as f:
             data = f.readlines()
         return np.array([l.strip().split(',') for l in data], dtype=float)
-
 
 class DataMap():
     #pylint: disable=too-many-arguments
@@ -344,8 +388,11 @@ class DataMap():
 
         # Add field values at airports
         annotate = self.field.vspec.get('annotate', False)
+        model_name = self.model_name
         if annotate and 'global' not in self.map.model: # too dense in global
-            self._draw_field_values(ax)
+            if model_name not in ['RRFS NA 3km']: # too dense in full RRFS domain
+                if model_name == 'RAP-NCEP' and self.map.tile not in ['full']:
+                    self._draw_field_values(ax)
 
         # Add scatter plot, if requested
         if self.plot_scatter:
@@ -357,9 +404,17 @@ class DataMap():
 
         ''' Draw the contour fields requested. '''
 
+        model_name = self.model_name
+        main_field = self.field.short_name
+
         for contour_field in self.contour_fields:
             levels = contour_field.contour_kwargs.pop('levels',
                                                       contour_field.clevs)
+
+            if model_name in ["RAP-NCEP", "RRFS-NCEP", "RRFS NA 3km"]:
+                if main_field == "totp" and contour_field.short_name == "pres" and \
+                   self.map.tile == "full":
+                    levels = np.arange(650, 1051, 8)
 
             cc = self._draw_field(ax=ax,
                                   field=contour_field,
@@ -369,15 +424,12 @@ class DataMap():
                                   )
             if contour_field.short_name not in not_labeled:
                 try:
-                    clab = plt.clabel(cc, levels[::4],
-                                      colors='w',
-                                      fmt='%1.0f',
-                                      fontsize=10,
-                                      inline=1,
-                                      )
-                    # Set the background color for the line labels to black
-                    _ = [txt.set_bbox(dict(color='k')) for txt in clab]
-
+                    plt.clabel(cc, levels[::4],
+                               colors='k',
+                               fmt='%1.0f',
+                               fontsize=10,
+                               inline=1,
+                               )
                 except ValueError:
                     print(f'Cannot add contour labels to map for {self.field.short_name} \
                             {self.field.level}')
@@ -437,7 +489,7 @@ class DataMap():
 
         # For global lat-lon models, make 2D arrays for x and y
         # Shift the map and data if needed
-        if self.map.model in ['global']:
+        if self.map.model in ['global', 'hfip']:
             tile = self.map.tile
             if tile in ['Africa', 'Europe']:
                 vals, x = shiftgrid(180., vals, x, start=False)
@@ -464,6 +516,8 @@ class DataMap():
         lats = self.map.airports[:, 0]
         lons = 360 + self.map.airports[:, 1]
         x, y = self.map.m(lons, lats)
+        if self.map.corners is None:
+            return
         data_values = self.field.data
         crnrs = copy.copy(self.map.corners)
         if crnrs[2] < 0:
@@ -608,6 +662,12 @@ class DataMap():
             if self.map.model == 'globalCONUS':
                 stride = int(round(stride / 2.5))
                 length = 5
+            if self.map.model == 'hrrr' and self.model_name == 'WFIP3-FULL' and \
+               tile == 'WFIP3-d02':
+                stride = 6
+            if self.map.model == 'hrrr' and self.model_name == 'WFIP3-NEST' and \
+               tile == 'WFIP3-d02':
+                stride = 17
 
         mask = np.ones_like(u)
         mask[::stride, ::stride] = 0

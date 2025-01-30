@@ -26,6 +26,15 @@ class VarSpec(abc.ABC):
         with open(config, 'r') as cfg:
             self.yml = yaml.load(cfg, Loader=yaml.Loader)
 
+    @property
+    def aod_colors(self) -> np.ndarray:
+
+        ''' Default color map for AOD products and chem products '''
+
+        grays = cm.get_cmap('Greys', 2)([0])
+        others = cm.get_cmap(self.vspec.get('cmap'), 15)(range(1, 15, 1), alpha=0.6)
+        return np.concatenate((grays, others))
+
     def centered_diff(self, cmap=None, nlev=None):
 
         ''' Returns the colors specified by levels and cmap in default spec, but
@@ -100,15 +109,6 @@ class VarSpec(abc.ABC):
         nws = ctables.colortables.get_colortable(self.vspec.get('cmap'))(range(ncolors))
         white = cm.get_cmap('Greys', 5)([0])
         return np.concatenate((grays, nws, white))
-
-    @property
-    def dewp_colors(self) -> np.ndarray:
-
-        ''' Default color map for Dew point temperature '''
-
-        ctable = ctables.colortables.get_colortable(self.vspec.get('cmap')) \
-                    (range(0, 42, 1)) # Carbone42_r
-        return ctable
 
     @property
     def fire_power_colors(self) -> np.ndarray:
@@ -193,6 +193,33 @@ class VarSpec(abc.ABC):
         return np.concatenate((grays, ctable))
 
     @property
+    def heat_flux_colors_g(self) -> np.ndarray:
+
+        ''' Default color map for Latent/Sensible Heat Flux '''
+
+        colors = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          (range(15, 112, 8))
+        return colors
+
+    @property
+    def heat_flux_colors_l(self) -> np.ndarray:
+
+        ''' Default color map for Latent/Sensible Heat Flux '''
+
+        colors = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          (range(32, 129, 6))
+        return colors
+
+    @property
+    def heat_flux_colors_s(self) -> np.ndarray:
+
+        ''' Default color map for Latent/Sensible Heat Flux '''
+
+        colors = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          (range(32, 129, 6))
+        return colors
+
+    @property
     def icprb_colors(self) -> np.ndarray:
 
         ''' Default color map for Icing Probability '''
@@ -274,6 +301,16 @@ class VarSpec(abc.ABC):
         grays = cm.get_cmap('Greys', 6)([0, 3])
         ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
                           ([25, 50, 60, 70, 80, 85, 90, 115])
+        return np.concatenate((grays, ncar))
+
+    @property
+    def pcp_colors_high(self) -> np.ndarray:
+
+        ''' High values color map for Hourly Precipitation '''
+
+        grays = cm.get_cmap('Greys', 2)([0])
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          ([70, 80, 85, 90, 115])
         return np.concatenate((grays, ncar))
 
     @property
@@ -364,6 +401,16 @@ class VarSpec(abc.ABC):
         return np.flip(self.rainbow12_colors, 0)
 
     @property
+    def rainbow16_colors(self) -> np.ndarray:
+
+        ''' Default color map for helicity '''
+
+        grays = cm.get_cmap('Greys', 5)([0, 2])
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          ([9, 15, 18, 20, 25, 48, 57, 65, 74, 79, 87, 94, 102, 109, 120])
+        return np.concatenate((grays, ncar))
+
+    @property
     def shear_colors(self) -> np.ndarray:
 
         ''' Default color map for Vertical Shear '''
@@ -435,17 +482,13 @@ class VarSpec(abc.ABC):
     @property
     def tsfc_colors(self) -> np.ndarray:
 
-        ''' Default color map for Surface Temperature '''  # WeatherBell-inspired scheme
+        ''' Default color map for Surface Temperature '''
 
-        temp1 = cm.get_cmap('cool_r', 8)(range(0, 8))
-        temp2 = cm.get_cmap('BuGn', 6)(range(2, 6))
-        temp3 = cm.get_cmap('Greens_r', 4)(range(0, 4))
-        temp4 = cm.get_cmap('RdPu_r', 8)(range(0, 8))
-        temp5 = cm.get_cmap('BuPu', 5)(range(0, 4))
-        temp6 = cm.get_cmap('RdYlBu_r', 10)(range(1, 10))
-        temp7 = cm.get_cmap('RdYlGn', 10)(range(0, 10))
-
-        return np.concatenate((temp1, temp2, temp3, temp4, temp5, temp6, temp7))
+        purples = cm.get_cmap('Purples', 16)([14, 12, 8, 6, 4, 2])
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          ([15, 20, 25, 33, 50, 60, 70, 80, 85, 90, 115])
+        grays = cm.get_cmap('Greys', 15)([2, 4, 6, 8])
+        return np.concatenate((purples, ncar, grays))
 
     @property
     def terrain_colors(self) -> np.ndarray:

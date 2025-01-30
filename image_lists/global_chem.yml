@@ -1,17 +1,27 @@
 hourly:
-  model: rap
+  model: global
   variables:
-    1hsnw:
+    1ref:
+      - 1000m
+    aodbc:
       - sfc
-    acsnod:
+    aodfd:
       - sfc
-    acsnw:
+    aodhg:
       - sfc
-    acfrozr:
+    aodoc:
       - sfc
-    acfrzr:
+    aodss:
       - sfc
-    acpcp:
+    aodsulf:
+      - sfc
+    aodtot:
+      - sfc
+    bc:
+      - sfc
+    bc1:
+      - sfc
+    bc2:
       - sfc
     cape:
       - mu
@@ -27,69 +37,64 @@ hourly:
       - low
       - mid
       - total
+    colbc:
+      - sfc
+    colfd:
+      - sfc
+    coloc:
+      - sfc
+    colpm10:
+      - sfc
+    colpm25:
+      - sfc
+    colss:
+      - sfc
+    colsu:
+      - sfc
+    colto:
+      - sfc
+    cpofp:
+      - sfc
     cref:
       - sfc
-    ctop:
-      - ua
-    dewp:
-      - 2m
-    echotop:
-      - sfc
-    flru:
+    fd:
       - sfc
     gust:
       - 10m
+    hlcy:
+      - sr01
+      - sr03
     hpbl:
       - sfc
     lhtfl:
       - sfc
-    ptmp:
-      - 2m
-    ptyp:
+    oc:
+      - sfc
+    oc1:
+      - sfc
+    oc2:
+      - sfc
+    PM10:
+      - sfc
+    PM25:
       - sfc
     pwtr:
       - sfc
-    rh:
-      - 2m
-      - 850mb
-      - mean
-      - pw
-    rvil:
+    seasalt:
       - sfc
     shtfl:
       - sfc
     snod:
       - sfc
     soilt: &soilt_levs
-      - 0cm
-      - 1cm
-      - 4cm
       - 10cm
-      - 30cm
-      - 60cm
       - 1m
-      - 1.6m
-      - 3m
     soilw: *soilt_levs
-    solar:
-      - sfc
-    temp:
-      - 2ds
-      - 2m
-      - 500mb
-      - 700mb
-      - 850mb
-      - 925mb
-      - sfc
-    totp:
+    sulf:
       - sfc
     ulwrf:
       - sfc
-      - top
     uswrf:
-      - sfc
-      - top
-    vil:
       - sfc
     vis:
       - sfc
@@ -99,8 +104,3 @@ hourly:
       - 700mb
     weasd:
       - sfc
-    wspeed:
-      - 10m
-      - 80m
-      - 250mb
-      - 850mb

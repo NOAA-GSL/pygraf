@@ -551,7 +551,7 @@ class fieldData(UPPData):
         '''
 
         lat, lon = self.latlons()
-        if self.model in ['global', 'obs']:
+        if self.model in ['global', 'hfip', 'obs']:
             ret = [lat[-1], lat[0], lon[0], lon[-1]]
         else:
             ret = [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
@@ -636,7 +636,8 @@ class fieldData(UPPData):
         lat = self.ds[lat_var]
 
         grid_info = {}
-        grid_info['corners'] = self.corners
+        if self.model != 'hrrrhi':
+            grid_info['corners'] = self.corners
         if self.grid_suffix in ['GLC0']:
             attrs = ['Latin1', 'Latin2', 'Lov']
             grid_info['projection'] = 'lcc'
@@ -668,6 +669,12 @@ class fieldData(UPPData):
             val = val[0] if isinstance(val, np.ndarray) else val
             grid_info[bm_arg] = val
             del val
+
+            if self.model == 'hrrrhi':
+                grid_info['lat_0'] = 20.44
+                grid_info['lon_0'] = 202.54
+                grid_info['width'] = 2000000
+                grid_info['height'] = 2000000
 
         del lat
 

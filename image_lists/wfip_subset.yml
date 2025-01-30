@@ -1,17 +1,19 @@
 hourly:
-  model: rap
+  model: hrrr
   variables:
     1hsnw:
       - sfc
-    acsnod:
-      - sfc
-    acsnw:
-      - sfc
+    1ref:
+      - 1000m
     acfrozr:
       - sfc
     acfrzr:
       - sfc
     acpcp:
+      - sfc
+    acsnod:
+      - sfc
+    acsnw:
       - sfc
     cape:
       - mu
@@ -20,13 +22,20 @@ hourly:
       - sfc
     ceil:
       - ua
+    ceilexp:
+      - ua
+    ceilexp2:
+      - ua
     cin:
       - sfc
     cloudcover:
+      - bndylay
       - high
       - low
       - mid
       - total
+    cpofp:
+      - sfc
     cref:
       - sfc
     ctop:
@@ -35,13 +44,59 @@ hourly:
       - 2m
     echotop:
       - sfc
+    firewx:
+      - sfc
     flru:
       - sfc
+    G113bt:
+      - sat
+    G114bt:
+      - sat
+    G123bt:
+      - sat
+    G124bt:
+      - sat
     gust:
       - 10m
+    hail:
+      - max
+      - maxsfc
+    hailcast:
+      - maxsfc
+    hlcy:
+      - in25
+      - mn02
+      - mn03
+      - mn25
+      - mx02
+      - mx03
+      - mx25
+      - sr01
+      - sr03
+    hlcytot:
+      - mn02
+      - mn03
+      - mn25
+      - mx02
+      - mx03
+      - mx25
     hpbl:
       - sfc
+    lcl:
+      - sfc
     lhtfl:
+      - sfc
+    li:
+      - best
+      - sfc
+    ltg3:
+      - sfc
+    mfrp:
+      - sfc
+    mref:
+      - sfc
+    pres:
+      - msl
       - sfc
     ptmp:
       - 2m
@@ -49,16 +104,22 @@ hourly:
       - sfc
     pwtr:
       - sfc
+    ref:
+      - m10
+      - maxm10
     rh:
       - 2m
-      - 850mb
-      - mean
       - pw
     rvil:
       - sfc
+    shear:
+      - 01km
+      - 06km
     shtfl:
       - sfc
     snod:
+      - sfc
+    soilm:
       - sfc
     soilt: &soilt_levs
       - 0cm
@@ -73,22 +134,32 @@ hourly:
     soilw: *soilt_levs
     solar:
       - sfc
+    ssrun:
+      - sfc
     temp:
       - 2ds
       - 2m
       - 500mb
       - 700mb
       - 850mb
-      - 925mb
       - sfc
     totp:
       - sfc
+    trc1:
+      - sfc
+      - int
     ulwrf:
       - sfc
       - top
     uswrf:
       - sfc
       - top
+    vbdsf:
+      - sfc
+    vddsf:
+      - sfc
+    vig:
+      - sfc
     vil:
       - sfc
     vis:
@@ -97,10 +168,18 @@ hourly:
       - 500mb
     vvel:
       - 700mb
+      - mean
+    vvort:
+      - mx01
+      - mx02
     weasd:
       - sfc
     wspeed:
       - 10m
       - 80m
-      - 250mb
+      - 160m
+      - 320m
       - 850mb
+      - max
+      - mdn
+      - mup
