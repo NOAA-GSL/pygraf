@@ -287,6 +287,8 @@ def load_specs(arg):
     with open(spec_file, 'r') as fn:
         specs = yaml.load(fn, Loader=yaml.Loader)
 
+    specs['file'] = spec_file
+
     return specs
 
 def old_enough(age, file_path):

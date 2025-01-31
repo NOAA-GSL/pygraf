@@ -117,6 +117,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
             member=mem,
             model=model,
             short_name=variable,
+            config=cla.specs['file']
             )
 
         try:
@@ -135,6 +136,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
                 member=mem,
                 model=model,
                 short_name=variable,
+                config=cla.specs['file']
                 )
 
             try:
