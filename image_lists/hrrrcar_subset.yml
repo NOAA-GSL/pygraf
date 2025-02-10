@@ -1,8 +1,6 @@
 hourly:
   model: hrrrcar
   variables:
-    1hsnw:
-      - sfc
     1ref:
       - 1000m
     acfrozr:
@@ -12,8 +10,6 @@ hourly:
     acpcp:
       - sfc
     acsnod:
-      - sfc
-    acsnw:
       - sfc
     cape:
       - mu
