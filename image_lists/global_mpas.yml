@@ -1,0 +1,86 @@
+hourly:
+  model: global_mpas
+  variables:
+    1ref:
+      - 1000m
+    acpcp:
+      - sfc
+    cape:
+      - mu
+      - mul
+      - mx90mb
+      - sfc
+    ceil:
+      - ua
+    cin:
+      - sfc
+    cloudcover:
+      - high
+      - low
+      - mid
+      - total
+    cpofp:
+      - sfc
+    cref:
+      - sfc
+    dewp:
+      - 2m
+    gh:
+      - 500mb
+    gust:
+      - 10m
+    hailcast:
+      - maxsfc
+    hlcy:
+      - sr01
+      - sr03
+    hpbl:
+      - sfc
+    lhtfl:
+      - sfc
+    pres:
+      - msl
+    pwtr:
+      - sfc
+    rh:
+      - 2m
+      - 850mb
+      - mean
+    shtfl:
+      - sfc
+    snod:
+      - sfc
+    soilt: &soilt_levs
+      - 10cm
+      - 1m
+    soilw: *soilt_levs
+    temp:
+      - 2ds
+      - 2m
+      - 500mb
+      - 700mb
+      - 850mb
+      - 925mb
+      - sfc
+    totp:
+      - sfc
+    ulwrf:
+      - sfc
+    uswrf:
+      - sfc
+    vis:
+      - sfc
+    vort:
+      - 500mb
+    vvel:
+      - 700mb
+    weasd:
+      - sfc
+    wspeed:
+      - 10m
+      - 10mb
+      - 20mb
+      - 250mb
+      - 5mb
+      - 80m
+      - 850mb
