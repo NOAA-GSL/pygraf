@@ -1,4 +1,4 @@
-# pylint: disable=invalid-name,too-few-public-methods,too-many-locals,too-many-branches
+# pylint: disable=invalid-name,too-few-public-methods,too-many-locals,too-many-branches,too-many-statements
 
 '''
 Classes that load grib files.
@@ -99,7 +99,10 @@ class GribFiles():
                         ])
                 needs_renaming = var.split('_')[0] not in odd_variables
                 if suffix in special_suffixes and needs_renaming:
-                    new_suffix = f'{suffix}1h' if 'global' not in self.model else f'{suffix}6h'
+                    if 'global' not in self.model or self.model == 'global_mpas':
+                        new_suffix = f'{suffix}1h'
+                    else:
+                        new_suffix = f'{suffix}6h'
                     ret[var] = var.replace(suffix, new_suffix)
                 # MASSDEN is a special case when ending in "avg_1'"
                 if var.split('_')[0] == 'MASSDEN' and var.split('_')[-2] == 'avg':
@@ -140,6 +143,17 @@ class GribFiles():
                         'CDLYR_P8_L200_GLC0_avg0h', 'TCDC_P8_L200_GLC0_avg0h', \
                         'APCP_P8_L1_GLC0_acc0h', 'APCP_P8_L1_GST0_acc0h']
                     if fhr != 0 and var in bad_0h_vars:
+                        print(f'dropping {var}')
+                        ds.drop(var)
+                        continue
+                    # mpas_global has fields that have the suffix 'acc1h' but we don't
+                    # want those since the output is 6h. Drop them if they come up.
+                    bad_1h_vars = ['APCP_P8_L1_GLL0_acc1h', \
+                        'FROZR_P8_L1_GLL0_acc1h', 'FRZR_P8_L1_GLL0_acc1h', \
+                        'CDLYR_P8_L200_GLL0_avg1h', 'TCDC_P8_L200_GLL0_avg1h', \
+                        'APCP_P8_L1_GLL0_acc1h', 'APCP_P8_L1_GST0_acc1h', \
+                        'WEASD_P8_L1_GLL0_acc1h']
+                    if self.model == 'global_mpas' and fhr != 0 and var in bad_1h_vars:
                         print(f'dropping {var}')
                         ds.drop(var)
                         continue

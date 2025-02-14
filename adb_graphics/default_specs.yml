@@ -841,8 +841,15 @@ hail: # Max 1h Hail diameter
 hailcast: # Max 1h Hail diameter
   maxsfc: # surface, from HAILCAST
     <<: *hail
-    ncl_name: HAIL_P8_L1_{grid}_max1h
-    title: Max 1h Hail Diameterat Sfc from HAILCAST
+    ncl_name:
+      global: HAIL_P8_L1_{grid}_max6h
+      global_mpas: HAIL_P8_L1_{grid}_max1h
+      hrrr: HAIL_P8_L1_{grid}_max1h
+      hrrrhi: HAIL_P8_L1_{grid}_max1h
+      hrrrcar: HAIL_P8_L1_{grid}_max1h
+      rap: HAIL_P8_L1_{grid}_max1h
+      rrfs: HAIL_P8_L1_{grid}_max1h
+    title: Max 6h Hail Diameter at Sfc from HAILCAST
 hlcy: # Helicity
   in16: &hlcy # Hourly updraft helicity over 1-6 km layer
     clevs: !!python/object/apply:numpy.arange [25, 301, 25]
@@ -1199,6 +1206,7 @@ pres:
     colors: pmsl_colors
     ncl_name:
       global: PRMSL_P0_L101_{grid}
+      global_mpas: MSLMA_P0_L101_{grid}
       globalAK: PRMSL_P0_L101_{grid}
       globalCONUS: PRMSL_P0_L101_{grid}
       globalNHemi: PRMSL_P0_L101_{grid}
