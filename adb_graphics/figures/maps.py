@@ -489,7 +489,7 @@ class DataMap():
 
         # For global lat-lon models, make 2D arrays for x and y
         # Shift the map and data if needed
-        if self.map.model in ['global', 'hfip']:
+        if self.map.model in ['global', 'global_mpas', 'hfip']:
             tile = self.map.tile
             if tile in ['Africa', 'Europe']:
                 vals, x = shiftgrid(180., vals, x, start=False)
@@ -909,7 +909,7 @@ class MapFields():
         if self.map_type == 'enspanel':
             return []
 
-        if self.model in ['global'] and self.tile in ['full']:
+        if 'global' in self.model  and self.tile in ['full']:
             return []
 
         return self._overlay_fields('contours')
