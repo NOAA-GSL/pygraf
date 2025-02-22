@@ -476,8 +476,12 @@ class VarSpec(abc.ABC):
 
         ''' Default color map for Upper-Air Temperature '''
 
-        ncolors = len(self.clevs)
-        return cm.get_cmap(self.vspec.get('cmap', 'jet'), ncolors)(range(ncolors))
+        grays = cm.get_cmap('Greys', 27)(range(17, 1, -2))
+        purples = cm.get_cmap('Purples', 27)(range(17, 1, -2))
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          ([30, 34, 36, 40, 45, 55, 60, 65, 70, \
+                          75, 80, 85, 90, 95, 100, 115])
+        return np.concatenate((grays, purples, ncar))
 
     @property
     def tsfc_colors(self) -> np.ndarray:

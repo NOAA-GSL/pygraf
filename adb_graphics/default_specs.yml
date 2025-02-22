@@ -1674,7 +1674,7 @@ temp: # Temperature
     unit: F
     wind: 10m
   500mb: &ua_temp
-    clevs: !!python/object/apply:numpy.arange [-70, 10, 2.5]
+    clevs: !!python/object/apply:numpy.arange [-40, 40, 2.5]
     cmap: jet
     colors: t_colors
     contours:
@@ -1697,7 +1697,6 @@ temp: # Temperature
     wind: True
   700mb:
     <<: *ua_temp
-    clevs: !!python/object/apply:numpy.arange [-40, 40, 2.5]
     contours:
       pres_sfc:
         colors: 'k'
@@ -1711,7 +1710,6 @@ temp: # Temperature
         levels: [0, 700]
   850mb:
     <<: *ua_temp
-    clevs: !!python/object/apply:numpy.arange [-40, 40, 2.5]
     contours:
       pres_sfc:
         colors: 'k'
@@ -1723,7 +1721,6 @@ temp: # Temperature
         levels: [0, 850]
   925mb:
     <<: *ua_temp
-    clevs: !!python/object/apply:numpy.arange [-40, 40, 2.5]
     contours:
       pres_sfc:
         colors: 'k'
