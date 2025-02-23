@@ -1736,6 +1736,7 @@ temp: # Temperature
   sfc:
     <<: *sfc_temp
     ncl_name: TMP_P0_L1_{grid}
+    title: Skin Temperature
     wind: False
   ua:
     <<: *ua_temp
