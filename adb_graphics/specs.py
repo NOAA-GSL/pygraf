@@ -474,7 +474,7 @@ class VarSpec(abc.ABC):
     @property
     def t_colors(self) -> np.ndarray:
 
-        ''' Default color map for Upper-Air Temperature '''
+        ''' Default color map for Potential Temperature '''
 
         ncolors = len(self.clevs)
         return cm.get_cmap(self.vspec.get('cmap', 'jet'), ncolors)(range(ncolors))
@@ -498,6 +498,18 @@ class VarSpec(abc.ABC):
         ctable = ctables.colortables.get_colortable(self.vspec.get('cmap')) \
                     (range(54, 157, 6))
         return ctable
+
+    @property
+    def ua_temp_colors(self) -> np.ndarray:
+
+        ''' Default color map for Upper-Air Temperature '''
+
+        grays = cm.get_cmap('Greys', 27)(range(17, 1, -2))
+        purples = cm.get_cmap('Purples', 27)(range(17, 1, -2))
+        ncar = cm.get_cmap(self.vspec.get('cmap'), 128) \
+                          ([30, 34, 36, 40, 45, 55, 60, 65, 70, \
+                          75, 80, 85, 90, 95, 100, 115])
+        return np.concatenate((grays, purples, ncar))
 
     @property
     def vis_colors(self) -> np.ndarray:
