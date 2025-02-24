@@ -1676,7 +1676,7 @@ temp: # Temperature
   500mb: &ua_temp
     clevs: !!python/object/apply:numpy.arange [-40, 40, 2.5]
     cmap: jet
-    colors: t_colors
+    colors: ua_temp_colors
     contours:
       pres_sfc:
         levels: [0, 500]
