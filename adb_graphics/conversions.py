@@ -101,3 +101,9 @@ def weasd_to_1hsnw(field, **kwargs):
     ''' Conversion from snow wter equiv to snow (10:1 ratio) '''
 
     return field * 10.
+
+def sden_to_slr(field, **kwargs):
+
+    ''' Convert snow density (kg m-3) to snow-liquid ratio '''
+
+    return 1000. / field
