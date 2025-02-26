@@ -2013,8 +2013,7 @@ snoliqr: # Snow-liquid ratio (from U. Utah diagnostic in UPP)
     clevs: [6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28]
     cmap: gist_ncar
     colors: snow_colors
-    ncl_name:
-      rrfs: SDEN_P0_L1_{grid}
+    ncl_name: SDEN_P0_L1_{grid}
     ticks: 0
     title: Instantaneous Snow-Liquid Ratio (U. Utah Method)
     transform: conversions.sden_to_slr

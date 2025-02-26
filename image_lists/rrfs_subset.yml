@@ -15,8 +15,6 @@ hourly:
       - sfc
     acsnw:
       - sfc
-    snoliqr:
-      - sfc
     cape:
       - mu
       - mul
