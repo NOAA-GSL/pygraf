@@ -57,7 +57,13 @@ hourly:
       - sfc
     cref:
       - sfc
+    ctop:
+      - ua
+    dewp:
+      - 2m
     fd:
+      - sfc
+    flru:
       - sfc
     gust:
       - 10m
@@ -78,8 +84,14 @@ hourly:
       - sfc
     PM25:
       - sfc
+    pres:
+      - msl
+    ptyp:
+      - sfc
     pwtr:
       - sfc
+    rh:
+      - 850mb
     seasalt:
       - sfc
     shtfl:
@@ -92,10 +104,24 @@ hourly:
     soilw: *soilt_levs
     sulf:
       - sfc
+    temp:
+      - 2ds
+      - 2m
+      - 500mb
+      - 700mb
+      - 850mb
+      - 925mb
+      - sfc
+    totp6h:
+      - sfc
+    totp:
+      - sfc
     ulwrf:
       - sfc
+      - top
     uswrf:
       - sfc
+      - top
     vis:
       - sfc
     vort:
@@ -104,3 +130,8 @@ hourly:
       - 700mb
     weasd:
       - sfc
+    wspeed:
+      - 10m
+      - 80m
+      - 250mb
+      - 850mb
