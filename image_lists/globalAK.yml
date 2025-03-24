@@ -3,6 +3,8 @@ hourly:
   variables:
     1ref:
       - 1000m
+    acpcp:
+      - sfc
     cape:
       - mu
       - mul
@@ -23,6 +25,10 @@ hourly:
       - sfc
     dewp:
       - 2m
+    dlwrf:
+      - sfc
+    dswrf:
+      - sfc
     gh:
       - 500mb
     gust:
@@ -34,6 +40,8 @@ hourly:
       - sfc
     lhtfl:
       - sfc
+    lhtflavg:
+      - sfc
     pres:
       - msl
     pwtr:
@@ -43,6 +51,8 @@ hourly:
       - 850mb
       - mean
     shtfl:
+      - sfc
+    shtflavg:
       - sfc
     snod:
       - sfc
