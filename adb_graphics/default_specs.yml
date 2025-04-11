@@ -87,6 +87,7 @@
       hrrrhi: WEASD_P8_L1_{grid}_acc1h
       rap: WEASD_P8_L1_{grid}_acc1h
       rrfs: TSNOWP_P8_L1_{grid}_acc1h
+      regional_mpas: WEASD_P8_L1_{grid}_acc1h
     ticks: 0
     title: 1 hr Accumulated Snow Using 10:1 Ratio
     transform: [conversions.kgm2_to_in, conversions.weasd_to_1hsnw]
@@ -237,6 +238,7 @@ acsnw: # Run Total Accumulated Snow Using 10:1 Ratio
       hrrrhi: WEASD_P8_L1_{grid}_acc
       rap: WEASD_P8_L1_{grid}_acc
       rrfs: TSNOWP_P8_L1_{grid}_acc
+      regional_mpas: WEASD_P8_L1_{grid}_acc
     ticks: 0
     title: Run-Total Accumulated Snow Using 10:1 Ratio
     transform: [conversions.kgm2_to_in, conversions.weasd_to_1hsnw]
@@ -408,7 +410,8 @@ ceil: # Ceiling
 ceilexp: # Ceiling - experimental
   ua:
     <<: *ceil
-    ncl_name: CEIL_P0_L215_{grid}
+    ncl_name: 
+      regional_mpas: CEIL_P0_L215_{grid}
     title: Ceiling (exp)
 ceilexp2: # Ceiling - experimental no.2
   ua:
@@ -419,6 +422,7 @@ ceilexp2: # Ceiling - experimental no.2
       hrrrcar: HGT_P0_L2_{grid}
       rap: HGT_P0_L2_{grid}
       rrfs: CEIL_P0_L2_{grid}
+      regional_mpas: CEIL_P0_L2_{grid}
     title: Ceiling (exp-2)
 cfrzr: # Categorical Freezing Rain
   sfc:
@@ -701,6 +705,7 @@ echotop: # Echo Top
       hrrrcar: RETOP_P0_L3_{grid}
       rap: RETOP_P0_L3_{grid}
       rrfs: RETOP_P0_L200_{grid}
+      regional_mpas: RETOP_P0_L3_{grid}
     ticks: 0
     title: Echo Top
     transform: conversions.m_to_kft
@@ -882,6 +887,7 @@ hailcast: # Max 1h Hail diameter
       hrrrcar: HAIL_P8_L1_{grid}_max1h
       rap: HAIL_P8_L1_{grid}_max1h
       rrfs: HAIL_P8_L1_{grid}_max1h
+      regional_mpas: HAIL_P8_L1_{grid}_max1h
     title: Max 6h Hail Diameter at Sfc from HAILCAST
 hlcy: # Helicity
   in16: &hlcy # Hourly updraft helicity over 1-6 km layer
@@ -1254,6 +1260,7 @@ pres:
       hrrrcar: MSLMA_P0_L101_{grid}
       rap: MSLMA_P0_L101_{grid}
       rrfs: MSLET_P0_L101_{grid}
+      regional_mpas: MSLMA_P0_L101_{grid}
     ticks: 0
     transform: conversions.pa_to_hpa
     unit: hPa
@@ -1278,6 +1285,7 @@ presmin:
       hrrrcar: MSLMA_P0_L101_{grid}
       rap: MSLMA_P0_L101_{grid}
       rrfs: MSLET_P0_L101_{grid}
+      regional_mpas: MSLMA_P0_L101_{grid}
     ticks: 0
     transform: [conversions.pa_to_hpa, run_min]
     unit: hPa
@@ -1463,6 +1471,7 @@ rvil: # Radar-derived Vertically Integrated Liquid
       hrrrcar: VIL_P0_L{level_type}_{grid}
       rap: VIL_P0_L{level_type}_{grid}
       rrfs: VIL_P0_L200_{grid}
+      regional_mpas: VIL_P0_L{level_type}_{grid}
     ticks: 0
     title: Radar-derived Vertically Integrated Liquid
     unit: kg/m$^{2}$
@@ -1582,6 +1591,7 @@ soilm: # Soil Moisture Availability
       hrrrcar: MSTAV_P0_L106_{grid}
       rap: MSTAV_P0_L106_{grid}
       rrfs: MSTAV_P0_L106_{grid}
+      regional_mpas: MSTAV_P0_L106_{grid}
     ticks: 0
     title: Soil Moisture Availability
     unit: "%"
@@ -1824,10 +1834,11 @@ trc1:
     clevs: [1, 4, 7, 11, 15, 20, 25, 30, 40, 50, 75, 150, 250, 500]
     colors: smoke_colors
     ncl_name:
-      hrrr:  COLMD_P0_L200_{grid}
-      hrrrcar:  COLMD_P0_L200_{grid}
-      rap:  COLMD_P0_L200_{grid}
+      hrrr: COLMD_P0_L200_{grid}
+      hrrrcar: COLMD_P0_L200_{grid}
+      rap: COLMD_P0_L200_{grid}
       rrfs: COLMD_P48_L200_{grid}_A62010
+      regional_mpas: COLMD_P0_L200_{grid}
     plot_airports: False
     ticks: 0
     title: Vertically Integrated Smoke
@@ -1856,6 +1867,7 @@ trc1:
       hrrrcar: MASSDEN_P0_L103_{grid}
       rap: MASSDEN_P0_L103_{grid}
       rrfs: MASSDEN_P48_L103_{grid}_A62010
+      regional_mpas: MASSDEN_P0_L103_{grid}
     plot_airports: False
     title: Near-Surface Smoke
     transform: conversions.to_micrograms_per_m3

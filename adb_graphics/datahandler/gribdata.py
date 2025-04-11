@@ -341,7 +341,7 @@ class UPPData(specs.VarSpec):
         entire atmosphere in HRRR, while 200 is used in RRFS. '''
 
         if self.filetype == 'prs':
-            if self.model == 'rrfs':
+            if self.model == 'rrfs' or self.model == 'regional_mpas':
                 return 200
             return 10
         return 105
