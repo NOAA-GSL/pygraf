@@ -1497,30 +1497,33 @@ seasalt: # Fine dust, global chem
     unit: $\mu g/m^3$
 shear:
   01km: &shear # 0-1 km
-    clevs: !!python/object/apply:numpy.arange [5, 91, 5]
-    cmap: jet
-    colors: shear_colors
+    clevs: [5, 10, 20, 30, 40, 50, 60]
+    cmap: gist_ncar
+    colors: wind_colors_high
     ncl_name: VUCSH_P0_2L103_{grid}
     split: True
     transform:
-      funcs: vector_magnitude
+      funcs: [vector_magnitude, conversions.ms_to_kt]
       kwargs:
         field2: VVCSH_P0_2L103_{grid}
         one_lev: True
         split: True
         level: 01km
     ticks: 0
-    unit: s$^{-1}$
+    title: 0–1 km Bulk Shear
+    unit: kt
   06km: # 0-6 km
     <<: *shear
+    clevs: [20, 30, 40, 50, 60, 70, 80, 90, 100]
     split: True
     transform:
-      funcs: vector_magnitude
+      funcs: [vector_magnitude, conversions.ms_to_kt]
       kwargs:
         field2: VVCSH_P0_2L103_{grid}
         one_lev: True
         split: True
         level: 06km
+    title: 0–6 km Bulk Shear
 shtfl: # Sensible Heat Net Flux
   sfc: &shtflsfc
     cmap: magma_r
