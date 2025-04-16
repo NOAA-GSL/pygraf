@@ -417,6 +417,10 @@ ceilexp2: # Ceiling - experimental no.2
   ua:
     <<: *ceil
     ncl_name: 
+      # Note that the "HGT_P0_L2_{grid}" ncl_names in RAPv5/HRRRv4 (below)
+      # seemingly correspond to cloud-base height.  This is intentional; i.e.,
+      # the exp2 ceiling field was indeed implemented into operations by being 
+      # labeled as the cloud-base height.
       hrrr: HGT_P0_L2_{grid}
       hrrrhi: HGT_P0_L2_{grid}
       hrrrcar: HGT_P0_L2_{grid}
@@ -424,6 +428,13 @@ ceilexp2: # Ceiling - experimental no.2
       rrfs: CEIL_P0_L2_{grid}
       regional_mpas: CEIL_P0_L2_{grid}
     title: Ceiling (exp-2)
+cloudbase: # Cloud-base height
+  ua:
+    <<: *ceil
+    ncl_name:
+      rrfs: HGT_P0_L2_{grid}
+      regional_mpas: HGT_P0_L2_{grid}
+    title: Cloud-Base Height
 cfrzr: # Categorical Freezing Rain
   sfc:
     ncl_name: CFRZR_P0_L1_{grid}
@@ -454,12 +465,6 @@ cin: # Surface Convective Inhibition
   sfclt:
     <<: *sfc_cin
     title: Surface CIN < -50
-cloudbase: # Cloud-base height
-  ua:
-    <<: *ceil
-    ncl_name:
-      rrfs: HGT_P0_L2_{grid}
-    title: Cloud-Base Height
 cloudcover:
   bndylay: &cld_cover # PBL ... 1 km Cloud Cover
     clevs: [2, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95]
@@ -2163,7 +2168,9 @@ wspeed: # Wind Speed
     clevs: [0.5, 1, 1.5, 2, 2.5, 5, 7.5, 10, 12.5, 15, 17.5, 20, 22.5, 25, 30, 35, 40]
     cmap: jet
     colors: mup_colors
-    ncl_name: MAXUVV_P8_2L108_{grid}_max1h
+    ncl_name: 
+      - MAXUVV_P8_2L108_{grid}_max1h
+      - MAXUVV_P8_2L100_{grid}_max1h
     ticks: 0
     title: Max Updraft Velocity (over prev hour)
     unit: m/s
