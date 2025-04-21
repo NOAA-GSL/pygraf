@@ -26,6 +26,8 @@ hourly:
       - ua
     ceilexp2:
       - ua
+    cloudbase:
+      - ua
     cloudcover:
       - bndylay
       - high
