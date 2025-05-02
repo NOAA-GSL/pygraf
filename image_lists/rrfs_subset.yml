@@ -173,8 +173,6 @@ hourly:
       - sfc
     vig:
       - sfc
-    vil:
-      - sfc
     vis:
       - sfc
     visbsn:

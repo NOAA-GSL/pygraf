@@ -1475,10 +1475,10 @@ rvil: # Radar-derived Vertically Integrated Liquid
       hrrrhi: VIL_P0_L{level_type}_{grid}
       hrrrcar: VIL_P0_L{level_type}_{grid}
       rap: VIL_P0_L{level_type}_{grid}
-      rrfs: VIL_P0_L200_{grid}
+      rrfs: VIL_P0_L{level_type}_{grid}
       regional_mpas: VIL_P0_L{level_type}_{grid}
     ticks: 0
-    title: Radar-derived Vertically Integrated Liquid
+    title: VIL (Reflectivity Derived)
     unit: kg/m$^{2}$
 rwmr: # Rain Mixing Ratio
   ua:
