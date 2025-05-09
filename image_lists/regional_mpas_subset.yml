@@ -56,10 +56,10 @@ hourly:
       - sat
     gust:
       - 10m
+    1hachail:
+      - sfc
     hail:
       - max
-      - maxsfc
-    hailcast:
       - maxsfc
     hlcy:
       - in25
@@ -160,8 +160,6 @@ hourly:
     vddsf:
       - sfc
     vig:
-      - sfc
-    vil:
       - sfc
     vis:
       - sfc

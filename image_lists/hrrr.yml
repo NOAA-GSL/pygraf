@@ -72,8 +72,6 @@ hourly:
     hail:
       - max
       - maxsfc
-    hailcast:
-      - maxsfc
     hlcy:
       - esbl
       - in16

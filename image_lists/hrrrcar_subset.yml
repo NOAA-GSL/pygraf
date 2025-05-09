@@ -57,8 +57,6 @@ hourly:
     hail:
       - max
       - maxsfc
-    hailcast:
-      - maxsfc
     hlcy:
       - in25
       - mn02

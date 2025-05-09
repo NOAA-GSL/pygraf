@@ -63,8 +63,6 @@ hourly:
     hail:
       - max
       - maxsfc
-    hailcast:
-      - maxsfc
     hlcy:
       - in25
       - mn02
@@ -164,8 +162,6 @@ hourly:
     vddsf:
       - sfc
     vig:
-      - sfc
-    vil:
       - sfc
     vis:
       - sfc
