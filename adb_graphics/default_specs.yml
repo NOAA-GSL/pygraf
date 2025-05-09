@@ -894,8 +894,7 @@ hail: # Max 1h Hail diameter
 hailcast: # Max 1h Hail diameter
   maxsfc: # surface, from HAILCAST
     <<: *hail
-    ncl_name:
-      rrfs: HAIL_P8_L1_GLC0_max1h
+    ncl_name: HAIL_P8_L1_GLC0_max1h
     title: Max 1h Hail Diameter at Sfc from HAILCAST
 hlcy: # Helicity
   in16: &hlcy # Hourly updraft helicity over 1-6 km layer
