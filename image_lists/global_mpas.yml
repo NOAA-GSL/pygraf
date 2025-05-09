@@ -29,8 +29,6 @@ hourly:
       - 500mb
     gust:
       - 10m
-    hailcast:
-      - maxsfc
     hlcy:
       - sr01
       - sr03

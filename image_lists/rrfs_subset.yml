@@ -70,9 +70,6 @@ hourly:
       - sfc
     gust:
       - 10m
-    hail:
-      - max
-      - maxsfc
     hailcast:
       - maxsfc
     hlcy:

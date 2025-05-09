@@ -867,9 +867,19 @@ gust:
     title: 10m Wind Gust Potential
     transform: conversions.ms_to_kt
     unit: kt
+1hachail: # 1 hr Accumulated Hail
+  sfc:
+    clevs: [0.1, 0.5, 1, 2, 3, 4, 6, 8, 10]
+    cmap: gist_ncar
+    colors: pcp_colors
+    ncl_name: HAIL_P8_L1_GLC0_acc1h
+    ticks: 0
+    title: 1h Accumulated Hail
+    transform: conversions.m_to_in
+    unit: in
 hail: # Max 1h Hail diameter
   maxsfc: &hail # surface
-    clevs: [0.01, 0.25, 0.50, 0.75, 1.0, 1.5, 2.0, 2.5, 3.0]
+    clevs: [0.10, 0.25, 0.50, 0.75, 1.0, 1.5, 2.0, 2.5, 3.0]
     cmap: gist_ncar
     colors: hail_colors
     ncl_name: HAIL_P8_L104_{grid}_max1h
@@ -880,20 +890,13 @@ hail: # Max 1h Hail diameter
   max: # total atmosphere
     <<: *hail
     ncl_name: HAIL_P8_L10_{grid}_max1h
-    title: Max 1h Hail/Graupel Diameter, Total Atm
+    title: Max 1h Hail/Graupel Diameter, Entire Column
 hailcast: # Max 1h Hail diameter
   maxsfc: # surface, from HAILCAST
     <<: *hail
     ncl_name:
-      global: HAIL_P8_L1_{grid}_max6h
-      global_mpas: HAIL_P8_L1_{grid}_max1h
-      hrrr: HAIL_P8_L1_{grid}_max1h
-      hrrrhi: HAIL_P8_L1_{grid}_max1h
-      hrrrcar: HAIL_P8_L1_{grid}_max1h
-      rap: HAIL_P8_L1_{grid}_max1h
-      rrfs: HAIL_P8_L1_{grid}_max1h
-      regional_mpas: HAIL_P8_L1_{grid}_max1h
-    title: Max 6h Hail Diameter at Sfc from HAILCAST
+      rrfs: HAIL_P8_L1_GLC0_max1h
+    title: Max 1h Hail Diameter at Sfc from HAILCAST
 hlcy: # Helicity
   in16: &hlcy # Hourly updraft helicity over 1-6 km layer
     clevs: !!python/object/apply:numpy.arange [25, 301, 25]
