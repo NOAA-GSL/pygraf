@@ -27,7 +27,11 @@ hourly:
       - 2m
     dlwrf:
       - sfc
+    dlwrfavg:
+      - sfc
     dswrf:
+      - sfc
+    dswrfavg:
       - sfc
     gh:
       - 500mb
@@ -72,8 +76,14 @@ hourly:
       - sfc
     ulwrf:
       - sfc
+    ulwrfavg:
+      - sfc
+      - top
     uswrf:
       - sfc
+    uswrfavg:
+      - sfc
+      - top
     vis:
       - sfc
     vort:

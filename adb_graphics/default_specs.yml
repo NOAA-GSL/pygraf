@@ -643,7 +643,7 @@ dlwrf: # Downward Longwave Radiation Flux
     colors: radiation_colors
     ncl_name: DLWRF_P0_L1_{grid}
     ticks: -2
-    title: Downward Longwave Radiation Flux, Surface
+    title: Downward LW Radiation Flux, Surface
     unit: W/m$^{2}$
   top: # Nominal top of atmosphere
     clevs: !!python/object/apply:numpy.arange [80, 341, 2]
@@ -651,7 +651,17 @@ dlwrf: # Downward Longwave Radiation Flux
     colors: radiation_mix_colors
     ncl_name: DLWRF_P0_L8_{grid}
     ticks: 20
-    title: Incoming Longwave Radiation Flux, TOA
+    title: Incoming LW Radiation Flux, TOA
+    unit: W/m$^{2}$
+dlwrfavg: # Downward Longwave Radiation Flux Average
+  sfc:
+    <<: *radiation_flux
+    clevs: !!python/object/apply:numpy.arange [200, 501, 12]
+    cmap: gist_ncar
+    colors: radiation_colors
+    ncl_name: DLWRF_P0_L1_{grid}_avg6h
+    ticks: -2
+    title: Downward LW Radiation Flux 6h Avg, Surface
     unit: W/m$^{2}$
 dswrf: # Downward Shortwave Radiation Flux
   sfc:
@@ -660,7 +670,7 @@ dswrf: # Downward Shortwave Radiation Flux
     colors: rainbow12_colors
     ncl_name: DSWRF_P0_L1_{grid}
     ticks: 0
-    title: Downward Shortwave Radiation Flux, Surface
+    title: Downward SW Radiation Flux, Surface
   top: # Nominal top of atmosphere
     <<: *radiation_flux
     clevs: !!python/object/apply:numpy.arange [50, 851, 10]
@@ -668,7 +678,15 @@ dswrf: # Downward Shortwave Radiation Flux
     colors: radiation_bw_colors
     ncl_name: DSWRF_P0_L8_{grid}
     ticks: 40
-    title: Incoming Shortwave Radiation Flux, TOA
+    title: Incoming SW Radiation Flux, TOA
+dswrfavg: # Downward Shortwave Radiation Flux Average
+  sfc:
+    <<: *radiation_flux
+    clevs: [0, 50, 100, 150, 200, 250, 300, 400, 500, 600, 700, 800, 900, 1000]
+    colors: rainbow12_colors
+    ncl_name: DSWRF_P8_L1_{grid}_avg6h
+    ticks: 0
+    title: Downward SW Radiation Flux 6h Avg, Surface
 fd: # Fine dust, global chem
   sfc:
     clevs: [1, 2, 4, 6, 8, 12, 16, 20, 25, 30, 40, 60, 100, 200]
@@ -1126,7 +1144,7 @@ lhtflavg:
   sfc:
     <<: *lhtflsfc
     ncl_name: LHTFL_P8_L1_{grid}_avg6h
-    title: Avg Latent Heat Net Flux
+    title: Latent Heat Net Flux 6h Avg
 li: # Lifted Index
   best: &lifted_index
     clevs: !!python/object/apply:numpy.arange [-15, 16]
@@ -1540,7 +1558,7 @@ shtflavg:
   sfc:
     <<: *shtflsfc
     ncl_name: SHTFL_P8_L1_{grid}_avg6h
-    title: Avg Sensible Heat Net Flux
+    title: Sensible Heat Net Flux 6h Avg
 sipd: # Supercooled Large Droplet Icing
   # levels chosen are arbitrary based on initial plot samples
   # additional levels may be requested in the future.
@@ -1923,7 +1941,7 @@ ulwrf: # Upward Longwave Radiation Flux
     colors: radiation_colors
     ncl_name: ULWRF_P0_L1_{grid}
     ticks: -2
-    title: Upward Longwave Radiation Flux, Surface
+    title: Upward LW Radiation Flux, Surface
     unit: W/m$^{2}$
   top: # Nominal top of atmosphere
     clevs: !!python/object/apply:numpy.arange [80, 341, 2]
@@ -1931,7 +1949,25 @@ ulwrf: # Upward Longwave Radiation Flux
     colors: radiation_mix_colors
     ncl_name: ULWRF_P0_L8_{grid}
     ticks: 20
-    title: Outgoing Longwave Radiation Flux, TOA
+    title: Outgoing LW Radiation Flux, TOA
+    unit: W/m$^{2}$
+ulwrfavg: # Upward Longwave Radiation Flux
+  sfc:
+    <<: *radiation_flux
+    clevs: !!python/object/apply:numpy.arange [350, 601, 10]
+    cmap: gist_ncar
+    colors: radiation_colors
+    ncl_name: ULWRF_P0_L1_{grid}_avg6h
+    ticks: -2
+    title: Upward LW Radiation Flux, Surface
+    unit: W/m$^{2}$
+  top: # Nominal top of atmosphere
+    clevs: !!python/object/apply:numpy.arange [80, 341, 2]
+    cmap: ir_rgbv_r
+    colors: radiation_mix_colors
+    ncl_name: ULWRF_P0_L8_{grid}_avg6h
+    ticks: 20
+    title: Outgoing LW Radiation Flux, TOA
     unit: W/m$^{2}$
 uswrf: # Upward Shortwave Radiation Flux
   sfc:
@@ -1940,7 +1976,7 @@ uswrf: # Upward Shortwave Radiation Flux
     colors: rainbow12_colors
     ncl_name: USWRF_P0_L1_{grid}
     ticks: 0
-    title: Upward Shortwave Radiation Flux, Surface
+    title: Upward SW Radiation Flux, Surface
   top: # Nominal top of atmosphere
     <<: *radiation_flux
     clevs: !!python/object/apply:numpy.arange [50, 851, 10]
@@ -1948,7 +1984,23 @@ uswrf: # Upward Shortwave Radiation Flux
     colors: radiation_bw_colors
     ncl_name: USWRF_P0_L8_{grid}
     ticks: 40
-    title: Outgoing Shortwave Radiation Flux, TOA
+    title: Outgoing SW Radiation Flux, TOA
+uswrfavg: # Upward Shortwave Radiation Flux Average
+  sfc:
+    <<: *radiation_flux
+    clevs: [0, 50, 100, 150, 200, 250, 300, 400, 500, 600, 700, 800, 900, 1000]
+    colors: rainbow12_colors
+    ncl_name: USWRF_P8_L1_{grid}_avg6h
+    ticks: 0
+    title: Upward SW Radiation Flux 6h Avg, Surface
+  top: # Nominal top of atmosphere
+    <<: *radiation_flux
+    clevs: !!python/object/apply:numpy.arange [50, 851, 10]
+    cmap: Greys_r
+    colors: radiation_bw_colors
+    ncl_name: USWRF_P8_L8_{grid}_avg6h
+    ticks: 40
+    title: Outgoing SW Radiation Flux 6h Avg, TOA
 v:
   10m: &agl_wind
     ncl_name: VGRD_P0_L103_{grid}
