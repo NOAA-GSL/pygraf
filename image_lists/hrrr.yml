@@ -55,7 +55,7 @@ hourly:
       - 2m
     echotop:
       - sfc
-    firewx:
+    firewx_pygraf:
       - sfc
     flru:
       - sfc
