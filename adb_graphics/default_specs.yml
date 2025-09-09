@@ -768,7 +768,7 @@ ffldro: # Ensemble flash flood runoff
     ncl_name: FFLDRO_P9_L1_{grid}_acc6h
     title: Prob of 6-hr Precip > RFC flash flood guidance w/in 40 km
 firewx: # Fire Weather Index
-  sfc:
+  sfc: &firewx
     clevs: [10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 100]
     cmap: gist_ncar
     colors: rainbow11_colors
@@ -776,6 +776,11 @@ firewx: # Fire Weather Index
     ticks: 0
     title: Hourly Wildfire Potential
     unit: "%"
+firewx-pygraf: # Fire Weather Index computed by pygraf (for HRRR)
+  sfc:
+    <<: *firewx
+    ncl_name: VGTYP_P0_L1_{grid}
+    transform: fire_weather_index
 flru: # Aviation Flight Rules
   sfc:
     clevs: [0.0, 1.0, 2.0, 3.0, 4.0]

@@ -31,6 +31,8 @@ hourly:
       - 2m
     echotop:
       - sfc
+    firewx-pygraf:
+      - sfc
     flru:
       - sfc
     G113bt:
