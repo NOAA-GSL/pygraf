@@ -79,6 +79,10 @@
 
 1hsnw: # 1 hr Accumulated Snow Using 10:1 Ratio
   sfc:
+    cfgrib:
+      shortName: sdwe
+      level: 0
+      typeOfLevel: surface
     clevs: [0.03, 0.05, 0.1, 0.5, 1, 2, 3, 4, 5, 6, 7, 8]
     cmap: gist_ncar
     colors: snow_colors
@@ -94,6 +98,9 @@
     unit: in
 1ref: # Reflectivity at 1 km AGL
   1000m: &refl
+    cfgrib:
+      shortName: rare
+      typeOfLevel: heightAboveGround
     clevs: !!python/object/apply:numpy.arange [5, 76, 5]
     cmap: NWSReflectivity
     colors: cref_colors
@@ -114,10 +121,22 @@ acfrozr: # Run Total Graupel
 acfrzr: # Run Total Freezing Rain
   sfc:
     <<: *graupel
+    cfgrib:
+      shortName: frzr
+      level: 0
+      typeOfLevel: surface
+      stepType: accum
+      stepRange: # startswith("0-")
     ncl_name: FRZR_P8_L1_GLC0_acc
     title: Run Total Freezing Rain
 acpcp: # Accumulated run total precipitation
   sfc:
+    cfgrib:
+      shortName: tp
+      level: 0
+      typeOfLevel: surface
+      stepRange: # startswith("0-")
+      stepType: accum
     clevs: [0.01, 0.1, 0.25, 0.5, 1, 2, 3, 5, 10, 15, 20, 40]
     cmap: gist_ncar
     colors: rainbow12_colors
@@ -220,6 +239,11 @@ acpcpens6: # ensemble probability of precipitation, 6h
     title: Probability of 6-hr Precipitation >= 0.5 in within 40km
 acsnod: # Accumulated snow
   sfc: &snow
+    cfgrib:
+      level: 0
+      typeOfLevel: surface
+      stepType: accum
+      parameterName: Total snowfall
     clevs: [0.01, 0.1, 1, 2, 3, 4, 6, 8, 10, 12, 18, 24]
     cmap: gist_ncar
     colors: snow_colors
@@ -230,6 +254,10 @@ acsnod: # Accumulated snow
     unit: in
 acsnw: # Run Total Accumulated Snow Using 10:1 Ratio
   sfc:
+    cfgrib:
+      shortName: sdwe
+      level: 0
+      typeOfLevel: surface
     clevs: [0.01, 0.1, 1, 2, 3, 4, 6, 8, 10, 12, 18, 24]
     cmap: gist_ncar
     colors: snow_colors
@@ -311,6 +339,10 @@ bc2: # Black Carbon 2
     transform: []
 cape:
   mu: &cape # Most Unstable CAPE
+    cfgrib:
+      shortName: cape
+      level: 18000
+      typeOfLevel: pressureFromGroundLayer
     clevs: [1, 100, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
     cmap: gist_ncar
     colors: vort_colors
@@ -335,6 +367,10 @@ cape:
     vertical_index: 2
   mul: # Most Unstable Layer CAPE
     <<: *cape
+    cfgrib:
+      shortName: cape
+      level: 18000
+      typeOfLevel: pressureFromGroundLayer
     contours:
       cape:
         colors: white
@@ -354,6 +390,10 @@ cape:
     vertical_index: 1
   mx90mb: # Lowest 90 mb Mixed Layer CAPE
     <<: *cape
+    cfgrib:
+      shortName: cape
+      level: 9000
+      typeOfLevel: pressureFromGroundLayer
     contours:
       cape:
         colors: white
@@ -373,6 +413,10 @@ cape:
     title: Lowest 90 mb Mixed Layer CAPE
   sfc:
     <<: *cape
+    cfgrib:
+      shortName: cape
+      level: 0
+      typeOfLevel: surface
     contours:
       cin:
         colors: 'k'
@@ -387,14 +431,26 @@ cape:
     title: Surface CAPE
 cell: # Storm cell motion
   ua:
+    cfgrib:
+      shortName: ustm
+      typeOfLevel: heightAboveGroundLayer
+      level: 6000
     ncl_name: USTM_P0_2L103_{grid}
     transform:
       funcs: [vector_magnitude, conversions.ms_to_kt]
       kwargs:
-        field2: VSTM_P0_2L103_{grid}
+        field2:
+          cfgrib:
+            shortName: ustm
+            typeOfLevel: heightAboveGroundLayer
+            level: 6000
     unit: kt
 ceil: # Ceiling
   ua: &ceil
+    cfgrib:
+      shortName: gh
+      typeOfLevel: cloudCeiling
+      level: 0
     clevs: [0, 0.1, 0.3, 0.5, 1, 2, 3, 5, 10, 15, 20, 30, 52]
     cmap: gist_ncar
     colors: ceil_colors
@@ -410,12 +466,20 @@ ceil: # Ceiling
 ceilexp: # Ceiling - experimental
   ua:
     <<: *ceil
+    cfgrib:
+      shortName: ceil
+      typeOfLevel: cloudCeiling
+      level: 0
     ncl_name: 
       regional_mpas: CEIL_P0_L215_{grid}
     title: Ceiling (exp)
 ceilexp2: # Ceiling - experimental no.2
   ua:
     <<: *ceil
+    cfgrib:
+      shortName: gh
+      typeOfLevel: cloudBase
+      level: 0
     ncl_name: 
       # Note that the "HGT_P0_L2_{grid}" ncl_names in RAPv5/HRRRv4 (below)
       # seemingly correspond to cloud-base height.  This is intentional; i.e.,
@@ -431,18 +495,33 @@ ceilexp2: # Ceiling - experimental no.2
 cloudbase: # Cloud-base height
   ua:
     <<: *ceil
+    cfgrib:
+      shortName: gh
+      typeOfLevel: cloudBase
+      level: 0
     ncl_name:
       rrfs: HGT_P0_L2_{grid}
       regional_mpas: HGT_P0_L2_{grid}
     title: Cloud-Base Height
 cfrzr: # Categorical Freezing Rain
   sfc:
+    cfgrib:
+      shortName: cfrzr
+      typeOfLevel: surface
     ncl_name: CFRZR_P0_L1_{grid}
 cicep: # Categorical Ice Pellets
   sfc:
+    cfgrib:
+      shortName: cicep
+      typeOfLevel: surface
+      stepType: accum
     ncl_name: CICEP_P0_L1_{grid}
 cin: # Surface Convective Inhibition
   mu:
+    cfgrib:
+      shortName: cin
+      level: 25500
+      typeOfLevel: pressureFromGroundLayer
     clevs: [-300, -200, -150, -100, -75, -50, -40, -30, -20, -10, -1]
     cmap: gist_ncar
     colors: cin_colors
@@ -450,10 +529,18 @@ cin: # Surface Convective Inhibition
     unit: J/kg
     vertical_index: 2
   mx90mb: # Lowest 90 mb Mixed Layer CIN
+    cfgrib:
+      shortName: cin
+      level: 9000
+      typeOfLevel: pressureFromGroundLayer
     ncl_name: CIN_P0_2L108_{grid}
     title: 'ML CIN < -50'
     vertical_index: 0
   sfc: &sfc_cin
+    cfgrib:
+      shortName: cin
+      level: 0
+      typeOfLevel: surface
     clevs: [-300, -200, -150, -100, -75, -50, -40, -30, -20, -10, -1]
     cmap: gist_ncar
     colors: cin_colors
@@ -467,6 +554,10 @@ cin: # Surface Convective Inhibition
     title: Surface CIN < -50
 cloudcover:
   bndylay: &cld_cover # PBL ... 1 km Cloud Cover
+    cfgrib:
+      shortName: tcc
+      typeOfLevel: boundaryLayerCloudLayer
+      level: 0
     clevs: [2, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95]
     cmap: gist_ncar
     colors: cldcov_colors
@@ -476,6 +567,10 @@ cloudcover:
     unit: '%'
   high:
     <<: *cld_cover
+    cfgrib:
+      shortName: hcc
+      typeOfLevel: highCloudLayer
+      level: 0
     clevs: [2, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95]
     cmap: gist_ncar
     colors: cldcov_colors
@@ -485,18 +580,34 @@ cloudcover:
     unit: '%'
   low:
     <<: *cld_cover
+    cfgrib:
+      shortName: lcc
+      typeOfLevel: lowCloudLayer
+      level: 0
     ncl_name: LCDC_P0_L214_{grid}
     title: Low-Level Cloud Cover
   mid:
     <<: *cld_cover
+    cfgrib:
+      shortName: mcc
+      typeOfLevel: middleCloudLayer
+      level: 0
     ncl_name: MCDC_P0_L224_{grid}
     title: Mid-Level Cloud Cover
   total:
     <<: *cld_cover
+    cfgrib:
+      shortName: tcc
+      typeOfLevel: atmosphereSingleLayer
+      stepType: instant
     ncl_name: TCDC_P0_L{level_type}_{grid}
     title: Total Cloud Cover
 clwmr: # Cloud water Mixing Ratio
   ua:
+    cfgrib:
+      prs:
+        shortName: clwmr
+        typeOfLevel: isobaricInhPa
     ncl_name: 
       nat: CLWMR_P0_L105_{grid}
       prs: CLWMR_P0_L100_{grid}
@@ -587,6 +698,9 @@ cpofp: # Frozen Precipitation Percentage
     unit: '%'
 crain: # Categorical Rain
   sfc:
+    cfgrib:
+      shortName: crain
+      typeOfLevel: surface
     ncl_name: CRAIN_P0_L1_{grid}
 cref: # Composite reflectivity
   esbl:
@@ -615,9 +729,15 @@ crefmax: # Comp reflectivity (max over forecast)
     unit: dBZ
 csnow: # Categorical Snow
   sfc:
+    cfgrib:
+      shortName: csnow
+      typeOfLevel: surface
     ncl_name: CSNOW_P0_L1_{grid}
 ctop: # Cloud top height
   ua:
+    cfgrib:
+      shortName: gh
+      typeOfLevel: cloudTop
     clevs: !!python/object/apply:numpy.arange [0, 61, 5]
     cmap: gist_ncar
     colors: ceil_colors
@@ -626,8 +746,12 @@ ctop: # Cloud top height
     title: Cloud Top Height
     transform: conversions.m_to_kft
     unit: kft asl
-dewp: # Dew point temperature
+dewp: # Dew point temperaeure
   2m:
+    cfgrib:
+      shortName: 2d
+      level: 2
+      typeOfLevel: heightAboveGround
     clevs: !!python/object/apply:numpy.arange [-50, 141, 10]
     cmap: gist_ncar
     colors: tsfc_colors
@@ -638,6 +762,9 @@ dewp: # Dew point temperature
     wind: 10m
 dlwrf: # Downward Longwave Radiation Flux
   sfc: &radiation_flux
+    cfgrib:
+      shortName: sdlwrf
+      typeOfLevel: surface
     clevs: !!python/object/apply:numpy.arange [200, 501, 12]
     cmap: gist_ncar
     colors: radiation_colors
@@ -656,6 +783,9 @@ dlwrf: # Downward Longwave Radiation Flux
 dlwrfavg: # Downward Longwave Radiation Flux Average
   sfc:
     <<: *radiation_flux
+    cfgrib:
+      shortName: avg_sdlwrf
+      typeOfLevel: surface
     clevs: !!python/object/apply:numpy.arange [200, 501, 12]
     cmap: gist_ncar
     colors: radiation_colors
@@ -666,6 +796,9 @@ dlwrfavg: # Downward Longwave Radiation Flux Average
 dswrf: # Downward Shortwave Radiation Flux
   sfc:
     <<: *radiation_flux
+    cfgrib:
+      shortName: sdswrf
+      typeOfLevel: surface
     clevs: [0, 50, 100, 150, 200, 250, 300, 400, 500, 600, 700, 800, 900, 1000]
     colors: rainbow12_colors
     ncl_name: DSWRF_P0_L1_{grid}
@@ -682,6 +815,9 @@ dswrf: # Downward Shortwave Radiation Flux
 dswrfavg: # Downward Shortwave Radiation Flux Average
   sfc:
     <<: *radiation_flux
+    cfgrib:
+      shortName: avg_sdswrf
+      typeOfLevel: surface
     clevs: [0, 50, 100, 150, 200, 250, 300, 400, 500, 600, 700, 800, 900, 1000]
     colors: rainbow12_colors
     ncl_name: DSWRF_P8_L1_{grid}_avg6h
@@ -792,6 +928,9 @@ flru: # Aviation Flight Rules
     unit: "category"
 G113bt: # GOES-W Brightness temperature, water vapor (Ch 3)
   sat: &goes_sat
+    cfgrib:
+      parameterNumber: 242
+      typeOfLevel: atmosphere
     clevs: !!python/object/apply:numpy.arange [-80, 41, 1]
     cmap: WVCIMSS_r
     colors: goes_colors
@@ -819,6 +958,9 @@ G124bt: # GOES-E Brightness temperature, infrared (Ch 4)
     unit: ch 4
 gh: # Geopotential height
   5mb: &ua_gh
+    cfgrib:
+      shortName: gh
+      typeOfLevel: isobaricInhPa
     clevs: !!python/object/apply:numpy.arange [6, 4680, 6]
     cmap: rainbow
     colors: terrain_colors
@@ -852,6 +994,9 @@ gh: # Geopotential height
     clevs: !!python/object/apply:numpy.arange [500, 600, 10]
   sfc:
     <<: *ua_gh
+    cfgrib:
+      shortName: orog
+      typeOfLevel: surface
     clevs: !!python/object/apply:numpy.arange [0, 5000, 250]
     cmap: gist_earth
     ncl_name: HGT_P0_L1_{grid}
@@ -862,6 +1007,10 @@ gh: # Geopotential height
     <<: *ua_gh
 ghtfl: # Ground Heat Flux
   sfc:
+    cfgrib:
+      shortName: gflux
+      typeOfLevel: surface
+      stepType: instant
     cmap: magma_r
     clevs: [-200, -150, -100, -50, -25, 0, 25, 50, 100, 150, 200, 300]
     cmap: PuOr
@@ -872,11 +1021,18 @@ ghtfl: # Ground Heat Flux
     unit: W/m$^{2}$
 grle: # Graupel
   ua:
+    cfgrib:
+      prs:
+        shortName: grle
+        typeOfLevel: isobaricInhPa
     ncl_name:
       nat: GRLE_P0_L105_{grid}
       prs: GRLE_P0_L100_{grid}
 gust:
   10m:
+    cfgrib:
+      shortName: gust
+      typeOfLevel: surface
     clevs: !!python/object/apply:numpy.arange [5, 95, 5]
     cmap: gist_ncar
     colors: wind_colors
@@ -897,6 +1053,10 @@ gust:
     unit: in
 hail: # Max 1h Hail diameter
   maxsfc: &hail # surface
+    cfgrib:
+      shortName: hail
+      typeOfLevel: surface
+      stepType: max
     clevs: [0.10, 0.25, 0.50, 0.75, 1.0, 1.5, 2.0, 2.5, 3.0]
     cmap: gist_ncar
     colors: hail_colors
@@ -1262,6 +1422,10 @@ PM25: # PM25, global chem
     title: PM25
 pres:
   sfc:
+    cfgrib:
+      shortName: sp
+      level: 0
+      typeOfLevel: surface
     clevs: !!python/object/apply:numpy.arange [650, 1051, 4]
     cmap: gist_ncar
     colors: ps_colors
@@ -1270,6 +1434,10 @@ pres:
     transform: conversions.pa_to_hpa
     unit: hPa
   msl:
+    cfgrib:
+      shortName: mslet
+      typeOfLevel: meanSea
+      level: 0
     clevs: !!python/object/apply:numpy.arange [976, 1051, 4]
     cmap: Spectral_r
     colors: pmsl_colors
@@ -1296,6 +1464,10 @@ presmin:
   msl:
     accumulate: True
     annotate: True
+    cfgrib:
+      shortName: mslet
+      typeOfLevel: meanSea
+      level: 0
     clevs: !!python/object/apply:numpy.arange [860, 1001, 10]
     cmap: NWSReflectivity
     colors: cref_colors
@@ -1746,6 +1918,10 @@ temp: # Temperature
     wind: False
   2m: &sfc_temp
     annotate: True
+    cfgrib:
+      shortName: 2t
+      level: 2
+      typeOfLevel: heightAboveGround
     clevs: !!python/object/apply:numpy.arange [-50, 141, 10]
     cmap: gist_ncar
     colors: tsfc_colors
@@ -1755,6 +1931,9 @@ temp: # Temperature
     unit: F
     wind: 10m
   500mb: &ua_temp
+    cfgrib:
+      shortName: t
+      typeOfLevel: isobaricInhPa
     clevs: !!python/object/apply:numpy.arange [-40, 40, 2.5]
     cmap: jet
     colors: ua_temp_colors
@@ -1813,6 +1992,10 @@ temp: # Temperature
         levels: [0, 925]
   sfc:
     <<: *sfc_temp
+    cfgrib:
+      shortName: 2t
+      level: 0
+      typeOfLevel: surface
     ncl_name: TMP_P0_L1_{grid}
     title: Skin Temperature
     wind: False
