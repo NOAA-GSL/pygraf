@@ -2144,7 +2144,7 @@ temp: # Temperature
     ticks: 10
     transform: conversions.k_to_f
     unit: F
-    wind: 10m
+    #wind: 10m
   500mb: &ua_temp
     cfgrib:
       shortName: t
@@ -2318,17 +2318,20 @@ u:
       typeOfLevel: heightAboveGround
     ncl_name: UGRD_P0_L103_{grid}
     transform: conversions.ms_to_kt
-  80m: *agl_uwind
+  80m:
+    <<: *agl_uwind
     cfgrib:
       shortName: u
       level: 80
       typeOfLevel: heightAboveGround
-  160m: *agl_uwind
+  160m:
+    <<: *agl_uwind
     cfgrib:
       shortName: u
       level: 160
       typeOfLevel: heightAboveGround
-  320m: *agl_uwind
+  320m:
+    <<: *agl_uwind
     cfgrib:
       shortName: u
       level: 320
@@ -2463,13 +2466,21 @@ v:
       typeOfLevel: heightAboveGround
     ncl_name: VGRD_P0_L103_{grid}
     transform: conversions.ms_to_kt
-  80m: *agl_wind
+  80m:
+    <<: *agl_wind
     cfgrib:
       shortName: v
       typeOfLevel: heightAboveGround
-  160m: *agl_wind
+  160m:
+    <<: *agl_wind
+    cfgrib:
+      shortName: v
       typeOfLevel: heightAboveGround
-  320m: *agl_wind
+  320m:
+    <<: *agl_wind
+    cfgrib:
+      shortName: v
+      typeOfLevel: heightAboveGround
   5mb: &ua_vwind
     cfgrib:
       shortName: v

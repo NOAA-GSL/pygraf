@@ -70,7 +70,7 @@ def create_skewt(cla, fhr, grib_path, workdir):
     with Pool(processes=cla.nprocs) as pool:
         pool.starmap(parallel_skewt, args)
 
-def create_maps(cla, fhr, grib_contents, workdir, grib_contents2=None):
+def create_maps(cla, fhr, grib_path, workdir, grib_path2=None):
 
     ''' Generate arguments for parallel processing of plan-view maps and
     generate a pool of workers to complete the task. '''
@@ -88,12 +88,13 @@ def create_maps(cla, fhr, grib_contents, workdir, grib_contents2=None):
                     msg = f'graphics: {variable} {level}'
                     raise errors.NoGraphicsDefinitionForVariable(msg)
 
-                args.append((cla, fhr, grib_contents, level, model, spec,
-                             variable, workdir, tile, grib_contents2))
+                args.append((cla, fhr, grib_path, level, model, spec,
+                             variable, workdir, tile, grib_path2))
 
         print(f'Queueing {len(args)} maps')
-        with Pool(processes=cla.nprocs) as pool:
-            pool.starmap(parallel_maps, args)
+        parallel_maps(*args[0])
+        #with Pool(processes=cla.nprocs) as pool:
+        #    pool.starmap(parallel_maps, args)
 
 def gather_gribfiles(cla, fhr, filename, gribfiles):
 
@@ -615,10 +616,9 @@ def graphics_driver(cla):
             if cla.graphic_type == 'skewts':
                 create_skewt(cla, fhr, grib_path, workdir)
             elif cla.graphic_type == 'maps':
-                gribfiles = gather_gribfiles(cla, fhr, grib_path, gribfiles)
                 create_maps(cla,
                             fhr=fhr,
-                            grib_contents=gribfiles.contents,
+                            grib_path=grib_path,
                             workdir=workdir,
                             )
             elif cla.graphic_type == 'diff':

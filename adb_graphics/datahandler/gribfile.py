@@ -8,13 +8,14 @@ import xarray as xr
 
 class GribFile():
 
-    ''' Wrappers and helper functions for interfacing with pyNIO.'''
+    ''' Wrappers and helper functions for interfacing with cfgrib.'''
 
-    def __init__(self, filename, **kwargs):
+    def __init__(self, filename, var_config, **kwargs):
 
         # pylint: disable=unused-argument
 
         self.filename = filename
+        self.var_config = var_config
         self.contents = self._load()
 
     def _load(self):
@@ -23,9 +24,9 @@ class GribFile():
         iterator. '''
 
         return xr.open_dataset(self.filename,
-                               engine='pynio',
+                               engine='cfgrib',
                                lock=False,
-                               backend_kwargs=dict(format="grib2"),
+                               backend_kwargs=({"filter_by_keys": self.var_config}),
                                )
 
 class GribFiles():

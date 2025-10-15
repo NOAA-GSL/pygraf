@@ -5,7 +5,7 @@ Classes that handle the specifics of grib files from UPP.
 '''
 
 import abc
-import datetime
+from datetime import datetime, timedelta
 from functools import lru_cache
 from string import digits, ascii_letters
 
@@ -40,6 +40,7 @@ class UPPData(specs.VarSpec):
         config = kwargs.get('config', 'adb_graphics/default_specs.yml')
         self.model = kwargs.get('model')
         self.filetype = kwargs.get('filetype', 'prs')
+        self.grib_path = kwargs.get("grib_path")
 
 
         specs.VarSpec.__init__(self, config)
@@ -53,12 +54,12 @@ class UPPData(specs.VarSpec):
         self.ds = ds
 
     @property
-    def anl_dt(self) -> datetime.datetime:
+    def anl_dt(self) -> datetime:
 
         ''' Returns the initial time of the grib file as a datetime object from
         the grib file.'''
 
-        return datetime.datetime.strptime(self.field.initial_time, '%m/%d/%Y (%H:%M)')
+        return datetime.fromisoformat(str(self.field.time.values).split(".")[0])
 
     @property
     def clevs(self) -> np.ndarray:
@@ -98,7 +99,7 @@ class UPPData(specs.VarSpec):
         ''' Wrapper that calls get_field method for the current variable.
         Returns the NioVariable object '''
 
-        return self._get_field(self.ncl_name(self.vspec))
+        return self.ds.__getattr__([x for x in self.ds.data_vars][0])
 
     def field_column_max(self, values, variable, level, **kwargs):
 
@@ -167,15 +168,11 @@ class UPPData(specs.VarSpec):
             ret.append(self.ds[dim].sel(**selector).values)
         return ret
 
-    def _get_field(self, ncl_name):
+    def _get_field(self, spec):
 
         ''' Given an ncl_name, return the NioVariable object. '''
 
-        try:
-            field = self.ds[ncl_name.format(level_type=self.level_type)]
-        except KeyError:
-            raise errors.GribReadError(f'{ncl_name}')
-        return field
+        return gribfile.GribFile(self.grib_path, spec).contents
 
     def _get_level(self, field, level, spec, **kwargs):
 
@@ -428,12 +425,12 @@ class UPPData(specs.VarSpec):
         return - values
 
     @property
-    def valid_dt(self) -> datetime.datetime:
+    def valid_dt(self) -> datetime:
 
         ''' Returns a datetime object corresponding to the forecast hour's valid
         time as set in the Grib file. '''
 
-        fh = datetime.timedelta(hours=int(self.fhr))
+        fh = timedelta(hours=int(self.fhr))
         return self.anl_dt + fh
 
     @abc.abstractmethod
@@ -619,9 +616,12 @@ class fieldData(UPPData):
         ''' Returns a dict that includes the grid info for the full grid. '''
 
         # Keys are grib names, values are Basemap argument names
-        ncl_to_basemap = dict(
+        keys_to_basemap = dict(
             CenterLon='lon_0',
             CenterLat='lat_0',
+            GRIB_Latin2InDegrees='lat_1',
+            GRIB_Latin1InDegrees='lat_2',
+            GRIB_LoVInDegrees='lon_0',
             Latin2='lat_1',
             Latin1='lat_2',
             Lov='lon_0',
@@ -635,39 +635,43 @@ class fieldData(UPPData):
         lat_var = [var for var in self.field.coords if 'lat' in var][0]
 
         # Get the latitude variable
-        lat = self.ds[lat_var]
 
         grid_info = {}
-        if self.model != 'hrrrhi':
-            grid_info['corners'] = self.corners
-        if self.grid_suffix in ['GLC0']:
-            attrs = ['Latin1', 'Latin2', 'Lov']
+        var_info = self.field
+        grid_def = var_info.attrs["GRIB_gridDefinitionDescription"].lower()
+        if 'lambert' in grid_def:
+            attrs = ["GRIB_Latin1InDegrees", "GRIB_Latin2InDegrees", "GRIB_LoVInDegrees"]
             grid_info['projection'] = 'lcc'
             grid_info['lat_0'] = 39.0
-        elif self.grid_suffix == 'GST0':
-            attrs = ['Lov']
-            grid_info['projection'] = 'stere'
-            grid_info['lat_0'] = 90
-        elif self.grid_suffix == 'GLL0':
-            attrs = []
-            grid_info['projection'] = 'cyl'
-        else:
-            attrs = []
-            grid_info['projection'] = 'rotpole'
 
-            # CenterLon in RAP and Longitude_of_southern_pole in RRFS
-            lon_0 = lat.attrs.get('CenterLon', lat.attrs.get('Longitude_of_southern_pole'))
-            grid_info['lon_0'] = lon_0[0] - 360
+        if self.model != 'hrrrhi':
+            grid_info['corners'] = self.corners
+        #if self.grid_suffix in ['GLC0']:
+        #    attrs = ['Latin1', 'Latin2', 'Lov']
+        #elif self.grid_suffix == 'GST0':
+        #    attrs = ['Lov']
+        #    grid_info['projection'] = 'stere'
+        #    grid_info['lat_0'] = 90
+        #elif self.grid_suffix == 'GLL0':
+        #    attrs = []
+        #    grid_info['projection'] = 'cyl'
+        #else:
+        #    attrs = []
+        #    grid_info['projection'] = 'rotpole'
 
-            # CenterLat in RAP and Latitude_of_southern_pole in RRFS
-            center_lat = lat.attrs.get('CenterLat', lat.attrs.get('Latitude_of_southern_pole'))
-            grid_info['o_lat_p'] = - center_lat[0] if center_lat[0] < 0 else 90 - center_lat[0]
+        #    # CenterLon in RAP and Longitude_of_southern_pole in RRFS
+        #    lon_0 = lat.attrs.get('CenterLon', lat.attrs.get('Longitude_of_southern_pole'))
+        #    grid_info['lon_0'] = lon_0[0] - 360
 
-            grid_info['o_lon_p'] = 180
+        #    # CenterLat in RAP and Latitude_of_southern_pole in RRFS
+        #    center_lat = lat.attrs.get('CenterLat', lat.attrs.get('Latitude_of_southern_pole'))
+        #    grid_info['o_lat_p'] = - center_lat[0] if center_lat[0] < 0 else 90 - center_lat[0]
+
+        #    grid_info['o_lon_p'] = 180
 
         for attr in attrs:
-            bm_arg = ncl_to_basemap[attr]
-            val = lat.attrs[attr]
+            bm_arg = keys_to_basemap[attr]
+            val = var_info.attrs[attr]
             val = val[0] if isinstance(val, np.ndarray) else val
             grid_info[bm_arg] = val
             del val
@@ -677,8 +681,6 @@ class fieldData(UPPData):
                 grid_info['lon_0'] = 202.54
                 grid_info['width'] = 2000000
                 grid_info['height'] = 2000000
-
-        del lat
 
         return grid_info
 
@@ -811,17 +813,18 @@ class fieldData(UPPData):
             vertical_index  the index (int) of the desired vertical level
         '''
 
-        level = level if level else self.level
+        level = level or self.level
+        vals = self.field
 
-        one_lev = kwargs.get('one_lev', True)
-        vertical_index = kwargs.get('vertical_index')
+        #one_lev = kwargs.get('one_lev', True)
+        #vertical_index = kwargs.get('vertical_index')
 
-        ncl_name = kwargs.get('ncl_name', '')
-        ncl_name = ncl_name.format(fhr=self.fhr, grid=self.grid_suffix)
+        #ncl_name = kwargs.get('ncl_name', '')
+        #ncl_name = ncl_name.format(fhr=self.fhr, grid=self.grid_suffix)
 
         do_transform = kwargs.get('do_transform', True)
 
-        if name is None and not ncl_name:
+        if name is None:
 
             # Use field and spec from the current object
             field = self.field
@@ -833,41 +836,41 @@ class fieldData(UPPData):
             spec = self.spec.get(name, {}).get(level, {})
             if not spec and name is not None:
                 raise errors.NoGraphicsDefinitionForVariable(name, level)
-            field = self._get_field(ncl_name or self.ncl_name(spec))
+            field = self._get_field(spec["cfgrib"])
 
-        lev = vertical_index
-        vals = field
-        if one_lev:
+        #lev = vertical_index
+        #vals = field
+        #if one_lev:
 
-            # Check if it's a 3D variable (lv in any dimension field)
-            dim_name = self.vertical_dim(field)
+        #    # Check if it's a 3D variable (lv in any dimension field)
+        #    dim_name = self.vertical_dim(field)
 
-            if dim_name: # Field has a vertical dimension
+        #    if dim_name: # Field has a vertical dimension
 
-                # Use vertical_index if provided in kwargs
-                lev = vertical_index if vertical_index is not None else \
-                        self._get_level(field, level, spec)
+        #        # Use vertical_index if provided in kwargs
+        #        lev = vertical_index if vertical_index is not None else \
+        #                self._get_level(field, level, spec)
 
-                if lev is None or dim_name is None:
-                    print(f'ERROR: Could not find dim_name ({dim_name}) or' \
-                          f'lev {lev} for {vals}')
-                    raise ValueError
+        #        if lev is None or dim_name is None:
+        #            print(f'ERROR: Could not find dim_name ({dim_name}) or' \
+        #                  f'lev {lev} for {vals}')
+        #            raise ValueError
 
-                try:
-                    vals = vals.isel(**{dim_name: lev})
-                except:
-                    print(f'Error for {vals.name} : {dim_name} {lev} \
-                            {level} {spec}')
-                    raise
+        #        try:
+        #            vals = vals.isel(**{dim_name: lev})
+        #        except:
+        #            print(f'Error for {vals.name} : {dim_name} {lev} \
+        #                    {level} {spec}')
+        #            raise
 
-        if self.mem is not None:
-            vals = vals.isel(**{'ens_mem': self.mem})
+        #if self.mem is not None:
+        #    vals = vals.isel(**{'ens_mem': self.mem})
 
-        # Select a single forecast hour (only if there are many)
-        if not spec.get('accumulate', False):
-            if 'fcst_hr' in vals.dims:
-                fcst_hr = 0 if self.ds.sizes['fcst_hr'] <= 1 else int(self.fhr)
-                vals = vals.sel(**{'fcst_hr': fcst_hr})
+        ## Select a single forecast hour (only if there are many)
+        #if not spec.get('accumulate', False):
+        #    if 'fcst_hr' in vals.dims:
+        #        fcst_hr = 0 if self.ds.sizes['fcst_hr'] <= 1 else int(self.fhr)
+        #        vals = vals.sel(**{'fcst_hr': fcst_hr})
 
         transforms = spec.get('transform')
         if transforms and do_transform:
@@ -930,10 +933,10 @@ class fieldData(UPPData):
             fhr=self.fhr,
             level=level,
             short_name=var,
-            )
+            ).field
         u, v = [field_lambda(self.ds, level, var) for var in ['u', 'v']]
 
-        return [component.values() for component in [u, v]]
+        return [u, v]
 
 
 class profileData(UPPData):

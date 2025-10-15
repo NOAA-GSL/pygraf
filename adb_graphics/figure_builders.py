@@ -51,8 +51,8 @@ def add_obs_panel(ax, model_name, obs_file, proj_info, short_name, tile):
     # Draw the map
     dm.draw(show=True)
 
-def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
-                  tile='full', ds2=None):
+def parallel_maps(cla, fhr, grib_path, level, model, spec, variable, workdir,
+                  tile='full', dp2=None):
 
     # pylint: disable=too-many-arguments,too-many-locals
     # pylint: disable=too-many-branches,too-many-statements
@@ -64,7 +64,7 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
     Input:
 
       fhr        forecast hour
-      ds         xarray dataset from the grib file
+      grib_path  path to grib file
       level      the vertical level of the variable to be plotted
                  corresponding to a key in the specs file
       model      model name: rap, hrrr, hrrre, rrfs, rtma
@@ -72,12 +72,18 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
                  and level
       variable   the name of the variable section in the specs file
       workdir    output directory
+      tile
 
     Optional:
       tile       the label of the tile being plotted
+      dp2        path to a second grib file
     '''
 
     fig, axes = set_figure(cla.model_name, cla.graphic_type, tile)
+    ds = gribfile.GribFile(grib_path, spec["cfgrib"]).contents
+
+    if dp2:
+        ds2 = gribfile.GribFile(dp2, spec["cfgrib"]).contents
 
     # set last_panel to send into DataMap for colorbar control
     last_panel = False
@@ -117,14 +123,9 @@ def parallel_maps(cla, fhr, ds, level, model, spec, variable, workdir,
             member=mem,
             model=model,
             short_name=variable,
-            config=cla.specs['file']
+            config=cla.specs['file'],
+            grib_path=dp2,
             )
-
-        try:
-            field.field
-        except errors.GribReadError:
-            print(f'Cannot find grib2 variable for {variable} at {level}. Skipping.')
-            return
 
         if cla.graphic_type == "diff":
 
