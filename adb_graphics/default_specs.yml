@@ -1282,6 +1282,9 @@ icsev: # Icing Severity
         variable: icsev
 lcl: # Lifted condensation level
   sfc: &lcl
+    cfgrib:
+      shortName: gh
+      typeOfLevel: adiabaticCondensation
     clevs: !!python/object/apply:numpy.arange [0, 5000, 250]
     cmap: rainbow
     colors: lcl_colors
@@ -1299,6 +1302,9 @@ lcl: # Lifted condensation level
     unit: m
 lhtfl: # Latent Heat Net Flux
   sfc: &lhtflsfc
+    cfgrib:
+      shortName: slhtf
+      typeOfLevel: surface
     cmap: magma_r
     clevs: [-100, -50, -25, -10, 0, 10, 25, 50, 100, 150, 200, 250, 300, 400, 500, 750]
     cmap: BrBG
@@ -1310,10 +1316,17 @@ lhtfl: # Latent Heat Net Flux
 lhtflavg:
   sfc:
     <<: *lhtflsfc
+    cfgrib:
+      shortName: avg_slhtf
+      typeOfLevel: surface
     ncl_name: LHTFL_P8_L1_{grid}_avg6h
     title: Latent Heat Net Flux 6h Avg
 li: # Lifted Index
   best: &lifted_index
+    cfgrib:
+      shortName: 4lftx
+      typeOfLevel: pressureFromGroundLayer
+      level: 18000
     clevs: !!python/object/apply:numpy.arange [-15, 16]
     cmap: Spectral
     colors: lifted_index_colors
@@ -1323,10 +1336,18 @@ li: # Lifted Index
     unit: C
   sfc:
     <<: *lifted_index
+    cfgrib:
+      shortName: lftx
+      typeOfLevel: isobaricLayer
+      level: 500
     ncl_name: LFTX_P0_2L100_{grid}
     title: Surface Lifted Index
 lpl: # Lifted parcel level
   agl:
+    cfgrib:
+      shortName: plpl
+      typeOfLevel: pressureFromGroundLayer
+      level: 25500
     ncl_name: PLPL_P0_2L108_{grid}
     title: Lifted Parcel Level AGL >50
     transform:
@@ -1336,6 +1357,10 @@ lpl: # Lifted parcel level
         level2: sfc
     unit: hPa
   ua:
+    cfgrib:
+      shortName: plpl
+      typeOfLevel: pressureFromGroundLayer
+      level: 25500
     ncl_name: PLPL_P0_2L108_{grid}
     transform: conversions.pa_to_hpa
     unit: hPa
@@ -1350,6 +1375,9 @@ ltg3: # Lightning Threat (LTG1 ... LTG2)
     unit: flashes / km$^{2}$ / 5 min
 ltng: # Lightning
   sfc:
+    cfgrib:
+      shortName: ltng
+      typeOfLevel: atmosphere
     clevs: !!python/object/apply:numpy.arange [5, 91, 5]
     cmap: jet
     colors: graupel_colors
@@ -1358,6 +1386,11 @@ ltng: # Lightning
     unit: strikes / hr
 lwtp: # Lightning with total precip
   sfc:
+    cfgrib:
+      shortName: tp
+      typeOfLevel: surface
+      stepType: accum
+      stepRange: # startswith fhr - 1
     clevs: [0.25, 0.50, 0.75, 1.0, 2.0]
     cmap: gist_ncar
     colors: pcp_colors_high
@@ -1466,6 +1499,9 @@ pres:
     unit: hPa
     wind: 10m
   ua:
+    cfgrib:
+      shortName:
+      typeOfLevel:
     ncl_name: PRES_P0_L105_{grid}
 presmin:
   msl:
@@ -1496,6 +1532,9 @@ presmin:
 #    wind: 10m
 ptmp: # Potential temperature
   2m:
+    cfgrib:
+      shortName: pt
+      typeOfLevel: surface
     clevs: !!python/object/apply:numpy.arange [210, 350, 5]
     cmap: jet
     colors: t_colors
@@ -1505,6 +1544,11 @@ ptmp: # Potential temperature
     wind: 10m
 ptyp: # Hourly total precipitation
   sfc:
+    cfgrib:
+      shortName: tp
+      typeOfLevel: surface
+      stepType: accum
+      stepRange: # startswith fhr - 1
     clevs: [0.002, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 1.0, 2.0]
     cmap: gist_ncar
     colors: pcp_colors
@@ -1560,6 +1604,9 @@ ptyp: # Hourly total precipitation
     unit: in
 pwtr: # Precipitable water
   sfc:
+    cfgrib:
+      shortName: pwat
+      typeOfLevel: atmosphereSingleLayer
     clevs: !!python/object/apply:numpy.arange [4, 81, 4]
     cmap: gist_ncar
     colors: pw_colors
@@ -1577,6 +1624,10 @@ ref: # Maximum reflectivity for past hour at 1 km AGL
     title: Max 1h -10C Isothermal Reflectivity
 rh: # Relative Humidity
   2m: &rh
+    cfgrib:
+      shortName: 2r
+      typeOfLevel: heightAboveGround
+      level: 2
     clevs: [10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 100, 105]
     cmap: gist_ncar
     colors: rainbow12_colors
@@ -1585,6 +1636,9 @@ rh: # Relative Humidity
     unit: '%'
   500mb: &rh_ua
     <<: *rh
+    cfgrib:
+      shortName: r
+      typeOfLevel: isobaricInhPa
     ncl_name: RH_P0_L100_{grid}
     contours:
       pres_sfc:
@@ -1666,6 +1720,9 @@ rh: # Relative Humidity
     title: Relative Humidity wrt Precipitable Water
 rvil: # Radar-derived Vertically Integrated Liquid
   sfc: &vert_int_liq
+    cfgrib:
+      shortName: veril
+      typeOfLevel: atmosphereSingleLayer
     clevs: [0.05, 0.15, 0.76, 3.47, 6.92, 12, 31.6, 35, 40, 45, 50, 55, 60, 65, 70]
     cmap: NWSReflectivity
     colors: cref_colors
@@ -1681,6 +1738,10 @@ rvil: # Radar-derived Vertically Integrated Liquid
     unit: kg/m$^{2}$
 rwmr: # Rain Mixing Ratio
   ua:
+    cfgrib:
+      prs:
+        shortName: rwmr
+        typeOfLevel: isobaricInhPa
     ncl_name:
       nat: RWMR_P0_L105_{grid}
       prs: RWMR_P0_L100_{grid}
@@ -1696,6 +1757,11 @@ seasalt: # Fine dust, global chem
     unit: $\mu g/m^3$
 shear:
   01km: &shear # 0-1 km
+    cfgrib:
+      shortName: vucsh
+      typeOfLevel: heightAboveGroundLayer
+      topLevel: 0
+      bottomLevel: 1000
     clevs: [5, 10, 20, 30, 40, 50, 60]
     cmap: gist_ncar
     colors: wind_colors_high
@@ -1705,6 +1771,11 @@ shear:
       funcs: [vector_magnitude, conversions.ms_to_kt]
       kwargs:
         field2: VVCSH_P0_2L103_{grid}
+        cfgrib:
+          shortName: vvcsh
+          typeOfLevel: heightAboveGroundLayer
+          topLevel: 0
+          bottomLevel: 1000
         one_lev: True
         split: True
         level: 01km
@@ -1713,18 +1784,32 @@ shear:
     unit: kt
   06km: # 0-6 km
     <<: *shear
+    cfgrib:
+      shortName: vucsh
+      typeOfLevel: heightAboveGroundLayer
+      topLevel: 0
+      bottomLevel: 6000
     clevs: [20, 30, 40, 50, 60, 70, 80, 90, 100]
     split: True
     transform:
       funcs: [vector_magnitude, conversions.ms_to_kt]
       kwargs:
         field2: VVCSH_P0_2L103_{grid}
+        cfgrib:
+          shortName: vvcsh
+          typeOfLevel: heightAboveGroundLayer
+          topLevel: 0
+          bottomLevel: 6000
         one_lev: True
         split: True
         level: 06km
     title: 0–6 km Bulk Shear
 shtfl: # Sensible Heat Net Flux
   sfc: &shtflsfc
+    cfgrib:
+      shortName: ishf
+      typeOfLevel: surface
+      stepType: instant
     cmap: magma_r
     clevs: [-100, -50, -25, -10, 0, 10, 25, 50, 100, 150, 200, 250, 300, 400, 500, 750]
     cmap: RdYlBu_r
@@ -1736,6 +1821,10 @@ shtfl: # Sensible Heat Net Flux
 shtflavg:
   sfc:
     <<: *shtflsfc
+    cfgrib:
+      shortName: avg_ishf
+      typeOfLevel: surface
+      stepType: avg
     ncl_name: SHTFL_P8_L1_{grid}_avg6h
     title: Sensible Heat Net Flux 6h Avg
 sipd: # Supercooled Large Droplet Icing
@@ -1779,12 +1868,19 @@ slw: # Supercooled Liquid Water
     unit: kg/m$^{2}$
 snmr: # Snow Mixing Ratio
   ua:
+    cfgrib:
+      prs:
+        shortName: snmr
+        typeOfLevel: isobaricInhPa
     ncl_name:
       nat: SNMR_P0_L105_{grid}
       prs: SNMR_P0_L100_{grid}
 snod: # Snow Depth
   sfc:
     <<: *snow
+    cfgrib:
+      shortName: sde
+      typeOfLevel: surface
     ncl_name: SNOD_P0_L1_{grid}
     title:  Cycled Snow Depth
 soilm: # Soil Moisture Availability
@@ -1804,6 +1900,11 @@ soilm: # Soil Moisture Availability
     unit: "%"
 soilt: # Soil Temperature
   0cm: &soilt_levs
+    cfgrib:
+      shortName: st
+      typeOfLevel: depthBelowLandLayer
+      scaledValueOfFirstFixedSurface: 0
+      scaledValueOfSecondFixedSurface: 0
     clevs: !!python/object/apply:numpy.arange [235, 331, 5]
     cmap: gist_ncar
     colors: tsfc_colors
@@ -1813,33 +1914,78 @@ soilt: # Soil Temperature
     unit: K
   1cm:
     <<: *soilt_levs
+    cfgrib:
+      shortName: st
+      typeOfLevel: depthBelowLandLayer
+      scaledValueOfFirstFixedSurface: 1
+      scaledValueOfSecondFixedSurface: 1
     title: Soil Temperature at 1cm
   4cm:
     <<: *soilt_levs
+    cfgrib:
+      shortName: st
+      typeOfLevel: depthBelowLandLayer
+      scaledValueOfFirstFixedSurface: 4
+      scaledValueOfSecondFixedSurface: 4
     title: Soil Temperature at 4cm
   10cm:
     <<: *soilt_levs
+    cfgrib:
+      shortName: st
+      typeOfLevel: depthBelowLandLayer
+      scaledValueOfFirstFixedSurface: 10
+      scaledValueOfSecondFixedSurface: 10
     title: Soil Temperature at 10cm
   30cm:
     <<: *soilt_levs
+    cfgrib:
+      shortName: st
+      typeOfLevel: depthBelowLandLayer
+      scaledValueOfFirstFixedSurface: 30
+      scaledValueOfSecondFixedSurface: 30
     title: Soil Temperature at 30cm
   40cm:
     <<: *soilt_levs
     title: Soil Temperature at 30cm
   60cm:
     <<: *soilt_levs
+    cfgrib:
+      shortName: st
+      typeOfLevel: depthBelowLandLayer
+      scaledValueOfFirstFixedSurface: 60
+      scaledValueOfSecondFixedSurface: 60
     title: Soil Temperature at 60cm
   1m:
     <<: *soilt_levs
+    cfgrib:
+      shortName: st
+      typeOfLevel: depthBelowLandLayer
+      scaledValueOfFirstFixedSurface: 100
+      scaledValueOfSecondFixedSurface: 100
     title: Soil Temperature at 1m
   1.6m:
     <<: *soilt_levs
+    cfgrib:
+      shortName: st
+      typeOfLevel: depthBelowLandLayer
+      scaledValueOfFirstFixedSurface: 160
+      scaledValueOfSecondFixedSurface: 160
     title: Soil Temperature at 1.6m
   3m:
     <<: *soilt_levs
+    cfgrib:
+      shortName: st
+      typeOfLevel: depthBelowLandLayer
+      scaledValueOfFirstFixedSurface: 300
+      scaledValueOfSecondFixedSurface: 300
     title: Soil Temperature at 3m
 soilw: # Soil Moisture
   0cm: &soilw_levs
+    cfgrib:
+      shortName: soilw
+      typeOfLevel: depthBelowLandLayer
+      scaledValueOfFirstFixedSurface: 0
+      scaledValueOfSecondFixedSurface: 0
     clevs: [0, 0.01, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50]
     cmap: jet_r
     colors: soilw_colors
@@ -1849,33 +1995,81 @@ soilw: # Soil Moisture
     unit: fraction
   1cm:
     <<: *soilw_levs
+    cfgrib:
+      shortName: soilw
+      typeOfLevel: depthBelowLandLayer
+      scaledValueOfFirstFixedSurface: 1
+      scaledValueOfSecondFixedSurface: 1
     title: Soil Moisture at 1cm
   4cm:
     <<: *soilw_levs
+    cfgrib:
+      shortName: soilw
+      typeOfLevel: depthBelowLandLayer
+      scaledValueOfFirstFixedSurface: 4
+      scaledValueOfSecondFixedSurface: 4
     title: Soil Moisture at 4cm
   10cm:
     <<: *soilw_levs
+    cfgrib:
+      shortName: soilw
+      typeOfLevel: depthBelowLandLayer
+      scaledValueOfFirstFixedSurface: 10
+      scaledValueOfSecondFixedSurface: 10
     title: Soil Moisture at 10cm
   30cm:
     <<: *soilw_levs
+    cfgrib:
+      shortName: soilw
+      typeOfLevel: depthBelowLandLayer
+      scaledValueOfFirstFixedSurface: 30
+      scaledValueOfSecondFixedSurface: 30
     title: Soil Moisture at 30cm
   40cm:
     <<: *soilw_levs
+    cfgrib:
+      shortName: soilw
+      typeOfLevel: depthBelowLandLayer
+      scaledValueOfFirstFixedSurface: 40
+      scaledValueOfSecondFixedSurface: 40
     title: Soil Moisture at 40cm
   60cm:
     <<: *soilw_levs
+    cfgrib:
+      shortName: soilw
+      typeOfLevel: depthBelowLandLayer
+      scaledValueOfFirstFixedSurface: 60
+      scaledValueOfSecondFixedSurface: 60
     title: Soil Moisture at 60cm
   1m:
     <<: *soilw_levs
+    cfgrib:
+      shortName: soilw
+      typeOfLevel: depthBelowLandLayer
+      scaledValueOfFirstFixedSurface: 100
+      scaledValueOfSecondFixedSurface: 100
     title: Soil Moisture at 1m
   1.6m:
     <<: *soilw_levs
+    cfgrib:
+      shortName: soilw
+      typeOfLevel: depthBelowLandLayer
+      scaledValueOfFirstFixedSurface: 160
+      scaledValueOfSecondFixedSurface: 160
     title: Soil Moisture at 1.6m
   3m:
     <<: *soilw_levs
+    cfgrib:
+      shortName: soilw
+      typeOfLevel: depthBelowLandLayer
+      scaledValueOfFirstFixedSurface: 300
+      scaledValueOfSecondFixedSurface: 300
     title: Soil Moisture at 3m
 solar: # Incoming Solar Radiation
   sfc: &incoming_radiation
+    cfgrib:
+      shortName: csdsf
+      typeOfLevel: surface
     clevs: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100]
     cmap: gist_ncar
     colors: vort_colors
@@ -1885,11 +2079,21 @@ solar: # Incoming Solar Radiation
     unit: W/m$^{2}$
 sphum: # Specific humidity
   2m:
+    cfgrib:
+      shortName: 2sh
+      typeOfLevel: heightAboveGround
     ncl_name: SPFH_P0_L103_{grid}
   ua:
+    cfgrib:
+      shortName: q
+      typeOfLevel: isobaricInhPa
     ncl_name: SPFH_P0_L105_{grid}
 ssrun: # Storm Surface Runoff
   sfc: &precip
+    cfgrib:
+      shortname: ssrun
+      typeOfLevel: surface
+      stepType: accum
     clevs: [0.002, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 1.0, 2.0]
     cmap: gist_ncar
     colors: pcp_colors
@@ -1910,6 +2114,10 @@ sulf: # Sulfate, global chem
     unit: $\mu g/m^3$
 temp: # Temperature
   2ds: # 2m - Sfc
+    cfgrib:
+      shortName: 2t
+      level: 2
+      typeOfLevel: heightAboveGround
     clevs: !!python/object/apply:numpy.arange [-32, 33, 2]
     cmap: Spectral_r
     colors: centered_diff
@@ -2020,6 +2228,11 @@ thick:
 totp: # Hourly total precipitation
   sfc:
     <<: *precip
+    cfgrib:
+      shortName: tp
+      typeOfLevel: surface
+      stepRange: # startswith fhr - 1
+      stepType: accum
     contours:
       pres_msl:
         colors: red
@@ -2035,6 +2248,11 @@ totp: # Hourly total precipitation
 totp6h: # 6-hourly total precipitation
   sfc:
     <<: *precip
+    cfgrib:
+      shortName: tp
+      typeOfLevel: surface
+      stepRange: # startswith 0
+      stepType: accum
     contours:
       pres_msl:
         colors: red
@@ -2094,12 +2312,31 @@ trc1:
     wind: 10m
 u:
   10m: &agl_uwind
+    cfgrib:
+      shortName: 10u
+      level: 10
+      typeOfLevel: heightAboveGround
     ncl_name: UGRD_P0_L103_{grid}
     transform: conversions.ms_to_kt
   80m: *agl_uwind
+    cfgrib:
+      shortName: u
+      level: 80
+      typeOfLevel: heightAboveGround
   160m: *agl_uwind
+    cfgrib:
+      shortName: u
+      level: 160
+      typeOfLevel: heightAboveGround
   320m: *agl_uwind
+    cfgrib:
+      shortName: u
+      level: 320
+      typeOfLevel: heightAboveGround
   5mb: &ua_uwind
+    cfgrib:
+      shortName: u
+      typeOfLevel: isobaricInhPa
     ncl_name:
       prs: UGRD_P0_L100_{grid}
       nat: UGRD_P0_L105_{grid}
@@ -2119,6 +2356,9 @@ u:
     <<: *nat_uwind
     vertical_index: 11
   max:
+    cfgrib:
+      shortName: u
+      typeOfLevel: maxWind
     ncl_name: MAXUW_P8_L103_{grid}_max1h
     transform: conversions.ms_to_kt
   ua:
@@ -2126,6 +2366,10 @@ u:
 ulwrf: # Upward Longwave Radiation Flux
   sfc:
     <<: *radiation_flux
+    cfgrib:
+      shortName: sulwrf
+      typeOfLevel: surface
+      stepType: instant
     clevs: !!python/object/apply:numpy.arange [350, 601, 10]
     cmap: gist_ncar
     colors: radiation_colors
@@ -2134,6 +2378,10 @@ ulwrf: # Upward Longwave Radiation Flux
     title: Upward LW Radiation Flux, Surface
     unit: W/m$^{2}$
   top: # Nominal top of atmosphere
+    cfgrib:
+      parameterName: Upward long-wave radiation flux
+      typeOfLevel: nominalTop
+      stepType: instant
     clevs: !!python/object/apply:numpy.arange [80, 341, 2]
     cmap: ir_rgbv_r
     colors: radiation_mix_colors
@@ -2144,6 +2392,10 @@ ulwrf: # Upward Longwave Radiation Flux
 ulwrfavg: # Upward Longwave Radiation Flux
   sfc:
     <<: *radiation_flux
+    cfgrib:
+      shortName: sulwrf
+      typeOfLevel: surface
+      stepType: avg
     clevs: !!python/object/apply:numpy.arange [350, 601, 10]
     cmap: gist_ncar
     colors: radiation_colors
@@ -2152,6 +2404,10 @@ ulwrfavg: # Upward Longwave Radiation Flux
     title: Upward LW Radiation Flux, Surface
     unit: W/m$^{2}$
   top: # Nominal top of atmosphere
+    cfgrib:
+      parameterName: Upward long-wave radiation flux
+      typeOfLevel: nominalTop
+      stepType: avg
     clevs: !!python/object/apply:numpy.arange [80, 341, 2]
     cmap: ir_rgbv_r
     colors: radiation_mix_colors
@@ -2162,6 +2418,10 @@ ulwrfavg: # Upward Longwave Radiation Flux
 uswrf: # Upward Shortwave Radiation Flux
   sfc:
     <<: *radiation_flux
+    cfgrib:
+      shortName: suswrf
+      typeOfLevel: surface
+      stepType: instant
     clevs: [0, 50, 100, 150, 200, 250, 300, 400, 500, 600, 700, 800, 900, 1000]
     colors: rainbow12_colors
     ncl_name: USWRF_P0_L1_{grid}
@@ -2178,6 +2438,10 @@ uswrf: # Upward Shortwave Radiation Flux
 uswrfavg: # Upward Shortwave Radiation Flux Average
   sfc:
     <<: *radiation_flux
+    cfgrib:
+      shortName: suswrf
+      typeOfLevel: surface
+      stepType: avg
     clevs: [0, 50, 100, 150, 200, 250, 300, 400, 500, 600, 700, 800, 900, 1000]
     colors: rainbow12_colors
     ncl_name: USWRF_P8_L1_{grid}_avg6h
@@ -2193,12 +2457,23 @@ uswrfavg: # Upward Shortwave Radiation Flux Average
     title: Outgoing SW Radiation Flux 6h Avg, TOA
 v:
   10m: &agl_wind
+    cfgrib:
+      shortName: 10v
+      level: 10
+      typeOfLevel: heightAboveGround
     ncl_name: VGRD_P0_L103_{grid}
     transform: conversions.ms_to_kt
   80m: *agl_wind
+    cfgrib:
+      shortName: v
+      typeOfLevel: heightAboveGround
   160m: *agl_wind
+      typeOfLevel: heightAboveGround
   320m: *agl_wind
   5mb: &ua_vwind
+    cfgrib:
+      shortName: v
+      typeOfLevel: isobaricInhPa
     ncl_name:
       prs: VGRD_P0_L100_{grid}
       nat: VGRD_P0_L105_{grid}
@@ -2218,6 +2493,9 @@ v:
     <<: *nat_vwind
     vertical_index: 11
   max:
+    cfgrib:
+      shortName: v
+      typeOfLevel: maxWind
     ncl_name: MAXVW_P8_L103_{grid}_max1h
     transform: conversions.ms_to_kt
   ua:
@@ -2225,11 +2503,17 @@ v:
 vbdsf: # Incoming Direct Radiation
   sfc:
     <<: *incoming_radiation
+    cfgrib:
+      shortName: vbdsf
+      typeOfLevel: surface
     ncl_name: VBDSF_P0_L1_{grid}
     title: Incoming Direct Radiation
 vddsf: # Incoming Diffuse Radiation
   sfc:
     <<: *incoming_radiation
+    cfgrib:
+      shortName: vddsf
+      typeOfLevel: surface
     ncl_name: VDDSF_P0_L1_{grid}
     title: Incoming Diffuse Radiation
 vig: # Vertically-integrated graupel
@@ -2248,6 +2532,9 @@ vil: # Vertically Integrated Liquid
     title: Vertically Integrated Liquid
 vis: # Visibility
   sfc: &vis
+    cfgrib:
+      shortName: vis
+      typeOfLevel: surface
     # see the description provided in adb_graphics/utils.py, for the join_ranges method.
     clevs: !join_ranges [[0, 10, 0.1], [10, 51, 1.0]]
     cmap: gist_ncar
@@ -2264,6 +2551,9 @@ visbsn: # Visibility incl. blowing snow
     title: Sfc Visibility incl. blowing snow (exp)
 vort: # Absolute vorticity
   500mb:
+    cfgrib:
+      shortName: absv
+      typeOfLevel: isobaricInhPa
     clevs: !!python/object/apply:numpy.arange [6, 29, 2]
     cmap: gist_ncar
     colors: vort_colors
@@ -2276,6 +2566,9 @@ vort: # Absolute vorticity
     unit: 1E-5/s
 vvel: # Vertical velocity
   700mb:
+    cfgrib:
+      shortName: wz
+      typeOfLevel: isobaricInhPa
     clevs: !!python/object/apply:numpy.arange [-17, 34, 5]
     cmap: gist_ncar
     colors: vvel_colors
@@ -2296,6 +2589,10 @@ vvel: # Vertical velocity
     unit: m/s
 vvort: # Vertical vorticity
   mx01: &vvort # Hourly maximum of vertical vorticity over 0-2 km layer
+    cfgrib:
+      shortName: max_vo
+      typeOfLevel: heightAboveGroundLayer
+      level: 1000
     clevs: !!python/object/apply:numpy.arange [0.0025, 0.0301, 0.0025]
     cmap: gist_ncar
     colors: vort_colors
@@ -2305,9 +2602,16 @@ vvort: # Vertical vorticity
     unit: 1/s
   mx02: # Hourly maximum of vertical vorticity over 0-2 km layer
     <<: *vvort 
+    cfgrib:
+      shortName: max_vo
+      typeOfLevel: heightAboveGroundLayer
+      level: 2000
     title: 0-2km Max Vertical Vorticity (over prev hour)
 weasd: # Water equivalent of accumulated snow depth
   sfc:
+    cfgrib:
+      shortName: sdwe
+      typeOfLevel: surface
     clevs: [0.01, 0.1, 0.3, 0.5, 1, 2, 3, 4, 5, 7.5, 10, 20]
     cmap: gist_ncar
     colors: snow_colors
@@ -2329,6 +2633,10 @@ snoliqr: # Snow-liquid ratio (from U. Utah diagnostic in UPP)
 windmax:
   10m:
     accumulate: True
+    cfgrib:
+      shortName: max_10si
+      typeOfLevel: heightAboveGround
+      level: 10
     clevs: !!python/object/apply:numpy.arange [5, 95, 5]
     cmap: gist_ncar
     colors: wind_colors
@@ -2339,6 +2647,10 @@ windmax:
     unit: kt
 wspeed: # Wind Speed
   10m: &ua_wspeed
+    cfgrib:
+      shortName: 10u
+      level: 10
+      typeOfLevel: heightAboveGround
     clevs: !!python/object/apply:numpy.arange [5, 95, 5]
     cmap: gist_ncar
     colors: wind_colors
@@ -2349,9 +2661,16 @@ wspeed: # Wind Speed
       funcs: [vector_magnitude, conversions.ms_to_kt]
       kwargs:
         field2: VGRD_P0_L103_{grid}
+        cfgrib:
+          shortName: 10v
+          level: 10
+          typeOfLevel: heightAboveGround
     unit: kt
     wind: True
   5mb: &ua_wspeed_high
+    cfgrib:
+      shortName: u
+      typeOfLevel: isobaricInhPa
     clevs: [20, 40, 60, 70, 80, 90, 100, 110, 120, 140, 160, 180, 200]
     cmap: gist_ncar
     colors: wind_colors_high
@@ -2366,6 +2685,9 @@ wspeed: # Wind Speed
       funcs: [vector_magnitude, conversions.ms_to_kt]
       kwargs:
         field2: VGRD_P0_L100_{grid}
+        cfgrib:
+          shortName: v
+          typeOfLevel: isobaricInhPa
     unit: kt
     wind: True
   10mb:
@@ -2398,8 +2720,15 @@ wspeed: # Wind Speed
       funcs: [vector_magnitude, conversions.ms_to_kt]
       kwargs:
         field2: VGRD_P0_L100_{grid}
+        cfgrib:
+          shortName: v
+          typeOfLevel: isobaricInhPa
   max: # Hourly Maximum 10m Wind
     <<: *ua_wspeed
+    cfgrib:
+      shortName: max_10si
+      typeOfLevel: heightAboveGround
+      level: 10
     ncl_name: WIND_P8_L103_{grid}_max1h
     title: Max 10m Wind (over prev hour)
     transform: conversions.ms_to_kt
