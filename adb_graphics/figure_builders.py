@@ -9,12 +9,14 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import yaml
 
 from adb_graphics.datahandler import gribfile
 from adb_graphics.datahandler import gribdata
 import adb_graphics.errors as errors
 from adb_graphics.figures import maps
 from adb_graphics.figures import skewt
+from adb_graphics.utils import numeric_level
 
 AIRPORTS = 'static/Airports_locs.txt'
 
@@ -80,10 +82,6 @@ def parallel_maps(cla, fhr, grib_path, level, model, spec, variable, workdir,
     '''
 
     fig, axes = set_figure(cla.model_name, cla.graphic_type, tile)
-    ds = gribfile.GribFile(grib_path, spec["cfgrib"]).contents
-
-    if dp2:
-        ds2 = gribfile.GribFile(dp2, spec["cfgrib"]).contents
 
     # set last_panel to send into DataMap for colorbar control
     last_panel = False
@@ -114,45 +112,14 @@ def parallel_maps(cla, fhr, grib_path, level, model, spec, variable, workdir,
             mem = mem if mem < 4 else index - 1
             mem = mem if mem < 8 else index - 2
 
-        # Object to be plotted on the map in filled contours.
-        field = gribdata.fieldData(
-            ds=ds,
-            fhr=fhr,
-            filetype=cla.file_type,
-            level=level,
-            member=mem,
-            model=model,
-            short_name=variable,
-            config=cla.specs['file'],
-            grib_path=dp2,
-            )
-
-        if cla.graphic_type == "diff":
-
-            field2 = gribdata.fieldData(
-                ds=ds2,
-                fhr=fhr,
-                filetype=cla.file_type,
-                level=level,
-                member=mem,
-                model=model,
-                short_name=variable,
-                config=cla.specs['file']
-                )
-
-            try:
-                field2.field
-            except errors.GribReadError:
-                print((f'Cannot find grib2 variable for {variable} at {level} in',
-                       '2nd set of files. Skipping.'))
-                return
-
-            field.data = field.values() - field2.values()
-
-
+        # Create an object that holds all the fields for this map
         map_fields = maps.MapFields(
-            fields_spec=spec,
-            main_field=field,
+            grib_path=grib_path,
+            grib_path2=dp2,
+            fhr=fhr,
+            fields_spec=cla.specs,
+            level=level,
+            name=variable,
             map_type=cla.graphic_type,
             model=model,
             tile=tile,
@@ -162,7 +129,7 @@ def parallel_maps(cla, fhr, grib_path, level, model, spec, variable, workdir,
         m = maps.Map(
             airport_fn=AIRPORTS,
             ax=current_ax,
-            grid_info=field.grid_info(),
+            grid_info=map_fields.shaded.grid_info(),
             model=model,
             plot_airports=spec.get('plot_airports', True),
             tile=tile,
@@ -225,7 +192,6 @@ def parallel_maps(cla, fhr, grib_path, level, model, spec, variable, workdir,
     plt.clf()
     # Closes all the figure windows.
     plt.close('all')
-    del field
     del m
     gc.collect()
 

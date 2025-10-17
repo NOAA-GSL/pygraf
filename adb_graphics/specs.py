@@ -21,11 +21,6 @@ class VarSpec(abc.ABC):
     the config file.
     '''
 
-    def __init__(self, config):
-
-        with open(config, 'r') as cfg:
-            self.yml = yaml.load(cfg, Loader=yaml.Loader)
-
     @property
     def aod_colors(self) -> np.ndarray:
 

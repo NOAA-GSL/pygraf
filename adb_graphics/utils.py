@@ -10,6 +10,7 @@ import glob
 import importlib as il
 from math import atan2, degrees
 from multiprocessing import Process
+from string import digits, ascii_letters
 import os
 import subprocess
 import sys
@@ -290,6 +291,40 @@ def load_specs(arg):
     specs['file'] = spec_file
 
     return specs
+
+def numeric_level(index_match=True, level=None, split=None):
+
+    '''
+    Split the numeric level and unit associated with the level key.
+
+    A blank string is returned for lev_val for levels that do not contain a
+    numeric, e.g., 'sfc' or 'ua'.
+    '''
+
+    level = level if level is not None else 0
+
+    # Gather all the numbers in the string
+    lev_val = ''.join([c for c in level if (c in digits or c == '.')])
+
+    # Convert the numbers to a list, and make integers or floats
+    if lev_val:
+        if split is not None:
+            lev_val = [int(lev) for lev in lev_val]
+        else:
+            lev_val = [float(lev_val) if '.' in lev_val else int(lev_val)]
+
+    # Gather all the letters
+    lev_unit = ''.join([c for c in level if c in ascii_letters])
+
+    if index_match:
+        if lev_unit == 'cm':
+            lev_val = [val / 100. for val in lev_val]
+        if lev_unit in ['mb', 'mxmb']:
+            lev_val = [val * 100. for val in lev_val]
+        if lev_unit in ['in', 'km', 'mn', 'mx', 'sr']:
+            lev_val = [val * 1000. for val in lev_val]
+
+    return lev_val, lev_unit
 
 def old_enough(age, file_path):
 

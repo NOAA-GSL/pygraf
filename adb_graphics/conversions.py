@@ -5,7 +5,7 @@ interface requires a single atmospheric field in a Numpy array, and returns the
 converted values as output.
 '''
 
-import numpy as np
+from xarray.ufuncs import sqrt, square
 
 def k_to_c(field, **kwargs):
 
@@ -29,7 +29,7 @@ def magnitude(a, b, **kwargs):
 
     ''' Return the magnitude of vector components '''
 
-    return np.sqrt(np.square(a) + np.square(b))
+    return sqrt(square(a) + square(b))
 
 def m_to_dm(field, **kwargs):
 

@@ -18,6 +18,9 @@ from mpl_toolkits.basemap import Basemap
 from mpl_toolkits.basemap import shiftgrid
 import numpy as np
 
+from adb_graphics.datahandler import gribdata, gribfile
+from adb_graphics.utils import numeric_level
+
 # FULL_TILES is a list of strings that includes the labels GSL attaches to some of
 # the wgrib2 cutouts used for larger domains like RAP, RRFS NA, and global.
 FULL_TILES = [
@@ -277,12 +280,16 @@ class DataMap():
     #pylint: disable=unused-argument
     def __init__(self, map_fields, map_, model_name=None, **kwargs):
 
-        self.field = map_fields.main_field
+        self.field = map_fields.shaded
         self.contour_fields = map_fields.contours
         self.hatch_fields = map_fields.hatches
+        self.map_fields = map_fields
         self.map = map_
         self.model_name = model_name
         self.plot_scatter = map_fields.fields_spec.get('plot_scatter', False)
+
+    def wind_fields(self, level):
+        return self.map_fields.wind_fields(level)
 
     @staticmethod
     def add_logo(ax):
@@ -327,11 +334,11 @@ class DataMap():
                             )
 
         if self.field.short_name == 'flru':
-            ticks = [label.rjust(30) for label in ['VFR', 'MVFR', 'IFR', 'LIFR']]
+            ticks = [label.rjust(30) for label in ['VFR', 'MVFR', 'IFR', 'LIFR', ""]]
 
         # this step is done to allow proper order of icing severity levels (trace before light)
         if self.field.short_name == 'icsev':
-            ticks = [label.rjust(30) for label in ['TRACE', 'LIGHT', 'MODERATE', 'HEAVY']]
+            ticks = [label.rjust(30) for label in ['TRACE', 'LIGHT', 'MODERATE', 'HEAVY', ""]]
 
         cbar.ax.set_xticklabels(ticks, fontsize=12)
 
@@ -556,12 +563,10 @@ class DataMap():
                                   func=self.map.m.contourf,
                                   **field.contour_kwargs,
                                   )
-
             # For each level, we set the color of its hatch
-            for collection in cf.collections:
-                collection.set_edgecolor(colors)
-                collection.set_facecolor(['None'])
-                collection.set_linewidth(linewidths)
+            cf.set_edgecolor(colors)
+            cf.set_facecolor("None")
+            cf.set_linewidth(linewidths)
 
         # Create legend for precip type field
         if self.field.short_name == 'ptyp':
@@ -627,7 +632,7 @@ class DataMap():
         else:
             level = level if not isinstance(level, list) else level[0]
             title = f'{level} {lev_unit} {f.field.long_name} {units}'
-        plt.title(f"{title}", position=(0.5, 1.10), fontsize=18)
+        plt.title(f"{title}", loc="center", y=1.10, fontsize=18)
 
         # Two lines for hatched data (top), and contoured data (bottom) on the right
         contoured = self._set_overlay_string()
@@ -643,7 +648,8 @@ class DataMap():
             by lat,lon so the stride is set in the TILE_DEFS. For the globalCONUS
             subdomains, further dividing by 2.5 works well. '''
 
-        u, v = self.field.wind(level)
+        lev = level if not isinstance(level, bool) else self.field.level
+        u, v = [f.data for f in self.wind_fields(lev)]
 
         tile = self.map.tile
 
@@ -891,14 +897,54 @@ class MapFields():
     contours, hatched spaces, and overlayed contours needed for a full
     product. '''
 
-    def __init__(self, main_field, fields_spec=None, map_type=None,
+    def __init__(self, fhr, fields_spec, grib_path, level, name, map_type=None,
                  **kwargs):
 
-        self.main_field = main_field
-        self.fields_spec = fields_spec if fields_spec is not None else {}
+        self.grib_path = grib_path
+        self.fhr = fhr
+        self.fields_spec = fields_spec
+        self.level = level
         self.map_type = map_type
         self.model = kwargs.get('model')
+        self.name = name
         self.tile = kwargs.get('tile', 'full')
+
+        self.map_spec = self.fields_spec[self.name][self.level]
+        self.set_level(self.level, self.map_spec)
+        # Required if map_type is "diff"
+        self.grib_path2 = kwargs.get("grib_path2")
+
+    @staticmethod
+    def set_level(level, spec):
+
+        nlevel, _ = numeric_level(level=level, index_match=False)
+        if nlevel and spec["cfgrib"].get("level") is None:
+            spec["cfgrib"]["level"] = nlevel
+        #if spec["cfgrib"].get("level") is None and not spec["cfgrib"].get("stepRange") and not \
+        #    spec["cfgrib"].get("topLevel") and not \
+        #    spec["cfgrib"].get("typeOfLevel") == "surface" and not \
+        #    spec["cfgrib"].get("scaledValueOfFirstFixedSurface"):
+
+    @property
+    def shaded(self):
+        ds = gribfile.GribFile(self.grib_path, self.map_spec["cfgrib"]).contents
+        args = {
+            "ds": ds,
+            "fhr": self.fhr,
+            "level": self.level,
+            "model": self.model,
+            "short_name": self.name,
+            "spec": self.fields_spec,
+            "grib_path": self.grib_path,
+        }
+        field = gribdata.fieldData(**args)
+        if self.map_type == "diff":
+            args["ds"] = gribfile.GribFile(self.grib_path2, self.map_spec["cfgrib"]).contents
+            args["grib_path"] == self.grib_path2
+            field2 = gribdata.fieldData(**args)
+            field.data = field.values() - field2.values()
+
+        return field
 
     @property
     def contours(self):
@@ -920,25 +966,51 @@ class MapFields():
 
         return self._overlay_fields('hatches')
 
+    def wind_fields(self, level=None):
+        ''' Return u, v tuple of wind fields '''
+
+        lev = level or self.level
+        winds = []
+        for var in ("u", "v"):
+            wind_spec = self.fields_spec[var][lev]
+            self.set_level(lev, wind_spec)
+            args = {
+                "ds": gribfile.GribFile(self.grib_path, wind_spec["cfgrib"]).contents,
+                "fhr": self.fhr,
+                "level": lev,
+                "model": self.model,
+                "short_name": var,
+                "spec": self.fields_spec,
+                "grib_path": self.grib_path,
+            }
+            winds.append(gribdata.fieldData(**args))
+        return winds
+
     def _overlay_fields(self, spec_sect):
 
         ''' Generate a list of fieldData objects for the specified type
         of overlay -- hatches or contours '''
-        overlays = self.fields_spec.get(spec_sect)
+
         overlay_fields = []
-        if overlays is not None:
-            for overlay, overlay_kwargs in overlays.items():
-                if '_' in overlay:
-                    var, lev = overlay.split('_')
-                else:
-                    var, lev = overlay, self.main_field.level
+        for overlay, overlay_kwargs in self.map_spec.get(spec_sect, {}).items():
+            if '_' in overlay:
+                var, lev = overlay.split('_')
+            else:
+                var, lev = overlay, self.level
 
-                # Make a copy of the main object, and change the
-                # attributes to match the overlay field
-                overlay_obj = copy.deepcopy(self.main_field)
-                overlay_obj.contour_kwargs = overlay_kwargs
-                overlay_obj.short_name = var
-                overlay_obj.level = lev
-
-                overlay_fields.append(overlay_obj)
+            overlay_spec = self.fields_spec[var][lev]
+            self.set_level(lev, overlay_spec)
+            args = {
+                "ds": gribfile.GribFile(self.grib_path, overlay_spec["cfgrib"]).contents,
+                "fhr": self.fhr,
+                "level": lev,
+                "model": self.model,
+                "short_name": var,
+                "spec": self.fields_spec,
+                "grib_path": self.grib_path,
+            }
+            overlay_obj = gribdata.fieldData(**args)
+            # Set the attributes for the overlay field
+            overlay_obj.contour_kwargs = overlay_kwargs
+            overlay_fields.append(overlay_obj)
         return overlay_fields

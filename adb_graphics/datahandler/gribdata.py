@@ -12,7 +12,7 @@ from string import digits, ascii_letters
 from matplotlib import cm
 import numpy as np
 import xarray as xr
-
+from adb_graphics.datahandler import gribfile
 from .. import conversions
 from .. import errors
 from .. import specs
@@ -33,19 +33,15 @@ class UPPData(specs.VarSpec):
         model:       string describing the model type
     '''
 
-    def __init__(self, ds, short_name, **kwargs):
+    def __init__(self, ds, short_name, spec, **kwargs):
 
 
         # Parse kwargs first
-        config = kwargs.get('config', 'adb_graphics/default_specs.yml')
         self.model = kwargs.get('model')
-        self.filetype = kwargs.get('filetype', 'prs')
         self.grib_path = kwargs.get("grib_path")
 
 
-        specs.VarSpec.__init__(self, config)
-
-        self.spec = self.yml
+        self.spec = spec
         self.short_name = short_name
         self.level = 'ua'
 
@@ -142,15 +138,8 @@ class UPPData(specs.VarSpec):
 
         ''' Returns the mean of the values. '''
 
-        fsum = np.zeros_like(values)
-
-        chosen_levels = global_levels if 'global' in self.model else levels
-        for level in global_levels:
-            val_lev = self.values(name=variable, level=level)
-            fsum = fsum + val_lev
-            val_lev.close()
-
-        return fsum / len(chosen_levels)
+        levs = [int(x[:-2]) for x in levels]
+        return values.sel(isobaricInhPa=levs).mean("isobaricInhPa")
 
     def _get_data_levels(self, vertical_dim):
 
@@ -172,7 +161,8 @@ class UPPData(specs.VarSpec):
 
         ''' Given an ncl_name, return the NioVariable object. '''
 
-        return gribfile.GribFile(self.grib_path, spec).contents
+        ds = gribfile.GribFile(self.grib_path, spec).contents
+        return ds.__getattr__([x for x in ds.data_vars][0])
 
     def _get_level(self, field, level, spec, **kwargs):
 
@@ -331,57 +321,6 @@ class UPPData(specs.VarSpec):
 
         return self.field.level_type
 
-    @property
-    def level_type(self):
-
-        ''' Returns a Grib2 code for type of level. 10 is used for
-        entire atmosphere in HRRR, while 200 is used in RRFS. '''
-
-        if self.filetype == 'prs':
-            if self.model == 'rrfs' or self.model == 'regional_mpas':
-                return 200
-            return 10
-        return 105
-
-    def ncl_name(self, spec: dict):
-
-        ''' Get the ncl_name from the specified spec dict. '''
-
-        name = spec.get('ncl_name')
-
-        if isinstance(name, dict):
-            if self.model in name.keys():
-                name = name.get(self.model)
-            else:
-                name = name.get(self.filetype)
-
-        if name is None:
-            print(f"Cannot find ncl_name for: ")
-            for key, value in spec.items():
-                print(f'{key}: {value}')
-            raise KeyError
-
-        # The level_type for the entire atmosphere could be L10 or L200. Thanks
-        # Grib2! Handle that in "try" statement when reading file.
-
-        name = name if isinstance(name, list) else [name]
-
-        try_name = ''
-        for try_name in name:
-            try_name = try_name.format(fhr=self.fhr,
-                                       grid=self.grid_suffix,
-                                       level_type=self.level_type)
-
-            try:
-                self._get_field(try_name)
-            except errors.GribReadError:
-                continue
-            else:
-                return try_name
-
-        msg = f'Could not find any of {try_name} in input file'
-        raise errors.GribReadError(msg)
-
     def numeric_level(self, index_match=True, level=None, split=None):
 
         '''
@@ -495,7 +434,7 @@ class fieldData(UPPData):
         Generates a field of Aviation Flight Rules from Ceil and Vis
         '''
 
-        ceil = values
+        ceil = values.to_dataarray().squeeze()
         vis = self.values(name='vis', level='sfc')
 
         flru = np.where((ceil > 1.) & (ceil < 3.), 1.01, 0.0)
@@ -630,11 +569,6 @@ class fieldData(UPPData):
             Lo1='lon_1',
             Lo2='lon_2',
             )
-
-        # Last coordinate listed should be latitude or longitude
-        lat_var = [var for var in self.field.coords if 'lat' in var][0]
-
-        # Get the latitude variable
 
         grid_info = {}
         var_info = self.field
@@ -814,7 +748,7 @@ class fieldData(UPPData):
         '''
 
         level = level or self.level
-        vals = self.field
+        vals = self.ds
 
         #one_lev = kwargs.get('one_lev', True)
         #vertical_index = kwargs.get('vertical_index')
@@ -836,7 +770,7 @@ class fieldData(UPPData):
             spec = self.spec.get(name, {}).get(level, {})
             if not spec and name is not None:
                 raise errors.NoGraphicsDefinitionForVariable(name, level)
-            field = self._get_field(spec["cfgrib"])
+            vals = self._get_field(spec["cfgrib"])
 
         #lev = vertical_index
         #vals = field
@@ -876,9 +810,11 @@ class fieldData(UPPData):
         if transforms and do_transform:
             vals = self.get_transform(transforms, vals)
 
+        if isinstance(vals, xr.Dataset):
+            return vals.to_dataarray().squeeze()
         return vals
 
-    def vector_magnitude(self, field1, field2, level=None, vertical_index=None, **kwargs):
+    def vector_magnitude(self, field1, cfkeys=None, field2_id=None, level=None, vertical_index=None, **kwargs):
 
         # pylint: disable=unused-argument
 
@@ -888,23 +824,29 @@ class fieldData(UPPData):
         first layer of a variable is returned if none is provided.
         '''
 
-        if isinstance(field1, str):
-            field1 = self.values(
-                level=level,
-                ncl_name=field1,
-                vertical_index=vertical_index,
-                **kwargs,
-                )
+        if cfkeys:
+            if cfkeys.get("level") is None:
+                cfkeys["level"] = utils.numeric_level(level=self.level, index_match=False)[0]
+            field2_spec = {"cfgrib": cfkeys}
+        else:
+            var, lev = field2_id.split(".")
+            field2_spec = self.spec
+            for key in (var, lev):
+                field2_spec = field2_spec[key]
 
-        if isinstance(field2, str):
-            field2 = self.values(
-                level=level,
-                ncl_name=field2,
-                vertical_index=vertical_index,
-                **kwargs,
-                )
+        ds = gribfile.GribFile(self.grib_path, field2_spec["cfgrib"]).contents
+        args = {
+                "ds": ds,
+                "fhr": self.fhr,
+                "level": self.level,
+                "model": self.model,
+                "short_name": self.short_name,
+                "spec": self.spec,
+                "grib_path": self.grib_path,
+            }
+        field2 = fieldData(**args).ds
 
-        mag = conversions.magnitude(field1, field2)
+        mag = conversions.magnitude(field1.to_dataarray().squeeze(), field2.to_dataarray().squeeze())
         field1.close()
         field2.close()
 
