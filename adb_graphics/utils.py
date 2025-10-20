@@ -19,6 +19,12 @@ import time
 import numpy as np
 import yaml
 
+def cfgrib_spec(config, model):
+
+    if (spec := config.get(model)):
+        return spec
+    return config
+
 
 def create_zip(files_to_zip, zipf):
 

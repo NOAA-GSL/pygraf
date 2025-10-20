@@ -19,7 +19,7 @@ from mpl_toolkits.basemap import shiftgrid
 import numpy as np
 
 from adb_graphics.datahandler import gribdata, gribfile
-from adb_graphics.utils import numeric_level
+from adb_graphics.utils import cfgrib_spec, numeric_level
 
 # FULL_TILES is a list of strings that includes the labels GSL attaches to some of
 # the wgrib2 cutouts used for larger domains like RAP, RRFS NA, and global.
@@ -186,9 +186,8 @@ class Map():
         lats = self.airports[:, 0]
         lons = 360 + self.airports[:, 1] # Convert to positive longitude
         x, y = self.m(lons, lats)
-        self.m.plot(x, y, 'ko',
+        self.m.plot(x, y, 'wo',
                     ax=self.ax,
-                    color='w',
                     fillstyle='full',
                     markeredgecolor='k',
                     markeredgewidth=0.5,
@@ -358,7 +357,7 @@ class DataMap():
         # Create a pop-up to display the figure, if show=True
         if show:
             plt.tight_layout()
-            plt.show()
+            #plt.show()
 
         self.add_logo(self.map.ax)
 
@@ -650,7 +649,6 @@ class DataMap():
 
         lev = level if not isinstance(level, bool) else self.field.level
         u, v = [f.data for f in self.wind_fields(lev)]
-
         tile = self.map.tile
 
         full_tile = tile in FULL_TILES
@@ -823,7 +821,7 @@ class MultiPanelDataMap(DataMap):
         # Create a pop-up to display the figure, if show=True
         if show:
             plt.tight_layout()
-            plt.show()
+            #plt.show()
 
         return cf
 
@@ -914,12 +912,15 @@ class MapFields():
         # Required if map_type is "diff"
         self.grib_path2 = kwargs.get("grib_path2")
 
-    @staticmethod
-    def set_level(level, spec):
+    def set_level(self, level, spec):
 
         nlevel, _ = numeric_level(level=level, index_match=False)
-        if nlevel and spec["cfgrib"].get("level") is None:
-            spec["cfgrib"]["level"] = nlevel
+        level_info = any(x for x in cfgrib_spec(spec["cfgrib"], self.model) for l in ("level", "top", "bottom", "Surface") if l in x)
+        if nlevel and not level_info:
+            if spec["cfgrib"].get(self.model):
+                spec["cfgrib"][self.model]["level"] = nlevel
+            else:
+                spec["cfgrib"]["level"] = nlevel
         #if spec["cfgrib"].get("level") is None and not spec["cfgrib"].get("stepRange") and not \
         #    spec["cfgrib"].get("topLevel") and not \
         #    spec["cfgrib"].get("typeOfLevel") == "surface" and not \
@@ -927,7 +928,8 @@ class MapFields():
 
     @property
     def shaded(self):
-        ds = gribfile.GribFile(self.grib_path, self.map_spec["cfgrib"]).contents
+        cf = cfgrib_spec(self.map_spec["cfgrib"], self.model)
+        ds = gribfile.GribFile(self.grib_path, cf).contents
         args = {
             "ds": ds,
             "fhr": self.fhr,
@@ -939,7 +941,7 @@ class MapFields():
         }
         field = gribdata.fieldData(**args)
         if self.map_type == "diff":
-            args["ds"] = gribfile.GribFile(self.grib_path2, self.map_spec["cfgrib"]).contents
+            args["ds"] = gribfile.GribFile(self.grib_path2, cf).contents
             args["grib_path"] == self.grib_path2
             field2 = gribdata.fieldData(**args)
             field.data = field.values() - field2.values()
@@ -974,8 +976,9 @@ class MapFields():
         for var in ("u", "v"):
             wind_spec = self.fields_spec[var][lev]
             self.set_level(lev, wind_spec)
+            ds = gribfile.GribFile(self.grib_path, cfgrib_spec(wind_spec["cfgrib"], self.model)).contents
             args = {
-                "ds": gribfile.GribFile(self.grib_path, wind_spec["cfgrib"]).contents,
+                "ds": ds,
                 "fhr": self.fhr,
                 "level": lev,
                 "model": self.model,
@@ -1001,7 +1004,7 @@ class MapFields():
             overlay_spec = self.fields_spec[var][lev]
             self.set_level(lev, overlay_spec)
             args = {
-                "ds": gribfile.GribFile(self.grib_path, overlay_spec["cfgrib"]).contents,
+                "ds": gribfile.GribFile(self.grib_path, cfgrib_spec(overlay_spec["cfgrib"], self.model)).contents,
                 "fhr": self.fhr,
                 "level": lev,
                 "model": self.model,

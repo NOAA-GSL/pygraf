@@ -48,8 +48,8 @@ hourly:
       - sfc
     firewx:
       - sfc
-   flru:
-     - sfc
+    flru:
+      - sfc
     ghtfl:
       - sfc
     gust:
@@ -64,11 +64,11 @@ hourly:
       - mx25
       - sr01
       - sr03
-    hlcytot:
-      - mn03
-      - mn25
-      - mx03
-      - mx25
+#    hlcytot:
+#      - mn03
+#      - mn25
+#      - mx03
+#      - mx25
     hpbl:
       - sfc
     lcl:
@@ -150,7 +150,6 @@ hourly:
       - 500mb
     vvel:
       - 700mb
-      - mean
     vvort:
       - mx01
       - mx02

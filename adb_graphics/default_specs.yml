@@ -80,9 +80,16 @@
 1hsnw: # 1 hr Accumulated Snow Using 10:1 Ratio
   sfc:
     cfgrib:
-      shortName: sdwe
-      level: 0
-      typeOfLevel: surface
+      rrfs:
+        shortName: sdwe
+        level: 0
+        typeOfLevel: surface
+      hrrr:
+        shortName: sdwe
+        level: 0
+        typeOfLevel: surface
+        stepType: accum
+        stepRange: "0-16"
     clevs: [0.03, 0.05, 0.1, 0.5, 1, 2, 3, 4, 5, 6, 7, 8]
     cmap: gist_ncar
     colors: snow_colors
@@ -99,9 +106,14 @@
 1ref: # Reflectivity at 1 km AGL
   1000m: &refl
     cfgrib:
-      shortName: rare
-      typeOfLevel: heightAboveGround
-      level: 1000
+      hrrr:
+        shortName: refd
+        typeOfLevel: heightAboveGround
+        level: 1000
+      rrfs:
+        shortName: rare
+        typeOfLevel: heightAboveGround
+        level: 1000
     clevs: !!python/object/apply:numpy.arange [5, 76, 5]
     cmap: NWSReflectivity
     colors: cref_colors
@@ -131,7 +143,6 @@ acfrzr: # Run Total Freezing Rain
       level: 0
       typeOfLevel: surface
       stepType: accum
-      #stepRange: # startswith("0-")
     ncl_name: FRZR_P8_L1_GLC0_acc
     title: Run Total Freezing Rain
 acpcp: # Accumulated run total precipitation
@@ -260,9 +271,16 @@ acsnod: # Accumulated snow
 acsnw: # Run Total Accumulated Snow Using 10:1 Ratio
   sfc:
     cfgrib:
-      shortName: sdwe
-      level: 0
-      typeOfLevel: surface
+      hrrr:
+        shortName: sdwe
+        level: 0
+        typeOfLevel: surface
+        stepType: accum
+        stepRange: "0-16"
+      rrfs:
+        shortName: sdwe
+        level: 0
+        typeOfLevel: surface
     clevs: [0.01, 0.1, 1, 2, 3, 4, 6, 8, 10, 12, 18, 24]
     cmap: gist_ncar
     colors: snow_colors
@@ -602,10 +620,16 @@ cloudcover:
   total:
     <<: *cld_cover
     cfgrib:
-      shortName: tcc
-      typeOfLevel: atmosphereSingleLayer
-      stepType: instant
-      level: 0
+      hrrr:
+        shortName: tcc
+        typeOfLevel: atmosphere
+        stepType: instant
+        level: 0
+      rrfs:
+        shortName: tcc
+        typeOfLevel: atmosphereSingleLayer
+        stepType: instant
+        level: 0
     ncl_name: TCDC_P0_L{level_type}_{grid}
     title: Total Cloud Cover
 clwmr: # Cloud water Mixing Ratio
@@ -723,10 +747,15 @@ cref: # Composite reflectivity
   sfc:
     <<: *refl
     cfgrib:
-      parameterNumber: 5
-      parameterCategory: 16
-      typeOfLevel: atmosphereSingleLayer
-      level: 0
+      hrrr:
+        shortName: refc
+        typeOfLevel: atmosphere
+        level: 0
+      rrfs:
+        parameterNumber: 5
+        parameterCategory: 16
+        typeOfLevel: atmosphereSingleLayer
+        level: 0
     ncl_name: REFC_P0_L{level_type}_{grid}
     title: Composite Reflectivity
     include_obs: True
@@ -872,10 +901,16 @@ fullintdust: # Full vertically integrated dust (Fine dust + Coarse dust)
 echotop: # Echo Top
   sfc:
     cfgrib:
-      parameterNumber: 3
-      parameterCategory: 16
-      typeOfLevel: atmosphereSingleLayer
-      level: 0
+      hrrr:
+        parameterNumber: 3
+        parameterCategory: 16
+        typeOfLevel: cloudTop
+        level: 0
+      rrfs:
+        parameterNumber: 3
+        parameterCategory: 16
+        typeOfLevel: atmosphereSingleLayer
+        level: 0
     clevs: !!python/object/apply:numpy.arange [4, 50, 3]
     cmap: NWSReflectivity
     colors: cref_colors
@@ -925,11 +960,12 @@ ffldro: # Ensemble flash flood runoff
     ncl_name: FFLDRO_P9_L1_{grid}_acc6h
     title: Prob of 6-hr Precip > RFC flash flood guidance w/in 40 km
 firewx: # Fire Weather Index
-  sfc:
+  sfc: &firewx
     cfgrib:
-      parameterNumber: 26
-      parameterCategory: 4
-      typeOfLevel: surface
+      rrfs:
+        parameterNumber: 26
+        parameterCategory: 4
+        typeOfLevel: surface
     clevs: [10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 100]
     cmap: gist_ncar
     colors: rainbow11_colors
@@ -937,6 +973,14 @@ firewx: # Fire Weather Index
     ticks: 0
     title: Hourly Wildfire Potential
     unit: "%"
+firewx_transform:
+  sfc:
+    <<: *firewx
+    cfgrib:
+      shortName: vgtyp
+      typeOfLevel: surface
+      level: 0
+    transform: fire_weather_index
 flru: # Aviation Flight Rules
   sfc:
     cfgrib:
@@ -958,9 +1002,14 @@ flru: # Aviation Flight Rules
 G113bt: # GOES-W Brightness temperature, water vapor (Ch 3)
   sat: &goes_sat
     cfgrib:
-      parameterNumber: 242
-      typeOfLevel: atmosphere
-      level: 0
+      hrrr:
+        shortName: SBT113
+        typeOfLevel: nominalTop
+        level: 0
+      rrfs:
+        parameterNumber: 242
+        typeOfLevel: atmosphere
+        level: 0
     clevs: !!python/object/apply:numpy.arange [-80, 41, 1]
     cmap: WVCIMSS_r
     colors: goes_colors
@@ -972,17 +1021,30 @@ G113bt: # GOES-W Brightness temperature, water vapor (Ch 3)
 G114bt: # GOES-W Brightness temperature, infrared (Ch 4)
   sat:
     <<: *goes_sat
+    cfgrib:
+      shortName: SBT114
+      typeOfLevel: nominalTop
+      level: 0
     ncl_name: SBT114_P0_L8_{grid}
     title: GOES-W Brightness Temperature, Infrared
     unit: ch 4
 G123bt: # GOES-E Brightness temperature, water vapor (Ch 3)
   sat:
     <<: *goes_sat
+    cfgrib:
+      shortName: SBT123
+      typeOfLevel: nominalTop
+      level: 0
     ncl_name: SBT123_P0_L8_{grid}
     title: GOES-E Brightness Temperature, Water Vapor
 G124bt: # GOES-E Brightness temperature, infrared (Ch 4)
   sat:
     <<: *goes_sat
+    cfgrib:
+      shortName: SBT124
+      typeOfLevel: nominalTop
+      level: 0
+
     ncl_name: SBT124_P0_L8_{grid}
     title: GOES-E Brightness Temperature, Infrared
     unit: ch 4
@@ -1085,10 +1147,12 @@ gust:
 hail: # Max 1h Hail diameter
   maxsfc: &hail # surface
     cfgrib:
-      shortName: hail
-      typeOfLevel: surface
-      stepType: max
-      level: 0
+      hrrr:
+        shortName: hail
+        typeOfLevel: atmosphere
+      rrfs:
+        shortName: hail
+        typeOfLevel: surface
     clevs: [0.10, 0.25, 0.50, 0.75, 1.0, 1.5, 2.0, 2.5, 3.0]
     cmap: gist_ncar
     colors: hail_colors
@@ -1120,7 +1184,6 @@ hlcy: # Helicity
     <<: *hlcy
     cfgrib:
       parameterNumber: 15
-      parameterCategory: 7
       topLevel: 5000
       bottomLevel: 2000
     clevs: !!python/object/apply:numpy.arange [25, 301, 25]
@@ -1128,6 +1191,11 @@ hlcy: # Helicity
     split: True
     title: 2-5km Updraft Helicity
   mn02: &hlcy_mn # Hourly minimum of updraft helicity over 0-2 km layer
+    cfgrib:
+      parameterNumber: 200
+      typeOfLevel: heightAboveGroundLayer
+      topLevel: 2000
+      bottomLevel: 0
     clevs: !!python/object/apply:numpy.arange [-300, -24, 25]
     cmap: gist_ncar
     colors: rainbow12_reverse
@@ -1157,6 +1225,11 @@ hlcy: # Helicity
     title: 2-5km Min Updraft Helicity (over prv hr)
   mx02: &hlcy_mx02 # Hourly maximum of updraft helicity over 0-2 km layer
     <<: *hlcy
+    cfgrib:
+      parameterNumber: 199
+      typeOfLevel: heightAboveGroundLayer
+      topLevel: 2000
+      bottomLevel: 0
     clevs: !join_ranges [[12.5, 87.6, 12.5], [100, 301, 25]]
     colors: rainbow16_colors
     ncl_name: MXUPHL_P8_2L103_{grid}_max1h
@@ -1267,9 +1340,13 @@ hlcytot:
 hpbl: # Height of Planetary Boundary Layer
   sfc: 
     cfgrib:
-      shortName: gh
-      typeOfLevel: planetaryBoundaryLayer
-      level: 0
+      hrrr:
+        shortName: blh
+        typeOfLevel: surface
+      rrfs:
+        shortName: gh
+        typeOfLevel: planetaryBoundaryLayer
+        level: 0
     clevs: [25, 50, 100, 200, 300, 500, 750, 1000, 1500, 2000, 2500, 3000, 4000, 5000]
     cmap: ir_rgbv
     colors: pbl_colors
@@ -1435,6 +1512,10 @@ lpl: # Lifted parcel level
     unit: hPa
 ltg3: # Lightning Threat (LTG1 ... LTG2)
   sfc: 
+    cfgrib:
+      shortName: ltng
+      typeOfLevel: atmosphere
+      level: 0
     clevs: [0.02, 0.5, 1.0, 1.5, 2.0, 2.5, 3, 4, 5, 6, 7, 8, 10, 12]
     cmap: NWSReflectivity
     colors: cref_colors
@@ -1475,6 +1556,9 @@ lwtp: # Lightning with total precip
     unit: in
 mfrp: # Fire radiative power
   sfc:
+    cfgrib:
+      shortName: cfnsf
+      typeOfLevel: surface
     clevs: [0, 10, 25, 50, 100, 250]
     colors: fire_power_colors
     ncl_name: CFNSF_P0_L1_{grid}
@@ -1550,9 +1634,14 @@ pres:
     unit: hPa
   msl:
     cfgrib:
-      shortName: mslet
-      typeOfLevel: meanSea
-      level: 0
+      hrrr:
+        shortName: mslma
+        typeOfLevel: meanSea
+        level: 0
+      rrfs:
+        shortName: mslet
+        typeOfLevel: meanSea
+        level: 0
     clevs: !!python/object/apply:numpy.arange [976, 1051, 4]
     cmap: Spectral_r
     colors: pmsl_colors
@@ -1608,9 +1697,14 @@ presmin:
 ptmp: # Potential temperature
   2m:
     cfgrib:
-      shortName: pt
-      typeOfLevel: surface
-      level: 0
+      hrrr:
+        shortName: pt
+        typeOfLevel: heightAboveGround
+        level: 2
+      rrfs:
+        shortName: pt
+        typeOfLevel: surface
+        level: 0
     clevs: !!python/object/apply:numpy.arange [210, 350, 5]
     cmap: jet
     colors: t_colors
@@ -1694,13 +1788,25 @@ ref: # Maximum reflectivity for past hour at 1 km AGL
   m10:
     <<: *refl
     cfgrib:
-      shortName: rare
-      typeOfLevel: isothermal
-      level: 263
+      hrrr:
+        shortName: refd
+        typeOfLevel: isothermal
+        level: 263
+        stepType: instant
+      rrfs:
+        shortName: rare
+        typeOfLevel: isothermal
+        level: 263
     ncl_name: REFD_P0_L20_{grid}
     title: -10C Isothermal Reflectivity
   maxm10:
     <<: *refl
+    cfgrib:
+      hrrr:
+        shortName: refd
+        typeOfLevel: isothermal
+        level: 263
+        stepType: max
     ncl_name: REFD_P8_L20_{grid}_max1h
     title: Max 1h -10C Isothermal Reflectivity
 rh: # Relative Humidity
@@ -1809,6 +1915,11 @@ rh: # Relative Humidity
 rvil: # Radar-derived Vertically Integrated Liquid
   sfc: &vert_int_liq
     cfgrib:
+      hrrr:
+        shortName: veril
+        typeOfLevel: atmosphere
+        level: 0
+      rrfs:
       shortName: veril
       typeOfLevel: atmosphereSingleLayer
       level: 0
@@ -1976,6 +2087,10 @@ snod: # Snow Depth
     title:  Cycled Snow Depth
 soilm: # Soil Moisture Availability
   sfc:
+    cfgrib:
+      shortName: mstav
+      typeOfLevel: depthBelowLand
+    level: 0
     clevs: [0, 5, 15, 25, 35, 45, 55, 65, 75, 85, 95]
     cmap: Spectral
     colors: soilm_colors
@@ -2159,9 +2274,14 @@ soilw: # Soil Moisture
 solar: # Incoming Solar Radiation
   sfc: &incoming_radiation
     cfgrib:
-      shortName: csdsf
-      level: 0
-      typeOfLevel: surface
+      hrrr:
+        shortName: sdswrf
+        level: 0
+        typeOfLevel: surface
+      rrfs:
+        shortName: csdsf
+        level: 0
+        typeOfLevel: surface
     clevs: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100]
     cmap: gist_ncar
     colors: vort_colors
@@ -2360,6 +2480,10 @@ totp6h: # 6-hourly total precipitation
     title: 6 hr Total Precip
 trc1:
   int:
+    cfgrib:
+      parameterNumber: 1
+      typeOfLevel: atmosphereSingleLayer
+      level: 0
     clevs: [1, 4, 7, 11, 15, 20, 25, 30, 40, 50, 75, 150, 250, 500]
     colors: smoke_colors
     ncl_name:
@@ -2389,6 +2513,10 @@ trc1:
     title: 6000ft AGL Smoke
     vertical_index: 11
   sfc:
+    cfgrib:
+      parameterNumber: 0
+      typeOfLevel: heightAboveGround
+      level: 8
     clevs: [1, 2, 4, 6, 8, 12, 16, 20, 25, 30, 40, 60, 100, 200]
     colors: smoke_colors
     ncl_name:
@@ -2475,10 +2603,15 @@ ulwrf: # Upward Longwave Radiation Flux
     unit: W/m$^{2}$
   top: # Nominal top of atmosphere
     cfgrib:
-      parameterName: Upward long-wave radiation flux
-      typeOfLevel: nominalTop
-      level: 0
-      stepType: avg
+      hrrr:
+        parameterNumber: 4
+        typeOfLevel: nominalTop
+        level: 0
+      rrfs:
+        parameterName: 4
+        typeOfLevel: nominalTop
+        level: 0
+        stepType: avg
     clevs: !!python/object/apply:numpy.arange [80, 341, 2]
     cmap: ir_rgbv_r
     colors: radiation_mix_colors
@@ -2527,8 +2660,11 @@ uswrf: # Upward Shortwave Radiation Flux
   top: # Nominal top of atmosphere
     <<: *radiation_flux
     cfgrib:
+    cfgrib:
       parameterNumber: 8
+      parameterCategory: 4
       typeOfLevel: nominalTop
+      level: 0
     clevs: !!python/object/apply:numpy.arange [50, 851, 10]
     cmap: Greys_r
     colors: radiation_bw_colors
@@ -2626,6 +2762,10 @@ vddsf: # Incoming Diffuse Radiation
     title: Incoming Diffuse Radiation
 vig: # Vertically-integrated graupel
   sfc:
+    cfgrib:
+      parameterNumber: 74
+      typeOfLevel: atmosphereSingleLayer
+      level: 0
     clevs: !!python/object/apply:numpy.arange [5, 91, 5]
     cmap: jet
     colors: graupel_colors
@@ -2675,8 +2815,12 @@ vort: # Absolute vorticity
 vvel: # Vertical velocity
   700mb:
     cfgrib:
-      shortName: wz
-      typeOfLevel: isobaricInhPa
+      hrrr:
+        shortName: w
+        typeOfLevel: isobaricInhPa
+      rrfs:
+        shortName: wz
+        typeOfLevel: isobaricInhPa
     clevs: !!python/object/apply:numpy.arange [-17, 34, 5]
     cmap: gist_ncar
     colors: vvel_colors
@@ -2688,6 +2832,10 @@ vvel: # Vertical velocity
     transform: conversions.vvel_scale
     unit: -Pa/s * 10
   mean: # Mean Vertical Velocity
+    cfgrib:
+      shortName: wz
+      typeOfLevel: sigmaLayer
+      level: 1
     clevs: [-20, -15, -10, -5, -1, -0.75, -0.5, -0.25, -0.1, 0.1, 0.25, 0.5, 0.75, 1, 5, 10, 15, 20]
     cmap: Spectral_r
     colors: mean_vvel_colors
@@ -2720,6 +2868,7 @@ weasd: # Water equivalent of accumulated snow depth
     cfgrib:
       shortName: sdwe
       typeOfLevel: surface
+      stepType: instant
     clevs: [0.01, 0.1, 0.3, 0.5, 1, 2, 3, 4, 5, 7.5, 10, 20]
     cmap: gist_ncar
     colors: snow_colors
@@ -2840,10 +2989,16 @@ wspeed: # Wind Speed
     wind: 10m
   mdn: # Hourly Maximum Downdraft Velocity
     cfgrib:
-      parameterNumber: 221
-      typeOfLevel: isobaricLayer
-      topLevel: 100
-      bottomLevel: 1000
+      hrrr:
+        parameterNumber: 221
+        typeOfLevel: pressureFromGroundLayer
+        topLevel: 10000
+        bottomLevel: 100000
+      rrfs:
+        parameterNumber: 221
+        typeOfLevel: isobaricLayer
+        topLevel: 100
+        bottomLevel: 1000
     clevs: [-40, -35, -30, -25, -22.5, -20, -17.5, -15, -12.5, -10, -7.5, -5, -2.5, -2, -1.5, -1, -0.5]
     cmap: jet
     colors: mdn_colors
@@ -2853,10 +3008,16 @@ wspeed: # Wind Speed
     unit: m/s
   mup: # Hourly Maximum Updraft Velocity
     cfgrib:
-      parameterNumber: 220
-      typeOfLevel: isobaricLayer
-      topLevel: 100
-      bottomLevel: 1000
+      hrrr:
+        parameterNumber: 220
+        typeOfLevel: pressureFromGroundLayer
+        topLevel: 10000
+        bottomLevel: 100000
+      rrfs:
+        parameterNumber: 220
+        typeOfLevel: isobaricLayer
+        topLevel: 100
+        bottomLevel: 1000
     clevs: [0.5, 1, 1.5, 2, 2.5, 5, 7.5, 10, 12.5, 15, 17.5, 20, 22.5, 25, 30, 35, 40]
     cmap: jet
     colors: mup_colors

@@ -13,6 +13,7 @@ from matplotlib import cm
 import numpy as np
 import xarray as xr
 from adb_graphics.datahandler import gribfile
+from adb_graphics.utils import cfgrib_spec
 from .. import conversions
 from .. import errors
 from .. import specs
@@ -508,13 +509,27 @@ class fieldData(UPPData):
 
         '''
 
+        def _load_field(level, short_name):
+            spec = cfgrib_spec(self.spec[short_name][level]["cfgrib"], self.model)
+            ds = gribfile.GribFile(self.grib_path, spec).contents
+            args = {
+                    "ds": ds,
+                    "fhr": self.fhr,
+                    "level": level,
+                    "model": self.model,
+                    "short_name": short_name,
+                    "spec": self.spec,
+                    "grib_path": self.grib_path,
+                }
+            return fieldData(**args).values(do_transform=False)
+
         # Gather fields from the input
-        veg = values # Chose this value as the main one in the default_specs
-        temp = self.values(name='temp', level='2m', do_transform=False)
-        dewpt = self.values(name='dewp', level='2m', do_transform=False)
-        weasd = self.values(name='weasd', level='sfc', do_transform=False)
-        gust = self.values(name='gust', level='10m', do_transform=False)
-        soilm = self.values(name='soilm', level='sfc', do_transform=False)
+        veg = values.to_dataarray().squeeze() # Chose this value as the main one in the default_specs
+        temp = _load_field(level="2m", short_name="temp")
+        dewpt = _load_field(level='2m', short_name='dewp')
+        weasd = _load_field(level='sfc', short_name='weasd')
+        gust = _load_field(level='10m', short_name='gust')
+        soilm = _load_field(level='sfc', short_name='soilm')
 
         # A few derived fields
         dewpt_depression = temp - dewpt
@@ -770,7 +785,7 @@ class fieldData(UPPData):
             spec = self.spec.get(name, {}).get(level, {})
             if not spec and name is not None:
                 raise errors.NoGraphicsDefinitionForVariable(name, level)
-            vals = self._get_field(spec["cfgrib"])
+            vals = self._get_field(utils.cfgrib_spec(spec["cfgrib"], self.model))
 
         #lev = vertical_index
         #vals = field

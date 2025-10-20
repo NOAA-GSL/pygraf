@@ -27,7 +27,7 @@ class VarSpec(abc.ABC):
         ''' Default color map for AOD products and chem products '''
 
         grays = cm.get_cmap('Greys', 2)([0])
-        others = cm.get_cmap(self.vspec.get('cmap'), 15)(range(1, 15, 1), alpha=0.6)
+        others = cm.get_cmap(self.vspec.get('cmap'), 15)(range(1, 15, 1))
         return np.concatenate((grays, others))
 
     def centered_diff(self, cmap=None, nlev=None):
@@ -259,7 +259,7 @@ class VarSpec(abc.ABC):
         ''' Default color map for Max Downdraft '''
 
         grays = cm.get_cmap('Greys', 2)([0])
-        others = cm.get_cmap(self.vspec.get('cmap'), 18)(range(18, 1, -1), alpha=0.6)
+        others = cm.get_cmap(self.vspec.get('cmap'), 18)(range(18, 1, -1))
         return np.concatenate((others, grays))
 
     @property
@@ -277,7 +277,7 @@ class VarSpec(abc.ABC):
         ''' Default color map for Max Updraft '''
 
         grays = cm.get_cmap('Greys', 2)([0])
-        others = cm.get_cmap(self.vspec.get('cmap'), 18)(range(1, 18, 1), alpha=0.6)
+        others = cm.get_cmap(self.vspec.get('cmap'), 18)(range(1, 18, 1))
         return np.concatenate((grays, others))
 
     @property
