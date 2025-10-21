@@ -18,8 +18,10 @@ class GribFile:
         self.contents = self._load()
 
     def _load(self):
-        """Internal method that opens the grib file. Returns a grib message
-        iterator."""
+        """
+        Internal method that opens the grib file. Returns a grib message
+        iterator.
+        """
 
         return xr.open_dataset(
             self.filename,
@@ -30,13 +32,14 @@ class GribFile:
 
 
 class GribFiles:
-    """Class for loading in a set of grib files and combining them over
-    forecast hours."""
+    """
+    Class for loading in a set of grib files and combining them over
+    forecast hours.
+    """
 
     def __init__(self, coord_dims, filenames, filetype, **kwargs):
         """
         Arguments:
-
           coord_dims  dict containing the name of the dimension to
                       concat (key), and a list of its values (value).
                         Ex: {'fhr': [2, 3, 4]}
@@ -47,6 +50,7 @@ class GribFiles:
 
         Keyword Arguments:
           model       string describing the model type
+
         """
 
         self.model = kwargs.get("model", "")
@@ -58,14 +62,18 @@ class GribFiles:
         self.contents = self._load()
 
     def append(self, filenames):
-        """Add a single new slice to existing data set. Must match coord_dims
-        and filetype of original dataset. Updates current contents of Object"""
+        """
+        Add a single new slice to existing data set. Must match coord_dims
+        and filetype of original dataset. Updates current contents of Object
+        """
 
         self.contents = self._load(filenames)
 
     def free_fcst_names(self, ds, fcst_type):
-        """Given an opened dataset, return a dict of original variable names
-        (key) and the desired name (value)"""
+        """
+        Given an opened dataset, return a dict of original variable names
+        (key) and the desired name (value)
+        """
 
         ret = {}
 
@@ -104,7 +112,7 @@ class GribFiles:
                     ret[var] = var.replace(suffix, new_suffix)
                 # MASSDEN is a special case when ending in "avg_1'"
                 if var.split("_")[0] == "MASSDEN" and var.split("_")[-2] == "avg":
-                    print(f"Special change to MASSDEN avg_1 name to avg1h_1")
+                    print("Special change to MASSDEN avg_1 name to avg1h_1")
                     ret[var] = var.replace("avg", "avg1h")
             else:
                 # Only rename these variables at late hours
@@ -128,11 +136,7 @@ class GribFiles:
                     # others! At 7 hours, it starts averaging since 6h. From 0-6
                     # h it's named with suffix avg, after its named avg1h,
                     # avg2h, etc.
-                    if (
-                        self.model == "rrfs"
-                        and variable == "LRGHR"
-                        and suffix == f"{suf}1h"
-                    ):
+                    if self.model == "rrfs" and variable == "LRGHR" and suffix == f"{suf}1h":
                         contains_suffix.append(suf)
 
                     # RRFS_A has fields that have the suffix 'acc0h' but we don't
@@ -209,8 +213,10 @@ class GribFiles:
 
     @staticmethod
     def _get_grid_suffix(filenames):
-        """Return the suffix of the first variable with 4 sections (split on _)
-        in the file. This should correspond to the grid tag."""
+        """
+        Return the suffix of the first variable with 4 sections (split on _)
+        in the file. This should correspond to the grid tag.
+        """
 
         for files in filenames.values():
             if files:
@@ -250,7 +256,7 @@ class GribFiles:
 
                 renaming = self.free_fcst_names(dataset, fcst_type)
                 if renaming and self.model not in ["hrrre", "rrfse"]:
-                    print(f"RENAMING VARIABLES:")
+                    print("RENAMING VARIABLES:")
                     for old_name, new_name in renaming.items():
                         print(f"  {old_name:>30s}  -> {new_name}")
                     dataset = dataset.rename_vars(renaming)
@@ -272,10 +278,7 @@ class GribFiles:
                     for bad_var in bad_vars:
                         # Check to see if the bad variable is in the current
                         # dataset and NOT in the original dataset.
-                        if (
-                            bad_var not in og_ds.variables
-                            and dataset.get(bad_var) is not None
-                        ):
+                        if bad_var not in og_ds.variables and dataset.get(bad_var) is not None:
                             print(f"Adding {bad_var} to og ds")
                             # Duplicate the accumulated variable with the
                             # required name
@@ -293,8 +296,10 @@ class GribFiles:
 
     @property
     def open_kwargs(self):
-        """Defines the key word arguments used by the various calls to XArray
-        open_mfdataset"""
+        """
+        Defines the key word arguments used by the various calls to XArray
+        open_mfdataset
+        """
 
         return dict(
             backend_kwargs=dict(format="grib2"),

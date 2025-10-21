@@ -26,13 +26,13 @@ def pytest_addoption(parser):
 
 @pytest.fixture
 def natfile(request):
-    """Interface to  pass a grib file to pytest"""
+    """Interface to  pass a grib file to pytest."""
 
     return request.config.getoption("--nat-file")
 
 
 @pytest.fixture
 def prsfile(request):
-    """Interface to  pass a grib file to pytest"""
+    """Interface to  pass a grib file to pytest."""
 
     return request.config.getoption("--prs-file")

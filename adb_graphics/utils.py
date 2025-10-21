@@ -4,38 +4,39 @@ A set of generic utilities available to all the adb_graphics components.
 """
 
 import argparse
-import datetime as dt
 import functools
 import glob
-import importlib as il
-import os
 import subprocess
 import sys
 import time
+from collections.abc import Callable
+from datetime import datetime, timedelta
+from importlib.util import find_spec
 from math import atan2, degrees
 from multiprocessing import Process
+from pathlib import Path
 from string import ascii_letters, digits
 
 import numpy as np
 import yaml
 
 
-def cfgrib_spec(config, model):
+def cfgrib_spec(config: dict, model: str) -> dict:
     if spec := config.get(model):
         return spec
     return config
 
 
-def create_zip(files_to_zip, zipf):
+def create_zip(files_to_zip: list[str] | list[Path], zipf: Path | str):
     """Create a zip file. Use a locking mechanism -- write a lock file to disk."""
 
-    lock_file = f"{zipf}._lock"
+    lock_file = Path(f"{zipf}._lock")
     retry = 2
     count = 0
     while True:
-        if not os.path.exists(lock_file):
+        if not lock_file.exists():
             # Create the lock
-            fd = open(lock_file, "w")
+            fd = lock_file.open()
             print(f"Writing to zip file {zipf} for files like: {files_to_zip[0][-10:]}")
 
             cmd = f"zip -uj {zipf} {' '.join(files_to_zip)}"
@@ -46,7 +47,7 @@ def create_zip(files_to_zip, zipf):
                     check=True,
                     shell=True,
                 )
-            except:  # pylint: disable=bare-except
+            except:  # noqa: E722
                 print(f"Error on writing zip file! {sys.exc_info()[0]}")
                 count += 1
                 if count >= retry:
@@ -54,19 +55,17 @@ def create_zip(files_to_zip, zipf):
             else:
                 # Zipping was successful. Remove files that were zipped
                 for file_to_zip in files_to_zip:
-                    if os.path.exists(file_to_zip):
-                        os.remove(file_to_zip)
+                    Path(file_to_zip).unlink(missing_ok=True)
             finally:
                 # Remove the lock
                 fd.close()
-                if os.path.exists(lock_file):
-                    os.remove(lock_file)
+                lock_file.unlink(missing_ok=True)
             break
         # Wait before trying to obtain the lock on the file
         time.sleep(5)
 
 
-def fhr_list(args):
+def fhr_list(args: list[int]) -> list[int]:
     """
     Given an argparse list argument, return the sequence of forecast hours to
     process.
@@ -92,13 +91,15 @@ def fhr_list(args):
     return args
 
 
-def from_datetime(date):
+def from_datetime(date: datetime) -> str:
     """Return a string like YYYYMMDDHH given a datetime object."""
-    return dt.datetime.strftime(date, "%Y%m%d%H")
+    return datetime.strftime(date, "%Y%m%d%H")
 
 
 def get_func(val: str):
     """
+    Gets a callable function.
+
     Given an input string, val, returns the corresponding callable function.
     This function is borrowed from stackoverflow.com response to "Python: YAML
     dictionary of functions: how to load without converting to strings."
@@ -110,24 +111,20 @@ def get_func(val: str):
         module_name = "__main__"
         fun_name = val
 
-    mod_spec = il.util.find_spec(module_name, package="adb_graphics")
+    mod_spec = find_spec(module_name, package="adb_graphics")
     if mod_spec is None:
-        mod_spec = il.util.find_spec("." + module_name, package="adb_graphics")
+        mod_spec = find_spec("." + module_name, package="adb_graphics")
 
     try:
         __import__(mod_spec.name)
-    except ImportError as exc:
-        print(
-            f"Could not load {module_name} while trying to locate function in get_func"
-        )
-        raise exc
+    except ImportError:
+        print(f"Could not load {module_name} while trying to locate function in get_func")
+        raise
     module = sys.modules[mod_spec.name]
-    fun = getattr(module, fun_name)
-    return fun
+    return getattr(module, fun_name)
 
 
-# pylint: disable=unused-argument
-def join_ranges(loader, node):
+def join_ranges(loader: str, node: str) -> np.ndarray:  # noqa: ARG001
     """
     Merge two or more different ranges into a single array for color bar clevs.
 
@@ -144,9 +141,7 @@ def join_ranges(loader, node):
 
     list_ = []
     for seq_node in node.value:
-        range_args = []
-        for scalar_node in seq_node.value:
-            range_args.append(float(scalar_node.value))
+        range_args = [float(scalar_node.value) for scalar_node in seq_node.value]
 
         list_.append(np.arange(*range_args))
 
@@ -157,8 +152,7 @@ def join_ranges(loader, node):
 yaml.add_constructor("!join_ranges", join_ranges, Loader=yaml.Loader)
 
 
-# pylint: disable=invalid-name, too-many-locals
-def label_line(ax, label, segment, **kwargs):
+def label_line(ax: list, label: list, segment: list, **kwargs):
     """
     Label a single line with line2D label data.
 
@@ -233,7 +227,7 @@ def label_line(ax, label, segment, **kwargs):
     ax.text(x, y, label, rotation=trans_angle, **kwargs)
 
 
-def label_lines(ax, lines, labels, offset=0, **kwargs):
+def label_lines(ax: list, lines: list, labels: list[str], offset: float = 0, **kwargs):
     """
     Plots labels on a set of lines from SkewT.
 
@@ -259,19 +253,19 @@ def label_lines(ax, lines, labels, offset=0, **kwargs):
         label_line(ax, label, line, align=True, offset=offset, **kwargs)
 
 
-def load_sites(arg):
+def load_sites(arg: str | Path) -> list[str]:
     """Check that the sites file exists, and return its contents."""
 
     # Check that the file exists
     path = path_exists(arg)
 
-    with open(path, "r") as sites_file:
-        sites = sites_file.readlines()
-    return sites
+    with path.open() as sites_file:
+        return sites_file.readlines()
 
 
-def uniq_wgrib2_list(inlist):
-    """Given a list of wgrib2 output fields, returns a uniq list of fields for
+def uniq_wgrib2_list(inlist: list[str]):
+    """
+    Given a list of wgrib2 output fields, returns a uniq list of fields for
     simplifying a grib2 dataset. Uniqueness is defined by the wgrib output from
     field 3 (colon delimted) onward, although the original full grib record must
     be included in the wgrib2 command below.
@@ -281,7 +275,7 @@ def uniq_wgrib2_list(inlist):
     uniq_list = []
     for infield in inlist:
         infield_info = infield.split(":")
-        if len(infield_info) <= 3:
+        if len(infield_info) <= 3:  # noqa: PLR2004
             continue
         infield_str = ":".join(infield_info[3:])
         if infield_str not in uniq_field_set:
@@ -291,12 +285,13 @@ def uniq_wgrib2_list(inlist):
     return uniq_list
 
 
-def load_specs(arg):
+def load_specs(arg: str | Path) -> dict:
     """Check to make sure arg file exists. Return its contents."""
 
-    spec_file = path_exists(arg)
+    spec_file = Path(arg)
+    assert spec_file.exists()
 
-    with open(spec_file, "r") as fn:
+    with spec_file.open() as fn:
         specs = yaml.load(fn, Loader=yaml.Loader)
 
     specs["file"] = spec_file
@@ -304,7 +299,7 @@ def load_specs(arg):
     return specs
 
 
-def numeric_level(index_match=True, level=None, split=None):
+def numeric_level(index_match: bool = True, level: str | None = None):
     """
     Split the numeric level and unit associated with the level key.
 
@@ -319,10 +314,7 @@ def numeric_level(index_match=True, level=None, split=None):
 
     # Convert the numbers to a list, and make integers or floats
     if lev_val:
-        if split is not None:
-            lev_val = [int(lev) for lev in lev_val]
-        else:
-            lev_val = [float(lev_val) if "." in lev_val else int(lev_val)]
+        lev_val = [float(lev_val) if "." in lev_val else int(lev_val)]
 
     # Gather all the letters
     lev_unit = "".join([c for c in level if c in ascii_letters])
@@ -338,7 +330,7 @@ def numeric_level(index_match=True, level=None, split=None):
     return lev_val, lev_unit
 
 
-def old_enough(age, file_path):
+def old_enough(age: int, file_path: Path):
     """
     Helper function to test the age of a file.
 
@@ -352,23 +344,24 @@ def old_enough(age, file_path):
       bool    whether the file is at least age minutes old
     """
 
-    file_time = dt.datetime.fromtimestamp(os.path.getctime(file_path))
-    max_age = dt.datetime.now() - dt.timedelta(minutes=age)
+    file_time = datetime.fromtimestamp(file_path.stat().st_ctime)
+    max_age = datetime.now() - timedelta(minutes=age)
 
     return file_time < max_age
 
 
-def path_exists(path: str):
+def path_exists(path: Path | str):
     """Checks whether a file exists, and returns the path if it does."""
 
-    if not os.path.exists(path):
+    ret_path = Path(path)
+    if not ret_path.exists():
         msg = f"{path} does not exist!"
         raise argparse.ArgumentTypeError(msg)
 
-    return path
+    return ret_path
 
 
-def timer(func):
+def timer(func: Callable):
     """Decorator function that provides an elapsed time for a method."""
 
     @functools.wraps(func)
@@ -383,15 +376,16 @@ def timer(func):
     return wrapper_timer
 
 
-def to_datetime(string):
+def to_datetime(string: str):
     """Return a datetime object give a string like YYYYMMDDHH."""
 
-    return dt.datetime.strptime(string, "%Y%m%d%H")
+    return datetime.strptime(string, "%Y%m%d%H")
 
 
 @timer
-def zip_products(fhr, workdir, zipfiles):
-    """Spin up a subprocess to zip all the product files into the staged zip files.
+def zip_products(fhr: int, workdir: Path, zipfiles: dict) -> None:
+    """
+    Spin up a subprocess to zip all the product files into the staged zip files.
 
     Input:
 
@@ -408,7 +402,7 @@ def zip_products(fhr, workdir, zipfiles):
             file_tmpl = f"*.skewt.*_f{fhr:03d}.csv"
         else:
             file_tmpl = f"*_{tile}_*{fhr:02d}.png"
-        product_files = glob.glob(os.path.join(workdir, file_tmpl))
+        product_files = glob.glob(workdir / file_tmpl)
         if product_files:
             zip_proc = Process(
                 group=None,

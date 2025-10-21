@@ -32,6 +32,7 @@ class UPPData(specs.VarSpec):
     Keyword Arguments:
         config:      path to a user-specified configuration file
         model:       string describing the model type
+
     """
 
     def __init__(self, ds, short_name, spec, **kwargs):
@@ -49,8 +50,10 @@ class UPPData(specs.VarSpec):
 
     @property
     def anl_dt(self) -> datetime:
-        """Returns the initial time of the grib file as a datetime object from
-        the grib file."""
+        """
+        Returns the initial time of the grib file as a datetime object from
+        the grib file.
+        """
 
         return datetime.fromisoformat(str(self.field.time.values).split(".")[0])
 
@@ -81,21 +84,24 @@ class UPPData(specs.VarSpec):
 
     @staticmethod
     def date_to_str(date: datetime) -> str:
-        """Returns a formatted string (for graphic title) from a datetime
-        object"""
+        """
+        Returns a formatted string (for graphic title) from a datetime
+        object
+        """
 
         return date.strftime("%Y%m%d %H UTC")
 
     @property
     def field(self):
-        """Wrapper that calls get_field method for the current variable.
-        Returns the NioVariable object"""
+        """
+        Wrapper that calls get_field method for the current variable.
+        Returns the NioVariable object
+        """
 
         return self.ds.__getattr__([x for x in self.ds.data_vars][0])
 
     def field_column_max(self, values, variable, level, **kwargs):
         # pylint: disable=unused-argument
-
         """Returns the column max of the values."""
 
         vals = self.values(name=variable, level=level, one_lev=False)
@@ -105,7 +111,6 @@ class UPPData(specs.VarSpec):
 
     def field_sum(self, values, variable2, level2, **kwargs):
         # pylint: disable=unused-argument
-
         """Return the sum of the values."""
 
         value2 = self.values(name=variable2, level=level2)
@@ -116,7 +121,6 @@ class UPPData(specs.VarSpec):
 
     def field_diff(self, values, variable2, level2, **kwargs):
         # pylint: disable=unused-argument
-
         """Subtracts the values from variable2 from self.field."""
 
         value2 = self.values(name=variable2, level=level2)
@@ -127,7 +131,6 @@ class UPPData(specs.VarSpec):
 
     def field_mean(self, values, variable, levels, global_levels, **kwargs):
         # pylint: disable=unused-argument
-
         """Returns the mean of the values."""
 
         levs = [int(x[:-2]) for x in levels]
@@ -135,8 +138,10 @@ class UPPData(specs.VarSpec):
         return ret
 
     def _get_data_levels(self, vertical_dim):
-        """Return a list of vertical dimension values corresponding to the
-        requested vertical dimension to get the values of those dimensions"""
+        """
+        Return a list of vertical dimension values corresponding to the
+        requested vertical dimension to get the values of those dimensions
+        """
 
         fcst_hr = 0 if self.ds.sizes.get("fcst_hr", 0) <= 1 else int(self.fhr)
 
@@ -154,10 +159,10 @@ class UPPData(specs.VarSpec):
         return ds.__getattr__([x for x in ds.data_vars][0])
 
     def _get_level(self, field, level, spec, **kwargs):
-        """Returns the value of the level to for a 3D array
+        """
+        Returns the value of the level to for a 3D array
 
         Arguments:
-
           field      dataset object for a given variable
           level      string describing the level atmospheric level; corresponds
                      to a key in default specs
@@ -171,9 +176,9 @@ class UPPData(specs.VarSpec):
 
 
         Return:
-
           Integer value corresponding to the array index for the atmospheric
           level.
+
         """
 
         # The index of the requested level
@@ -227,7 +232,8 @@ class UPPData(specs.VarSpec):
         raise ValueError(msg)
 
     def get_transform(self, transforms, val):
-        """Applies a set of one or more transforms to an np.array of
+        """
+        Applies a set of one or more transforms to an np.array of
         data values.
 
         Input:
@@ -237,9 +243,9 @@ class UPPData(specs.VarSpec):
                          transformed
 
         Return:
-
           val:           updated values after transforms have been
                          applied
+
         """
 
         transform_kwargs = {}
@@ -260,7 +266,7 @@ class UPPData(specs.VarSpec):
                 val = utils.get_func(transform)(val, **transform_kwargs)
         return val
 
-    @lru_cache()
+    @lru_cache
     def get_xypoint(self, site_lat, site_lon) -> tuple:
         """
         Return the X, Y grid point corresponding to the site location. No
@@ -287,8 +293,10 @@ class UPPData(specs.VarSpec):
 
     @property
     def grid_suffix(self):
-        """Return the suffix of the first variable with 4 sections (split on _)
-        in the file. This should correspond to the grid tag."""
+        """
+        Return the suffix of the first variable with 4 sections (split on _)
+        in the file. This should correspond to the grid tag.
+        """
 
         for var in self.ds.keys():
             vsplit = var.split("_")
@@ -346,15 +354,16 @@ class UPPData(specs.VarSpec):
     @staticmethod
     def opposite(values, **kwargs):
         # pylint: disable=unused-argument
-
         """Returns the opposite of input values"""
 
         return -values
 
     @property
     def valid_dt(self) -> datetime:
-        """Returns a datetime object corresponding to the forecast hour's valid
-        time as set in the Grib file."""
+        """
+        Returns a datetime object corresponding to the forecast hour's valid
+        time as set in the Grib file.
+        """
 
         fh = timedelta(hours=int(self.fhr))
         return self.anl_dt + fh
@@ -366,9 +375,11 @@ class UPPData(specs.VarSpec):
 
     @staticmethod
     def vertical_dim(field):
-        """Determine the vertical dimension of the variable by looking through
+        """
+        Determine the vertical dimension of the variable by looking through
         the field's dimensions for one that includes "lv". Return the first
-        matching instance."""
+        matching instance.
+        """
 
         vert_dim = [dim for dim in field.dims if ("lv" in dim or "probability" in dim)]
         if vert_dim:
@@ -399,6 +410,7 @@ class fieldData(UPPData):
         config:      path to a user-specified configuration file
         member:      integer describing the ensemble member number to
                      grab data for
+
     """
 
     def __init__(self, ds, level, short_name, **kwargs):
@@ -406,11 +418,10 @@ class fieldData(UPPData):
 
         self.level = level
         self.contour_kwargs = kwargs.get("contour_kwargs", {})
-        self.mem = kwargs.get("member", None)
+        self.mem = kwargs.get("member")
 
     def aviation_flight_rules(self, values, **kwargs):
         # pylint: disable=unused-argument
-
         """
         Generates a field of Aviation Flight Rules from Ceil and Vis
         """
@@ -431,8 +442,10 @@ class fieldData(UPPData):
 
     @property
     def cmap(self):
-        """Returns the LinearSegmentedColormap specified by the config key
-        "cmap" """
+        """
+        Returns the LinearSegmentedColormap specified by the config key
+        "cmap"
+        """
 
         return cm.get_cmap(self.vspec["cmap"])
 
@@ -476,7 +489,6 @@ class fieldData(UPPData):
 
     def fire_weather_index(self, values, **kwargs):
         # pylint: disable=unused-argument
-
         """
         Generates a field of Fire Weather Index
 
@@ -527,9 +539,7 @@ class fieldData(UPPData):
         # Set all others vegetation types to 1
         veg = np.where(veg > 0, 1, veg)
 
-        fwi = veg * (
-            2.37 * (gust_max**1.11) * (dewpt_depression**0.92) * (mois**6.95) * snowc
-        )
+        fwi = veg * (2.37 * (gust_max**1.11) * (dewpt_depression**0.92) * (mois**6.95) * snowc)
 
         fwi = fwi / 10.0
 
@@ -614,7 +624,6 @@ class fieldData(UPPData):
 
     def icing_adjust_trace(self, values, **kwargs):
         # pylint: disable=unused-argument,no-self-use
-
         """Changes the value of ICSEV trace from 4.0 to 0.5, to maintain ascending order"""
 
         vals = np.where(values == 4.0, 0.5, values)
@@ -644,7 +653,6 @@ class fieldData(UPPData):
 
     def supercooled_liquid_water(self, values, **kwargs):
         # pylint: disable=unused-argument
-
         """
         Generates a field of Supercooled Liquid Water
 
@@ -675,9 +683,7 @@ class fieldData(UPPData):
                 pres_layer = 2 * (pres_sfc[:, :] - pres_nat_lev[n, :, :])  # layer depth
                 pres_sigma = pres_sfc - pres_layer  # pressure at next sigma level
             else:
-                pres_layer = 2 * (
-                    pres_sigma[:, :] - pres_nat_lev[n, :, :]
-                )  # layer depth
+                pres_layer = 2 * (pres_sigma[:, :] - pres_nat_lev[n, :, :])  # layer depth
                 pres_sigma = pres_sigma - pres_layer  # pressure at next sigma level
             # compute supercooled water in layer and add to previous values
             supercool_locs = np.where(
@@ -696,22 +702,28 @@ class fieldData(UPPData):
 
     @property
     def ticks(self) -> int:
-        """Returns the number of color bar tick marks from the yaml config
-        settings."""
+        """
+        Returns the number of color bar tick marks from the yaml config
+        settings.
+        """
 
         return self.vspec.get("ticks", 10)
 
     @property
     def units(self) -> str:
-        """Returns the variable unit from the yaml config, if available. If not
-        specified in the yaml file, returns the value set in the Grib file."""
+        """
+        Returns the variable unit from the yaml config, if available. If not
+        specified in the yaml file, returns the value set in the Grib file.
+        """
 
         return self.vspec.get("unit", self.field.units)
 
     @property
     def data(self):
-        """Sets the data property on the object for use when we need to update
-        the values associated with a given object -- helpful for differences."""
+        """
+        Sets the data property on the object for use when we need to update
+        the values associated with a given object -- helpful for differences.
+        """
         if not hasattr(self, "_data"):
             return self.values()
         return self._data
@@ -736,6 +748,7 @@ class fieldData(UPPData):
             one_lev         bool flag. if True, get the single level of the variable
                             (default: True)
             vertical_index  the index (int) of the desired vertical level
+
         """
 
         level = level or self.level
@@ -823,7 +836,6 @@ class fieldData(UPPData):
         **kwargs,
     ):
         # pylint: disable=unused-argument
-
         """
         Returns the vector magnitude of two component vector fields. The
         input fields can be either NCL names (string) or full data fields. The
@@ -832,9 +844,7 @@ class fieldData(UPPData):
 
         if cfkeys:
             if cfkeys.get("level") is None:
-                cfkeys["level"] = utils.numeric_level(
-                    level=self.level, index_match=False
-                )[0]
+                cfkeys["level"] = utils.numeric_level(level=self.level, index_match=False)[0]
             field2_spec = {"cfgrib": cfkeys}
         else:
             var, lev = field2_id.split(".")
@@ -925,9 +935,7 @@ class profileData(UPPData):
         # minus sign to convert the longitude to deg East, and then need to
         # adjust to the 0 to 360 system.
         self.site_lat = float(lat)
-        self.site_lon = -float(
-            lon
-        )  # lons are -180 but without minus sign in input file
+        self.site_lon = -float(lon)  # lons are -180 but without minus sign in input file
         if self.site_lon < 0:
             self.site_lon = self.site_lon + 360.0
 
@@ -947,6 +955,7 @@ class profileData(UPPData):
             split            bool flag. if True, level string numbers are split
                              into a list, e.g. used to get [0, 6000] from 06km
             vertical_index   the index of the required level
+
         """
 
         # Set the defaults here since this is an instance of an abstract method
@@ -993,9 +1002,7 @@ class profileData(UPPData):
                 profile = profile[:, x, y]
         return profile
 
-    def vector_magnitude(
-        self, field1, field2, level="ua", vertical_index=None, **kwargs
-    ):
+    def vector_magnitude(self, field1, field2, level="ua", vertical_index=None, **kwargs):
         """
         Returns the vector magnitude of two component vector profiles. The
         input fields can be either NCL names (string) or full data fields.

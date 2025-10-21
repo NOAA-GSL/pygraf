@@ -1,20 +1,20 @@
-# pylint: disable=unused-variable
-"""Tests for create_graphics driver"""
+"""Tests for create_graphics driver."""
 
 import os
 
 import pytest
+from path import Path
 
 from create_graphics import create_graphics, parse_args
 
-DATA_LOC = os.environ.get("data_loc")
-OUTPUT_LOC = os.environ.get("data_loc")
+DATA_LOC = os.environ.get("DATA_LOC")
+OUTPUT_LOC = Path(os.environ.get("OUTPUT_LOC"))
 
 
-@pytest.fixture(name="_setup")
-def build_maps():
-    """Builds HRRR 12-hour accumulated maps"""
-    args = [
+@pytest.fixture
+def maps_args() -> list:
+    """Builds HRRR 12-hour accumulated maps."""
+    return [
         "maps",
         "-d",
         DATA_LOC,
@@ -34,11 +34,11 @@ def build_maps():
         "--all_leads",
         "--file_type=prs",
     ]
-    create_graphics(args)
 
 
 def test_parse_args():
-    """Test parse_args for basic parsing success.
+    """
+    Test parse_args for basic parsing success.
     Checks if parse_args returns 'maps' in the graphic_type field.
     """
     args = [
@@ -65,25 +65,18 @@ def test_parse_args():
     assert test_args.graphic_type == "maps"
 
 
-def test_folder_existence(_setup):
-    """Tests for existence of folders.
-    Can be extended to cover multiple folders.
+def test_file_count(maps_args):
     """
-    folder = "/202303150000"
-    full_path = OUTPUT_LOC + folder
-    file_path = os.path.isdir(full_path)
-    assert file_path
-
-
-def test_file_count(_setup):
-    """Test for file count in directory.
+    Test for file count in directory.
     Can be extended to cover multiple folders.
     """
     # Based on the hrrr_test.yml file, only 6 maps will be created
+    create_graphics(maps_args)
     map_count = 6
     count = 0
     folder = "/202303150000/"
-    for file_name in os.listdir(OUTPUT_LOC + folder):
-        if os.path.isfile(OUTPUT_LOC + folder + file_name):
+    assert (OUTPUT_LOC / folder).isdir()
+    for file_name in (OUTPUT_LOC / folder).iterdir():
+        if (OUTPUT_LOC / folder / file_name).is_file():
             count += 1
     assert count == map_count

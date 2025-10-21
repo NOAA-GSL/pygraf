@@ -50,7 +50,6 @@ unittest() {
   msg OK
 }
 
-test "${CONDEV_SHELL:-}" = 1 && cd $(dirname $0)/../src || cd ../test_files
 if [[ -n "${1:-}" ]]; then
   # Run single specified code-quality tool.
   $1

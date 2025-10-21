@@ -5,7 +5,8 @@ Log-P diagram using MetPy.
 """
 
 from collections import OrderedDict
-from functools import lru_cache
+from functools import cached_property
+from pathlib import Path
 
 import matplotlib.font_manager as fm
 import matplotlib.lines as mlines
@@ -18,14 +19,15 @@ from matplotlib.ticker import FixedLocator
 from metpy.plots import Hodograph, SkewT
 from metpy.units import units
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+from xarray import Dataset
 
-import adb_graphics.datahandler.gribdata as gribdata
-import adb_graphics.errors as errors
-import adb_graphics.utils as utils
+from adb_graphics import errors, utils
+from adb_graphics.datahandler import gribdata
 
 
 class SkewTDiagram(gribdata.profileData):
-    """The class responsible for gathering all data needed from a grib file to
+    """
+    The class responsible for gathering all data needed from a grib file to
     produce a Skew-T Log-P diagram.
 
     Input:
@@ -43,7 +45,7 @@ class SkewTDiagram(gribdata.profileData):
     be included.
     """
 
-    def __init__(self, ds, loc, **kwargs):
+    def __init__(self, ds: Dataset, loc: str, **kwargs):
         # Initialize on the temperature field since we need to gather
         # field-specific data from this object, e.g. dates, lat, lon, etc.
 
@@ -57,7 +59,7 @@ class SkewTDiagram(gribdata.profileData):
         self.max_plev = kwargs.get("max_plev", 0)
         self.model_name = kwargs.get("model_name", "Analysis")
 
-    def _add_hydrometeors(self, hydro_subplot):
+    def _add_hydrometeors(self, hydro_subplot: plt):
         # pylint: disable=too-many-locals
         mixing_ratios = OrderedDict(
             {
@@ -109,8 +111,9 @@ class SkewTDiagram(gribdata.profileData):
 
         lines = [
             "Vert. Integrated Amt\n(Resolved, Total)\n"
-            + "(supercool layers shaded,\nwith filled markers)"
+            "(supercool layers shaded,\nwith filled markers)"
         ]
+        freezing_f = 32.0
 
         for mixr, settings in mixing_ratios.items():
             # Get the profile values
@@ -130,9 +133,9 @@ class SkewTDiagram(gribdata.profileData):
                     pres_sigma = pres_sigma - pres_layer  # pressure at next sigma level
                     mixr_total = mixr_total + pres_layer / gravity * profile[n]
 
-            # limit values to upper and lower values of lotting range
-            profile = np.where((profile > 0.0) & (profile < 1.0e-4), 1.0e-4, profile)
-            profile = np.where((profile > 10.0), 10.0, profile)
+            # limit values to upper and lower values of plotting range
+            profile = np.where((profile > 0.0) & (profile < 1.0e-4), 1.0e-4, profile)  # noqa: PLR2004
+            profile = np.where((profile > 10.0), 10.0, profile)  # noqa: PLR2004
 
             # plot line
             hydro_subplot.plot(
@@ -146,8 +149,8 @@ class SkewTDiagram(gribdata.profileData):
             )
             if mixr in ["clwmr", "rwmr"]:
                 hydro_subplot.plot(
-                    profile[temp.magnitude < 32.0],
-                    pres[temp.magnitude < 32.0],
+                    profile[temp.magnitude < freezing_f],
+                    pres[temp.magnitude < freezing_f],
                     settings.get("color"),
                     fillstyle="full",
                     linewidth=0.5,
@@ -156,10 +159,10 @@ class SkewTDiagram(gribdata.profileData):
                 )
                 layer = False
                 for i, profile_lev in enumerate(profile):
-                    if (profile_lev > 0.0 and temp[i].magnitude < 32.0) and not layer:
+                    if (profile_lev > 0.0 and temp[i].magnitude < freezing_f) and not layer:
                         layer = True
                         p_base = pres[i].magnitude
-                    elif (profile_lev <= 0.0 or temp[i].magnitude > 32.0) and layer:
+                    elif (profile_lev <= 0.0 or temp[i].magnitude > freezing_f) and layer:
                         # Shade the supercooled water depth
                         p_top = pres[i - 1].magnitude
                         rect = plt.Rectangle(
@@ -174,8 +177,7 @@ class SkewTDiagram(gribdata.profileData):
 
             # compute vertically integrated amount and add legend line
             line = (
-                f"{settings.get('label'):<7s} {mixr_total.magnitude:>10.3f} "
-                f"{settings.get('units')}"
+                f"{settings.get('label'):<7s} {mixr_total.magnitude:>10.3f} {settings.get('units')}"
             )
             if scale != 1.0:
                 line = (
@@ -215,7 +217,7 @@ class SkewTDiagram(gribdata.profileData):
             verticalalignment="top",
         )
 
-    def _add_thermo_inset(self, skew):
+    def _add_thermo_inset(self, skew: plt):
         # Build up the text that goes in the thermo-dyniamics box
         lines = []
         for name, items in self.thermo_variables.items():
@@ -223,15 +225,11 @@ class SkewTDiagram(gribdata.profileData):
             decimals = items.get("decimals", 0)
             value = items["data"]
             if value != "--":
-                value = (
-                    int(value)
-                    if decimals == 0
-                    else value.round(decimals=decimals).values
-                )
+                value = int(value) if decimals == 0 else value.round(decimals=decimals).to_numpy()
 
             # Sure would have been nice to use a variable in the f string to
             # denote the format per variable.
-            line = f"{name.upper():<7s} {str(value):>6} {items['units']}"
+            line = f"{name.upper():<7s} {value!s:>6} {items['units']}"
             lines.append(line)
 
         contents = "\n".join(lines)
@@ -248,8 +246,7 @@ class SkewTDiagram(gribdata.profileData):
             verticalalignment="top",
         )
 
-    @property
-    @lru_cache()
+    @cached_property
     def atmo_profiles(self):
         """
         Return a dictionary of atmospheric data profiles for each variable
@@ -313,8 +310,10 @@ class SkewTDiagram(gribdata.profileData):
         return atmo_vars
 
     def create_diagram(self):
-        """Calls the private methods for creating each component of the SkewT
-        Diagram."""
+        """
+        Calls the private methods for creating each component of the SkewT
+        Diagram.
+        """
 
         skew, hydro_subplot = self._setup_diagram()
         self._title()
@@ -326,12 +325,12 @@ class SkewTDiagram(gribdata.profileData):
         self._add_thermo_inset(skew)
         self._add_hydrometeors(hydro_subplot)
 
-    def create_csv(self, csv_path):
+    def create_csv(self, csv_path: Path | str):
         """Calls the private methods for writing each of the SkewT Data."""
 
         self._write_profile(csv_path)
 
-    def _plot_hodograph(self, skew):
+    def _plot_hodograph(self, skew: plt):
         # Create an array that indicates which layer (10-3, 3-1, 0-1 km) the
         # wind belongs to. The array, agl, will be set to the height
         # corresponding to the top of the layer. The resulting array will look
@@ -371,14 +370,12 @@ class SkewTDiagram(gribdata.profileData):
         # Local function to create a proxy line object for creating a legend on
         # a LineCollection returned from plot_colormapped. Using lines and
         # colors from outside scope.
-        def make_proxy(zval, idx=None, **kwargs):
+        def make_proxy(zval: int, idx: int | None = None, **kwargs):
             color = colors[idx] if idx < len(colors) else lines.cmap(zval - 1)
             return Line2D([0, 1], [0, 1], color=color, linewidth=line_width, **kwargs)
 
         # Make a list of proxies
-        proxies = [
-            make_proxy(item, idx=i) for i, item in enumerate(intervals.magnitude)
-        ]
+        proxies = [make_proxy(item, idx=i) for i, item in enumerate(intervals.magnitude)]
 
         # Draw the legend
         ax.legend(
@@ -389,11 +386,11 @@ class SkewTDiagram(gribdata.profileData):
         )
 
     @staticmethod
-    def _plot_labels(skew):
+    def _plot_labels(skew: plt):
         skew.ax.set_xlabel("Temperature (F)")
         skew.ax.set_ylabel("Pressure (hPa)")
 
-    def _write_profile(self, csv_path):
+    def _write_profile(self, csv_path: str | Path):
         profiles = self.atmo_profiles  # dictionary
         pres = profiles.get("pres").get("data")
         u = profiles.get("u").get("data")
@@ -401,9 +398,7 @@ class SkewTDiagram(gribdata.profileData):
         temp = profiles.get("temp").get("data").to("degC")
         sphum = profiles.get("sphum").get("data")
 
-        dewpt = np.array(
-            mpcalc.dewpoint_from_specific_humidity(sphum, temp, pres).to("degC")
-        )
+        dewpt = np.array(mpcalc.dewpoint_from_specific_humidity(sphum, temp, pres).to("degC"))
         wspd = np.array(mpcalc.wind_speed(u, v))
         wdir = np.array(mpcalc.wind_direction(u, v))
 
@@ -422,7 +417,7 @@ class SkewTDiagram(gribdata.profileData):
 
         profile.to_csv(csv_path, index=False, float_format="%10.2f")
 
-    def _plot_profile(self, skew):
+    def _plot_profile(self, skew: plt):
         profiles = self.atmo_profiles  # dictionary
         pres = profiles.get("pres").get("data")
         temp = profiles.get("temp").get("data")
@@ -446,7 +441,7 @@ class SkewTDiagram(gribdata.profileData):
             linewidth=1.2,
         )
 
-    def _plot_wind_barbs(self, skew):
+    def _plot_wind_barbs(self, skew: plt):
         # Pressure vs wind
         skew.plot_barbs(
             self.atmo_profiles.get("pres", {}).get("data"),
@@ -472,17 +467,17 @@ class SkewTDiagram(gribdata.profileData):
         # display in Fahrenheit.
 
         # Fahrenheit tick labels that will display
-        labels_F = list(range(-20, 125, 20)) * units.degF
+        labels_f = list(range(-20, 125, 20)) * units.degF
 
         # Celcius VALUES for those tick marks. These put the ticks in the right
         # spot.
-        labels = labels_F.to("degC").magnitude
+        labels = labels_f.to("degC").magnitude
 
         # Set the MINOR tick values to the CELCIUS values.
         skew.ax.xaxis.set_minor_locator(FixedLocator(labels))
 
         # Set the MINOR tick labels to the FAHRENHEIT values.
-        skew.ax.set_xticklabels(labels_F.magnitude, minor=True)
+        skew.ax.set_xticklabels(labels_f.magnitude, minor=True)
         skew.ax.tick_params(which="minor", length=8)
 
         # Turn off the MAJOR (celcius) tick marks, label the grid lines inside
@@ -558,8 +553,7 @@ class SkewTDiagram(gribdata.profileData):
 
         return skew, hydro_subplot
 
-    @property
-    @lru_cache()
+    @cached_property
     def thermo_variables(self):
         """
         Return an ordered dictionary of thermodynamic variables needed for the skewT.

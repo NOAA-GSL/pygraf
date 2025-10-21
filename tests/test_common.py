@@ -1,7 +1,9 @@
 # pylint: disable=invalid-name
 
 """
-Pytests for the common utilities included in this package. Includes:
+Pytests for the common utilities included in this package.
+
+Includes:
 
     - conversions.py
     - specs.py
@@ -23,15 +25,14 @@ from matplotlib import cm
 from matplotlib import colors as mcolors
 from metpy.plots import ctables
 
-import adb_graphics.conversions as conversions
-import adb_graphics.datahandler.gribdata as gribdata
-import adb_graphics.specs as specs
-import adb_graphics.utils as utils
+from adb_graphics import conversions, specs, utils
+from adb_graphics.datahandler import gribdata
 
 
 def test_conversion():
-    """Test that conversions return at numpy array for input of np.ndarray,
-    list, or int"""
+    """
+    Conversions return numpy array for input of np.ndarray, list, or int.
+    """
 
     a = np.ones([3, 2]) * 300
     c = a[0, 0]
@@ -78,7 +79,7 @@ def test_conversion():
 
 
 class MockSpecs(specs.VarSpec):
-    """Mock class for the VarSpec abstract class"""
+    """Mock class for the VarSpec abstract class."""
 
     @property
     def clevs(self):
@@ -143,8 +144,10 @@ class TestDefaultSpecs:
 
     @property
     def allowable(self):
-        """Each entry in the dict names a function that tests a key in
-        default_specs.yml."""
+        """
+        Each entry in the dict names a function that tests a key in
+        default_specs.yml.
+        """
 
         return {
             "accumulate": self.is_bool,
@@ -188,16 +191,18 @@ class TestDefaultSpecs:
             if lev:
                 assert self.cfg.get(short_name).get(lev) is not None
 
-            for arg in args.keys():
+            for arg in args:
                 assert arg in accepted_args
 
         return True
 
     def check_transform(self, entry):
         """
-        Check that the transform entry is either a single transformation
-        function, a list of transformation functions, or a dictionary containing
-        the functions list and the kwargs list like so:
+        Check structure of transform entry.
+
+        The transform entry should be either a single transformation function, a list of
+        transformation functions, or a dictionary containing the functions list and the kwargs list
+        like so:
 
             transform:
               funcs: [list, of, functions]
@@ -237,9 +242,7 @@ class TestDefaultSpecs:
             # when provided arguments don't appear in all_params.
             # arguments not in that list, we fail.
             if kwargs:
-                argspecs = [
-                    getfullargspec(func) for func in transforms if callable(func)
-                ]
+                argspecs = [getfullargspec(func) for func in transforms if callable(func)]
 
                 all_params = []
                 for argspec in argspecs:
@@ -252,11 +255,11 @@ class TestDefaultSpecs:
                             parameters.extend(argtype)
                     all_params.extend(parameters)
 
-                for key in kwargs.keys():
+                for key in kwargs:
                     if key not in all_params:
                         msg = f"Function key {key} is not an expicit parameter \
                                 in any of the transforms: {funcs}!"
-                        warnings.warn(msg, UserWarning)
+                        warnings.warn(msg, UserWarning, stacklevel=2)
 
         return True
 
@@ -281,7 +284,8 @@ class TestDefaultSpecs:
         if callable(utils.get_func(func)):
             return utils.get_func(func)
 
-        raise ValueError("{func} is not a known callable function!")
+        msg = f"{func} is not a known callable function!"
+        raise ValueError(msg)
 
     @staticmethod
     def is_a_clev(clev):
@@ -304,8 +308,10 @@ class TestDefaultSpecs:
         return cmap in dir(cm) + list(ctables.colortables.keys())
 
     def is_a_contour_dict(self, entry):
-        """Set up the accepted arguments for plt.contour, and check the given
-        arguments."""
+        """
+        Set up the accepted arguments for plt.contour, and check the given
+        arguments.
+        """
 
         args = [
             "X",
@@ -337,8 +343,10 @@ class TestDefaultSpecs:
         return self.check_kwargs(args, entry)
 
     def is_a_contourf_dict(self, entry):
-        """Set up the accepted arguments for plt.contourf, and check the given
-        arguments."""
+        """
+        Set up the accepted arguments for plt.contourf, and check the given
+        arguments.
+        """
 
         args = [
             "X",
@@ -375,13 +383,10 @@ class TestDefaultSpecs:
 
         colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS, **ctables.colortables)
 
-        if color in colors.keys():
+        if color in colors:
             return True
 
-        if color in dir(self.varspec):
-            return True
-
-        return False
+        return color in dir(self.varspec)
 
     @staticmethod
     def is_a_level(key):
@@ -466,10 +471,7 @@ class TestDefaultSpecs:
                     allowed = True
                     break
 
-        if numeric and allowed:
-            return True
-
-        return False
+        return numeric and allowed
 
     def is_a_key(self, key):
         """Returns true if key exists as a key in the config file."""
@@ -493,9 +495,7 @@ class TestDefaultSpecs:
             callable_ = callable_ if isinstance(callable_, list) else [callable_]
 
             for clbl in callable_:
-                if isinstance(clbl, np.ndarray):
-                    callables.append(True)
-                elif callable(clbl):
+                if isinstance(clbl, np.ndarray) or callable(clbl):
                     callables.append(True)
                 else:
                     callables.append(False)
@@ -504,7 +504,7 @@ class TestDefaultSpecs:
 
     @staticmethod
     def is_dict(d):
-        """Returns true if d is a dictionary"""
+        """Returns true if d is a dictionary."""
 
         return isinstance(d, dict)
 
@@ -536,8 +536,10 @@ class TestDefaultSpecs:
         return isinstance(wind, bool) or self.is_a_level(wind)
 
     def check_keys(self, d, depth=0):
-        """Helper function that recursively checks the keys in the dictionary by calling the
-        function defined in allowable."""
+        """
+        Helper function that recursively checks the keys in the dictionary by calling the
+        function defined in allowable.
+        """
 
         max_depth = 2
 
@@ -553,7 +555,7 @@ class TestDefaultSpecs:
 
         for k, v in d.items():
             # Check that the key is allowable
-            assert (k in self.allowable.keys()) or self.is_a_level(k)
+            assert (k in self.allowable) or self.is_a_level(k)
 
             # Call a checker if one exists for the key, otherwise descend into
             # next level of dict
@@ -563,9 +565,8 @@ class TestDefaultSpecs:
                     assert checker
                 else:
                     assert checker(v)
-            else:
-                if isinstance(v, dict):
-                    self.check_keys(v, depth=level)
+            elif isinstance(v, dict):
+                self.check_keys(v, depth=level)
 
     def test_keys(self):
         """Tests each of top-level variables in the config file by calling the helper function."""

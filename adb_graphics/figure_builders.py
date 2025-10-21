@@ -9,20 +9,19 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
-import yaml
 
-import adb_graphics.errors as errors
 from adb_graphics.datahandler import gribdata, gribfile
 from adb_graphics.figures import maps, skewt
-from adb_graphics.utils import numeric_level
 
 AIRPORTS = "static/Airports_locs.txt"
 
 
 def add_obs_panel(ax, model_name, obs_file, proj_info, short_name, tile):
     # pylint: disable=too-many-arguments
-    """Plot observation data provided by the obs_file
-    path using the assigned projection."""
+    """
+    Plot observation data provided by the obs_file
+    path using the assigned projection.
+    """
 
     gribobs = gribfile.GribFile(filename=obs_file)
     ax.axis("on")
@@ -57,7 +56,6 @@ def parallel_maps(
 ):
     # pylint: disable=too-many-arguments,too-many-locals
     # pylint: disable=too-many-branches,too-many-statements
-
     """
     Function that creates plan-view maps, either a single panel, or
     multipanel for a forecast ensemble. Can be used in parallel.
@@ -243,8 +241,10 @@ def parallel_skewt(cla, fhr, ds, site, workdir):
 
 
 def set_figure(model_name, graphic_type, tile):
-    """Create the figure and subplots appropriate for the model and
-    graphics type. Return the figure handle and list of axes."""
+    """
+    Create the figure and subplots appropriate for the model and
+    graphics type. Return the figure handle and list of axes.
+    """
 
     if model_name == "HRRR-HI":
         inches = 12.2

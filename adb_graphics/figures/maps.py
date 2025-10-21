@@ -8,8 +8,10 @@ UPPData object) and creates a standard plot with shaded fields, contours, wind
 barbs, and descriptive annotation.
 """
 
+from collections.abc import Callable
 from copy import copy, deepcopy
 from math import isnan
+from pathlib import Path
 
 import matplotlib.image as mpimg
 import matplotlib.offsetbox as mpob
@@ -106,9 +108,157 @@ TILE_DEFS = {
 }
 
 
+class MapFields:
+    """
+    Class that packages all the field objects need for producing
+    desired map content, i.e. an object that contains all filled
+    contours, hatched spaces, and overlayed contours needed for a full
+    product.
+    """
+
+    def __init__(
+        self,
+        fhr: int,
+        fields_spec: dict,
+        grib_path: Path,
+        level: str,
+        name: str,
+        map_type: str | None = None,
+        **kwargs,
+    ):
+        self.grib_path = grib_path
+        self.fhr = fhr
+        self.fields_spec = deepcopy(fields_spec)
+        self.level = level
+        self.map_type = map_type
+        self.model = kwargs.get("model")
+        self.name = name
+        self.tile = kwargs.get("tile", "full")
+
+        self.map_spec = deepcopy(self.fields_spec[self.name][self.level])
+        self.set_level(self.level, self.map_spec)
+        # Required if map_type is "diff"
+        self.grib_path2 = kwargs.get("grib_path2")
+
+    def set_level(self, level: str, spec: dict):
+        nlevel, _ = numeric_level(level=level, index_match=False)
+        level_info = any(
+            key
+            for keys in cfgrib_spec(spec["cfgrib"], self.model)
+            for key in ("level", "top", "bottom", "Surface")
+            if key in keys
+        )
+        if nlevel and not level_info:
+            if spec["cfgrib"].get(self.model):
+                spec["cfgrib"][self.model]["level"] = nlevel
+            else:
+                spec["cfgrib"]["level"] = nlevel
+        # if spec["cfgrib"].get("level") is None and not spec["cfgrib"].get("stepRange") and not \
+        #    spec["cfgrib"].get("topLevel") and not \
+        #    spec["cfgrib"].get("typeOfLevel") == "surface" and not \
+        #    spec["cfgrib"].get("scaledValueOfFirstFixedSurface"):
+
+    @property
+    def shaded(self):
+        cf = cfgrib_spec(self.map_spec["cfgrib"], self.model)
+        ds = gribfile.GribFile(self.grib_path, cf).contents
+        args = {
+            "ds": ds,
+            "fhr": self.fhr,
+            "level": self.level,
+            "model": self.model,
+            "short_name": self.name,
+            "spec": self.fields_spec,
+            "grib_path": self.grib_path,
+        }
+        field = gribdata.fieldData(**args)
+
+        if self.map_type == "diff":
+            args["ds"] = gribfile.GribFile(self.grib_path2, cf).contents
+            args["grib_path"] = self.grib_path2
+            field2 = gribdata.fieldData(**args)
+            field.data = field.values() - field2.values()
+
+        return field
+
+    @property
+    def contours(self):
+        """Return the list of contour fieldData objects."""
+
+        # We won't plot contours on multipanel plots, or full global
+        # plots.
+        if self.map_type == "enspanel":
+            return []
+
+        if "global" in self.model and self.tile in ["full"]:
+            return []
+
+        return self._overlay_fields("contours")
+
+    @property
+    def hatches(self):
+        """Return the list of hatch fieldData objects."""
+
+        return self._overlay_fields("hatches")
+
+    def wind_fields(self, level: str | None = None):
+        """Return u, v tuple of wind fields."""
+
+        lev = level or self.level
+        winds = []
+        for var in ("u", "v"):
+            wind_spec = self.fields_spec[var][lev]
+            self.set_level(lev, wind_spec)
+            ds = gribfile.GribFile(
+                self.grib_path, cfgrib_spec(wind_spec["cfgrib"], self.model)
+            ).contents
+            args = {
+                "ds": ds,
+                "fhr": self.fhr,
+                "level": lev,
+                "model": self.model,
+                "short_name": var,
+                "spec": self.fields_spec,
+                "grib_path": self.grib_path,
+            }
+            winds.append(gribdata.fieldData(**args))
+        return winds
+
+    def _overlay_fields(self, spec_sect: str) -> list:
+        """
+        Create fieldData objects for the specified overlay type - hatches or contours.
+        """
+
+        overlay_fields = []
+        for overlay, overlay_kwargs in self.map_spec.get(spec_sect, {}).items():
+            if "_" in overlay:
+                var, lev = overlay.split("_")
+            else:
+                var, lev = overlay, self.level
+
+            overlay_spec = deepcopy(self.fields_spec[var][lev])
+            self.set_level(lev, overlay_spec)
+            ds = gribfile.GribFile(
+                self.grib_path, cfgrib_spec(overlay_spec["cfgrib"], self.model)
+            ).contents
+            args = {
+                "ds": ds,
+                "fhr": self.fhr,
+                "level": lev,
+                "model": self.model,
+                "short_name": var,
+                "spec": self.fields_spec,
+                "grib_path": self.grib_path,
+            }
+            overlay_obj = gribdata.fieldData(**args)
+            # Set the attributes for the overlay field
+            overlay_obj.contour_kwargs = overlay_kwargs
+            overlay_fields.append(overlay_obj)
+        return overlay_fields
+
+
 class Map:
     # pylint: disable=too-many-instance-attributes
-
     """
     Class includes utilities needed to create a Basemap object, add airport
     locations, and draw the blank map.
@@ -118,8 +268,7 @@ class Map:
           airport_fn    full path to airport file
           ax            figure axis
 
-        Keyword arguments:
-
+    Keyword Arguments:
           map_proj      dict describing the map projection to use.
                         The only options currently are for lcc settings in
                         _get_basemap()
@@ -132,9 +281,10 @@ class Map:
                         certain plots, default is True
           tile          a string corresponding to a pre-defined tile in the
                         TILE_DEFS dictionary
+
     """
 
-    def __init__(self, airport_fn, ax, **kwargs):
+    def __init__(self, airport_fn: Path, ax: plt, **kwargs):
         self.ax = ax
         self.grid_info = kwargs.get("grid_info", {})
         self.model = kwargs.get("model")
@@ -204,9 +354,7 @@ class Map:
         """Draw a map with political boundaries and airports only."""
 
         self.boundaries()
-        if (
-            self.plot_airports and "global" not in self.model
-        ):  # airports are too dense in global
+        if self.plot_airports and "global" not in self.model:  # airports are too dense in global
             self.draw_airports()
 
     def draw_airports(self):
@@ -230,7 +378,7 @@ class Map:
         del y
 
     def _get_basemap(self, **get_basemap_kwargs):
-        """Wrapper around basemap creation"""
+        """Wrapper around basemap creation."""
 
         basemap_args = dict(
             ax=self.ax,
@@ -260,8 +408,9 @@ class Map:
 
     def get_corners(self):
         """
-        Gather the corners for a specific tile. Corners are supplied in the
-        following format:
+        Gather the corners for a specific tile.
+
+        Corners are supplied in the following format:
 
         lat and lon of lower left (ll) and upper right(ur) corners:
              ll_lat, ur_lat, ll_lon, ur_lon
@@ -284,17 +433,16 @@ class Map:
         return TILE_DEFS[self.tile]["height"]
 
     @staticmethod
-    def load_airports(fn):
+    def load_airports(fn: Path):
         """Load lat, lon pairs from a text file, return a list of lists."""
 
-        with open(fn, "r") as f:
+        with fn.open() as f:
             data = f.readlines()
-        return np.array([l.strip().split(",") for l in data], dtype=float)
+        return np.array([line.strip().split(",") for line in data], dtype=float)
 
 
 class DataMap:
     # pylint: disable=too-many-arguments
-
     """
     Class that combines the input data and the chosen map to plot both together.
 
@@ -308,8 +456,7 @@ class DataMap:
 
     """
 
-    # pylint: disable=unused-argument
-    def __init__(self, map_fields, map_, model_name=None, **kwargs):
+    def __init__(self, map_fields: MapFields, map_: plt, model_name: str | None = None, **kwargs):  # noqa: ARG002
         self.field = map_fields.shaded
         self.contour_fields = map_fields.contours
         self.hatch_fields = map_fields.hatches
@@ -318,11 +465,11 @@ class DataMap:
         self.model_name = model_name
         self.plot_scatter = map_fields.fields_spec.get("plot_scatter", False)
 
-    def wind_fields(self, level):
+    def wind_fields(self, level: str):
         return self.map_fields.wind_fields(level)
 
     @staticmethod
-    def add_logo(ax):
+    def add_logo(ax: plt):
         """Puts the NOAA logo at the bottom left of the matplotlib axes."""
 
         logo = mpimg.imread("static/noaa-logo-50x50.png")
@@ -338,10 +485,12 @@ class DataMap:
 
         ax.add_artist(ab)
 
-    def _colorbar(self, cc, ax):
-        """Internal method that plots the color bar for a contourf field.
-        If ticks is set to zero, use a user-defined list of clevs from default_specs
-        If ticks is less than zero, use abs(ticks) as the step for labeling clevs"""
+    def _colorbar(self, cc: plt, ax: plt):
+        """
+        Plot the colorbar for the contourf field.
+        If ticks is set to zero, use a user-defined list of clevs from default_specs.
+        If ticks is less than zero, use abs(ticks) as the step for labeling clevs.
+        """
 
         if self.field.ticks > 0:
             ticks = np.arange(
@@ -369,15 +518,15 @@ class DataMap:
 
         # this step is done to allow proper order of icing severity levels (trace before light)
         if self.field.short_name == "icsev":
-            ticks = [
-                label.rjust(30) for label in ["TRACE", "LIGHT", "MODERATE", "HEAVY", ""]
-            ]
+            ticks = [label.rjust(30) for label in ["TRACE", "LIGHT", "MODERATE", "HEAVY", ""]]
 
         cbar.ax.set_xticklabels(ticks, fontsize=12)
 
-    def draw(self, show=False):
-        """Main method for creating the plot. Set show=True to display the
-        figure from the command line."""
+    def draw(self, show: bool = False):
+        """
+        Main method for creating the plot. Set show=True to display the
+        figure from the command line.
+        """
 
         cf = self._draw_panel()
 
@@ -394,7 +543,7 @@ class DataMap:
 
         self.add_logo(self.map.ax)
 
-    def _draw_panel(self, wind_barbs=True):  # pylint: disable=too-many-locals, too-many-branches
+    def _draw_panel(self, wind_barbs: bool = True):
         ax = self.map.ax
 
         # Draw a map and add the shaded field
@@ -428,10 +577,15 @@ class DataMap:
         # Add field values at airports
         annotate = self.field.vspec.get("annotate", False)
         model_name = self.model_name
-        if annotate and "global" not in self.map.model:  # too dense in global
-            if model_name not in ["RRFS NA 3km"]:  # too dense in full RRFS domain
-                if model_name == "RAP-NCEP" and self.map.tile not in ["full"]:
-                    self._draw_field_values(ax)
+        # too dense in global and rrfs NA
+        if (
+            annotate
+            and "global" not in self.map.model
+            and model_name not in ["RRFS NA 3km"]
+            and model_name == "RAP-NCEP"
+            and self.map.tile not in ["full"]
+        ):
+            self._draw_field_values(ax)
 
         # Add scatter plot, if requested
         if self.plot_scatter:
@@ -439,7 +593,7 @@ class DataMap:
 
         return cf
 
-    def _draw_contours(self, ax, not_labeled):
+    def _draw_contours(self, ax: plt, not_labeled: bool):
         """Draw the contour fields requested."""
 
         model_name = self.model_name
@@ -448,13 +602,12 @@ class DataMap:
         for contour_field in self.contour_fields:
             levels = contour_field.contour_kwargs.pop("levels", contour_field.clevs)
 
-            if model_name in ["RAP-NCEP", "RRFS-NCEP", "RRFS NA 3km"]:
-                if (
-                    main_field == "totp"
-                    and contour_field.short_name == "pres"
-                    and self.map.tile == "full"
-                ):
-                    levels = np.arange(650, 1051, 8)
+            if model_name in ["RAP-NCEP", "RRFS-NCEP", "RRFS NA 3km"] and (
+                main_field == "totp"
+                and contour_field.short_name == "pres"
+                and self.map.tile == "full"
+            ):
+                levels = np.arange(650, 1051, 8)
 
             cc = self._draw_field(
                 ax=ax,
@@ -479,7 +632,7 @@ class DataMap:
                             {self.field.level}"
                     )
 
-    def _draw_scatter(self, ax):
+    def _draw_scatter(self, ax: plt):
         """Plot dots at locations on the map that meet a threshold."""
 
         field = self.field
@@ -497,9 +650,7 @@ class DataMap:
                     value_to_color,
                 )
             else:
-                value_to_color = np.where(
-                    vals > levels[i], colors[i + 1], value_to_color
-                )
+                value_to_color = np.where(vals > levels[i], colors[i + 1], value_to_color)
 
         vtc1d = np.ravel(value_to_color)
 
@@ -516,7 +667,7 @@ class DataMap:
             **field.contour_kwargs,
         )
 
-    def _draw_field(self, ax, field, func, **kwargs):
+    def _draw_field(self, ax: plt, field: str, func: Callable, **kwargs):
         """
         Internal implementation that calls a matplotlib function.
 
@@ -525,12 +676,13 @@ class DataMap:
             field:   Field to be plotted
             func:    Matplotlib function to be called.
 
-        Keyword args:
+        kwargs:
             Can be any of the keyword args accepted by original func in
             matplotlib.
 
         Return:
             The return from the function called.
+
         """
 
         x, y = self._xy_mesh(field)
@@ -561,7 +713,7 @@ class DataMap:
             print(f"CLOSE ERROR: {field.short_name} {field.level}")
         return ret
 
-    def _draw_field_values(self, ax):
+    def _draw_field_values(self, ax: plt):
         """Add the text value of the field at airport locations."""
         annotate_decimal = self.field.vspec.get("annotate_decimal", 0)
         lats = self.map.airports[:, 0]
@@ -579,16 +731,15 @@ class DataMap:
             if crnrs[1] > lat > crnrs[0] and crnrs[3] > lons[i] > crnrs[2]:
                 xgrid, ygrid = self.field.get_xypoint(lat, lons[i])
                 data_value = data_values[xgrid, ygrid].values.item()
-                if xgrid > 0 and ygrid > 0:
-                    if (not isnan(data_value)) and (data_value != 0.0):
-                        ax.annotate(
-                            f"{data_value:.{annotate_decimal}f}",
-                            xy=(x[i], y[i]),
-                            fontsize=10,
-                        )
+                if xgrid > 0 and ygrid > 0 and (not isnan(data_value)) and (data_value != 0.0):
+                    ax.annotate(
+                        f"{data_value:.{annotate_decimal}f}",
+                        xy=(x[i], y[i]),
+                        fontsize=10,
+                    )
         data_values.close()
 
-    def _draw_hatches(self, ax):
+    def _draw_hatches(self, ax: plt):
         """Draw the hatched regions requested."""
 
         # Levels should be included in the settings dict here since they don't
@@ -625,8 +776,10 @@ class DataMap:
             plt.legend(handles=handles, loc=[0.25, 0.03])
 
     def _set_overlay_string(self):
-        """Creates the main title of the plot with select hatched and
-        contoured fields defined."""
+        """
+        Creates the main title of the plot with select hatched and
+        contoured fields defined.
+        """
 
         f = self.field
 
@@ -672,10 +825,7 @@ class DataMap:
         )
 
         level, lev_unit = f.numeric_level(index_match=False)
-        if f.vspec.get("print_units", True):
-            units = f"({f.units}, shaded)"
-        else:
-            units = f""
+        units = f"({f.units}, shaded)" if f.vspec.get("print_units", True) else ""
 
         # Title or Atmospheric level and unit in the high center
         if f.vspec.get("title"):
@@ -693,11 +843,13 @@ class DataMap:
             fontsize=14,
         )
 
-    def _wind_barbs(self, level):
-        """Draws the wind barbs. A decent stride can be found if you divide the
+    def _wind_barbs(self, level: bool | str):
+        """
+        Draws the wind barbs. A decent stride can be found if you divide the
         number of grid points on the shorter side by 35. Subdomains are defined
         by lat,lon so the stride is set in the TILE_DEFS. For the globalCONUS
-        subdomains, further dividing by 2.5 works well."""
+        subdomains, further dividing by 2.5 works well.
+        """
 
         lev = level if not isinstance(level, bool) else self.field.level
         u, v = [f.data for f in self.wind_fields(lev)]
@@ -707,28 +859,17 @@ class DataMap:
 
         # Set the stride and size of the barbs to be plotted with a masked array.
         if full_tile:
-            if u.shape[0] < u.shape[1]:
-                stride = int(round(u.shape[0] / 35))
-            else:
-                stride = int(round(u.shape[1] / 35))
+            stride = round(u.shape[0] / 35) if u.shape[0] < u.shape[1] else round(u.shape[1] / 35)
             length = 5
         else:
             stride = TILE_DEFS[tile]["stride"]
             length = TILE_DEFS[tile]["length"]
             if self.map.model == "globalCONUS":
-                stride = int(round(stride / 2.5))
+                stride = round(stride / 2.5)
                 length = 5
-            if (
-                self.map.model == "hrrr"
-                and self.model_name == "WFIP3-FULL"
-                and tile == "WFIP3-d02"
-            ):
+            if self.map.model == "hrrr" and self.model_name == "WFIP3-FULL" and tile == "WFIP3-d02":
                 stride = 6
-            if (
-                self.map.model == "hrrr"
-                and self.model_name == "WFIP3-NEST"
-                and tile == "WFIP3-d02"
-            ):
+            if self.map.model == "hrrr" and self.model_name == "WFIP3-NEST" and tile == "WFIP3-d02":
                 stride = 17
 
         mask = np.ones_like(u)
@@ -758,7 +899,7 @@ class DataMap:
             sizes={"spacing": 0.25},
         )
 
-    def _xy_mesh(self, field):
+    def _xy_mesh(self, field: gribdata.fieldData):
         """Helper function to create mesh for various plot."""
 
         lat, lon = field.latlons()
@@ -775,7 +916,7 @@ class DiffMap(DataMap):
     and will not plot overlays and such.
     """
 
-    def _colorbar(self, cc, ax):
+    def _colorbar(self, cc: plt, ax: plt):
         """Set the colorbar for a difference field."""
 
         plt.colorbar(
@@ -786,7 +927,7 @@ class DiffMap(DataMap):
             shrink=1.0,
         )
 
-    def _draw_panel(self, wind_barbs=False):
+    def _draw_panel(self):
         """Draw a map of the difference field."""
 
         ax = self.map.ax
@@ -798,7 +939,7 @@ class DiffMap(DataMap):
         # in the linspace call in self._eq_contours. 21 seems reasonable, but is
         # arbitrary.
         colors = self.field.centered_diff(cmap="Spectral_r", nlev=21)
-        cf = self._draw_field(
+        return self._draw_field(
             ax=ax,
             colors=colors,
             extend="both",
@@ -806,10 +947,9 @@ class DiffMap(DataMap):
             func=self.map.m.contourf,
             levels=self._eq_contours(),
         )
-        return cf
 
     def _eq_contours(self):
-        """Center the contours based on the data min/max"""
+        """Center the contours based on the data min/max."""
 
         minval = np.amin(self.field.data)
         maxval = np.amax(self.field.data)
@@ -834,10 +974,7 @@ class DiffMap(DataMap):
         )
 
         level, lev_unit = f.numeric_level(index_match=False)
-        if f.vspec.get("print_units", True):
-            units = f"({f.units}, shaded)"
-        else:
-            units = f""
+        units = f"({f.units}, shaded)" if f.vspec.get("print_units", True) else ""
 
         # Title or Atmospheric level and unit in the high center
         if f.vspec.get("title"):
@@ -852,19 +989,24 @@ class MultiPanelDataMap(DataMap):
     """
     Class that extends a DataMap for handling multiple panels.
 
-    Keyword arguments:
+    Keyword Arguments:
         last_panel        flag for multipanel plots to designate last panel drawn
+
     """
 
-    def __init__(self, map_fields, map_, member, model_name=None, **kwargs):
+    def __init__(
+        self, map_fields: list, map_: plt, member: int, model_name: str | None = None, **kwargs
+    ):
         super().__init__(map_fields, map_, model_name=model_name)
 
         self.last_panel = kwargs.get("last_panel", False)
         self.member = str(member)
 
-    def draw(self, show=False):
-        """Main method for creating the plot. Set show=True to display the
-        figure from the command line."""
+    def draw(self, show: bool = False):
+        """
+        Main method for creating the plot. Set show=True to display the
+        figure from the command line.
+        """
 
         cf = self._draw_panel(wind_barbs=False)
 
@@ -885,7 +1027,7 @@ class MultiPanelDataMap(DataMap):
         return cf
 
     def _label_member(self):
-        """Add the member label to the top left of the plot"""
+        """Add the member label to the top left of the plot."""
 
         ax = self.map.ax
         ax.text(
@@ -919,10 +1061,7 @@ class MultiPanelDataMap(DataMap):
         )
 
         level, lev_unit = f.numeric_level(index_match=False)
-        if f.vspec.get("print_units", True):
-            units = f"({f.units}, shaded)"
-        else:
-            units = f""
+        units = f"({f.units}, shaded)" if f.vspec.get("print_units", True) else ""
 
         # Title or Atmospheric level and unit in the high center
         if f.vspec.get("title"):
@@ -951,142 +1090,3 @@ class MultiPanelDataMap(DataMap):
             fontsize=14,
             transform=ax.transAxes,
         )
-
-
-class MapFields:
-    """Class that packages all the field objects need for producing
-    desired map content, i.e. an object that contains all filled
-    contours, hatched spaces, and overlayed contours needed for a full
-    product."""
-
-    def __init__(
-        self, fhr, fields_spec, grib_path, level, name, map_type=None, **kwargs
-    ):
-        self.grib_path = grib_path
-        self.fhr = fhr
-        self.fields_spec = deepcopy(fields_spec)
-        self.level = level
-        self.map_type = map_type
-        self.model = kwargs.get("model")
-        self.name = name
-        self.tile = kwargs.get("tile", "full")
-
-        self.map_spec = deepcopy(self.fields_spec[self.name][self.level])
-        self.set_level(self.level, self.map_spec)
-        # Required if map_type is "diff"
-        self.grib_path2 = kwargs.get("grib_path2")
-
-    def set_level(self, level, spec):
-        nlevel, _ = numeric_level(level=level, index_match=False)
-        level_info = any(
-            x
-            for x in cfgrib_spec(spec["cfgrib"], self.model)
-            for l in ("level", "top", "bottom", "Surface")
-            if l in x
-        )
-        if nlevel and not level_info:
-            if spec["cfgrib"].get(self.model):
-                spec["cfgrib"][self.model]["level"] = nlevel
-            else:
-                spec["cfgrib"]["level"] = nlevel
-        # if spec["cfgrib"].get("level") is None and not spec["cfgrib"].get("stepRange") and not \
-        #    spec["cfgrib"].get("topLevel") and not \
-        #    spec["cfgrib"].get("typeOfLevel") == "surface" and not \
-        #    spec["cfgrib"].get("scaledValueOfFirstFixedSurface"):
-
-    @property
-    def shaded(self):
-        cf = cfgrib_spec(self.map_spec["cfgrib"], self.model)
-        ds = gribfile.GribFile(self.grib_path, cf).contents
-        args = {
-            "ds": ds,
-            "fhr": self.fhr,
-            "level": self.level,
-            "model": self.model,
-            "short_name": self.name,
-            "spec": self.fields_spec,
-            "grib_path": self.grib_path,
-        }
-        field = gribdata.fieldData(**args)
-
-        if self.map_type == "diff":
-            args["ds"] = gribfile.GribFile(self.grib_path2, cf).contents
-            args["grib_path"] == self.grib_path2
-            field2 = gribdata.fieldData(**args)
-            field.data = field.values() - field2.values()
-
-        return field
-
-    @property
-    def contours(self):
-        """Return the list of contour fieldData objects"""
-
-        # We won't plot contours on multipanel plots, or full global
-        # plots.
-        if self.map_type == "enspanel":
-            return []
-
-        if "global" in self.model and self.tile in ["full"]:
-            return []
-
-        return self._overlay_fields("contours")
-
-    @property
-    def hatches(self):
-        """Return the list of hatch fieldData objects"""
-
-        return self._overlay_fields("hatches")
-
-    def wind_fields(self, level=None):
-        """Return u, v tuple of wind fields"""
-
-        lev = level or self.level
-        winds = []
-        for var in ("u", "v"):
-            wind_spec = self.fields_spec[var][lev]
-            self.set_level(lev, wind_spec)
-            ds = gribfile.GribFile(
-                self.grib_path, cfgrib_spec(wind_spec["cfgrib"], self.model)
-            ).contents
-            args = {
-                "ds": ds,
-                "fhr": self.fhr,
-                "level": lev,
-                "model": self.model,
-                "short_name": var,
-                "spec": self.fields_spec,
-                "grib_path": self.grib_path,
-            }
-            winds.append(gribdata.fieldData(**args))
-        return winds
-
-    def _overlay_fields(self, spec_sect):
-        """Generate a list of fieldData objects for the specified type
-        of overlay -- hatches or contours"""
-
-        overlay_fields = []
-        for overlay, overlay_kwargs in self.map_spec.get(spec_sect, {}).items():
-            if "_" in overlay:
-                var, lev = overlay.split("_")
-            else:
-                var, lev = overlay, self.level
-
-            overlay_spec = deepcopy(self.fields_spec[var][lev])
-            self.set_level(lev, overlay_spec)
-            ds = gribfile.GribFile(
-                self.grib_path, cfgrib_spec(overlay_spec["cfgrib"], self.model)
-            ).contents
-            args = {
-                "ds": ds,
-                "fhr": self.fhr,
-                "level": lev,
-                "model": self.model,
-                "short_name": var,
-                "spec": self.fields_spec,
-                "grib_path": self.grib_path,
-            }
-            overlay_obj = gribdata.fieldData(**args)
-            # Set the attributes for the overlay field
-            overlay_obj.contour_kwargs = overlay_kwargs
-            overlay_fields.append(overlay_obj)
-        return overlay_fields
