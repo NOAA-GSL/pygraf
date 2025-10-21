@@ -8,7 +8,7 @@ UPPData object) and creates a standard plot with shaded fields, contours, wind
 barbs, and descriptive annotation.
 '''
 
-import copy
+from copy import copy, deepcopy
 from math import isnan
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
@@ -525,7 +525,7 @@ class DataMap():
         if self.map.corners is None:
             return
         data_values = self.field.data
-        crnrs = copy.copy(self.map.corners)
+        crnrs = copy(self.map.corners)
         if crnrs[2] < 0:
             crnrs[2] = 360 + crnrs[2]
         if crnrs[3] < 0:
@@ -900,14 +900,14 @@ class MapFields():
 
         self.grib_path = grib_path
         self.fhr = fhr
-        self.fields_spec = fields_spec
+        self.fields_spec = deepcopy(fields_spec)
         self.level = level
         self.map_type = map_type
         self.model = kwargs.get('model')
         self.name = name
         self.tile = kwargs.get('tile', 'full')
 
-        self.map_spec = self.fields_spec[self.name][self.level]
+        self.map_spec = deepcopy(self.fields_spec[self.name][self.level])
         self.set_level(self.level, self.map_spec)
         # Required if map_type is "diff"
         self.grib_path2 = kwargs.get("grib_path2")
@@ -940,6 +940,7 @@ class MapFields():
             "grib_path": self.grib_path,
         }
         field = gribdata.fieldData(**args)
+
         if self.map_type == "diff":
             args["ds"] = gribfile.GribFile(self.grib_path2, cf).contents
             args["grib_path"] == self.grib_path2
@@ -1001,10 +1002,11 @@ class MapFields():
             else:
                 var, lev = overlay, self.level
 
-            overlay_spec = self.fields_spec[var][lev]
+            overlay_spec = deepcopy(self.fields_spec[var][lev])
             self.set_level(lev, overlay_spec)
+            ds = gribfile.GribFile(self.grib_path, cfgrib_spec(overlay_spec["cfgrib"], self.model)).contents
             args = {
-                "ds": gribfile.GribFile(self.grib_path, cfgrib_spec(overlay_spec["cfgrib"], self.model)).contents,
+                "ds": ds,
                 "fhr": self.fhr,
                 "level": lev,
                 "model": self.model,

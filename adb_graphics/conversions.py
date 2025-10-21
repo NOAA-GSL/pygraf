@@ -98,7 +98,7 @@ def vort_scale(field, **kwargs):
 
 def weasd_to_1hsnw(field, **kwargs):
 
-    ''' Conversion from snow wter equiv to snow (10:1 ratio) '''
+    ''' Conversion from snow water equiv to snow (10:1 ratio) '''
 
     return field * 10.
 

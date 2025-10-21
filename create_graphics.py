@@ -91,10 +91,10 @@ def create_maps(cla, fhr, grib_path, workdir, grib_path2=None):
                 args.append((cla, fhr, grib_path, level, model, spec,
                              variable, workdir, tile, grib_path2))
 
-        #print(f'Queueing {len(args)} maps')
-                parallel_maps(*args[-1])
-        #with Pool(processes=cla.nprocs) as pool:
-        #    pool.starmap(parallel_maps, args)
+        print(f'Queueing {len(args)} maps')
+        #        parallel_maps(*args[-1])
+        with Pool(processes=cla.nprocs) as pool:
+            pool.starmap(parallel_maps, args)
 
 def gather_gribfiles(cla, fhr, filename, gribfiles):
 

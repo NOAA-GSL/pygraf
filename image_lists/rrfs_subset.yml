@@ -108,6 +108,8 @@ hourly:
       - sfc
     snod:
       - sfc
+    soilm:
+      - sfc
     soilt: &soilt_levs
       - 0cm
       - 1cm

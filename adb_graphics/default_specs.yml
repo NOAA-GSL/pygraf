@@ -80,16 +80,18 @@
 1hsnw: # 1 hr Accumulated Snow Using 10:1 Ratio
   sfc:
     cfgrib:
-      rrfs:
-        shortName: sdwe
-        level: 0
-        typeOfLevel: surface
       hrrr:
         shortName: sdwe
         level: 0
         typeOfLevel: surface
         stepType: accum
-        stepRange: "0-16"
+        stepRange: "15-16"
+      rrfs:
+        parameterNumber: 50
+        level: 0
+        typeOfLevel: surface
+        stepType: accum
+        stepRange: "15-16"
     clevs: [0.03, 0.05, 0.1, 0.5, 1, 2, 3, 4, 5, 6, 7, 8]
     cmap: gist_ncar
     colors: snow_colors
@@ -151,7 +153,7 @@ acpcp: # Accumulated run total precipitation
       shortName: tp
       level: 0
       typeOfLevel: surface
-      #stepRange: # startswith("0-")
+      stepRange: 0-16
       stepType: accum
     clevs: [0.01, 0.1, 0.25, 0.5, 1, 2, 3, 5, 10, 15, 20, 40]
     cmap: gist_ncar
@@ -278,9 +280,10 @@ acsnw: # Run Total Accumulated Snow Using 10:1 Ratio
         stepType: accum
         stepRange: "0-16"
       rrfs:
-        shortName: sdwe
+        parameterNumber: 50
         level: 0
         typeOfLevel: surface
+        stepRange: "0-16"
     clevs: [0.01, 0.1, 1, 2, 3, 4, 6, 8, 10, 12, 18, 24]
     cmap: gist_ncar
     colors: snow_colors
@@ -364,7 +367,7 @@ cape:
   mu: &cape # Most Unstable CAPE
     cfgrib:
       shortName: cape
-      level: 18000
+      level: 25500
       typeOfLevel: pressureFromGroundLayer
     clevs: [1, 100, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
     cmap: gist_ncar
@@ -802,6 +805,7 @@ dewp: # Dew point temperaeure
     colors: tsfc_colors
     ncl_name: DPT_P0_L103_{grid}
     ticks: 10
+    title: 2m Dewpoint Temperature
     transform: conversions.k_to_f
     unit: F
     wind: 10m
@@ -1089,6 +1093,7 @@ gh: # Geopotential height
     cfgrib:
       shortName: orog
       typeOfLevel: surface
+      level: 0
     clevs: !!python/object/apply:numpy.arange [0, 5000, 250]
     cmap: gist_earth
     ncl_name: HGT_P0_L1_{grid}
@@ -1149,7 +1154,8 @@ hail: # Max 1h Hail diameter
     cfgrib:
       hrrr:
         shortName: hail
-        typeOfLevel: atmosphere
+        typeOfLevel: sigma
+        level: 0
       rrfs:
         shortName: hail
         typeOfLevel: surface
@@ -1163,6 +1169,14 @@ hail: # Max 1h Hail diameter
     unit: in
   max: # total atmosphere
     <<: *hail
+    cfgrib:
+      hrrr:
+        shortName: hail
+        typeOfLevel: atmosphere
+        level: 0
+      rrfs:
+        shortName: hail
+        typeOfLevel: surface
     ncl_name: HAIL_P8_L10_{grid}_max1h
     title: Max 1h Hail/Graupel Diameter, Entire Column
 hailcast: # Max 1h Hail diameter
@@ -1340,13 +1354,8 @@ hlcytot:
 hpbl: # Height of Planetary Boundary Layer
   sfc: 
     cfgrib:
-      hrrr:
-        shortName: blh
-        typeOfLevel: surface
-      rrfs:
-        shortName: gh
-        typeOfLevel: planetaryBoundaryLayer
-        level: 0
+      shortName: blh
+      typeOfLevel: surface
     clevs: [25, 50, 100, 200, 300, 500, 750, 1000, 1500, 2000, 2500, 3000, 4000, 5000]
     cmap: ir_rgbv
     colors: pbl_colors
@@ -1630,6 +1639,7 @@ pres:
     colors: ps_colors
     ncl_name: PRES_P0_L1_{grid}
     ticks: 20
+    title: Surface Pressure
     transform: conversions.pa_to_hpa
     unit: hPa
   msl:
@@ -1719,7 +1729,7 @@ ptyp: # Hourly total precipitation
       typeOfLevel: surface
       level: 0
       stepType: accum
-      #stepRange: # startswith fhr - 1
+      stepRange: 15-16
     clevs: [0.002, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 1.0, 2.0]
     cmap: gist_ncar
     colors: pcp_colors
@@ -1819,6 +1829,7 @@ rh: # Relative Humidity
     cmap: gist_ncar
     colors: rainbow12_colors
     ncl_name: RH_P0_L103_{grid}
+    title: 2 m Relative Humidity
     ticks: 10
     unit: '%'
   500mb: &rh_ua
@@ -1920,9 +1931,9 @@ rvil: # Radar-derived Vertically Integrated Liquid
         typeOfLevel: atmosphere
         level: 0
       rrfs:
-      shortName: veril
-      typeOfLevel: atmosphereSingleLayer
-      level: 0
+        shortName: veril
+        typeOfLevel: atmosphereSingleLayer
+        level: 0
     clevs: [0.05, 0.15, 0.76, 3.47, 6.92, 12, 31.6, 35, 40, 45, 50, 55, 60, 65, 70]
     cmap: NWSReflectivity
     colors: cref_colors
@@ -2058,8 +2069,11 @@ sipd: # Supercooled Large Droplet Icing
       kwargs:
         level: 1000ft
         variable: sipd
-slw: # Supercooled Liquid Water
+slw: # Supercooled Liquid Water -- requires nat data
   sfc:
+    cfgrib:
+      shortName: t
+      typeOfLevel: surface
     clevs: [0.05, 0.1, 0.2, .3, .4, .5, .75, 1., 1.25, 1.5, 2., 3., 4., 5., 6.]
     cmap: gist_ncar
     colors: slw_colors
@@ -2355,6 +2369,7 @@ temp: # Temperature
     colors: tsfc_colors
     ncl_name: TMP_P0_L103_{grid}
     ticks: 10
+    title: 2m Temperature
     transform: conversions.k_to_f
     unit: F
     wind: 10m
@@ -2444,7 +2459,7 @@ totp: # Hourly total precipitation
     cfgrib:
       shortName: tp
       typeOfLevel: surface
-      #stepRange: # startswith fhr - 1
+      stepRange: 15-16
       stepType: accum
     contours:
       pres_msl:
@@ -2497,7 +2512,8 @@ trc1:
     title: Vertically Integrated Smoke
     transform: conversions.to_micro
     unit: $mg/m^2$
-  1000ft: &tracer1
+  1000ft: &tracer1 
+    # requires nat data
     clevs: [1, 2, 4, 6, 8, 12, 16, 20, 25, 30, 40, 60, 100, 200]
     colors: smoke_colors
     ncl_name: MASSDEN_P0_L105_{grid}
@@ -2509,6 +2525,7 @@ trc1:
     unit: $\mu g/m^3$
     vertical_index: 4
   6000ft:
+    # requires nat data
     <<: *tracer1
     title: 6000ft AGL Smoke
     vertical_index: 11
@@ -2608,7 +2625,7 @@ ulwrf: # Upward Longwave Radiation Flux
         typeOfLevel: nominalTop
         level: 0
       rrfs:
-        parameterName: 4
+        parameterNumber: 4
         typeOfLevel: nominalTop
         level: 0
         stepType: avg
@@ -2962,9 +2979,16 @@ wspeed: # Wind Speed
     title: 320m Wind
   80m:
     <<: *ua_wspeed
+    cfgrib:
+      shortName: u
+      typeOfLevel: heightAboveGround
+      level: 80
     title: 80m Wind
   850mb:
     <<: *ua_wspeed
+    cfgrib:
+      shortName: u
+      typeOfLevel: isobaricInhPa
     contours:
       gh:
         colors: white

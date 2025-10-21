@@ -5,6 +5,7 @@ Classes that handle the specifics of grib files from UPP.
 '''
 
 import abc
+from copy import deepcopy
 from datetime import datetime, timedelta
 from functools import lru_cache
 from string import digits, ascii_letters
@@ -140,7 +141,8 @@ class UPPData(specs.VarSpec):
         ''' Returns the mean of the values. '''
 
         levs = [int(x[:-2]) for x in levels]
-        return values.sel(isobaricInhPa=levs).mean("isobaricInhPa")
+        ret =  values.sel(isobaricInhPa=levs).mean("isobaricInhPa")
+        return ret
 
     def _get_data_levels(self, vertical_dim):
 
@@ -782,10 +784,15 @@ class fieldData(UPPData):
         else:
 
             # Get the spec dict and ncl_name for the given variable name
-            spec = self.spec.get(name, {}).get(level, {})
+            spec = deepcopy(self.spec.get(name, {}).get(level, {}))
             if not spec and name is not None:
                 raise errors.NoGraphicsDefinitionForVariable(name, level)
-            vals = self._get_field(utils.cfgrib_spec(spec["cfgrib"], self.model))
+            cfkeys = utils.cfgrib_spec(spec["cfgrib"], self.model)
+            nlevel = utils.numeric_level(level=level, index_match=False)[0]
+            level_info = any(x for x in utils.cfgrib_spec(spec["cfgrib"], self.model) for l in ("level", "top", "bottom", "Surface") if l in x)
+            if nlevel and not level_info:
+                cfkeys["level"] = utils.numeric_level(level=level, index_match=False)[0]
+            vals = self._get_field(cfkeys)
 
         #lev = vertical_index
         #vals = field
