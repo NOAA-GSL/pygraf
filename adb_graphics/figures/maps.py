@@ -995,7 +995,7 @@ class MultiPanelDataMap(DataMap):
     """
 
     def __init__(
-        self, map_fields: list, map_: plt, member: int, model_name: str | None = None, **kwargs
+        self, map_fields: MapFields, map_: plt, member: str, model_name: str | None = None, **kwargs
     ):
         super().__init__(map_fields, map_, model_name=model_name)
 

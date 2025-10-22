@@ -18,9 +18,9 @@ import sys
 import time
 from argparse import ArgumentError, ArgumentParser, Namespace
 from multiprocessing import Pool
+from pathlib import Path
 
 import yaml
-from libpath import Path
 
 from adb_graphics import errors, utils
 from adb_graphics.datahandler.gribfile import GribFile, GribFiles
@@ -41,7 +41,7 @@ def check_file(
     data_root: Path | None = None,
     file_tmpl: str | None = None,
     mem: int | None = None,
-) -> (Path, bool):
+) -> tuple[Path, bool]:
     """
     Given the command line arguments, the forecast hour, and a potential
     ensemble member, build a full path to the file and ensure it exists.
@@ -54,9 +54,10 @@ def check_file(
 
     grib_path = data_root / file_tmpl
     if mem is not None:
-        grib_path = grib_path.format(FCST_TIME=fhr, mem=mem)
+        grib_path = str(grib_path).format(FCST_TIME=fhr, mem=mem)
     else:
-        grib_path = grib_path.format(FCST_TIME=fhr)
+        grib_path = str(grib_path).format(FCST_TIME=fhr)
+    grib_path = Path(grib_path)
 
     print(f"Checking on file {grib_path}")
     old_enough = utils.old_enough(cla.data_age, grib_path) if grib_path.exists() else False
@@ -70,7 +71,7 @@ def create_skewt(cla: Namespace, fhr: int, grib_path: Path, workdir: Path):
     """
 
     # Create the file object to load the contents
-    gfile = GribFile(grib_path)
+    gfile = GribFile(grib_path, var_config={})
 
     args = [(cla, fhr, gfile.contents, site, workdir) for site in cla.sites]
 
@@ -120,38 +121,36 @@ def create_maps(
             pool.starmap(parallel_maps, args)
 
 
-def gather_gribfiles(cla: Namespace, fhr: int, filename: str, gribfiles: None | GribFiles):
+def gather_gribfiles(cla: Namespace, fhr: int, grib_path: Path, gribfiles: None | GribFiles):
     """
     Returns the appropriate gribfiles object for the type of graphics being
     generated -- whether it's for a single forecast time or all forecast lead
     times.
     """
 
-    filenames = {"01fcst": [], "free_fcst": []}
+    filenames: dict[str, list[Path]] = {"01fcst": [], "free_fcst": []}
 
     fcst_hour = int(fhr)
 
     first_fcst = 6 if "global" in cla.images[0] else 1
     if fcst_hour <= first_fcst:
-        filenames["01fcst"].append(filename)
+        filenames["01fcst"].append(grib_path)
     else:
-        filenames["free_fcst"].append(filename)
+        filenames["free_fcst"].append(grib_path)
 
     if gribfiles is None or not cla.all_leads:
         # Create a new GribFiles object, include all hours, or just this one,
         # depending on command line argument flag
 
-        gribfiles = GribFiles(
+        return GribFiles(
             coord_dims={"fcst_hr": [fhr]},
             filenames=filenames,
             filetype=cla.file_type,
             model=cla.images[0],
         )
-    else:
-        # Append a single forecast hour to the existing GribFiles object.
-        gribfiles.coord_dims.get("fcst_hr").append(fhr)
-        gribfiles.append(filenames)
-
+    # Append a single forecast hour to the existing GribFiles object.
+    gribfiles.coord_dims.get("fcst_hr", []).append(fhr)
+    gribfiles.append(filenames)
     return gribfiles
 
 
@@ -177,7 +176,7 @@ def generate_tile_list(arg_list: list) -> list[str]:
     return arg_list
 
 
-def load_images(arg: Path | str):
+def load_images(arg: list[Path | str]):
     """
     Check that input image file exists, and that it contains the
     requested section. Return a 2-list (required by argparse) of the
@@ -394,7 +393,7 @@ def parse_args(argv: list) -> Namespace:
     return parser.parse_args(argv)
 
 
-def pre_proc_grib_files(cla: Namespace, fhr: int) -> Path:
+def pre_proc_grib_files(cla: Namespace, fhr: int) -> tuple[Path, bool]:
     """
     Use the command line argument object (cla) to determine the grib file
     location at a given forecast hour. If multiple data input paths and file
@@ -420,11 +419,12 @@ def pre_proc_grib_files(cla: Namespace, fhr: int) -> Path:
 
     # Generate a list of files to be joined.
     file_list = [
-        Path(*path).format(FCST_TIME=fhr) for path in zip(cla.data_root, cla.file_tmpl, strict=True)
+        "/".join(path).format(FCST_TIME=fhr)
+        for path in zip(cla.data_root, cla.file_tmpl, strict=True)
     ]
     for file_path in file_list:
-        if not file_path.exists() or not utils.old_enough(cla.data_age, file_path):
-            return file_path, False
+        if not Path(file_path).exists() or not utils.old_enough(cla.data_age, file_path):
+            return Path(file_path), False
 
     print("Combining input files: ")
     for fn in file_list:
@@ -671,8 +671,8 @@ def graphics_driver(cla: Namespace):
                 create_maps(
                     cla,
                     fhr=fhr,
-                    grib_contents=gribfiles.contents,
-                    grib_contents2=gribfiles2.contents,
+                    grib_path=grib_path,
+                    grib_path2=grib_path2,
                     workdir=workdir,
                 )
             else:
@@ -685,7 +685,7 @@ def graphics_driver(cla: Namespace):
                 create_maps(
                     cla,
                     fhr=fhr,
-                    grib_contents=gribfiles.contents,
+                    grib_path=grib_path,
                     workdir=workdir,
                 )
 
@@ -723,7 +723,7 @@ def create_graphics(argv: list):
     # Check that the same number of entries exists in -d and --file_tmpl
     if len(clargs.data_root) != len(clargs.file_tmpl):
         errmsg = "Must specify the same number of arguments for -d and --file_tmpl"
-        ArgumentParser.exit(0, errmsg)
+        clargs.exit(errmsg, 0)
 
     # Ensure wgrib command is available in environment before getting too far
     # down this path...
@@ -756,13 +756,13 @@ def create_graphics(argv: list):
     # Make sure both required arguments (--max_plev, --sites) are provided when doing skewTs
     if clargs.graphic_type == "skewts":
         if not clargs.max_plev:
-            ArgumentParser.exit(
-                0,
+            clargs.exit(
                 "Must specify maximum pressure level \
                 (--max_plev) when creating skewTs",
+                0,
             )
         if not clargs.sites:
-            ArgumentParser.exit(0, "Must specify sites (--sites) when creating skewTs")
+            clargs.exit("Must specify sites (--sites) when creating skewTs", 0)
 
     print(f"Running script for {clargs.graphic_type} with args: ", f"{LOG_BREAK}")
 

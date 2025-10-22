@@ -10,32 +10,37 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib import axes
 from xarray import Dataset
 
-from adb_graphics.datahandler import gribdata, gribfile
 from adb_graphics.figures import maps, skewt
 
-AIRPORTS = "static/Airports_locs.txt"
+AIRPORTS = Path("static/Airports_locs.txt")
 
 
 def add_obs_panel(
-    ax: plt, model_name: str, obs_file: Path, proj_info: dict, short_name: str, tile: str
+    ax: axes.Axes,
+    model_name: str,
+    obs_file: Path,
+    proj_info: dict,
+    spec: dict,
+    short_name: str,
+    tile: str,
 ):
     """
     Plot observation data provided by the obs_file
     path using the assigned projection.
     """
 
-    gribobs = gribfile.GribFile(filename=obs_file)
     ax.axis("on")
-    field = gribdata.FieldData(
-        ds=gribobs.contents,
+    map_fields = maps.MapFields(
         fhr=0,
+        fields_spec=spec,
+        grib_path=obs_file,
         level="obs",
         model="obs",
-        short_name=short_name,
+        name=short_name,
     )
-    map_fields = maps.MapFields(main_field=field)
     m = maps.Map(
         airport_fn=AIRPORTS,
         ax=ax,
@@ -169,6 +174,7 @@ def parallel_maps(
                         obs_file=cla.obs_file_path,
                         proj_info=map_fields.shaded.grid_info(),
                         short_name=variable,
+                        spec=cla.specs,
                         tile=tile,
                     )
             else:
@@ -264,8 +270,8 @@ def set_figure(model_name: str, graphic_type: str, tile: str):
     inches = 12.2 if model_name == "HRRR-HI" else 10
 
     # Settings for a default single map
-    x_aspect = 1
-    y_aspect = 1
+    x_aspect = 1.0
+    y_aspect = 1.0
     nrows = 1
     ncols = 1
 

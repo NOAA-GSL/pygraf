@@ -63,7 +63,7 @@ class GribFiles:
         self.grid_suffix = self._get_grid_suffix(filenames)
         self.contents = self._load()
 
-    def append(self, filenames: list[str]):
+    def append(self, filenames: dict[str, list[Path]]):
         """
         Add a single new slice to existing data set.
         Must match coord_dims and filetype of the original dataset. Updates current contents
@@ -216,7 +216,7 @@ class GribFiles:
 
         return ret
 
-    def _load(self, filenames: list[str] | None = None):
+    def _load(self, filenames: list[Path] | None = None):
         """Load the set of files into a single XArray structure."""
 
         all_leads = [] if filenames is None else [self.contents]

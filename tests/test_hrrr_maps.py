@@ -2,17 +2,15 @@
 
 import os
 
-import pytest
-from path import Path
+from pytest import fixture
 
 from create_graphics import create_graphics, parse_args
 
 DATA_LOC = os.environ.get("DATA_LOC")
-OUTPUT_LOC = Path(os.environ.get("OUTPUT_LOC"))
 
 
-@pytest.fixture
-def maps_args() -> list:
+@fixture
+def maps_args(tmp_path) -> list:
     """Builds HRRR 12-hour accumulated maps."""
     return [
         "maps",
@@ -23,7 +21,7 @@ def maps_args() -> list:
         "12",
         "1",
         "-o",
-        OUTPUT_LOC,
+        tmp_path / "output",
         "-s",
         "2023031500",
         "--file_tmpl",
@@ -36,7 +34,7 @@ def maps_args() -> list:
     ]
 
 
-def test_parse_args():
+def test_parse_args(tmp_path):
     """
     Test parse_args for basic parsing success.
     Checks if parse_args returns 'maps' in the graphic_type field.
@@ -50,7 +48,7 @@ def test_parse_args():
         "12",
         "1",
         "-o",
-        OUTPUT_LOC,
+        tmp_path / "output",
         "-s",
         "2021052315",
         "--file_tmpl",
@@ -65,7 +63,7 @@ def test_parse_args():
     assert test_args.graphic_type == "maps"
 
 
-def test_file_count(maps_args):
+def test_file_count(maps_args, tmp_path):
     """
     Test for file count in directory.
     Can be extended to cover multiple folders.
@@ -75,8 +73,9 @@ def test_file_count(maps_args):
     map_count = 6
     count = 0
     folder = "/202303150000/"
-    assert (OUTPUT_LOC / folder).isdir()
-    for file_name in (OUTPUT_LOC / folder).iterdir():
-        if (OUTPUT_LOC / folder / file_name).is_file():
+    output = tmp_path / "output" / folder
+    assert output.isdir()
+    for file_name in output.iterdir():
+        if (output / file_name).is_file():
             count += 1
     assert count == map_count

@@ -330,7 +330,7 @@ def numeric_level(index_match: bool = True, level: str | None = None):
     return lev_val, lev_unit
 
 
-def old_enough(age: int, file_path: Path):
+def old_enough(age: int, file_path: Path | str):
     """
     Helper function to test the age of a file.
 
@@ -343,6 +343,8 @@ def old_enough(age: int, file_path: Path):
 
       bool    whether the file is at least age minutes old
     """
+
+    file_path = Path(file_path) if isinstance(file_path, str) else file_path
 
     file_time = datetime.fromtimestamp(file_path.stat().st_ctime)
     max_age = datetime.now() - timedelta(minutes=age)
