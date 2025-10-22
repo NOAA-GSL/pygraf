@@ -4,13 +4,15 @@
 Classes that load grib files.
 """
 
+from pathlib import Path
+
 import xarray as xr
 
 
 class GribFile:
     """Wrappers and helper functions for interfacing with cfgrib."""
 
-    def __init__(self, filename, var_config, **kwargs):
+    def __init__(self, filename: Path | str, var_config: dict):
         # pylint: disable=unused-argument
 
         self.filename = filename
@@ -37,9 +39,10 @@ class GribFiles:
     forecast hours.
     """
 
-    def __init__(self, coord_dims, filenames, filetype, **kwargs):
+    def __init__(self, coord_dims: dict[str, list[int]], filenames: dict, filetype: str, **kwargs):
         """
-        Arguments:
+        Initialize GribFiles object.
+
           coord_dims  dict containing the name of the dimension to
                       concat (key), and a list of its values (value).
                         Ex: {'fhr': [2, 3, 4]}
@@ -48,9 +51,8 @@ class GribFiles:
                       hours after that ('free_fcst').
           filetype    key to use for dict when setting variable_names
 
-        Keyword Arguments:
+        kwargs:
           model       string describing the model type
-
         """
 
         self.model = kwargs.get("model", "")
@@ -61,18 +63,21 @@ class GribFiles:
         self.grid_suffix = self._get_grid_suffix(filenames)
         self.contents = self._load()
 
-    def append(self, filenames):
+    def append(self, filenames: list[str]):
         """
-        Add a single new slice to existing data set. Must match coord_dims
-        and filetype of original dataset. Updates current contents of Object
+        Add a single new slice to existing data set.
+        Must match coord_dims and filetype of the original dataset. Updates current contents
+        property.
         """
 
         self.contents = self._load(filenames)
 
-    def free_fcst_names(self, ds, fcst_type):
+    def free_fcst_names(self, ds: xr.Dataset, fcst_type: str):  # noqa: PLR0915,PLR0912
         """
+        Variable names to rename.
+
         Given an opened dataset, return a dict of original variable names
-        (key) and the desired name (value)
+        (key) and the desired name (value).
         """
 
         ret = {}
@@ -182,7 +187,7 @@ class GribFiles:
                         "WEASD_P8_L1_GST0_acc3h",
                         "FROZR_P8_L1_GST0_acc3h",
                     ]
-                    if self.model == "rap" and fhr != 3 and var in bad_3h_vars:
+                    if self.model == "rap" and fhr != 3 and var in bad_3h_vars:  # noqa: PLR2004
                         print(f"dropping {var}")
                         ds.drop(var)
                         continue
@@ -195,7 +200,7 @@ class GribFiles:
                         "APCP_P8_L1_GLC0_acc12h",
                         "APCP_P8_L1_GST0_acc12h",
                     ]
-                    if fhr != 12 and var in bad_12h_vars:
+                    if fhr != 12 and var in bad_12h_vars:  # noqa: PLR2004
                         print(f"dropping {var}")
                         ds.drop(var)
                         continue
@@ -211,30 +216,7 @@ class GribFiles:
 
         return ret
 
-    @staticmethod
-    def _get_grid_suffix(filenames):
-        """
-        Return the suffix of the first variable with 4 sections (split on _)
-        in the file. This should correspond to the grid tag.
-        """
-
-        for files in filenames.values():
-            if files:
-                gfile = xr.open_dataset(
-                    files[0],
-                    cache=False,
-                    engine="pynio",
-                    lock=False,
-                    backend_kwargs=dict(format="grib2"),
-                )
-                for var in gfile.keys():
-                    vsplit = var.split("_")
-                    if len(vsplit) == 4:
-                        gfile.close()
-                        return vsplit[-1]
-        return "GRID NOT FOUND"
-
-    def _load(self, filenames=None):
+    def _load(self, filenames: list[str] | None = None):
         """Load the set of files into a single XArray structure."""
 
         all_leads = [] if filenames is None else [self.contents]
@@ -285,20 +267,18 @@ class GribFiles:
                             og_ds[bad_var] = og_ds.get(f"{bad_var}1h")
                 all_leads.append(dataset)
 
-        ret = xr.combine_nested(
+        return xr.combine_nested(
             all_leads,
             compat="override",
             concat_dim=list(self.coord_dims.keys())[0],
             coords="minimal",
             data_vars="all",
         )
-        return ret
 
     @property
     def open_kwargs(self):
         """
-        Defines the key word arguments used by the various calls to XArray
-        open_mfdataset
+        Defines the kwargs used by calls to XArray open_mfdataset.
         """
 
         return dict(

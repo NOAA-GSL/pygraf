@@ -48,11 +48,11 @@ def test_UPPData(natfile, prsfile):
         assert upp.date_to_str(test_date) == "20201205 12 UTC"
 
 
-def test_fieldData(prsfile):
-    """Test the fieldData class methods on a prs file."""
+def test_FieldData(prsfile):
+    """Test the FieldData class methods on a prs file."""
 
     prs_ds = gribfile.GribFile(prsfile)
-    field = gribdata.fieldData(prs_ds.contents, fhr=2, level="500mb", short_name="temp")
+    field = gribdata.FieldData(prs_ds.contents, fhr=2, level="500mb", short_name="temp")
 
     assert isinstance(field.cmap, mcolors.Colormap)
     assert isinstance(field.colors, np.ndarray)
@@ -82,7 +82,7 @@ def test_fieldData(prsfile):
         (field.values() - 273.15) * 9 / 5 + 32,
     )
 
-    field2 = gribdata.fieldData(prs_ds.contents, fhr=2, level="ua", short_name="ceil")
+    field2 = gribdata.FieldData(prs_ds.contents, fhr=2, level="ua", short_name="ceil")
     transforms = field2.vspec.get("transform")
     assert np.array_equal(
         field2.get_transform(transforms, field2.values()),
@@ -96,11 +96,11 @@ def test_fieldData(prsfile):
 
 
 def test_profile_data(natfile: Path):
-    """Test the profileData class methods on a nat file."""
+    """Test the ProfileData class methods on a nat file."""
 
     nat_ds = gribfile.GribFile(natfile)
     loc = " BNA   9999 99999  36.12  86.69  597 Nashville, TN\n"
-    profile = gribdata.profileData(
+    profile = gribdata.ProfileData(
         nat_ds.contents,
         fhr=2,
         filetype="nat",

@@ -1,18 +1,14 @@
 """Errors specific to the ADB Graphics package."""
 
 
-class Error(Exception):
-    """Base class for handling errors"""
+class FieldNotUniqueError(Exception):
+    """Exception raised when multiple Grib fields are found with input parameters."""
 
 
-class FieldNotUnique(Error):
-    """Exception raised when multiple Grib fields are found with input parameters"""
-
-
-class GribReadError(Error):
+class GribReadError(Exception):
     """Exception raised when there is an error reading the grib file."""
 
-    def __init__(self, name, message="was not found"):
+    def __init__(self, name: str, message: str = "was not found"):
         self.name = name
         self.message = message
 
@@ -22,13 +18,13 @@ class GribReadError(Error):
         return f'"{self.name}" {self.message}'
 
 
-class NoGraphicsDefinitionForVariable(Error):
+class NoGraphicsDefinitionForVariableError(Exception):
     """Exception raised when there is no configuration for the variable."""
 
 
-class LevelNotFound(Error):
+class LevelNotFoundError(Exception):
     """Exception raised when there is no configuration for the variable."""
 
 
-class OutsideDomain(Error):
+class OutsideDomainError(Exception):
     """Exception raised when there is no configuration for the variable."""

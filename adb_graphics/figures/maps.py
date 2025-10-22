@@ -171,19 +171,19 @@ class MapFields:
             "spec": self.fields_spec,
             "grib_path": self.grib_path,
         }
-        field = gribdata.fieldData(**args)
+        field = gribdata.FieldData(**args)
 
         if self.map_type == "diff":
             args["ds"] = gribfile.GribFile(self.grib_path2, cf).contents
             args["grib_path"] = self.grib_path2
-            field2 = gribdata.fieldData(**args)
+            field2 = gribdata.FieldData(**args)
             field.data = field.values() - field2.values()
 
         return field
 
     @property
     def contours(self):
-        """Return the list of contour fieldData objects."""
+        """Return the list of contour FieldData objects."""
 
         # We won't plot contours on multipanel plots, or full global
         # plots.
@@ -197,7 +197,7 @@ class MapFields:
 
     @property
     def hatches(self):
-        """Return the list of hatch fieldData objects."""
+        """Return the list of hatch FieldData objects."""
 
         return self._overlay_fields("hatches")
 
@@ -221,12 +221,12 @@ class MapFields:
                 "spec": self.fields_spec,
                 "grib_path": self.grib_path,
             }
-            winds.append(gribdata.fieldData(**args))
+            winds.append(gribdata.FieldData(**args))
         return winds
 
     def _overlay_fields(self, spec_sect: str) -> list:
         """
-        Create fieldData objects for the specified overlay type - hatches or contours.
+        Create FieldData objects for the specified overlay type - hatches or contours.
         """
 
         overlay_fields = []
@@ -250,7 +250,7 @@ class MapFields:
                 "spec": self.fields_spec,
                 "grib_path": self.grib_path,
             }
-            overlay_obj = gribdata.fieldData(**args)
+            overlay_obj = gribdata.FieldData(**args)
             # Set the attributes for the overlay field
             overlay_obj.contour_kwargs = overlay_kwargs
             overlay_fields.append(overlay_obj)
@@ -899,7 +899,7 @@ class DataMap:
             sizes={"spacing": 0.25},
         )
 
-    def _xy_mesh(self, field: gribdata.fieldData):
+    def _xy_mesh(self, field: gribdata.FieldData):
         """Helper function to create mesh for various plot."""
 
         lat, lon = field.latlons()

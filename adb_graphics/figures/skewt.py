@@ -25,7 +25,7 @@ from adb_graphics import errors, utils
 from adb_graphics.datahandler import gribdata
 
 
-class SkewTDiagram(gribdata.profileData):
+class SkewTDiagram(gribdata.ProfileData):
     """
     The class responsible for gathering all data needed from a grib file to
     produce a Skew-T Log-P diagram.
@@ -41,7 +41,7 @@ class SkewTDiagram(gribdata.profileData):
       max_plev         maximum pressure level to plot in mb
       model_name       model name to use for plotting
 
-    Additional keyword arguments for the gribdata.profileData base class should also
+    Additional keyword arguments for the gribdata.ProfileData base class should also
     be included.
     """
 
@@ -563,7 +563,7 @@ class SkewTDiagram(gribdata.profileData):
         includes the value of the metric.
 
         Variables' transforms and units are handled by default specs in much the
-        same way as in fieldData class since these are not used by MetPy
+        same way as in FieldData class since these are not used by MetPy
         explictly.
         """
 
@@ -641,7 +641,7 @@ class SkewTDiagram(gribdata.profileData):
             spec = self.spec.get(varname, {}).get(lev)
 
             if not spec:
-                raise errors.NoGraphicsDefinitionForVariable(varname, lev)
+                raise errors.NoGraphicsDefinitionForVariableError(varname, lev)
 
             try:
                 tmp = self.values(level=lev, name=varname, one_lev=True)

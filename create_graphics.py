@@ -97,7 +97,7 @@ def create_maps(
 
                 if not spec:
                     msg = f"graphics: {variable} {level}"
-                    raise errors.NoGraphicsDefinitionForVariable(msg)
+                    raise errors.NoGraphicsDefinitionForVariableError(msg)
 
                 args.append(
                     (
@@ -489,7 +489,7 @@ def remove_accumulated_images(cla: Namespace):
             spec = cla.specs.get(variable, {}).get(level)
             if not spec:
                 msg = f"graphics: {variable} {level}"
-                raise errors.NoGraphicsDefinitionForVariable(msg)
+                raise errors.NoGraphicsDefinitionForVariableError(msg)
             accumulate = spec.get("accumulate", False)
 
             if accumulate:

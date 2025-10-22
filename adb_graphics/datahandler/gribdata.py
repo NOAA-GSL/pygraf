@@ -7,17 +7,15 @@ Classes that handle the specifics of grib files from UPP.
 import abc
 from copy import deepcopy
 from datetime import datetime, timedelta
-from functools import lru_cache
 from string import ascii_letters, digits
 
 import numpy as np
-import xarray as xr
 from matplotlib import cm
+from xarray import DataArray, DataSet
 
+from adb_graphics import conversions, errors, specs, utils
 from adb_graphics.datahandler import gribfile
 from adb_graphics.utils import cfgrib_spec
-
-from .. import conversions, errors, specs, utils
 
 
 class UPPData(specs.VarSpec):
@@ -29,13 +27,13 @@ class UPPData(specs.VarSpec):
         ds:          xarray dataset from grib file
         short_name:  name of variable corresponding to entry in specs configuration
 
-    Keyword Arguments:
+    kwargs:
         config:      path to a user-specified configuration file
         model:       string describing the model type
 
     """
 
-    def __init__(self, ds, short_name, spec, **kwargs):
+    def __init__(self, ds: DataSet, short_name: str, spec: dict, **kwargs):
         # Parse kwargs first
         self.model = kwargs.get("model")
         self.grib_path = kwargs.get("grib_path")
@@ -85,8 +83,7 @@ class UPPData(specs.VarSpec):
     @staticmethod
     def date_to_str(date: datetime) -> str:
         """
-        Returns a formatted string (for graphic title) from a datetime
-        object
+        Returns a formatted string (for graphic title) from a datetime object.
         """
 
         return date.strftime("%Y%m%d %H UTC")
@@ -94,22 +91,18 @@ class UPPData(specs.VarSpec):
     @property
     def field(self):
         """
-        Wrapper that calls get_field method for the current variable.
-        Returns the NioVariable object
+        Get the first DataArray out of the DataSet.
         """
 
-        return self.ds.__getattr__([x for x in self.ds.data_vars][0])
+        return self.ds.__getattr__(list(self.ds.data_vars)[0])
 
-    def field_column_max(self, values, variable, level, **kwargs):
-        # pylint: disable=unused-argument
+    def field_column_max(self, values: DataArray, variable: str, level: str, **kwargs):  # noqa: ARG002
         """Returns the column max of the values."""
 
         vals = self.values(name=variable, level=level, one_lev=False)
-        maxvals = vals.max(axis=0)
+        return vals.max(axis=0)
 
-        return maxvals
-
-    def field_sum(self, values, variable2, level2, **kwargs):
+    def field_sum(self, values: DataArray, variable2: str, level2: str, **kwargs):  # noqa: ARG002
         # pylint: disable=unused-argument
         """Return the sum of the values."""
 
@@ -119,8 +112,7 @@ class UPPData(specs.VarSpec):
 
         return sum2
 
-    def field_diff(self, values, variable2, level2, **kwargs):
-        # pylint: disable=unused-argument
+    def field_diff(self, values: DataArray, variable2: str, level2: str, **kwargs):  # noqa: ARG002
         """Subtracts the values from variable2 from self.field."""
 
         value2 = self.values(name=variable2, level=level2)
@@ -129,18 +121,23 @@ class UPPData(specs.VarSpec):
 
         return diff
 
-    def field_mean(self, values, variable, levels, global_levels, **kwargs):
-        # pylint: disable=unused-argument
-        """Returns the mean of the values."""
+    def field_mean(
+        self,
+        values: DataArray,
+        levels: list,
+        **kwargs,  # noqa: ARG002
+    ):
+        """Returns the mean of the values over the vertical dimension."""
 
         levs = [int(x[:-2]) for x in levels]
-        ret = values.sel(isobaricInhPa=levs).mean("isobaricInhPa")
-        return ret
+        return values.sel(isobaricInhPa=levs).mean("isobaricInhPa")
 
-    def _get_data_levels(self, vertical_dim):
+    def _get_data_levels(self, vertical_dim: str):
         """
-        Return a list of vertical dimension values corresponding to the
-        requested vertical dimension to get the values of those dimensions
+        Values of the vertical dimension.
+
+        Arg:
+          vertical_dim   the name of the vertical dimension
         """
 
         fcst_hr = 0 if self.ds.sizes.get("fcst_hr", 0) <= 1 else int(self.fhr)
@@ -152,28 +149,32 @@ class UPPData(specs.VarSpec):
             ret.append(self.ds[dim].sel(**selector).values)
         return ret
 
-    def _get_field(self, spec):
-        """Given an ncl_name, return the NioVariable object."""
-
-        ds = gribfile.GribFile(self.grib_path, spec).contents
-        return ds.__getattr__([x for x in ds.data_vars][0])
-
-    def _get_level(self, field, level, spec, **kwargs):
+    def _get_field(self, spec: dict) -> DataArray:
         """
-        Returns the value of the level to for a 3D array
+        Given a cfgrib block, return the DataArray.
 
-        Arguments:
-          field      dataset object for a given variable
-          level      string describing the level atmospheric level; corresponds
-                     to a key in default specs
+        Arg:
           spec       the specifications dictionary to use for the variable in
                      question
+        """
 
+        ds = gribfile.GribFile(self.grib_path, spec).contents
+        return ds.__getattr__(list(ds.data_vars)[0])
 
-        Keyword Arguments:
-          split      bool sometimes passed in through transforms that indicates
-                     a level string should be split, e.g. 06km.
+    def _get_level(self, field: DataSet, level: str, spec: dict, **kwargs):
+        """
+        Returns the value of the level to for a 3D array.
 
+        Arg:
+          field:     dataset object for a given variable
+          level:     string describing the level atmospheric level; corresponds
+                     to a key in default specs
+          spec:      the specifications dictionary to use for the variable in
+                     question
+
+        kwargs:
+          split:      bool sometimes passed in through transforms that indicates
+                      a level string should be split, e.g. 06km.
 
         Return:
           Integer value corresponding to the array index for the atmospheric
@@ -201,7 +202,7 @@ class UPPData(specs.VarSpec):
         # For split-level variables, like 0-6km, find the matching index by
         # looping through both the possible vertical level arrays.
         if len(data_levels) == 2 and len(requested_level) == 2:
-            for lev, levset in enumerate(zip(*[list(lev) for lev in data_levels])):
+            for lev, levset in enumerate(zip(*[list(lev) for lev in data_levels], strict=True)):
                 if sorted(levset) == requested_level:
                     return lev
 
@@ -212,8 +213,7 @@ class UPPData(specs.VarSpec):
                 lev = np.argwhere(dim_levels == requested_level[0])
                 try:
                     if lev or lev == [0]:
-                        lev = int(lev[0])
-                        return lev
+                        return int(lev[0])
                 except ValueError:
                     print(f"BAD LEVEL is {lev} for {field.name}")
 
@@ -231,7 +231,7 @@ class UPPData(specs.VarSpec):
         )
         raise ValueError(msg)
 
-    def get_transform(self, transforms, val):
+    def get_transform(self, transforms: dict, val: float | list | DataArray):
         """
         Applies a set of one or more transforms to an np.array of
         data values.
@@ -266,8 +266,7 @@ class UPPData(specs.VarSpec):
                 val = utils.get_func(transform)(val, **transform_kwargs)
         return val
 
-    @lru_cache
-    def get_xypoint(self, site_lat, site_lon) -> tuple:
+    def get_xypoint(self, site_lat: float, site_lon: float) -> tuple:
         """
         Return the X, Y grid point corresponding to the site location. No
         interpolation is used.
@@ -298,14 +297,14 @@ class UPPData(specs.VarSpec):
         in the file. This should correspond to the grid tag.
         """
 
-        for var in self.ds.keys():
+        for var in self.ds:
             vsplit = var.split("_")
             if len(vsplit) == 4:
                 return vsplit[-1]
         return "GRID NOT FOUND"
 
     def latlons(self):
-        """Returns the set of latitudes and longitudes"""
+        """Returns the set of latitudes and longitudes."""
 
         coords = sorted(
             [c for c in list(self.ds.coords) if any(ele in c for ele in ["lat", "lon"])]
@@ -318,7 +317,9 @@ class UPPData(specs.VarSpec):
 
         return self.field.level_type
 
-    def numeric_level(self, index_match=True, level=None, split=None):
+    def numeric_level(
+        self, index_match: bool = True, level: str | None = None, split: str | None = None
+    ):
         """
         Split the numeric level and unit associated with the level key.
 
@@ -352,9 +353,8 @@ class UPPData(specs.VarSpec):
         return lev_val, lev_unit
 
     @staticmethod
-    def opposite(values, **kwargs):
-        # pylint: disable=unused-argument
-        """Returns the opposite of input values"""
+    def opposite(values: DataArray, **kwargs):  # noqa: ARG004
+        """Returns the opposite of input values."""
 
         return -values
 
@@ -369,16 +369,16 @@ class UPPData(specs.VarSpec):
         return self.anl_dt + fh
 
     @abc.abstractmethod
-    def values(self, level=None, name=None, **kwargs):
+    def values(self, level: str | None = None, name: str | None = None, **kwargs):
         """Returns the values of a given variable."""
-        ...
 
     @staticmethod
-    def vertical_dim(field):
+    def vertical_dim(field: DataSet):
         """
-        Determine the vertical dimension of the variable by looking through
-        the field's dimensions for one that includes "lv". Return the first
-        matching instance.
+        Find the name of the vertical dimension.
+
+        Looking through the field's dimensions for one that includes "lv". Return the first matching
+        instance.
         """
 
         vert_dim = [dim for dim in field.dims if ("lv" in dim or "probability" in dim)]
@@ -392,11 +392,11 @@ class UPPData(specs.VarSpec):
 
         vspec = self.spec.get(self.short_name, {}).get(self.level)
         if not vspec:
-            raise errors.NoGraphicsDefinitionForVariable(self.short_name, self.level)
+            raise errors.NoGraphicsDefinitionForVariableError(self.short_name, self.level)
         return vspec
 
 
-class fieldData(UPPData):
+class FieldData(UPPData):
     """
     Class provides interface for accessing field (2D plan view) data from UPP in
     Grib2 format.
@@ -413,17 +413,16 @@ class fieldData(UPPData):
 
     """
 
-    def __init__(self, ds, level, short_name, **kwargs):
+    def __init__(self, ds: DataSet, level: str, short_name: str, **kwargs):
         super().__init__(ds, short_name, **kwargs)
 
         self.level = level
         self.contour_kwargs = kwargs.get("contour_kwargs", {})
         self.mem = kwargs.get("member")
 
-    def aviation_flight_rules(self, values, **kwargs):
-        # pylint: disable=unused-argument
+    def aviation_flight_rules(self, values: DataArray, **kwargs):  # noqa: ARG002
         """
-        Generates a field of Aviation Flight Rules from Ceil and Vis
+        Generates a field of Aviation Flight Rules from Ceil and Vis.
         """
 
         ceil = values.to_dataarray().squeeze()
@@ -438,13 +437,12 @@ class fieldData(UPPData):
 
         vis.close()
 
-        return xr.DataArray(flru)
+        return DataArray(flru)
 
     @property
     def cmap(self):
         """
-        Returns the LinearSegmentedColormap specified by the config key
-        "cmap"
+        The LinearSegmentedColormap specified by the config key 'cmap'.
         """
 
         return cm.get_cmap(self.vspec["cmap"])
@@ -466,14 +464,17 @@ class fieldData(UPPData):
             ret = self.__getattribute__(color_spec)
             if callable(ret):
                 return ret()
-            return ret
         except AttributeError:
             return color_spec
+        return ret
 
     @property
     def corners(self) -> list:
         """
-        Returns lat and lon of lower left (ll) and upper right(ur) corners:
+
+        Returns lat and lon of lower left (ll) and upper right(ur) corners.
+
+        Order:
                ll_lat, ur_lat, ll_lon, ur_lon
         """
 
@@ -487,17 +488,16 @@ class fieldData(UPPData):
 
         return ret
 
-    def fire_weather_index(self, values, **kwargs):
-        # pylint: disable=unused-argument
+    def fire_weather_index(self, values: DataArray, **kwargs):  # noqa: ARG002
         """
-        Generates a field of Fire Weather Index
+        Generates a field of Fire Weather Index.
 
         This method uses wrfprs data to find regions where
         weather conditions are most likely to lead to wildfires.
 
         """
 
-        def _load_field(level, short_name):
+        def _load_field(level: str, short_name: str):
             spec = cfgrib_spec(self.spec[short_name][level]["cfgrib"], self.model)
             ds = gribfile.GribFile(self.grib_path, spec).contents
             args = {
@@ -509,7 +509,7 @@ class fieldData(UPPData):
                 "spec": self.spec,
                 "grib_path": self.grib_path,
             }
-            return fieldData(**args).values(do_transform=False)
+            return FieldData(**args).values(do_transform=False)
 
         # Gather fields from the input
         veg = (
@@ -622,39 +622,33 @@ class fieldData(UPPData):
 
         return grid_info
 
-    def icing_adjust_trace(self, values, **kwargs):
-        # pylint: disable=unused-argument,no-self-use
-        """Changes the value of ICSEV trace from 4.0 to 0.5, to maintain ascending order"""
+    @staticmethod
+    def icing_adjust_trace(values: DataArray, **kwargs):  # noqa: ARG004
+        """Changes the value of ICSEV trace from 4.0 to 0.5, to maintain ascending order."""
 
-        vals = np.where(values == 4.0, 0.5, values)
+        return np.where(values == 4.0, 0.5, values)
 
-        return vals
-
-    def run_max(self, values, **kwargs):
+    @staticmethod
+    def run_max(values: DataArray, **kwargs):  # noqa: ARG004
         """Finds the max hourly value over all the forecast lead times available."""
-
-        # pylint: disable=unused-argument,no-self-use
 
         return values.max(dim="fcst_hr")
 
-    def run_min(self, values, **kwargs):
+    @staticmethod
+    def run_min(values: DataArray, **kwargs):  # noqa: ARG004
         """Finds the min hourly value over all the forecast lead times available."""
-
-        # pylint: disable=unused-argument,no-self-use
 
         return values.min(dim="fcst_hr")
 
-    def run_total(self, values, **kwargs):
+    @staticmethod
+    def run_total(values: DataArray, **kwargs):  # noqa: ARG004
         """Sums over all the forecast lead times available."""
-
-        # pylint: disable=unused-argument,no-self-use
 
         return values.sum(dim="fcst_hr")
 
-    def supercooled_liquid_water(self, values, **kwargs):
-        # pylint: disable=unused-argument
+    def supercooled_liquid_water(self, **kwargs):  # noqa: ARG002
         """
-        Generates a field of Supercooled Liquid Water
+        Generates a field of Supercooled Liquid Water.
 
         This method uses wrfnat data to find regions where
         cloud and rain moisture are in below-freezing temps.
@@ -729,10 +723,10 @@ class fieldData(UPPData):
         return self._data
 
     @data.setter
-    def data(self, value):
+    def data(self, value: DataSet):
         self._data = value
 
-    def values(self, level=None, name=None, **kwargs):
+    def values(self, level: str | None = None, name: str | None = None, **kwargs):
         """
         Returns the numpy array of values at the requested level for the
         variable after applying any unit conversion to the original data.
@@ -741,7 +735,7 @@ class fieldData(UPPData):
             name       the name of a field other than defined in self
             level      the desired level of the named field
 
-        Keyword Args:
+        kwargs:
             do_transform    bool flag. to call, or not, the transform specified
                             in specs (default: True)
             ncl_name        the NCL-assigned Grib2 name (default: '')
@@ -753,89 +747,42 @@ class fieldData(UPPData):
 
         level = level or self.level
         vals = self.ds
-
-        # one_lev = kwargs.get('one_lev', True)
-        # vertical_index = kwargs.get('vertical_index')
-
-        # ncl_name = kwargs.get('ncl_name', '')
-        # ncl_name = ncl_name.format(fhr=self.fhr, grid=self.grid_suffix)
+        spec = self.vspec
 
         do_transform = kwargs.get("do_transform", True)
 
-        if name is None:
-            # Use field and spec from the current object
-            field = self.field
-            spec = self.vspec
-
-        else:
+        if name is not None:
             # Get the spec dict and ncl_name for the given variable name
             spec = deepcopy(self.spec.get(name, {}).get(level, {}))
             if not spec and name is not None:
-                raise errors.NoGraphicsDefinitionForVariable(name, level)
+                raise errors.NoGraphicsDefinitionForVariableError(name, level)
             cfkeys = utils.cfgrib_spec(spec["cfgrib"], self.model)
             nlevel = utils.numeric_level(level=level, index_match=False)[0]
             level_info = any(
-                x
-                for x in utils.cfgrib_spec(spec["cfgrib"], self.model)
-                for l in ("level", "top", "bottom", "Surface")
-                if l in x
+                key
+                for keys in utils.cfgrib_spec(spec["cfgrib"], self.model)
+                for key in ("level", "top", "bottom", "Surface")
+                if key in keys
             )
             if nlevel and not level_info:
                 cfkeys["level"] = utils.numeric_level(level=level, index_match=False)[0]
             vals = self._get_field(cfkeys)
 
-        # lev = vertical_index
-        # vals = field
-        # if one_lev:
-
-        #    # Check if it's a 3D variable (lv in any dimension field)
-        #    dim_name = self.vertical_dim(field)
-
-        #    if dim_name: # Field has a vertical dimension
-
-        #        # Use vertical_index if provided in kwargs
-        #        lev = vertical_index if vertical_index is not None else \
-        #                self._get_level(field, level, spec)
-
-        #        if lev is None or dim_name is None:
-        #            print(f'ERROR: Could not find dim_name ({dim_name}) or' \
-        #                  f'lev {lev} for {vals}')
-        #            raise ValueError
-
-        #        try:
-        #            vals = vals.isel(**{dim_name: lev})
-        #        except:
-        #            print(f'Error for {vals.name} : {dim_name} {lev} \
-        #                    {level} {spec}')
-        #            raise
-
-        # if self.mem is not None:
-        #    vals = vals.isel(**{'ens_mem': self.mem})
-
-        ## Select a single forecast hour (only if there are many)
-        # if not spec.get('accumulate', False):
-        #    if 'fcst_hr' in vals.dims:
-        #        fcst_hr = 0 if self.ds.sizes['fcst_hr'] <= 1 else int(self.fhr)
-        #        vals = vals.sel(**{'fcst_hr': fcst_hr})
-
         transforms = spec.get("transform")
         if transforms and do_transform:
             vals = self.get_transform(transforms, vals)
 
-        if isinstance(vals, xr.Dataset):
+        if isinstance(vals, DataSet):
             return vals.to_dataarray().squeeze()
         return vals
 
     def vector_magnitude(
         self,
-        field1,
-        cfkeys=None,
-        field2_id=None,
-        level=None,
-        vertical_index=None,
-        **kwargs,
+        field1: DataSet,
+        cfkeys: dict | None = None,
+        field2_id: str | None = None,
+        **kwargs,  # noqa: ARG002
     ):
-        # pylint: disable=unused-argument
         """
         Returns the vector magnitude of two component vector fields. The
         input fields can be either NCL names (string) or full data fields. The
@@ -862,7 +809,7 @@ class fieldData(UPPData):
             "spec": self.spec,
             "grib_path": self.grib_path,
         }
-        field2 = fieldData(**args).ds
+        field2 = FieldData(**args).ds
 
         mag = conversions.magnitude(
             field1.to_dataarray().squeeze(), field2.to_dataarray().squeeze()
@@ -872,7 +819,7 @@ class fieldData(UPPData):
 
         return mag
 
-    def wind(self, level) -> [np.ndarray, np.ndarray]:
+    def wind(self, level: str) -> [np.ndarray, np.ndarray]:
         """
         Returns the u, v wind components as a list (length 2) of arrays.
 
@@ -888,8 +835,8 @@ class fieldData(UPPData):
         if not level:
             return False
 
-        # Create fieldData objects for u, v components
-        field_lambda = lambda ds, level, var: fieldData(
+        # Create FieldData objects for u, v components
+        field_lambda = lambda ds, level, var: FieldData(
             ds=ds,
             fhr=self.fhr,
             level=level,
@@ -900,7 +847,7 @@ class fieldData(UPPData):
         return [u, v]
 
 
-class profileData(UPPData):
+class ProfileData(UPPData):
     """
     Class provides methods for getting profiles from a specific lat/lon location
     from a grib file.
@@ -919,7 +866,7 @@ class profileData(UPPData):
 
     """
 
-    def __init__(self, ds, loc, short_name, **kwargs):
+    def __init__(self, ds: DataSet, loc: str, short_name: str, **kwargs):
         super().__init__(ds, short_name, **kwargs)
 
         # The first 31 columns are space delimted
@@ -939,7 +886,7 @@ class profileData(UPPData):
         if self.site_lon < 0:
             self.site_lon = self.site_lon + 360.0
 
-    def values(self, level=None, name=None, **kwargs):
+    def values(self, level: str | None = None, name: str | None = None, **kwargs):
         """
         Returns the numpy array of values at the object's x, y location for the
         requested variable. Transforms are performed in the child class.
@@ -949,7 +896,7 @@ class profileData(UPPData):
             level      the level of the alternate field to use, default='ua' for
                        upper air
 
-        Keyword Args:
+        kwargs:
             ncl_name         the NCL name of the variable to be retrieved
             one_lev          bool flag. if True, get the single level of the variable
             split            bool flag. if True, level string numbers are split
@@ -980,7 +927,7 @@ class profileData(UPPData):
         ncl_name = ncl_name.format(fhr=self.fhr, grid=self.grid_suffix)
 
         if not ncl_name:
-            raise errors.NoGraphicsDefinitionForVariable(
+            raise errors.NoGraphicsDefinitionForVariableError(
                 name,
                 "ua",
             )
@@ -990,8 +937,10 @@ class profileData(UPPData):
 
         profile = field[::]
         lev = 0
+        # 2D
         if len(profile.shape) == 2:
             profile = profile[x, y]
+        # 3D
         elif len(profile.shape) == 3:
             if one_lev:
                 lev = vertical_index
@@ -1002,13 +951,20 @@ class profileData(UPPData):
                 profile = profile[:, x, y]
         return profile
 
-    def vector_magnitude(self, field1, field2, level="ua", vertical_index=None, **kwargs):
+    def vector_magnitude(
+        self,
+        field1: DataSet,
+        field2: DataSet,
+        level: str = "ua",
+        vertical_index: int | None = None,
+        **kwargs,
+    ) -> DataArray:
         """
-        Returns the vector magnitude of two component vector profiles. The
-        input fields can be either NCL names (string) or full data fields.
+        The vector magnitude of two component vector profiles.
 
-        If no layer or level is provided, the default 'ua' will be used in
-        self.values.
+        The input fields can be either NCL names (string) or full data fields.
+
+        If no layer or level is provided, the default 'ua' will be used in self.values.
         """
 
         if isinstance(field1, str):

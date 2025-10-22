@@ -5,10 +5,12 @@ compbined with maps and skewts to provide the final product.
 """
 
 import gc
-import os
+from argparse import Namespace
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+from xarray import Dataset
 
 from adb_graphics.datahandler import gribdata, gribfile
 from adb_graphics.figures import maps, skewt
@@ -16,8 +18,9 @@ from adb_graphics.figures import maps, skewt
 AIRPORTS = "static/Airports_locs.txt"
 
 
-def add_obs_panel(ax, model_name, obs_file, proj_info, short_name, tile):
-    # pylint: disable=too-many-arguments
+def add_obs_panel(
+    ax: plt, model_name: str, obs_file: Path, proj_info: dict, short_name: str, tile: str
+):
     """
     Plot observation data provided by the obs_file
     path using the assigned projection.
@@ -25,7 +28,7 @@ def add_obs_panel(ax, model_name, obs_file, proj_info, short_name, tile):
 
     gribobs = gribfile.GribFile(filename=obs_file)
     ax.axis("on")
-    field = gribdata.fieldData(
+    field = gribdata.FieldData(
         ds=gribobs.contents,
         fhr=0,
         level="obs",
@@ -52,7 +55,16 @@ def add_obs_panel(ax, model_name, obs_file, proj_info, short_name, tile):
 
 
 def parallel_maps(
-    cla, fhr, grib_path, level, model, spec, variable, workdir, tile="full", dp2=None
+    cla: Namespace,
+    fhr: int,
+    grib_path: Path,
+    level: str,
+    model: str,
+    spec: dict,
+    variable: str,
+    workdir: Path,
+    tile: str = "full",
+    dp2: Path | None = None,
 ):
     # pylint: disable=too-many-arguments,too-many-locals
     # pylint: disable=too-many-branches,too-many-statements
@@ -104,9 +116,11 @@ def parallel_maps(
                 continue
 
             # Shenanigans to match ensemble member to panel index
-            mem = 0 if index == 4 else index
-            mem = mem if mem < 4 else index - 1
-            mem = mem if mem < 8 else index - 2
+            center_left = 4
+            lower_left = 8
+            mem = 0 if index == center_left else index
+            mem = mem if mem < center_left else index - 1
+            mem = mem if mem < lower_left else index - 2
 
         # Create an object that holds all the fields for this map
         map_fields = maps.MapFields(
@@ -145,7 +159,7 @@ def parallel_maps(
             if index == 0:
                 dm.title()
                 dm.add_logo(current_ax)
-            elif index == 8:
+            elif index == lower_left:
                 if spec.get("include_obs", False) and cla.obs_file_path:
                     # Add observation panel to lower left. Currently only
                     # supported for composite reflectivity.
@@ -153,7 +167,7 @@ def parallel_maps(
                         ax=axes[8],
                         model_name=cla.model_name,
                         obs_file=cla.obs_file_path,
-                        proj_info=field.grid_info(),
+                        proj_info=map_fields.shaded.grid_info(),
                         short_name=variable,
                         tile=tile,
                     )
@@ -165,7 +179,7 @@ def parallel_maps(
     # Build the output path
     png_file = f"{variable}_{tile}_{level}_f{fhr:03d}.png"
     png_file = png_file.replace("__", "_")
-    png_path = os.path.join(workdir, png_file)
+    png_path = workdir / png_file
 
     print("*" * 120)
     print(f"Creating image file: {png_path}")
@@ -192,9 +206,11 @@ def parallel_maps(
     gc.collect()
 
 
-def parallel_skewt(cla, fhr, ds, site, workdir):
+def parallel_skewt(cla: Namespace, fhr: int, ds: Dataset, site: str, workdir: Path):
     """
-    Function that creates a single SkewT plot. Can be used in parallel.
+    Function that creates a single SkewT plot.
+
+    Can be used in parallel.
     Input:
 
       cla        command line arguments Namespace object
@@ -214,8 +230,7 @@ def parallel_skewt(cla, fhr, ds, site, workdir):
     )
     skew.create_diagram()
     outfile = f"{skew.site_code}_{skew.site_num}_skewt_f{fhr:03d}.png"
-    png_path = os.path.join(workdir, outfile)
-
+    png_path = workdir / outfile
     print("*" * 80)
     print(f"Creating image file: {png_path}")
     print("*" * 80)
@@ -231,7 +246,7 @@ def parallel_skewt(cla, fhr, ds, site, workdir):
 
     start_time = cla.start_time.strftime("%Y%m%d%H")
     csvfile = f"{skew.site_code}.{skew.site_num}.skewt.{start_time}_f{fhr:03d}.csv"
-    csv_path = os.path.join(workdir, csvfile)
+    csv_path = workdir / csvfile
     print("*" * 80)
     print(f"Creating csv file: {csv_path}")
     print("*" * 80)
@@ -240,16 +255,13 @@ def parallel_skewt(cla, fhr, ds, site, workdir):
     plt.close()
 
 
-def set_figure(model_name, graphic_type, tile):
+def set_figure(model_name: str, graphic_type: str, tile: str):
     """
     Create the figure and subplots appropriate for the model and
     graphics type. Return the figure handle and list of axes.
     """
 
-    if model_name == "HRRR-HI":
-        inches = 12.2
-    else:
-        inches = 10
+    inches = 12.2 if model_name == "HRRR-HI" else 10
 
     # Settings for a default single map
     x_aspect = 1
