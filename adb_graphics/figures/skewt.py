@@ -4,9 +4,9 @@ The module the contains the SkewTDiagram class responsible for creating a Skew-T
 Log-P diagram using MetPy.
 """
 
-from collections import OrderedDict
 from functools import cached_property
 from pathlib import Path
+from typing import TYPE_CHECKING, TypedDict
 
 import matplotlib.font_manager as fm
 import matplotlib.lines as mlines
@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import metpy.calc as mpcalc
 import numpy as np
 import pandas as pd
+from matplotlib.axes import Axes
 from matplotlib.lines import Line2D
 from matplotlib.ticker import FixedLocator
 from metpy.plots import Hodograph, SkewT
@@ -23,6 +24,17 @@ from xarray import Dataset
 
 from adb_graphics import errors, utils
 from adb_graphics.datahandler import gribdata
+
+if TYPE_CHECKING:
+    from pint import UnitRegistry
+
+
+class HydroPlotSettings(TypedDict):
+    color: str
+    label: str
+    marker: str
+    scale: float
+    units: str
 
 
 class SkewTDiagram(gribdata.ProfileData):
@@ -59,47 +71,46 @@ class SkewTDiagram(gribdata.ProfileData):
         self.max_plev = kwargs.get("max_plev", 0)
         self.model_name = kwargs.get("model_name", "Analysis")
 
-    def _add_hydrometeors(self, hydro_subplot: plt):
+    def _add_hydrometeors(self, hydro_subplot: Axes):
         # pylint: disable=too-many-locals
-        mixing_ratios = OrderedDict(
-            {
-                "clwmr": {
-                    "color": "blue",
-                    "label": "CWAT",
-                    "marker": "s",
-                    "scale": 1.0,
-                    "units": "g/m2",
-                },
-                "icmr": {
-                    "color": "red",
-                    "label": "CICE",
-                    "marker": "^",
-                    "scale": 10.0,
-                    "units": "g/m2",
-                },
-                "rwmr": {
-                    "color": "cyan",
-                    "label": "RAIN",
-                    "marker": "o",
-                    "scale": 1.0,
-                    "units": "g/m2",
-                },
-                "snmr": {
-                    "color": "purple",
-                    "label": "SNOW",
-                    "marker": "*",
-                    "scale": 1.0,
-                    "units": "g/m2",
-                },
-                "grle": {
-                    "color": "orange",
-                    "label": "GRPL",
-                    "marker": "D",
-                    "scale": 1.0,
-                    "units": "g/m2",
-                },
-            }
-        )
+
+        mixing_ratios: dict[str, HydroPlotSettings] = {
+            "clwmr": {
+                "color": "blue",
+                "label": "CWAT",
+                "marker": "s",
+                "scale": 1.0,
+                "units": "g/m2",
+            },
+            "icmr": {
+                "color": "red",
+                "label": "CICE",
+                "marker": "^",
+                "scale": 10.0,
+                "units": "g/m2",
+            },
+            "rwmr": {
+                "color": "cyan",
+                "label": "RAIN",
+                "marker": "o",
+                "scale": 1.0,
+                "units": "g/m2",
+            },
+            "snmr": {
+                "color": "purple",
+                "label": "SNOW",
+                "marker": "*",
+                "scale": 1.0,
+                "units": "g/m2",
+            },
+            "grle": {
+                "color": "orange",
+                "label": "GRPL",
+                "marker": "D",
+                "scale": 1.0,
+                "units": "g/m2",
+            },
+        }
 
         profiles = self.atmo_profiles  # dictionary
         pres = profiles.get("pres").get("data")
@@ -119,11 +130,11 @@ class SkewTDiagram(gribdata.ProfileData):
             # Get the profile values
             scale = settings.get("scale")
             try:
-                profile = np.asarray(self.values(name=mixr)) * 1000.0 * scale
+                profile = self.values(name=mixr) * 1000.0 * scale
             except errors.GribReadError:
                 print(f"missing {mixr} for hydrometeor plot, skipping that field.")
                 continue
-            mixr_total = 0.0
+            mixr_total: units = 0.0
             for n in range(nlevs):
                 if n == 0:
                     pres_layer = 2 * (pres_sfc - pres[n])  # layer depth
@@ -141,7 +152,7 @@ class SkewTDiagram(gribdata.ProfileData):
             hydro_subplot.plot(
                 profile,
                 pres,
-                settings.get("color"),
+                settings.get("color", ""),
                 fillstyle="none",
                 linewidth=0.5,
                 marker=settings.get("marker"),
@@ -151,7 +162,7 @@ class SkewTDiagram(gribdata.ProfileData):
                 hydro_subplot.plot(
                     profile[temp.magnitude < freezing_f],
                     pres[temp.magnitude < freezing_f],
-                    settings.get("color"),
+                    settings.get("color", ""),
                     fillstyle="full",
                     linewidth=0.5,
                     marker=settings.get("marker"),
@@ -217,7 +228,7 @@ class SkewTDiagram(gribdata.ProfileData):
             verticalalignment="top",
         )
 
-    def _add_thermo_inset(self, skew: plt):
+    def _add_thermo_inset(self, skew: SkewT):
         # Build up the text that goes in the thermo-dyniamics box
         lines = []
         for name, items in self.thermo_variables.items():
@@ -257,39 +268,37 @@ class SkewTDiagram(gribdata.ProfileData):
         differs from the requirements of other graphics units/transforms.
         """
 
-        # OrderedDict because we need to get pressure profile first. Entries in
+        # We need to get pressure profile first. Entries in
         # the dict are as follows:
         #
         #   Variable short name:   consistent with default_specs.yml
         #      transform:          units string to pass to MetPy's to() function
         #      units:              the end unit of the field (after transform,
         #                          if applicable).
-        atmo_vars = OrderedDict(
-            {
-                "pres": {
-                    "transform": "hectoPa",
-                    "units": units.Pa,
-                },
-                "gh": {
-                    "units": units.gpm,
-                },
-                "sphum": {
-                    "units": units.dimensionless,
-                },
-                "temp": {
-                    "transform": "degF",
-                    "units": units.degK,
-                },
-                "u": {
-                    "transform": "knots",
-                    "units": units.meter_per_second,
-                },
-                "v": {
-                    "transform": "knots",
-                    "units": units.meter_per_second,
-                },
-            }
-        )
+        atmo_vars = {
+            "pres": {
+                "transform": "hectoPa",
+                "units": units.Pa,
+            },
+            "gh": {
+                "units": units.gpm,
+            },
+            "sphum": {
+                "units": units.dimensionless,
+            },
+            "temp": {
+                "transform": "degF",
+                "units": units.degK,
+            },
+            "u": {
+                "transform": "knots",
+                "units": units.meter_per_second,
+            },
+            "v": {
+                "transform": "knots",
+                "units": units.meter_per_second,
+            },
+        }
 
         top = None
         for var, items in atmo_vars.items():
@@ -330,7 +339,7 @@ class SkewTDiagram(gribdata.ProfileData):
 
         self._write_profile(csv_path)
 
-    def _plot_hodograph(self, skew: plt):
+    def _plot_hodograph(self, skew: SkewT):
         # Create an array that indicates which layer (10-3, 3-1, 0-1 km) the
         # wind belongs to. The array, agl, will be set to the height
         # corresponding to the top of the layer. The resulting array will look
@@ -341,7 +350,8 @@ class SkewTDiagram(gribdata.ProfileData):
         # Where the values above 10 km are unchanged, and there are three levels
         # in each of the 3 layers of interest.
         #
-        agl = np.copy(self.atmo_profiles.get("gh", {}).get("data")).to("km")
+        data_copy: units = np.copy(self.atmo_profiles.get("gh", {}).get("data"))
+        agl = data_copy.to("km")
 
         # Retrieve the wind data profiles
         u_wind = self.atmo_profiles.get("u", {}).get("data")
@@ -353,7 +363,7 @@ class SkewTDiagram(gribdata.ProfileData):
         h = Hodograph(ax, component_range=80.0)
         h.add_grid(increment=20, linewidth=0.5)
 
-        intervals = [0, 1, 3, 10] * agl.units
+        intervals: UnitRegistry = np.array([0, 1, 3, 10]) * agl.units
         colors = ["xkcd:salmon", "xkcd:aquamarine", "xkcd:navy blue"]
         line_width = 1.5
 
@@ -370,12 +380,12 @@ class SkewTDiagram(gribdata.ProfileData):
         # Local function to create a proxy line object for creating a legend on
         # a LineCollection returned from plot_colormapped. Using lines and
         # colors from outside scope.
-        def make_proxy(zval: int, idx: int | None = None, **kwargs):
+        def make_proxy(zval: int, idx: int):
             color = colors[idx] if idx < len(colors) else lines.cmap(zval - 1)
-            return Line2D([0, 1], [0, 1], color=color, linewidth=line_width, **kwargs)
+            return Line2D([0, 1], [0, 1], color=color, linewidth=line_width)
 
         # Make a list of proxies
-        proxies = [make_proxy(item, idx=i) for i, item in enumerate(intervals.magnitude)]
+        proxies = [make_proxy(item, i) for i, item in enumerate(np.asarray(intervals.magnitude))]
 
         # Draw the legend
         ax.legend(
@@ -386,7 +396,7 @@ class SkewTDiagram(gribdata.ProfileData):
         )
 
     @staticmethod
-    def _plot_labels(skew: plt):
+    def _plot_labels(skew: SkewT):
         skew.ax.set_xlabel("Temperature (F)")
         skew.ax.set_ylabel("Pressure (hPa)")
 
@@ -417,7 +427,7 @@ class SkewTDiagram(gribdata.ProfileData):
 
         profile.to_csv(csv_path, index=False, float_format="%10.2f")
 
-    def _plot_profile(self, skew: plt):
+    def _plot_profile(self, skew: SkewT):
         profiles = self.atmo_profiles  # dictionary
         pres = profiles.get("pres").get("data")
         temp = profiles.get("temp").get("data")
@@ -441,7 +451,7 @@ class SkewTDiagram(gribdata.ProfileData):
             linewidth=1.2,
         )
 
-    def _plot_wind_barbs(self, skew: plt):
+    def _plot_wind_barbs(self, skew: SkewT):
         # Pressure vs wind
         skew.plot_barbs(
             self.atmo_profiles.get("pres", {}).get("data"),
@@ -556,20 +566,17 @@ class SkewTDiagram(gribdata.ProfileData):
     @cached_property
     def thermo_variables(self):
         """
-        Return an ordered dictionary of thermodynamic variables needed for the skewT.
-        Ordered because we want to print these values in this order on the SkewT
-        diagram.
-        The return dictionary contains a 'data' entry for each variable that
-        includes the value of the metric.
+        Return a dictionary of thermodynamic variables needed for the skewT.
+        Ensure it's ordered because we want to print these values in this order on the SkewT
+        diagram.  The return dictionary contains a 'data' entry for each variable that includes the
+        value of the metric.
 
-        Variables' transforms and units are handled by default specs in much the
-        same way as in FieldData class since these are not used by MetPy
-        explictly.
+        Variables' transforms and units are handled by default specs in much the same way as in
+        FieldData class since these are not used by MetPy explictly.
         """
 
-        # OrderedDict so that we get the thermodynamic variables printed in the
-        # same order every time in the resulting SkewT inset. The fields
-        # include:
+        # We want the thermodynamic variables printed in the same order every time in the resulting
+        # SkewT inset. The fields include:
         #
         #    Variable short name:     can be consistent with default_specs.yml.
         #                             If not, must provide level and variable
@@ -581,59 +588,57 @@ class SkewTDiagram(gribdata.ProfileData):
         #       decimals:             (optional) number of decimal places to
         #                             include when formatting output. Defaults
         #                             to 0 (integer).
-        thermo = OrderedDict(
-            {
-                "cape": {  # Convective available potential energy
-                    "level": "sfc",
-                },
-                "cin": {  # Convective inhibition
-                    "level": "sfc",
-                },
-                "mucape": {  # Most Unstable CAPE
-                    "level": "mu",
-                    "variable": "cape",
-                },
-                "mucin": {  # CIN from MUCAPE level
-                    "level": "mu",
-                    "variable": "cin",
-                },
-                "li": {  # Lifted Index
-                    "decimals": 1,
-                    "level": "sfc",
-                },
-                "bli": {  # Best Lifted Index
-                    "decimals": 1,
-                    "level": "best",
-                    "variable": "li",
-                },
-                "lcl": {  # Lifted Condensation Level
-                },
-                "lpl": {  # Lifted Parcel Level
-                },
-                "srh03": {  # 0-3 km Storm relative helicity
-                    "level": "sr03",
-                    "variable": "hlcy",
-                },
-                "srh01": {  # 0-1 km Storm relative helicity
-                    "level": "sr01",
-                    "variable": "hlcy",
-                },
-                "shr06": {  # 0-6 km Shear
-                    "level": "06km",
-                    "variable": "shear",
-                },
-                "shr01": {  # 0-1 km Shear
-                    "level": "01km",
-                    "variable": "shear",
-                },
-                "cell": {  # Cell motion
-                },
-                "pwtr": {  # Precipitable water
-                    "decimals": 1,
-                    "level": "sfc",
-                },
-            }
-        )
+        thermo: dict = {
+            "cape": {  # Convective available potential energy
+                "level": "sfc",
+            },
+            "cin": {  # Convective inhibition
+                "level": "sfc",
+            },
+            "mucape": {  # Most Unstable CAPE
+                "level": "mu",
+                "variable": "cape",
+            },
+            "mucin": {  # CIN from MUCAPE level
+                "level": "mu",
+                "variable": "cin",
+            },
+            "li": {  # Lifted Index
+                "decimals": 1,
+                "level": "sfc",
+            },
+            "bli": {  # Best Lifted Index
+                "decimals": 1,
+                "level": "best",
+                "variable": "li",
+            },
+            "lcl": {  # Lifted Condensation Level
+            },
+            "lpl": {  # Lifted Parcel Level
+            },
+            "srh03": {  # 0-3 km Storm relative helicity
+                "level": "sr03",
+                "variable": "hlcy",
+            },
+            "srh01": {  # 0-1 km Storm relative helicity
+                "level": "sr01",
+                "variable": "hlcy",
+            },
+            "shr06": {  # 0-6 km Shear
+                "level": "06km",
+                "variable": "shear",
+            },
+            "shr01": {  # 0-1 km Shear
+                "level": "01km",
+                "variable": "shear",
+            },
+            "cell": {  # Cell motion
+            },
+            "pwtr": {  # Precipitable water
+                "decimals": 1,
+                "level": "sfc",
+            },
+        }
 
         for var, items in thermo.items():
             varname = items.get("variable", var)

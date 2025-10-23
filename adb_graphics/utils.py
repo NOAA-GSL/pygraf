@@ -16,6 +16,7 @@ from math import atan2, degrees
 from multiprocessing import Process
 from pathlib import Path
 from string import ascii_letters, digits
+from typing import Any
 
 import numpy as np
 import yaml
@@ -124,7 +125,7 @@ def get_func(val: str):
     return getattr(module, fun_name)
 
 
-def join_ranges(loader: str, node: str) -> np.ndarray:  # noqa: ARG001
+def join_ranges(loader: yaml.SafeLoader, node: yaml.Node) -> np.ndarray:  # noqa: ARG001
     """
     Merge two or more different ranges into a single array for color bar clevs.
 
@@ -227,7 +228,7 @@ def label_line(ax: list, label: list, segment: list, **kwargs):
     ax.text(x, y, label, rotation=trans_angle, **kwargs)
 
 
-def label_lines(ax: list, lines: list, labels: list[str], offset: float = 0, **kwargs):
+def label_lines(ax: list, lines: Any, labels: np.ndarray, offset: float = 0, **kwargs):
     """
     Plots labels on a set of lines from SkewT.
 

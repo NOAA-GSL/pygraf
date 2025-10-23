@@ -18,6 +18,8 @@ import matplotlib.offsetbox as mpob
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.axes import Axes
+from matplotlib.contour import QuadContourSet
 from mpl_toolkits.basemap import Basemap, shiftgrid
 
 from adb_graphics.datahandler import gribdata, gribfile
@@ -37,8 +39,7 @@ FULL_TILES = [
 # TILE_DEFS is a dict of dicts with predefined tiles specifying the corners of the grid
 #     to be plotted, and the stride and length of the wind barbs.
 # Order for corners: [lower left lat, upper right lat, lower left lon, upper right lon]
-
-TILE_DEFS = {
+TILE_DEFS: dict = {
     "NC": {"corners": [36, 51, -109, -85], "stride": 10, "length": 4},
     "NE": {"corners": [36, 48, -91, -62], "stride": 10, "length": 4},
     "NW": {"corners": [35, 52, -126, -102], "stride": 10, "length": 4},
@@ -131,14 +132,18 @@ class MapFields:
         self.fields_spec = deepcopy(fields_spec)
         self.level = level
         self.map_type = map_type
-        self.model = kwargs.get("model")
+        self.model = kwargs.get("model", "")
         self.name = name
         self.tile = kwargs.get("tile", "full")
 
         self.map_spec = deepcopy(self.fields_spec[self.name][self.level])
         self.set_level(self.level, self.map_spec)
         # Required if map_type is "diff"
-        self.grib_path2 = kwargs.get("grib_path2")
+        if map_type == "diff":
+            self.grib_path2: Path | str = kwargs.get("grib_path2", "")
+            if not self.grib_path2:
+                msg = "Diff map requires a second grib path. Provide grib_path2 argument!"
+                raise ValueError(msg)
 
     def set_level(self, level: str, spec: dict):
         nlevel, _ = numeric_level(level=level, index_match=False)
@@ -284,10 +289,10 @@ class Map:
 
     """
 
-    def __init__(self, airport_fn: Path, ax: plt, **kwargs):
+    def __init__(self, airport_fn: Path, ax: Axes, **kwargs):
         self.ax = ax
         self.grid_info = kwargs.get("grid_info", {})
-        self.model = kwargs.get("model")
+        self.model = kwargs.get("model", "")
         self.plot_airports = kwargs.get("plot_airports", True)
         self.tile = kwargs.get("tile", "full")
         self.airports = self.load_airports(airport_fn)
@@ -456,7 +461,7 @@ class DataMap:
 
     """
 
-    def __init__(self, map_fields: MapFields, map_: plt, model_name: str | None = None, **kwargs):  # noqa: ARG002
+    def __init__(self, map_fields: MapFields, map_: Map, model_name: str | None = None, **kwargs):  # noqa: ARG002
         self.field = map_fields.shaded
         self.contour_fields = map_fields.contours
         self.hatch_fields = map_fields.hatches
@@ -469,7 +474,7 @@ class DataMap:
         return self.map_fields.wind_fields(level)
 
     @staticmethod
-    def add_logo(ax: plt):
+    def add_logo(ax: Axes):
         """Puts the NOAA logo at the bottom left of the matplotlib axes."""
 
         logo = mpimg.imread("static/noaa-logo-50x50.png")
@@ -485,7 +490,7 @@ class DataMap:
 
         ax.add_artist(ab)
 
-    def _colorbar(self, cc: plt, ax: plt):
+    def _colorbar(self, cc: QuadContourSet, ax: Axes):
         """
         Plot the colorbar for the contourf field.
         If ticks is set to zero, use a user-defined list of clevs from default_specs.
@@ -514,13 +519,13 @@ class DataMap:
         )
 
         if self.field.short_name == "flru":
-            ticks = [label.rjust(30) for label in ["VFR", "MVFR", "IFR", "LIFR", ""]]
+            tick_labels = [label.rjust(30) for label in ["VFR", "MVFR", "IFR", "LIFR", ""]]
 
         # this step is done to allow proper order of icing severity levels (trace before light)
         if self.field.short_name == "icsev":
-            ticks = [label.rjust(30) for label in ["TRACE", "LIGHT", "MODERATE", "HEAVY", ""]]
+            tick_labels = [label.rjust(30) for label in ["TRACE", "LIGHT", "MODERATE", "HEAVY", ""]]
 
-        cbar.ax.set_xticklabels(ticks, fontsize=12)
+        cbar.ax.set_xticklabels(tick_labels, fontsize=12)
 
     def draw(self, show: bool = False):
         """
@@ -593,7 +598,7 @@ class DataMap:
 
         return cf
 
-    def _draw_contours(self, ax: plt, not_labeled: bool):
+    def _draw_contours(self, ax: Axes, not_labeled: list[str]):
         """Draw the contour fields requested."""
 
         model_name = self.model_name
@@ -632,7 +637,7 @@ class DataMap:
                             {self.field.level}"
                     )
 
-    def _draw_scatter(self, ax: plt):
+    def _draw_scatter(self, ax: Axes):
         """Plot dots at locations on the map that meet a threshold."""
 
         field = self.field
@@ -667,7 +672,7 @@ class DataMap:
             **field.contour_kwargs,
         )
 
-    def _draw_field(self, ax: plt, field: str, func: Callable, **kwargs):
+    def _draw_field(self, ax: Axes, field: gribdata.FieldData, func: Callable, **kwargs):
         """
         Internal implementation that calls a matplotlib function.
 
@@ -713,7 +718,7 @@ class DataMap:
             print(f"CLOSE ERROR: {field.short_name} {field.level}")
         return ret
 
-    def _draw_field_values(self, ax: plt):
+    def _draw_field_values(self, ax: Axes):
         """Add the text value of the field at airport locations."""
         annotate_decimal = self.field.vspec.get("annotate_decimal", 0)
         lats = self.map.airports[:, 0]
@@ -739,7 +744,7 @@ class DataMap:
                     )
         data_values.close()
 
-    def _draw_hatches(self, ax: plt):
+    def _draw_hatches(self, ax: Axes):
         """Draw the hatched regions requested."""
 
         # Levels should be included in the settings dict here since they don't
@@ -775,7 +780,7 @@ class DataMap:
         if self.field.short_name == "ptyp":
             plt.legend(handles=handles, loc=[0.25, 0.03])
 
-    def _set_overlay_string(self):
+    def _set_overlay_string(self) -> str:
         """
         Creates the main title of the plot with select hatched and
         contoured fields defined.
@@ -791,23 +796,23 @@ class DataMap:
             cf = self.hatch_fields[0]
             not_labeled.extend([h.short_name for h in self.hatch_fields])
             if not any(list(set(cf.short_name).intersection(["pres"]))):
-                title = cf.vspec.get("title", cf.field.long_name)
-                contoured.append(f"{title} ({cf.units}, hatched)")
+                user_title = cf.vspec.get("title", cf.field.long_name)
+                contoured.append(f"{user_title} ({cf.units}, hatched)")
 
         # Add descriptor string for the important contoured fields
         if self.contour_fields:
             for cf in self.contour_fields:
                 if cf.short_name not in not_labeled:
-                    title = cf.vspec.get("title", cf.field.long_name)
-                    title = title.replace("Geopotential", "Geop.")
-                    contoured.append(f"{title}")
+                    user_title = cf.vspec.get("title", cf.field.long_name)
+                    user_title = user_title.replace("Geopotential", "Geop.")
+                    contoured.append(f"{user_title}")
                     contoured_units.append(f"{cf.units}")
 
-        contoured = "\n".join(contoured)  # Make 'contoured' a string with linefeeds
+        title = "\n".join(contoured)  # Make 'contoured' a multioline string
         if contoured_units:
-            contoured = f"{contoured} ({', '.join(contoured_units)}, contoured)"
+            title = f"{title} ({', '.join(contoured_units)}, contoured)"
 
-        return contoured
+        return title
 
     def _title(self):
         """Draw the title for a map."""
@@ -885,6 +890,8 @@ class DataMap:
                 u, x = shiftgrid(180.0, u, x, start=False)
                 v, savex = shiftgrid(180.0, v, savex, start=False)
             y, x = np.meshgrid(y, x, sparse=False, indexing="ij")
+        mu: np.ma.MaskedArray
+        mv: np.ma.MaskedArray
         mu, mv = [np.ma.masked_array(c, mask=mask) for c in [u, v]]
 
         self.map.m.barbs(
@@ -916,7 +923,7 @@ class DiffMap(DataMap):
     and will not plot overlays and such.
     """
 
-    def _colorbar(self, cc: plt, ax: plt):
+    def _colorbar(self, cc: QuadContourSet, ax: Axes):
         """Set the colorbar for a difference field."""
 
         plt.colorbar(
@@ -927,13 +934,16 @@ class DiffMap(DataMap):
             shrink=1.0,
         )
 
-    def _draw_panel(self):
+    def _draw_panel(self, wind_barbs: bool = False):
         """Draw a map of the difference field."""
 
         ax = self.map.ax
 
         # Draw a map and add the shaded field
         self.map.draw()
+
+        if wind_barbs:
+            print("Wind barbs are not drawn for diff plots")
 
         # The number of levels (nlev) here, should be the same number as is used
         # in the linspace call in self._eq_contours. 21 seems reasonable, but is
@@ -995,7 +1005,7 @@ class MultiPanelDataMap(DataMap):
     """
 
     def __init__(
-        self, map_fields: MapFields, map_: plt, member: str, model_name: str | None = None, **kwargs
+        self, map_fields: MapFields, map_: Map, member: str, model_name: str | None = None, **kwargs
     ):
         super().__init__(map_fields, map_, model_name=model_name)
 
@@ -1015,7 +1025,7 @@ class MultiPanelDataMap(DataMap):
         # Finish with the colorbar on the last panel only
         # Plot it on the full figure scale.
         if self.last_panel:
-            cax = plt.axes([0.0, 0.0, 1.0, 0.2])
+            cax = plt.axes((0.0, 0.0, 1.0, 0.2))
             self._colorbar(ax=cax, cc=cf)
             cax.axis("off")
 

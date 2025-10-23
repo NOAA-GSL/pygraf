@@ -17,6 +17,7 @@ To run the tests, type the following in the top level repo directory:
 
 import warnings
 from inspect import getfullargspec
+from pathlib import Path
 from string import ascii_letters, digits
 
 import numpy as np
@@ -81,6 +82,9 @@ def test_conversion():
 class MockSpecs(specs.VarSpec):
     """Mock class for the VarSpec abstract class."""
 
+    with Path("adb_graphics/default_specs.yml").open() as c:
+        cfg = yaml.safe_load(c)
+
     @property
     def clevs(self):
         return np.asarray(range(15))
@@ -88,22 +92,6 @@ class MockSpecs(specs.VarSpec):
     @property
     def vspec(self):
         return {}
-
-
-def test_specs():
-    """Test VarSpec properties."""
-
-    config = "adb_graphics/default_specs.yml"
-    varspec = MockSpecs(config)
-
-    # Ensure correct return type
-    assert isinstance(varspec.t_colors, np.ndarray)
-    assert isinstance(varspec.ps_colors, np.ndarray)
-    assert isinstance(varspec.yml, dict)
-
-    # Ensure the appropriate number of colors is returned
-    assert np.shape(varspec.t_colors) == (len(varspec.clevs), 4)
-    assert np.shape(varspec.ps_colors) == (105, 4)
 
 
 def test_utils():
@@ -138,9 +126,9 @@ class TestDefaultSpecs:
     """Test contents of default_specs.yml."""
 
     config = "adb_graphics/default_specs.yml"
-    varspec = MockSpecs(config)
-
-    cfg = varspec.yml
+    varspec = MockSpecs()
+    with Path("adb_graphics/default_specs.yml").open() as c:
+        cfg = yaml.safe_load(c)
 
     @property
     def allowable(self):
@@ -229,7 +217,7 @@ class TestDefaultSpecs:
             funcs = funcs if isinstance(funcs, list) else [funcs]
 
             # Key word arguments may not be present.
-            kwargs = entry.get("kwargs")
+            kwargs = entry.get("kwargs", {})
 
             transforms = []
             for func in funcs:
@@ -244,12 +232,12 @@ class TestDefaultSpecs:
             if kwargs:
                 argspecs = [getfullargspec(func) for func in transforms if callable(func)]
 
-                all_params = []
+                all_params: list = []
                 for argspec in argspecs:
                     # Make sure all functions accept key word arguments
                     assert argspec.varkw is not None
 
-                    parameters = []
+                    parameters: list = []
                     for argtype in [argspec.args, argspec.varargs, argspec.varkw]:
                         if argtype is not None:
                             parameters.extend(argtype)

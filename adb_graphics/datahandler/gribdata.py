@@ -726,7 +726,7 @@ class FieldData(UPPData):
     def data(self, value: DataSet):
         self._data = value
 
-    def values(self, level: str | None = None, name: str | None = None, **kwargs):
+    def values(self, level: str | None = None, name: str | None = None, **kwargs) -> DataArray:
         """
         Returns the numpy array of values at the requested level for the
         variable after applying any unit conversion to the original data.
