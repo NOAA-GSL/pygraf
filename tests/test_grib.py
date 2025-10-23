@@ -15,8 +15,8 @@ DATAARRAY = xr.core.dataarray.DataArray
 def test_UPPData(natfile, prsfile):
     """Test the UPPData class methods on both types of input files."""
 
-    nat_ds = gribfile.GribFile(natfile)
-    prs_ds = gribfile.GribFile(prsfile)
+    nat_ds = gribfile.GribFile(natfile, var_config={})
+    prs_ds = gribfile.GribFile(prsfile, var_config={})
 
     class UPP(gribdata.UPPData):
         """Test class needed to define the values as an abstract class."""
@@ -24,8 +24,8 @@ def test_UPPData(natfile, prsfile):
         def values(self, level=None, name=None, **kwargs):  # noqa: ARG002
             return 1
 
-    upp_nat = UPP(nat_ds.contents, fhr=2, filetype="nat", short_name="temp")
-    upp_prs = UPP(prs_ds.contents, fhr=2, short_name="temp")
+    upp_nat = UPP(nat_ds.contents, fhr=2, filetype="nat", short_name="temp", spec={})
+    upp_prs = UPP(prs_ds.contents, fhr=2, short_name="temp", spec={})
 
     cycle = datetime(2025, 10, 2, 17)
 
@@ -33,12 +33,11 @@ def test_UPPData(natfile, prsfile):
     for upp in [upp_nat, upp_prs]:
         assert isinstance(upp.anl_dt, datetime)
         assert isinstance(upp.clevs, np.ndarray)
-        assert isinstance(upp.date_to_str(cycle, str))
+        assert isinstance(upp.date_to_str(cycle), str)
         assert isinstance(upp.fhr, str)
         assert isinstance(upp.field, DATAARRAY)
         assert isinstance(upp.latlons(), list)
         assert isinstance(upp.lev_descriptor, str)
-        assert isinstance(upp.ncl_name(upp.vspec), str)
         assert isinstance(upp.numeric_level(), tuple)
         assert isinstance(upp.spec, dict)
         assert isinstance(upp.valid_dt, datetime)
@@ -51,7 +50,7 @@ def test_UPPData(natfile, prsfile):
 def test_FieldData(prsfile):
     """Test the FieldData class methods on a prs file."""
 
-    prs_ds = gribfile.GribFile(prsfile)
+    prs_ds = gribfile.GribFile(prsfile, var_config={})
     field = gribdata.FieldData(prs_ds.contents, fhr=2, level="500mb", short_name="temp")
 
     assert isinstance(field.cmap, mcolors.Colormap)
@@ -98,7 +97,7 @@ def test_FieldData(prsfile):
 def test_profile_data(natfile: Path):
     """Test the ProfileData class methods on a nat file."""
 
-    nat_ds = gribfile.GribFile(natfile)
+    nat_ds = gribfile.GribFile(natfile, var_config={})
     loc = " BNA   9999 99999  36.12  86.69  597 Nashville, TN\n"
     profile = gribdata.ProfileData(
         nat_ds.contents,

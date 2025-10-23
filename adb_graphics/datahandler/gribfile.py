@@ -39,7 +39,13 @@ class GribFiles:
     forecast hours.
     """
 
-    def __init__(self, coord_dims: dict[str, list[int]], filenames: dict, filetype: str, **kwargs):
+    def __init__(
+        self,
+        coord_dims: dict[str, list[int]],
+        filenames: dict[str, list[Path]],
+        filetype: str,
+        **kwargs,
+    ):
         """
         Initialize GribFiles object.
 
@@ -60,7 +66,6 @@ class GribFiles:
         self.filenames = filenames
         self.filetype = filetype
         self.coord_dims = coord_dims
-        self.grid_suffix = self._get_grid_suffix(filenames)
         self.contents = self._load()
 
     def append(self, filenames: dict[str, list[Path]]):
@@ -85,7 +90,8 @@ class GribFiles:
         fhr = self.coord_dims["fcst_hr"][-1]
 
         special_suffixes = ["max", "min", "acc", "avg"]
-        for var in ds.variables:
+        for ds_var in ds.variables:
+            var = str(ds_var)
             suffix = var.split("_")[-1]
 
             # Keeping lists of misbehaving "accumulated" variables here because
@@ -216,7 +222,7 @@ class GribFiles:
 
         return ret
 
-    def _load(self, filenames: list[Path] | None = None):
+    def _load(self, filenames: dict[str, list[Path]] | None = None):
         """Load the set of files into a single XArray structure."""
 
         all_leads = [] if filenames is None else [self.contents]
@@ -226,46 +232,45 @@ class GribFiles:
         # the rest of the forecast hours. Rename those accumulated variables if
         # needed.
         for fcst_type in ["01fcst", "free_fcst"]:
-            if filenames.get(fcst_type):
-                for filename in filenames.get(fcst_type):
-                    print(f"Loading grib2 file: {fcst_type}, {filename}")
+            for filename in filenames.get(fcst_type, {}):
+                print(f"Loading grib2 file: {fcst_type}, {filename}")
 
-                # Rename variables to match free forecast variables
-                dataset = xr.open_mfdataset(
-                    filenames[fcst_type],
-                    **self.open_kwargs,
-                )
+            # Rename variables to match free forecast variables
+            dataset = xr.open_mfdataset(
+                filenames[fcst_type],
+                **self.open_kwargs,
+            )
 
-                renaming = self.free_fcst_names(dataset, fcst_type)
-                if renaming and self.model not in ["hrrre", "rrfse"]:
-                    print("RENAMING VARIABLES:")
-                    for old_name, new_name in renaming.items():
-                        print(f"  {old_name:>30s}  -> {new_name}")
-                    dataset = dataset.rename_vars(renaming)
+            # renaming = self.free_fcst_names(dataset, fcst_type)
+            # if renaming and self.model not in ["hrrre", "rrfse"]:
+            #    print("RENAMING VARIABLES:")
+            #    for old_name, new_name in renaming.items():
+            #        print(f"  {old_name:>30s}  -> {new_name}")
+            #    dataset = dataset.rename_vars(renaming)
 
-                if len(all_leads) == 1:
-                    # Check that specific variables exist in the xarray that is
-                    # already loaded (presumably 0hr), and add them if they
-                    # don't. This implementation is relying on pointers to
-                    # update "in place"
-                    og_ds = all_leads[0]
-                    bad_vars = [
-                        "APCP_P8_L1_{grid}_acc",
-                        "ACPCP_P8_L1_{grid}_acc",
-                        "FROZR_P8_L1_{grid}_acc",
-                        "NCPCP_P8_L1_{grid}_acc",
-                        "WEASD_P8_L1_{grid}_acc",
-                    ]
-                    bad_vars = [v.format(grid=self.grid_suffix) for v in bad_vars]
-                    for bad_var in bad_vars:
-                        # Check to see if the bad variable is in the current
-                        # dataset and NOT in the original dataset.
-                        if bad_var not in og_ds.variables and dataset.get(bad_var) is not None:
-                            print(f"Adding {bad_var} to og ds")
-                            # Duplicate the accumulated variable with the
-                            # required name
-                            og_ds[bad_var] = og_ds.get(f"{bad_var}1h")
-                all_leads.append(dataset)
+            # if len(all_leads) == 1:
+            #    # Check that specific variables exist in the xarray that is
+            #    # already loaded (presumably 0hr), and add them if they
+            #    # don't. This implementation is relying on pointers to
+            #    # update "in place"
+            #    og_ds = all_leads[0]
+            #    bad_vars = [
+            #        "APCP_P8_L1_{grid}_acc",
+            #        "ACPCP_P8_L1_{grid}_acc",
+            #        "FROZR_P8_L1_{grid}_acc",
+            #        "NCPCP_P8_L1_{grid}_acc",
+            #        "WEASD_P8_L1_{grid}_acc",
+            #    ]
+            #    bad_vars = [v.format(grid=self.grid_suffix) for v in bad_vars]
+            #    for bad_var in bad_vars:
+            #        # Check to see if the bad variable is in the current
+            #        # dataset and NOT in the original dataset.
+            #        if bad_var not in og_ds.variables and dataset.get(bad_var) is not None:
+            #            print(f"Adding {bad_var} to og ds")
+            #            # Duplicate the accumulated variable with the
+            #            # required name
+            #            og_ds[bad_var] = og_ds.get(f"{bad_var}1h")
+            all_leads.append(dataset)
 
         return xr.combine_nested(
             all_leads,

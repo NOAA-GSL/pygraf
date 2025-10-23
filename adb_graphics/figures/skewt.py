@@ -20,7 +20,7 @@ from matplotlib.ticker import FixedLocator
 from metpy.plots import Hodograph, SkewT
 from metpy.units import units
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-from xarray import Dataset
+from xarray import DataArray, Dataset
 
 from adb_graphics import errors, utils
 from adb_graphics.datahandler import gribdata
@@ -128,7 +128,7 @@ class SkewTDiagram(gribdata.ProfileData):
 
         for mixr, settings in mixing_ratios.items():
             # Get the profile values
-            scale = settings.get("scale")
+            scale = settings.get("scale", 1.0)
             try:
                 profile = self.values(name=mixr) * 1000.0 * scale
             except errors.GribReadError:
@@ -145,8 +145,8 @@ class SkewTDiagram(gribdata.ProfileData):
                     mixr_total = mixr_total + pres_layer / gravity * profile[n]
 
             # limit values to upper and lower values of plotting range
-            profile = np.where((profile > 0.0) & (profile < 1.0e-4), 1.0e-4, profile)  # noqa: PLR2004
-            profile = np.where((profile > 10.0), 10.0, profile)  # noqa: PLR2004
+            profile = DataArray.where((profile > 0.0) & (profile < 1.0e-4), 1.0e-4, profile)  # noqa: PLR2004
+            profile = DataArray.where((profile > 10.0), 10.0, profile)  # noqa: PLR2004
 
             # plot line
             hydro_subplot.plot(
@@ -656,7 +656,7 @@ class SkewTDiagram(gribdata.ProfileData):
                     tmp = self.get_transform(transforms, tmp)
 
             except errors.GribReadError:
-                tmp = "--"
+                tmp = DataArray([])
 
             thermo[var]["data"] = tmp
             thermo[var]["units"] = spec.get("unit")

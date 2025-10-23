@@ -20,15 +20,17 @@ from typing import Any
 
 import numpy as np
 import yaml
+from matplotlib.axes import Axes
 
 
 def cfgrib_spec(config: dict, model: str) -> dict:
-    if spec := config.get(model):
+    spec: dict = config.get(model, {})
+    if spec and isinstance(spec, dict):
         return spec
     return config
 
 
-def create_zip(files_to_zip: list[str] | list[Path], zipf: Path | str):
+def create_zip(files_to_zip: list[str], zipf: Path | str):
     """Create a zip file. Use a locking mechanism -- write a lock file to disk."""
 
     lock_file = Path(f"{zipf}._lock")
@@ -115,6 +117,9 @@ def get_func(val: str):
     mod_spec = find_spec(module_name, package="adb_graphics")
     if mod_spec is None:
         mod_spec = find_spec("." + module_name, package="adb_graphics")
+    if mod_spec is None:
+        msg = "Could not find {module_name} in current environment."
+        raise ValueError(msg)
 
     try:
         __import__(mod_spec.name)
@@ -125,7 +130,7 @@ def get_func(val: str):
     return getattr(module, fun_name)
 
 
-def join_ranges(loader: yaml.SafeLoader, node: yaml.Node) -> np.ndarray:  # noqa: ARG001
+def join_ranges(loader: yaml.SafeLoader, node: yaml.Node) -> Any:  # noqa: ARG001
     """
     Merge two or more different ranges into a single array for color bar clevs.
 
@@ -150,10 +155,10 @@ def join_ranges(loader: yaml.SafeLoader, node: yaml.Node) -> np.ndarray:  # noqa
 
 
 # SafeLoader doesn't seem compatible with our numpy contructors, using Loader here
-yaml.add_constructor("!join_ranges", join_ranges, Loader=yaml.Loader)
+yaml.add_constructor("!join_ranges", join_ranges, Loader=yaml.SafeLoader)
 
 
-def label_line(ax: list, label: list, segment: list, **kwargs):
+def label_line(ax: Axes, label: str, segment: np.ndarray, **kwargs):
     """
     Label a single line with line2D label data.
 
@@ -228,7 +233,7 @@ def label_line(ax: list, label: list, segment: list, **kwargs):
     ax.text(x, y, label, rotation=trans_angle, **kwargs)
 
 
-def label_lines(ax: list, lines: Any, labels: np.ndarray, offset: float = 0, **kwargs):
+def label_lines(ax: Axes, lines: Any, labels: np.ndarray, offset: float = 0, **kwargs):
     """
     Plots labels on a set of lines from SkewT.
 
@@ -251,7 +256,7 @@ def label_lines(ax: list, lines: Any, labels: np.ndarray, offset: float = 0, **k
 
     for i, line in enumerate(lines.get_segments()):
         label = int(labels[i])
-        label_line(ax, label, line, align=True, offset=offset, **kwargs)
+        label_line(ax, str(label), line, align=True, offset=offset, **kwargs)
 
 
 def load_sites(arg: str | Path) -> list[str]:
@@ -261,7 +266,8 @@ def load_sites(arg: str | Path) -> list[str]:
     path = path_exists(arg)
 
     with path.open() as sites_file:
-        return sites_file.readlines()
+        sites: list[str] = sites_file.readlines()
+    return sites
 
 
 def uniq_wgrib2_list(inlist: list[str]):
@@ -292,6 +298,7 @@ def load_specs(arg: str | Path) -> dict:
     spec_file = Path(arg)
     assert spec_file.exists()
 
+    specs: dict
     with spec_file.open() as fn:
         specs = yaml.load(fn, Loader=yaml.Loader)
 
@@ -308,14 +315,14 @@ def numeric_level(index_match: bool = True, level: str | None = None):
     numeric, e.g., 'sfc' or 'ua'.
     """
 
-    level = level if level is not None else 0
+    level = level if level is not None else ""
 
     # Gather all the numbers in the string
-    lev_val = "".join([c for c in level if (c in digits or c == ".")])
+    numbers = "".join([c for c in level if (c in digits or c == ".")])
 
     # Convert the numbers to a list, and make integers or floats
-    if lev_val:
-        lev_val = [float(lev_val) if "." in lev_val else int(lev_val)]
+    if numbers:
+        lev_val = [float(numbers) if "." in numbers else int(numbers)]
 
     # Gather all the letters
     lev_unit = "".join([c for c in level if c in ascii_letters])
@@ -405,7 +412,7 @@ def zip_products(fhr: int, workdir: Path, zipfiles: dict) -> None:
             file_tmpl = f"*.skewt.*_f{fhr:03d}.csv"
         else:
             file_tmpl = f"*_{tile}_*{fhr:02d}.png"
-        product_files = glob.glob(workdir / file_tmpl)
+        product_files = glob.glob(str(workdir / file_tmpl))
         if product_files:
             zip_proc = Process(
                 group=None,

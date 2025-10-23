@@ -6,7 +6,7 @@ converted values as output.
 """
 
 from numpy import ndarray
-from xarray import DataSet
+from xarray import DataArray
 from xarray.ufuncs import sqrt, square
 
 
@@ -28,10 +28,10 @@ def kgm2_to_in(field: ndarray, **kwargs):
     return field * 0.03937
 
 
-def magnitude(a: DataSet, b: DataSet, **kwargs):
+def magnitude(a: DataArray, b: DataArray, **kwargs) -> DataArray:
     """Return the magnitude of vector components."""
 
-    return sqrt(square(a) + square(b))
+    return DataArray(sqrt(square(a) + square(b)))
 
 
 def m_to_dm(field: ndarray, **kwargs):

@@ -105,7 +105,7 @@ class VarSpec(abc.ABC):
         return np.concatenate((grays, nws, white))
 
     @property
-    def fire_power_colors(self) -> np.ndarray:
+    def fire_power_colors(self) -> list[str]:
         """Default color map for fire power plot."""
 
         # The scatter plot utility won't accept anything but named colors
@@ -120,7 +120,7 @@ class VarSpec(abc.ABC):
         ]
 
     @property
-    def smoke_emissions_colors(self) -> np.ndarray:
+    def smoke_emissions_colors(self) -> list[str]:
         """Default color map for smoke emissions plot."""
 
         # The scatter plot utility won't accept anything but named colors
@@ -223,9 +223,10 @@ class VarSpec(abc.ABC):
     def lcl_colors(self) -> np.ndarray:
         """Default color map for Lifted Condensation Level."""
 
-        return ctables.colortables.get_colortable(self.vspec.get("cmap"))(
-            range(50, 180, 7)
-        )  # rainbow
+        # rainbow
+        return np.ndarray(
+            ctables.colortables.get_colortable(self.vspec.get("cmap"))(range(50, 180, 7))
+        )
 
     @property
     def lifted_index_colors(self) -> np.ndarray:
@@ -264,7 +265,9 @@ class VarSpec(abc.ABC):
     def pbl_colors(self) -> np.ndarray:
         """Default color map for PBL Height."""
 
-        return ctables.colortables.get_colortable(self.vspec.get("cmap"))(range(15, 60, 3))
+        return np.ndarray(
+            ctables.colortables.get_colortable(self.vspec.get("cmap"))(range(15, 60, 3))
+        )
 
     @property
     def pcp_colors(self) -> np.ndarray:
@@ -445,7 +448,9 @@ class VarSpec(abc.ABC):
     def terrain_colors(self) -> np.ndarray:
         """Default color map for Terrain."""
 
-        return ctables.colortables.get_colortable(self.vspec.get("cmap"))(range(54, 157, 6))
+        return np.ndarray(
+            ctables.colortables.get_colortable(self.vspec.get("cmap"))(range(54, 157, 6))
+        )
 
     @property
     def ua_temp_colors(self) -> np.ndarray:
