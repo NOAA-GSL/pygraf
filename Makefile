@@ -7,14 +7,13 @@ format:
 	@./format
 
 lint:
-	recipe/run_test.sh lint
+	ruff check .
 
-test:
-	recipe/run_test.sh
+test: lint typecheck unittest
 
 typecheck:
-	recipe/run_test.sh typecheck
+	mypy --install-types --non-interactive .
 
 unittest:
-	recipe/run_test.sh unittest
+	pytest --cov -k "not hrrr" -n 4 .
 

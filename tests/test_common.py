@@ -29,6 +29,8 @@ from metpy.plots import ctables
 from adb_graphics import conversions, specs, utils
 from adb_graphics.datahandler import gribdata
 
+yaml.add_constructor("!join_ranges", utils.join_ranges, Loader=yaml.Loader)
+
 
 def test_conversion():
     """
@@ -83,7 +85,7 @@ class MockSpecs(specs.VarSpec):
     """Mock class for the VarSpec abstract class."""
 
     with Path("adb_graphics/default_specs.yml").open() as c:
-        cfg = yaml.safe_load(c)
+        cfg = yaml.load(c, Loader=yaml.Loader)
 
     @property
     def clevs(self):
@@ -103,13 +105,12 @@ def test_utils():
 def test_join_ranges_constructor():
     """Test that the join_ranges constructor works as expected."""
 
-    yaml.add_constructor("!join_ranges", utils.join_ranges, Loader=yaml.SafeLoader)
     yaml_str = """
     foo: !join_ranges [[0, 15, 0.1], [20, 61, 20]]
     foo2: !join_ranges [[0, 15, 0.1]]
     foo3: !join_ranges [[0, 15, 0.1], [20, 40, 10], [40, 61, 20]]
     """
-    cfg = yaml.load(yaml_str, Loader=yaml.SafeLoader)
+    cfg = yaml.load(yaml_str, Loader=yaml.Loader)
 
     expected = np.concatenate((np.arange(0, 15, 0.1), np.arange(20, 61, 20)), axis=0)
     expected2 = np.arange(0, 15, 0.1)
@@ -128,7 +129,7 @@ class TestDefaultSpecs:
     config = "adb_graphics/default_specs.yml"
     varspec = MockSpecs()
     with Path("adb_graphics/default_specs.yml").open() as c:
-        cfg = yaml.safe_load(c)
+        cfg = yaml.load(c, Loader=yaml.Loader)
 
     @property
     def allowable(self):
@@ -143,11 +144,13 @@ class TestDefaultSpecs:
             "annotate_decimal": self.is_int,
             "clevs": self.is_a_clev,
             "cmap": self.is_a_cmap,
+            "cfgrib": self.is_dict,
             "colors": self.is_a_color,
             "contours": self.is_a_contour_dict,
             "include_obs": self.is_bool,
             "hatches": self.is_a_contourf_dict,
             "labels": self.is_a_contourf_dict,
+            "level": self.is_number,
             "ncl_name": True,
             "plot_airports": self.is_bool,
             "plot_scatter": self.is_bool,
@@ -230,7 +233,7 @@ class TestDefaultSpecs:
             # when provided arguments don't appear in all_params.
             # arguments not in that list, we fail.
             if kwargs:
-                argspecs = [getfullargspec(func) for func in transforms if callable(func)]
+                argspecs = [getfullargspec(fx) for fx in transforms if callable(fx)]
 
                 all_params: list = []
                 for argspec in argspecs:
@@ -245,8 +248,10 @@ class TestDefaultSpecs:
 
                 for key in kwargs:
                     if key not in all_params:
-                        msg = f"Function key {key} is not an expicit parameter \
-                                in any of the transforms: {funcs}!"
+                        msg = (
+                            f"Function key {key} is not an explicit parameter"
+                            f"in any of the transforms: {funcs}!"
+                        )
                         warnings.warn(msg, UserWarning, stacklevel=2)
 
         return True
@@ -267,6 +272,8 @@ class TestDefaultSpecs:
                 if func in dir(gribdata.__getattribute__(attr)):
                     method = gribdata.__getattribute__(attr).__dict__.get(func)
                     if method is not None:
+                        if isinstance(method, staticmethod):
+                            return method.__func__
                         return method
 
         if callable(utils.get_func(func)):
@@ -375,6 +382,9 @@ class TestDefaultSpecs:
             return True
 
         return color in dir(self.varspec)
+
+    def is_a_dict(self, cfgrib):
+        return isinstance(cfgrib, dict)
 
     @staticmethod
     def is_a_level(key):

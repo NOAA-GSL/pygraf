@@ -21,7 +21,7 @@ def maps_args(tmp_path) -> list:
         "12",
         "1",
         "-o",
-        tmp_path / "output",
+        str(tmp_path / "output"),
         "-s",
         "2023031500",
         "--file_tmpl",
@@ -34,7 +34,7 @@ def maps_args(tmp_path) -> list:
     ]
 
 
-def test_parse_args(tmp_path):
+def test_hrrr_parse_args(tmp_path):
     """
     Test parse_args for basic parsing success.
     Checks if parse_args returns 'maps' in the graphic_type field.
@@ -48,7 +48,7 @@ def test_parse_args(tmp_path):
         "12",
         "1",
         "-o",
-        tmp_path / "output",
+        str(tmp_path / "output"),
         "-s",
         "2021052315",
         "--file_tmpl",
@@ -63,7 +63,7 @@ def test_parse_args(tmp_path):
     assert test_args.graphic_type == "maps"
 
 
-def test_file_count(maps_args, tmp_path):
+def test_hrrr_file_count(maps_args, tmp_path):
     """
     Test for file count in directory.
     Can be extended to cover multiple folders.

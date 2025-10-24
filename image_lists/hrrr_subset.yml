@@ -41,7 +41,7 @@ hourly:
       - 2m
     echotop:
       - sfc
-    firewx_transform:
+    firewxtransform:
       - sfc
     flru:
       - sfc

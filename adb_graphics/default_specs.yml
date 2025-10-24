@@ -12,7 +12,7 @@
 #   clevs: specifies the contour levels by one of the following methods
 #      - a list with no quotes
 #      - a numpy.arange specified as "!!python/object/apply:numpy.arange [list]"
-#        with quotes. Specify "list" as with numpy.anumpy.arange() like this --
+#        with quotes. Specify "list" as with numpy.arange() like this --
 #        [[start, ]stop[, increment]]]. start and increment are options.
 #      - the name of a function to be called that will return a list.
 #
@@ -977,7 +977,7 @@ firewx: # Fire Weather Index
     ticks: 0
     title: Hourly Wildfire Potential
     unit: "%"
-firewx_transform:
+firewxtransform:
   sfc:
     <<: *firewx
     cfgrib:

@@ -130,7 +130,7 @@ def get_func(val: str):
     return getattr(module, fun_name)
 
 
-def join_ranges(loader: yaml.SafeLoader, node: yaml.Node) -> Any:  # noqa: ARG001
+def join_ranges(loader: yaml.Loader, node: yaml.Node) -> Any:  # noqa: ARG001
     """
     Merge two or more different ranges into a single array for color bar clevs.
 
@@ -154,8 +154,7 @@ def join_ranges(loader: yaml.SafeLoader, node: yaml.Node) -> Any:  # noqa: ARG00
     return np.concatenate(list_, axis=0)
 
 
-# SafeLoader doesn't seem compatible with our numpy contructors, using Loader here
-yaml.add_constructor("!join_ranges", join_ranges, Loader=yaml.SafeLoader)
+yaml.add_constructor("!join_ranges", join_ranges, Loader=yaml.Loader)
 
 
 def label_line(ax: Axes, label: str, segment: np.ndarray, **kwargs):
