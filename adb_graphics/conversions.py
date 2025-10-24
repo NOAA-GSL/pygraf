@@ -75,6 +75,11 @@ def percent(field: ndarray, **kwargs):
     return field * 100.0
 
 
+def sden_to_slr(field: ndarray, **kwargs):
+    """Convert snow density (kg m-3) to snow-liquid ratio."""
+
+    return 1000.0 / field
+
 def to_micro(field: ndarray, **kwargs):
     """Convert field to micro."""
 
@@ -105,7 +110,3 @@ def weasd_to_1hsnw(field: ndarray, **kwargs):
     return field * 10.0
 
 
-def sden_to_slr(field: ndarray, **kwargs):
-    """Convert snow density (kg m-3) to snow-liquid ratio."""
-
-    return 1000.0 / field
