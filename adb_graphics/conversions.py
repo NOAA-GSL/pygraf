@@ -80,6 +80,7 @@ def sden_to_slr(field: ndarray, **kwargs):
 
     return 1000.0 / field
 
+
 def to_micro(field: ndarray, **kwargs):
     """Convert field to micro."""
 
@@ -108,5 +109,3 @@ def weasd_to_1hsnw(field: ndarray, **kwargs):
     """Conversion from snow water equiv to snow (10:1 ratio)."""
 
     return field * 10.0
-
-

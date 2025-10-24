@@ -9,8 +9,8 @@ import abc
 from itertools import chain
 
 import numpy as np
-from matplotlib import cm
 from matplotlib import colors as mpcolors
+from matplotlib.pyplot import get_cmap
 from metpy.plots import ctables
 
 
@@ -25,8 +25,8 @@ class VarSpec(abc.ABC):
     def aod_colors(self) -> np.ndarray:
         """Default color map for AOD products and chem products."""
 
-        grays = cm.get_cmap("Greys", 2)([0])
-        others = cm.get_cmap(self.vspec.get("cmap"), 15)(range(1, 15, 1))
+        grays = get_cmap("Greys", 2)([0])
+        others = get_cmap(self.vspec.get("cmap"), 15)(range(1, 15, 1))
         return np.concatenate((grays, others))
 
     def centered_diff(self, cmap: str | None = None, nlev: int | None = None):
@@ -36,13 +36,13 @@ class VarSpec(abc.ABC):
         """
 
         if nlev is None:
-            clevs = self.vspec.get("clevs")
+            clevs = self.vspec.get("clevs", self.clevs)
             nlev = len(clevs) + 1
 
         if cmap is None:
             cmap = self.vspec.get("cmap")
 
-        colors = cm.get_cmap(cmap, nlev)(range(nlev))
+        colors = get_cmap(cmap, nlev)(range(nlev))
         mid = nlev // 2
 
         colors[mid] = [1, 1, 1, 1]
@@ -54,10 +54,8 @@ class VarSpec(abc.ABC):
     def cin_colors(self) -> np.ndarray:
         """Default color map for Convective Inhibition."""
 
-        ncar = cm.get_cmap(self.vspec.get("cmap"), 128)(
-            [120, 100, 90, 85, 80, 70, 60, 50, 25, 20, 18]
-        )
-        grays = cm.get_cmap("Greys", 2)([0])
+        ncar = get_cmap(self.vspec.get("cmap"), 128)([120, 100, 90, 85, 80, 70, 60, 50, 25, 20, 18])
+        grays = get_cmap("Greys", 2)([0])
         return np.concatenate((ncar, grays))
 
     @property
@@ -80,8 +78,8 @@ class VarSpec(abc.ABC):
     def ceil_colors(self) -> np.ndarray:
         """Default color map for Ceiling."""
 
-        grays = cm.get_cmap("Greys", 2)([0])
-        ncar = cm.get_cmap(self.vspec.get("cmap"), 128)(
+        grays = get_cmap("Greys", 2)([0])
+        ncar = get_cmap(self.vspec.get("cmap"), 128)(
             [15, 18, 20, 25, 50, 60, 70, 80, 85, 90, 100, 120]
         )
         return np.concatenate((grays, ncar, grays))
@@ -90,8 +88,8 @@ class VarSpec(abc.ABC):
     def cldcov_colors(self) -> np.ndarray:
         """Default color map for Cloud Cover."""
 
-        grays = cm.get_cmap("Greys", 7)([0, 1, 3])
-        ncar = cm.get_cmap(self.vspec.get("cmap"), 128)([120, 100, 90, 85, 80, 70, 60, 50, 25, 20])
+        grays = get_cmap("Greys", 7)([0, 1, 3])
+        ncar = get_cmap(self.vspec.get("cmap"), 128)([120, 100, 90, 85, 80, 70, 60, 50, 25, 20])
         return np.concatenate((grays, ncar))
 
     @property
@@ -99,9 +97,9 @@ class VarSpec(abc.ABC):
         """Default color map for Reflectivity."""
 
         ncolors = len(self.clevs) - 1
-        grays = cm.get_cmap("Greys", 5)([0])
+        grays = get_cmap("Greys", 5)([0])
         nws = ctables.colortables.get_colortable(self.vspec.get("cmap"))(range(ncolors))
-        white = cm.get_cmap("Greys", 5)([0])
+        white = get_cmap("Greys", 5)([0])
         return np.concatenate((grays, nws, white))
 
     @property
@@ -118,6 +116,265 @@ class VarSpec(abc.ABC):
             "indianred",
             "firebrick",
         ]
+
+    @property
+    def flru_colors(self) -> np.ndarray:
+        """Default color map for Ceiling."""
+
+        return get_cmap(self.vspec.get("cmap"), 128)([50, 15, 90, 120])
+
+    @property
+    def frzn_colors(self) -> np.ndarray:
+        """Default color map for Frozen Precip %."""
+
+        grays = get_cmap("Greys", 7)([0, 2])
+        ncar = get_cmap(self.vspec.get("cmap"), 128)([120, 90, 85, 80, 70, 60, 50, 25, 20, 15])
+        return np.concatenate((grays, ncar))
+
+    @property
+    def goes_colors(self) -> np.ndarray:
+        """Default color map for simulated GOES IR satellite."""
+
+        grays = get_cmap("Greys_r", 33)(range(33))
+        ctable2 = ctables.colortables.get_colortable(self.vspec.get("cmap"))(range(65, 150))
+        return np.concatenate((grays[-1:], grays, ctable2, grays[1:]))
+
+    @property
+    def graupel_colors(self) -> np.ndarray:
+        """Default color map for Max Vertically Integrated Graupel."""
+
+        grays = get_cmap("Greys", 3)([0])
+        ncar = get_cmap(self.vspec.get("cmap"), 128)(range(20, 128, 6))
+        return np.concatenate((grays, ncar))
+
+    @property
+    def hail_colors(self) -> np.ndarray:
+        """Default color map for Hail diameter."""
+
+        grays = get_cmap("Greys", 2)([0])
+        ncar = get_cmap(self.vspec.get("cmap"), 128)([100, 15, 18, 20, 25, 60, 80, 85, 90])
+        return np.concatenate((grays, ncar))
+
+    @property
+    def heat_flux_colors(self) -> np.ndarray:
+        """Default color map for Latent/Sensible Heat Flux."""
+
+        grays = get_cmap("Greys", 8)([6, 5, 4, 3, 2])
+        ctable = ctables.colortables.get_colortable(self.vspec.get("cmap"))(range(0, 33, 2))
+        return np.concatenate((grays, ctable))
+
+    @property
+    def heat_flux_colors_g(self) -> np.ndarray:
+        """Default color map for Latent/Sensible Heat Flux."""
+
+        return get_cmap(self.vspec.get("cmap"), 128)(range(15, 112, 8))
+
+    @property
+    def heat_flux_colors_l(self) -> np.ndarray:
+        """Default color map for Latent/Sensible Heat Flux."""
+
+        return get_cmap(self.vspec.get("cmap"), 128)(range(32, 129, 6))
+
+    @property
+    def heat_flux_colors_s(self) -> np.ndarray:
+        """Default color map for Latent/Sensible Heat Flux."""
+
+        return get_cmap(self.vspec.get("cmap"), 128)(range(32, 129, 6))
+
+    @property
+    def icprb_colors(self) -> np.ndarray:
+        """Default color map for Icing Probability."""
+
+        grays = get_cmap("Greys", 2)([0])
+        ncar = get_cmap(self.vspec.get("cmap"), 128)([25, 35, 50, 60, 70, 80, 85, 90, 100])
+        return np.concatenate((grays, ncar))
+
+    @property
+    def icsev_colors(self) -> np.ndarray:
+        """Default color map for Icing  Severity."""
+
+        white = get_cmap("Greys", 2)([0])
+        blues = get_cmap(self.vspec.get("cmap"), 9)([2, 3, 4, 6, 8])
+        return np.concatenate((white, blues))
+
+    @property
+    def lcl_colors(self) -> np.ndarray:
+        """Default color map for Lifted Condensation Level."""
+
+        # rainbow
+        return np.asarray(
+            ctables.colortables.get_colortable(self.vspec.get("cmap"))(range(50, 180, 7))
+        )
+
+    @property
+    def lifted_index_colors(self) -> np.ndarray:
+        """Default color map for Lifted Index."""
+
+        ctable = get_cmap(self.vspec.get("cmap"), 128)(range(4, 125, 4))
+        ctable[14] = [1, 1, 1, 1]
+        ctable[15] = [1, 1, 1, 1]
+        return ctable
+
+    @property
+    def mdn_colors(self) -> np.ndarray:
+        """Default color map for Max Downdraft."""
+
+        grays = get_cmap("Greys", 2)([0])
+        others = get_cmap(self.vspec.get("cmap"), 18)(range(18, 1, -1))
+        return np.concatenate((others, grays))
+
+    @property
+    def mean_vvel_colors(self) -> np.ndarray:
+        """Default color map for Mean Vertical Velocity."""
+
+        ctable = get_cmap(self.vspec.get("cmap"), 128)(range(0, 114, 6))
+        ctable[9] = [1, 1, 1, 1]
+        return ctable
+
+    @property
+    def mup_colors(self) -> np.ndarray:
+        """Default color map for Max Updraft."""
+
+        grays = get_cmap("Greys", 2)([0])
+        others = get_cmap(self.vspec.get("cmap"), 18)(range(1, 18, 1))
+        return np.concatenate((grays, others))
+
+    @property
+    def pbl_colors(self) -> np.ndarray:
+        """Default color map for PBL Height."""
+
+        return np.asarray(
+            ctables.colortables.get_colortable(self.vspec.get("cmap"))(range(15, 60, 3))
+        )
+
+    @property
+    def pcp_colors(self) -> np.ndarray:
+        """Default color map for Hourly Precipitation."""
+
+        grays = get_cmap("Greys", 6)([0, 3])
+        ncar = get_cmap(self.vspec.get("cmap"), 128)([25, 50, 60, 70, 80, 85, 90, 115])
+        return np.concatenate((grays, ncar))
+
+    @property
+    def pcp_colors_high(self) -> np.ndarray:
+        """High values color map for Hourly Precipitation."""
+
+        grays = get_cmap("Greys", 2)([0])
+        ncar = get_cmap(self.vspec.get("cmap"), 128)([70, 80, 85, 90, 115])
+        return np.concatenate((grays, ncar))
+
+    @property
+    def pmsl_colors(self) -> np.ndarray:
+        """Default color map for Surface Pressure."""
+
+        ncolors = len(self.vspec.get("clevs", self.clevs))
+        incr = 128 // ncolors
+        colors = get_cmap(self.vspec.get("cmap"), 128)(range(incr, 128, incr))
+        return np.asarray(colors)
+
+    @property
+    def ps_colors(self) -> np.ndarray:
+        """Default color map for Surface Pressure."""
+
+        grays = get_cmap("Greys", 13)(range(13))
+        segments = [[16, 53], [86, 105], [110, 151, 2], [172, 202, 2]]
+        ncar = get_cmap("gist_ncar", 200)(list(chain(*[range(*i) for i in segments])))
+        return np.concatenate((grays, ncar))
+
+    @property
+    def pw_colors(self) -> np.ndarray:
+        """Default color map for Precipitable Water."""
+
+        grays = get_cmap("Greys", 5)([1, 3])
+        ncar = get_cmap(self.vspec.get("cmap"), 128)(
+            [120, 100, 95, 85, 80, 70, 65, 50, 25, 22, 20, 17]
+        )
+        bupu = get_cmap("BuPu", 15)([13, 14])
+        cool = get_cmap("cool", 15)([10, 9, 12, 7, 5])
+        return np.concatenate((grays, ncar, bupu, cool))
+
+    @property
+    def radiation_colors(self) -> np.ndarray:
+        """Default color map for Longwave Radiation."""
+
+        grays = get_cmap("Greys", 2)([0])
+        ncar = get_cmap(self.vspec.get("cmap"), 128)(range(0, 126, 5))
+        return np.concatenate((grays, ncar))
+
+    @property
+    def radiation_bw_colors(self) -> np.ndarray:
+        """Default grayscale map for Outgoing Shortwave Radiation."""
+
+        return get_cmap(self.vspec.get("cmap"), 128)(range(30, 110))
+
+    @property
+    def radiation_mix_colors(self) -> np.ndarray:
+        """Default color map for Longwave Radiation."""
+
+        ncar = ctables.colortables.get_colortable(self.vspec.get("cmap"))(range(40))
+        grays = get_cmap("Greys", 100)(range(10, 100))
+        return np.concatenate((ncar, grays))
+
+    @property
+    def rainbow11_colors(self) -> np.ndarray:
+        """Default color map for Hourly Wildfire Potential."""
+
+        grays = get_cmap("Greys", 2)([0])
+        ncar = get_cmap(self.vspec.get("cmap"), 128)([18, 20, 25, 50, 60, 70, 80, 85, 90, 100, 120])
+        return np.concatenate((grays, ncar))
+
+    @property
+    def rainbow12_colors(self) -> np.ndarray:
+        """Default color map for ACPCP, ACSNOD, HLCY, RH, and SNOD."""
+
+        grays = get_cmap("Greys", 2)([0])
+        ncar = get_cmap(self.vspec.get("cmap"), 128)(
+            [15, 18, 20, 25, 50, 60, 70, 80, 85, 90, 100, 120]
+        )
+        return np.concatenate((grays, ncar))
+
+    @property
+    def rainbow12_reverse(self) -> np.ndarray:
+        """Default color map for min helicity."""
+
+        return np.flip(self.rainbow12_colors, 0)
+
+    @property
+    def rainbow16_colors(self) -> np.ndarray:
+        """Default color map for helicity."""
+
+        grays = get_cmap("Greys", 5)([0, 2])
+        ncar = get_cmap(self.vspec.get("cmap"), 128)(
+            [9, 15, 18, 20, 25, 48, 57, 65, 74, 79, 87, 94, 102, 109, 120]
+        )
+        return np.concatenate((grays, ncar))
+
+    @property
+    def shear_colors(self) -> np.ndarray:
+        """Default color map for Vertical Shear."""
+
+        ctable = get_cmap(self.vspec.get("cmap"), 16)(range(5, 15))
+        ctable[9] = [1, 1, 1, 1]
+        return ctable
+
+    @property
+    def slw_colors(self) -> np.ndarray:
+        """Default color map for Max Vertically Integrated Graupel."""
+
+        white = get_cmap("Greys", 3)([0])
+        purples = get_cmap("nipy_spectral", 30)([3, 1])
+        ncar = get_cmap(self.vspec.get("cmap"), 15)([2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
+        return np.concatenate((white, purples, ncar))
+
+    @property
+    def smoke_colors(self) -> np.ndarray:
+        """Default color map for smoke plots."""
+
+        white = get_cmap("Greys", 2)([0])
+        blues = get_cmap("Blues", 6)(range(1, 5))
+        green_yellow_red = get_cmap("RdYlGn_r", 18)([1, 3, 5, 9, 12, 13, 14, 16, 18])
+        purple = np.array([mpcolors.to_rgba("xkcd:vivid purple")])
+        return np.concatenate((white, blues, green_yellow_red, purple))
 
     @property
     def smoke_emissions_colors(self) -> list[str]:
@@ -141,287 +398,26 @@ class VarSpec(abc.ABC):
             "firebrick",
         ]
 
-    def flru_colors(self) -> np.ndarray:
-        """Default color map for Ceiling."""
-
-        return cm.get_cmap(self.vspec.get("cmap"), 128)([50, 15, 90, 120])
-
-    @property
-    def frzn_colors(self) -> np.ndarray:
-        """Default color map for Frozen Precip %."""
-
-        grays = cm.get_cmap("Greys", 7)([0, 2])
-        ncar = cm.get_cmap(self.vspec.get("cmap"), 128)([120, 90, 85, 80, 70, 60, 50, 25, 20, 15])
-        return np.concatenate((grays, ncar))
-
-    @property
-    def goes_colors(self) -> np.ndarray:
-        """Default color map for simulated GOES IR satellite."""
-
-        grays = cm.get_cmap("Greys_r", 33)(range(33))
-        ctable2 = ctables.colortables.get_colortable(self.vspec.get("cmap"))(range(65, 150))
-        return np.concatenate((grays[-1:], grays, ctable2, grays[1:]))
-
-    @property
-    def graupel_colors(self) -> np.ndarray:
-        """Default color map for Max Vertically Integrated Graupel."""
-
-        grays = cm.get_cmap("Greys", 3)([0])
-        ncar = cm.get_cmap(self.vspec.get("cmap"), 128)(range(20, 128, 6))
-        return np.concatenate((grays, ncar))
-
-    @property
-    def hail_colors(self) -> np.ndarray:
-        """Default color map for Hail diameter."""
-
-        grays = cm.get_cmap("Greys", 2)([0])
-        ncar = cm.get_cmap(self.vspec.get("cmap"), 128)([100, 15, 18, 20, 25, 60, 80, 85, 90])
-        return np.concatenate((grays, ncar))
-
-    @property
-    def heat_flux_colors(self) -> np.ndarray:
-        """Default color map for Latent/Sensible Heat Flux."""
-
-        grays = cm.get_cmap("Greys", 8)([6, 5, 4, 3, 2])
-        ctable = ctables.colortables.get_colortable(self.vspec.get("cmap"))(range(0, 33, 2))
-        return np.concatenate((grays, ctable))
-
-    @property
-    def heat_flux_colors_g(self) -> np.ndarray:
-        """Default color map for Latent/Sensible Heat Flux."""
-
-        return cm.get_cmap(self.vspec.get("cmap"), 128)(range(15, 112, 8))
-
-    @property
-    def heat_flux_colors_l(self) -> np.ndarray:
-        """Default color map for Latent/Sensible Heat Flux."""
-
-        return cm.get_cmap(self.vspec.get("cmap"), 128)(range(32, 129, 6))
-
-    @property
-    def heat_flux_colors_s(self) -> np.ndarray:
-        """Default color map for Latent/Sensible Heat Flux."""
-
-        return cm.get_cmap(self.vspec.get("cmap"), 128)(range(32, 129, 6))
-
-    @property
-    def icprb_colors(self) -> np.ndarray:
-        """Default color map for Icing Probability."""
-
-        grays = cm.get_cmap("Greys", 2)([0])
-        ncar = cm.get_cmap(self.vspec.get("cmap"), 128)([25, 35, 50, 60, 70, 80, 85, 90, 100])
-        return np.concatenate((grays, ncar))
-
-    def icsev_colors(self) -> np.ndarray:
-        """Default color map for Icing  Severity."""
-
-        white = cm.get_cmap("Greys", 2)([0])
-        blues = cm.get_cmap(self.vspec.get("cmap"), 9)([2, 3, 4, 6, 8])
-        return np.concatenate((white, blues))
-
-    @property
-    def lcl_colors(self) -> np.ndarray:
-        """Default color map for Lifted Condensation Level."""
-
-        # rainbow
-        return np.ndarray(
-            ctables.colortables.get_colortable(self.vspec.get("cmap"))(range(50, 180, 7))
-        )
-
-    @property
-    def lifted_index_colors(self) -> np.ndarray:
-        """Default color map for Lifted Index."""
-
-        ctable = cm.get_cmap(self.vspec.get("cmap"), 128)(range(4, 125, 4))
-        ctable[14] = [1, 1, 1, 1]
-        ctable[15] = [1, 1, 1, 1]
-        return ctable
-
-    @property
-    def mdn_colors(self) -> np.ndarray:
-        """Default color map for Max Downdraft."""
-
-        grays = cm.get_cmap("Greys", 2)([0])
-        others = cm.get_cmap(self.vspec.get("cmap"), 18)(range(18, 1, -1))
-        return np.concatenate((others, grays))
-
-    @property
-    def mean_vvel_colors(self) -> np.ndarray:
-        """Default color map for Mean Vertical Velocity."""
-
-        ctable = cm.get_cmap(self.vspec.get("cmap"), 128)(range(0, 114, 6))
-        ctable[9] = [1, 1, 1, 1]
-        return ctable
-
-    @property
-    def mup_colors(self) -> np.ndarray:
-        """Default color map for Max Updraft."""
-
-        grays = cm.get_cmap("Greys", 2)([0])
-        others = cm.get_cmap(self.vspec.get("cmap"), 18)(range(1, 18, 1))
-        return np.concatenate((grays, others))
-
-    @property
-    def pbl_colors(self) -> np.ndarray:
-        """Default color map for PBL Height."""
-
-        return np.ndarray(
-            ctables.colortables.get_colortable(self.vspec.get("cmap"))(range(15, 60, 3))
-        )
-
-    @property
-    def pcp_colors(self) -> np.ndarray:
-        """Default color map for Hourly Precipitation."""
-
-        grays = cm.get_cmap("Greys", 6)([0, 3])
-        ncar = cm.get_cmap(self.vspec.get("cmap"), 128)([25, 50, 60, 70, 80, 85, 90, 115])
-        return np.concatenate((grays, ncar))
-
-    @property
-    def pcp_colors_high(self) -> np.ndarray:
-        """High values color map for Hourly Precipitation."""
-
-        grays = cm.get_cmap("Greys", 2)([0])
-        ncar = cm.get_cmap(self.vspec.get("cmap"), 128)([70, 80, 85, 90, 115])
-        return np.concatenate((grays, ncar))
-
-    @property
-    def pmsl_colors(self) -> np.ndarray:
-        """Default color map for Surface Pressure."""
-
-        ncolors = len(self.vspec.get("clevs"))
-        incr = 128 // ncolors
-        colors = cm.get_cmap(self.vspec.get("cmap"), 128)(range(incr, 128, incr))
-        return np.asarray(colors)
-
-    @property
-    def ps_colors(self) -> np.ndarray:
-        """Default color map for Surface Pressure."""
-
-        grays = cm.get_cmap("Greys", 13)(range(13))
-        segments = [[16, 53], [86, 105], [110, 151, 2], [172, 202, 2]]
-        ncar = cm.get_cmap("gist_ncar", 200)(list(chain(*[range(*i) for i in segments])))
-        return np.concatenate((grays, ncar))
-
-    @property
-    def pw_colors(self) -> np.ndarray:
-        """Default color map for Precipitable Water."""
-
-        grays = cm.get_cmap("Greys", 5)([1, 3])
-        ncar = cm.get_cmap(self.vspec.get("cmap"), 128)(
-            [120, 100, 95, 85, 80, 70, 65, 50, 25, 22, 20, 17]
-        )
-        bupu = cm.get_cmap("BuPu", 15)([13, 14])
-        cool = cm.get_cmap("cool", 15)([10, 9, 12, 7, 5])
-        return np.concatenate((grays, ncar, bupu, cool))
-
-    @property
-    def radiation_colors(self) -> np.ndarray:
-        """Default color map for Longwave Radiation."""
-
-        grays = cm.get_cmap("Greys", 2)([0])
-        ncar = cm.get_cmap(self.vspec.get("cmap"), 128)(range(0, 126, 5))
-        return np.concatenate((grays, ncar))
-
-    @property
-    def radiation_bw_colors(self) -> np.ndarray:
-        """Default grayscale map for Outgoing Shortwave Radiation."""
-
-        return cm.get_cmap(self.vspec.get("cmap"), 128)(range(30, 110))
-
-    @property
-    def radiation_mix_colors(self) -> np.ndarray:
-        """Default color map for Longwave Radiation."""
-
-        ncar = ctables.colortables.get_colortable(self.vspec.get("cmap"))(range(40))
-        grays = cm.get_cmap("Greys", 100)(range(10, 100))
-        return np.concatenate((ncar, grays))
-
-    @property
-    def rainbow11_colors(self) -> np.ndarray:
-        """Default color map for Hourly Wildfire Potential."""
-
-        grays = cm.get_cmap("Greys", 2)([0])
-        ncar = cm.get_cmap(self.vspec.get("cmap"), 128)(
-            [18, 20, 25, 50, 60, 70, 80, 85, 90, 100, 120]
-        )
-        return np.concatenate((grays, ncar))
-
-    @property
-    def rainbow12_colors(self) -> np.ndarray:
-        """Default color map for ACPCP, ACSNOD, HLCY, RH, and SNOD."""
-
-        grays = cm.get_cmap("Greys", 2)([0])
-        ncar = cm.get_cmap(self.vspec.get("cmap"), 128)(
-            [15, 18, 20, 25, 50, 60, 70, 80, 85, 90, 100, 120]
-        )
-        return np.concatenate((grays, ncar))
-
-    @property
-    def rainbow12_reverse(self) -> np.ndarray:
-        """Default color map for min helicity."""
-
-        return np.flip(self.rainbow12_colors, 0)
-
-    @property
-    def rainbow16_colors(self) -> np.ndarray:
-        """Default color map for helicity."""
-
-        grays = cm.get_cmap("Greys", 5)([0, 2])
-        ncar = cm.get_cmap(self.vspec.get("cmap"), 128)(
-            [9, 15, 18, 20, 25, 48, 57, 65, 74, 79, 87, 94, 102, 109, 120]
-        )
-        return np.concatenate((grays, ncar))
-
-    @property
-    def shear_colors(self) -> np.ndarray:
-        """Default color map for Vertical Shear."""
-
-        ctable = cm.get_cmap(self.vspec.get("cmap"), 16)(range(5, 15))
-        ctable[9] = [1, 1, 1, 1]
-        return ctable
-
-    @property
-    def slw_colors(self) -> np.ndarray:
-        """Default color map for Max Vertically Integrated Graupel."""
-
-        white = cm.get_cmap("Greys", 3)([0])
-        purples = cm.get_cmap("nipy_spectral", 30)([3, 1])
-        ncar = cm.get_cmap(self.vspec.get("cmap"), 15)([2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
-        return np.concatenate((white, purples, ncar))
-
-    @property
-    def smoke_colors(self) -> np.ndarray:
-        """Default color map for smoke plots."""
-
-        white = cm.get_cmap("Greys", 2)([0])
-        blues = cm.get_cmap("Blues", 6)(range(1, 5))
-        green_yellow_red = cm.get_cmap("RdYlGn_r", 18)([1, 3, 5, 9, 12, 13, 14, 16, 18])
-        purple = np.array([mpcolors.to_rgba("xkcd:vivid purple")])
-        return np.concatenate((white, blues, green_yellow_red, purple))
-
     @property
     def snow_colors(self) -> np.ndarray:
         """Default color map for Snow fields."""
 
-        grays = cm.get_cmap("Greys", 5)([0, 2])
-        ncar = cm.get_cmap(self.vspec.get("cmap"), 128)(
-            [15, 18, 20, 25, 50, 60, 74, 81, 85, 90, 100]
-        )
+        grays = get_cmap("Greys", 5)([0, 2])
+        ncar = get_cmap(self.vspec.get("cmap"), 128)([15, 18, 20, 25, 50, 60, 74, 81, 85, 90, 100])
         return np.concatenate((grays, ncar))
 
     @property
     def soilm_colors(self) -> np.ndarray:
         """Default color map for Soil Moisture Availability."""
 
-        return cm.get_cmap(self.vspec.get("cmap"), 128)(range(0, 122, 11))
+        return get_cmap(self.vspec.get("cmap"), 128)(range(0, 122, 11))
 
     @property
     def soilw_colors(self) -> np.ndarray:
         """Default color map for Soil Moisture."""
 
-        grays = cm.get_cmap("Greys", 2)([1])
-        ncar = cm.get_cmap(self.vspec.get("cmap"), 110)(
+        grays = get_cmap("Greys", 2)([1])
+        ncar = get_cmap(self.vspec.get("cmap"), 110)(
             [0, 10, 20, 25, 35, 40, 60, 73, 80, 85, 95, 105]
         )
         return np.concatenate((grays, ncar))
@@ -431,24 +427,22 @@ class VarSpec(abc.ABC):
         """Default color map for Potential Temperature."""
 
         ncolors = len(self.clevs)
-        return cm.get_cmap(self.vspec.get("cmap", "jet"), ncolors)(range(ncolors))
+        return get_cmap(self.vspec.get("cmap", "jet"), ncolors)(range(ncolors))
 
     @property
     def tsfc_colors(self) -> np.ndarray:
         """Default color map for Surface Temperature."""
 
-        purples = cm.get_cmap("Purples", 16)([14, 12, 8, 6, 4, 2])
-        ncar = cm.get_cmap(self.vspec.get("cmap"), 128)(
-            [15, 20, 25, 33, 50, 60, 70, 80, 85, 90, 115]
-        )
-        grays = cm.get_cmap("Greys", 15)([2, 4, 6, 8])
+        purples = get_cmap("Purples", 16)([14, 12, 8, 6, 4, 2])
+        ncar = get_cmap(self.vspec.get("cmap"), 128)([15, 20, 25, 33, 50, 60, 70, 80, 85, 90, 115])
+        grays = get_cmap("Greys", 15)([2, 4, 6, 8])
         return np.concatenate((purples, ncar, grays))
 
     @property
     def terrain_colors(self) -> np.ndarray:
         """Default color map for Terrain."""
 
-        return np.ndarray(
+        return np.asarray(
             ctables.colortables.get_colortable(self.vspec.get("cmap"))(range(54, 157, 6))
         )
 
@@ -456,9 +450,9 @@ class VarSpec(abc.ABC):
     def ua_temp_colors(self) -> np.ndarray:
         """Default color map for Upper-Air Temperature."""
 
-        grays = cm.get_cmap("Greys", 27)(range(17, 1, -2))
-        purples = cm.get_cmap("Purples", 27)(range(17, 1, -2))
-        ncar = cm.get_cmap(self.vspec.get("cmap"), 128)(
+        grays = get_cmap("Greys", 27)(range(17, 1, -2))
+        purples = get_cmap("Purples", 27)(range(17, 1, -2))
+        ncar = get_cmap(self.vspec.get("cmap"), 128)(
             [30, 34, 36, 40, 45, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 115]
         )
         return np.concatenate((grays, purples, ncar))
@@ -477,14 +471,14 @@ class VarSpec(abc.ABC):
         the gray range is arbitrary compared to the official flight levels
         """
 
-        lifr = cm.get_cmap("RdPu_r", 20)(range(11))
-        ifr = cm.get_cmap("autumn", 30)(range(30))
-        mvfr = cm.get_cmap("Blues", 20)(range(10, 20))
-        vfr1 = cm.get_cmap("YlGn_r", 60)(range(50))
-        vfr2 = cm.get_cmap("Greys", 25)(np.full(10, 9))
-        hi01 = cm.get_cmap("Greys", 25)(np.full(10, 6))
-        hi02 = cm.get_cmap("Greys", 25)(np.full(20, 3))
-        hi03 = cm.get_cmap("Greys", 25)(np.full(1, 0))
+        lifr = get_cmap("RdPu_r", 20)(range(11))
+        ifr = get_cmap("autumn", 30)(range(30))
+        mvfr = get_cmap("Blues", 20)(range(10, 20))
+        vfr1 = get_cmap("YlGn_r", 60)(range(50))
+        vfr2 = get_cmap("Greys", 25)(np.full(10, 9))
+        hi01 = get_cmap("Greys", 25)(np.full(10, 6))
+        hi02 = get_cmap("Greys", 25)(np.full(20, 3))
+        hi03 = get_cmap("Greys", 25)(np.full(1, 0))
 
         return np.concatenate((lifr, ifr, mvfr, vfr1, vfr2, hi01, hi02, hi03))
 
@@ -492,17 +486,17 @@ class VarSpec(abc.ABC):
     def vvel_colors(self) -> np.ndarray:
         """Default color map for Vetical Velocity."""
 
-        ncar1 = cm.get_cmap(self.vspec.get("cmap"), 128)([15, 18, 20, 25])
-        grays = cm.get_cmap("Greys", 2)([0])
-        ncar2 = cm.get_cmap(self.vspec.get("cmap"), 128)([60, 70, 80, 85, 90, 100, 120])
+        ncar1 = get_cmap(self.vspec.get("cmap"), 128)([15, 18, 20, 25])
+        grays = get_cmap("Greys", 2)([0])
+        ncar2 = get_cmap(self.vspec.get("cmap"), 128)([60, 70, 80, 85, 90, 100, 120])
         return np.concatenate((ncar1, grays, ncar2))
 
     @property
     def vort_colors(self) -> np.ndarray:
         """Default color map for Absolute Vorticity."""
 
-        grays = cm.get_cmap("Greys", 2)([0])
-        ncar = cm.get_cmap(self.vspec.get("cmap"), 128)(
+        grays = get_cmap("Greys", 2)([0])
+        ncar = get_cmap(self.vspec.get("cmap"), 128)(
             [15, 18, 20, 25, 50, 60, 70, 80, 83, 90, 100, 120]
         )
         return np.concatenate((grays, ncar))
@@ -511,16 +505,16 @@ class VarSpec(abc.ABC):
     def wind_colors(self) -> np.ndarray:
         """Default color map for Wind Speed."""
 
-        low = cm.get_cmap(self.vspec.get("cmap"), 129)(range(129, 109, -5))
-        high1 = cm.get_cmap(self.vspec.get("cmap"), 129)(range(16, 29, 3))
-        high2 = cm.get_cmap(self.vspec.get("cmap"), 129)(range(48, 103, 6))
+        low = get_cmap(self.vspec.get("cmap"), 129)(range(129, 109, -5))
+        high1 = get_cmap(self.vspec.get("cmap"), 129)(range(16, 29, 3))
+        high2 = get_cmap(self.vspec.get("cmap"), 129)(range(48, 103, 6))
         return np.concatenate((low, high1, high2))
 
     @property
     def wind_colors_high(self) -> np.ndarray:
         """Default color map for High Wind Speed."""
 
-        low = cm.get_cmap(self.vspec.get("cmap"), 129)(range(129, 108, -7))
-        high1 = cm.get_cmap(self.vspec.get("cmap"), 129)(range(16, 29, 4))
-        high2 = cm.get_cmap(self.vspec.get("cmap"), 129)(range(46, 95, 7))
+        low = get_cmap(self.vspec.get("cmap"), 129)(range(129, 108, -7))
+        high1 = get_cmap(self.vspec.get("cmap"), 129)(range(16, 29, 4))
+        high2 = get_cmap(self.vspec.get("cmap"), 129)(range(46, 95, 7))
         return np.concatenate((low, high1, high2))

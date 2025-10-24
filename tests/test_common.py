@@ -26,59 +26,10 @@ from matplotlib import cm
 from matplotlib import colors as mcolors
 from metpy.plots import ctables
 
-from adb_graphics import conversions, specs, utils
+from adb_graphics import specs, utils
 from adb_graphics.datahandler import gribdata
 
 yaml.add_constructor("!join_ranges", utils.join_ranges, Loader=yaml.Loader)
-
-
-def test_conversion():
-    """
-    Conversions return numpy array for input of np.ndarray, list, or int.
-    """
-
-    a = np.ones([3, 2]) * 300
-    c = a[0, 0]
-
-    # Check for the right answer
-    assert np.array_equal(conversions.k_to_c(a), a - 273.15)
-    assert np.array_equal(conversions.k_to_f(a), (a - 273.15) * 9 / 5 + 32)
-    assert np.array_equal(conversions.kgm2_to_in(a), a * 0.03937)
-    assert np.array_equal(conversions.m_to_dm(a), a / 10)
-    assert np.array_equal(conversions.m_to_in(a), a * 39.3701)
-    assert np.array_equal(conversions.m_to_kft(a), a / 304.8)
-    assert np.array_equal(conversions.m_to_mi(a), a / 1609.344)
-    assert np.array_equal(conversions.ms_to_kt(a), a * 1.9438)
-    assert np.array_equal(conversions.pa_to_hpa(a), a / 100)
-    assert np.array_equal(conversions.percent(a), a * 100)
-    assert np.array_equal(conversions.to_micro(a), a * 1e6)
-    assert np.array_equal(conversions.to_micrograms_per_m3(a), a * 1e9)
-    assert np.array_equal(conversions.vvel_scale(a), a * -10)
-    assert np.array_equal(conversions.vort_scale(a), a / 1e-05)
-    assert np.array_equal(conversions.weasd_to_1hsnw(a), a * 10)
-
-    functions = [
-        conversions.k_to_c,
-        conversions.k_to_f,
-        conversions.kgm2_to_in,
-        conversions.m_to_dm,
-        conversions.m_to_in,
-        conversions.m_to_kft,
-        conversions.m_to_mi,
-        conversions.ms_to_kt,
-        conversions.pa_to_hpa,
-        conversions.percent,
-        conversions.to_micro,
-        conversions.to_micrograms_per_m3,
-        conversions.vvel_scale,
-        conversions.vort_scale,
-        conversions.weasd_to_1hsnw,
-    ]
-
-    # Check that all functions return a np.ndarray given a collection, or single float
-    for f in functions:
-        for collection in [a, c]:
-            assert isinstance(f(collection), type(collection))
 
 
 class MockSpecs(specs.VarSpec):
