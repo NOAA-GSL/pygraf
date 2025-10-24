@@ -3,7 +3,7 @@ exclude_also = ["if TYPE_CHECKING:"]
 fail_under = 100
 show_missing = true
 skip_covered = true
-omit = ["tests/*"]
+omit = ["conftest.py", "tests/*"]
 
 
 [tool.mypy]

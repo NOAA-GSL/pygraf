@@ -23,7 +23,6 @@ from pathlib import Path
 import yaml
 
 from adb_graphics import errors, utils
-from adb_graphics.datahandler.gribfile import GribFile, GribFiles
 from adb_graphics.figure_builders import parallel_maps, parallel_skewt
 from adb_graphics.figures import maps
 
@@ -70,10 +69,7 @@ def create_skewt(cla: Namespace, fhr: int, grib_path: Path, workdir: Path):
     and generate a pool of workers to complete the tasks.
     """
 
-    # Create the file object to load the contents
-    gfile = GribFile(grib_path, var_config={})
-
-    args = [(cla, fhr, gfile.contents, site, workdir) for site in cla.sites]
+    args = [(cla, fhr, grib_path, site, workdir) for site in cla.sites]
 
     print(f"Queueing {len(args)} Skew Ts")
     with Pool(processes=cla.nprocs) as pool:
@@ -81,7 +77,12 @@ def create_skewt(cla: Namespace, fhr: int, grib_path: Path, workdir: Path):
 
 
 def create_maps(
-    cla: Namespace, fhr: int, grib_path: Path, workdir: Path, grib_path2: Path | None = None
+    cla: Namespace,
+    fhr: int,
+    grib_paths: list[Path],
+    workdir: Path,
+    grib_path2: Path | None = None,
+    **kwargs,
 ):
     """
     Generate arguments for parallel processing of plan-view maps and
@@ -104,7 +105,7 @@ def create_maps(
                     (
                         cla,
                         fhr,
-                        grib_path,
+                        grib_paths,
                         level,
                         model,
                         spec,
@@ -112,6 +113,7 @@ def create_maps(
                         workdir,
                         tile,
                         grib_path2,
+                        kwargs,
                     )
                 )
 
@@ -119,39 +121,6 @@ def create_maps(
         #        parallel_maps(*args[-1])
         with Pool(processes=cla.nprocs) as pool:
             pool.starmap(parallel_maps, args)
-
-
-def gather_gribfiles(cla: Namespace, fhr: int, grib_path: Path, gribfiles: None | GribFiles):
-    """
-    Returns the appropriate gribfiles object for the type of graphics being
-    generated -- whether it's for a single forecast time or all forecast lead
-    times.
-    """
-
-    filenames: dict[str, list[Path]] = {"01fcst": [], "free_fcst": []}
-
-    fcst_hour = int(fhr)
-
-    first_fcst = 6 if "global" in cla.images[0] else 1
-    if fcst_hour <= first_fcst:
-        filenames["01fcst"].append(grib_path)
-    else:
-        filenames["free_fcst"].append(grib_path)
-
-    if gribfiles is None or not cla.all_leads:
-        # Create a new GribFiles object, include all hours, or just this one,
-        # depending on command line argument flag
-
-        return GribFiles(
-            coord_dims={"fcst_hr": [fhr]},
-            filenames=filenames,
-            filetype=cla.file_type,
-            model=cla.images[0],
-        )
-    # Append a single forecast hour to the existing GribFiles object.
-    gribfiles.coord_dims.get("fcst_hr", []).append(fhr)
-    gribfiles.append(filenames)
-    return gribfiles
 
 
 def generate_tile_list(arg_list: list) -> list[str]:
@@ -568,9 +537,7 @@ def graphics_driver(cla: Namespace):
     # Initialize a timer used for killing the program
     timer_end = time.time()
 
-    gribfiles = None
-    gribfiles2 = None
-
+    grib_paths = []
     # When accummulating variables for preparing a single lead time,
     # load all of those into gribfiles up front.
     # This is not an operational feature. Exit if files don't exist.
@@ -588,7 +555,8 @@ def graphics_driver(cla: Namespace):
                     )
                     remove_proc_grib_files(cla)
                     raise FileNotFoundError(" ".join(msg))
-                gribfiles = gather_gribfiles(cla, fhr, grib_path, gribfiles)
+                if old_enough:
+                    grib_paths.append(grib_path)
 
     # Allow this task to run concurrently with UPP by continuing to check for
     # new files as they become available.
@@ -599,13 +567,14 @@ def graphics_driver(cla: Namespace):
             if cla.graphic_type == "enspanel":
                 # Expand template to create a list of ensemble member files and
                 # check if they exist and that they're old enough
-                grib_paths = []
+                ens_paths = []
                 ens_members = list(range(cla.ens_size))
                 for mem in ens_members:
                     mem_path, mem_old_enough = check_file(cla, fhr, mem=mem)
                     if mem_old_enough:
-                        grib_paths.append(mem_path)
-                    old_enough = len(grib_paths) == cla.ens_size
+                        ens_paths.append(mem_path)
+                    old_enough = len(ens_paths) == cla.ens_size
+                grib_paths = ens_paths
             else:
                 # Only checks existence/age of base file for diffs
                 grib_path, old_enough = pre_proc_grib_files(cla, fhr)
@@ -613,6 +582,7 @@ def graphics_driver(cla: Namespace):
             # UPP is most likely done writing if it hasn't written in data_age
             # mins (default is 3 to address most CONUS-sized domains)
             if old_enough:
+                grib_paths.append(grib_path)
                 fcst_hours.remove(fhr)
                 fhr_as_list = [fhr]
             else:
@@ -655,38 +625,30 @@ def graphics_driver(cla: Namespace):
                 create_maps(
                     cla,
                     fhr=fhr,
-                    grib_path=grib_path,
+                    grib_paths=grib_paths,
                     workdir=workdir,
                 )
             elif cla.graphic_type == "diff":
-                gribfiles = gather_gribfiles(cla, fhr, grib_path, gribfiles)
                 grib_path2, _ = check_file(
                     cla,
                     fhr,
                     data_root=cla.data_root2,
                     file_tmpl=cla.file_tmpl2,
                 )
-                gribfiles2 = gather_gribfiles(cla, fhr, grib_path2, gribfiles2)
-
                 create_maps(
                     cla,
                     fhr=fhr,
-                    grib_path=grib_path,
+                    grib_paths=[grib_path],
                     grib_path2=grib_path2,
                     workdir=workdir,
                 )
-            else:
-                gribfiles = GribFiles(
-                    coord_dims={"ens_mem": ens_members, "fcst_hr": fhr_as_list},
-                    filenames={"free_fcst": grib_paths},
-                    filetype=cla.file_type,
-                    model=cla.images[0],
-                )
+            else:  # enspanel
                 create_maps(
                     cla,
                     fhr=fhr,
-                    grib_path=grib_path,
+                    grib_paths=grib_paths,
                     workdir=workdir,
+                    coord_dims={"ens_mem": ens_members, "fcst_hr": fhr_as_list},
                 )
 
             # Zip png files and remove the originals in a subprocess

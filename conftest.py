@@ -5,6 +5,8 @@ Each CLA needs to be defined in pytest_addoption and to have a pytest.fixture
 function defined.
 """
 
+from pathlib import Path
+
 import pytest
 
 
@@ -32,7 +34,6 @@ def natfile(request):
 
 
 @pytest.fixture
-def prsfile(request):
+def prsfile():
     """Interface to  pass a grib file to pytest."""
-
-    return request.config.getoption("--prs-file")
+    return Path("tests", "data", "wrfprs_hrconus_07.grib2")
