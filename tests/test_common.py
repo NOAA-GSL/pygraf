@@ -17,11 +17,9 @@ To run the tests, type the following in the top level repo directory:
 
 import warnings
 from inspect import getfullargspec
-from pathlib import Path
 from string import ascii_letters, digits
 
 import numpy as np
-import yaml
 from matplotlib import cm
 from matplotlib import colors as mcolors
 from metpy.plots import ctables
@@ -29,14 +27,11 @@ from metpy.plots import ctables
 from adb_graphics import specs, utils
 from adb_graphics.datahandler import gribdata
 
-yaml.add_constructor("!join_ranges", utils.join_ranges, Loader=yaml.Loader)
-
 
 class MockSpecs(specs.VarSpec):
     """Mock class for the VarSpec abstract class."""
 
-    with Path("adb_graphics/default_specs.yml").open() as c:
-        cfg = yaml.load(c, Loader=yaml.Loader)
+    cfg = utils.load_yaml("adb_graphics/default_specs.yml")
 
     @property
     def clevs(self):
@@ -53,15 +48,16 @@ def test_utils():
     assert callable(utils.get_func("conversions.k_to_c"))
 
 
-def test_join_ranges_constructor():
+def test_join_ranges_constructor(tmp_path):
     """Test that the join_ranges constructor works as expected."""
 
-    yaml_str = """
+    cfg_file = tmp_path / "cfg.yaml"
+    cfg_file.write_text("""
     foo: !join_ranges [[0, 15, 0.1], [20, 61, 20]]
     foo2: !join_ranges [[0, 15, 0.1]]
     foo3: !join_ranges [[0, 15, 0.1], [20, 40, 10], [40, 61, 20]]
-    """
-    cfg = yaml.load(yaml_str, Loader=yaml.Loader)
+    """)
+    cfg = utils.load_yaml(cfg_file)
 
     expected = np.concatenate((np.arange(0, 15, 0.1), np.arange(20, 61, 20)), axis=0)
     expected2 = np.arange(0, 15, 0.1)
@@ -79,8 +75,7 @@ class TestDefaultSpecs:
 
     config = "adb_graphics/default_specs.yml"
     varspec = MockSpecs()
-    with Path("adb_graphics/default_specs.yml").open() as c:
-        cfg = yaml.load(c, Loader=yaml.Loader)
+    cfg = utils.load_yaml("adb_graphics/default_specs.yml")
 
     @property
     def allowable(self):

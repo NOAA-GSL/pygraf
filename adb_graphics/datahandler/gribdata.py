@@ -13,6 +13,7 @@ from typing import Any
 
 import numpy as np
 from matplotlib import cm
+from pandas import to_datetime
 from xarray import DataArray, Dataset
 
 from adb_graphics import conversions, errors, specs, utils
@@ -54,8 +55,8 @@ class UPPData(specs.VarSpec):
         Returns the initial time of the grib file as a datetime object from
         the grib file.
         """
-
-        return datetime.fromisoformat(str(self.field.time.values).split(".")[0])
+        ret: datetime = to_datetime(self.field.time.values)
+        return ret
 
     @property
     def clevs(self) -> np.ndarray:
@@ -63,24 +64,10 @@ class UPPData(specs.VarSpec):
         Uses the information contained in the yaml config file to determine
         the set of levels to be contoured. Returns the list of levels.
 
-        The yaml file "clevs" key may contain a list, a range, or a call to a
-        function. The logic to parse those options is included here.
+        The yaml file "clevs" key may contain a list or a range.
         """
 
-        clev = np.asarray(self.vspec.get("clevs", []))
-
-        # Is clevs a list?
-        if isinstance(clev, (list, np.ndarray)):
-            return np.asarray(clev)
-
-        # Is clev a call to another function?
-        try:
-            return utils.get_func(clev)()
-        except ImportError:
-            print(
-                f"Check yaml file definition of CLEVS for {self.short_name}. ",
-                "Must be a list, range, or function call!",
-            )
+        return np.asarray(self.vspec.get("clevs", []))
 
     @staticmethod
     def date_to_str(date: datetime) -> str:
@@ -98,21 +85,10 @@ class UPPData(specs.VarSpec):
         first_variable_name = list(self.ds.data_vars)[0]
         return DataArray(self.ds[first_variable_name])
 
-    def field_column_max(self, values: DataArray, variable: str, level: str, **kwargs):  # noqa: ARG002
+    def field_column_max(self, **kwargs):  # noqa: ARG002
         """Returns the column max of the values."""
 
-        vals = self.values(name=variable, level=level, one_lev=False)
-        return vals.max(axis=0)
-
-    def field_sum(self, values: DataArray, variable2: str, level2: str, **kwargs):  # noqa: ARG002
-        # pylint: disable=unused-argument
-        """Return the sum of the values."""
-
-        value2 = self.values(name=variable2, level=level2)
-        sum2 = values + value2
-        value2.close()
-
-        return sum2
+        return self.values().max(axis=0)
 
     def field_diff(self, values: DataArray, variable2: str, level2: str, **kwargs):  # noqa: ARG002
         """Subtracts the values from variable2 from self.field."""
@@ -134,6 +110,15 @@ class UPPData(specs.VarSpec):
         levs = [int(x[:-2]) for x in levels]
         return values.sel(isobaricInhPa=levs).mean("isobaricInhPa")
 
+    def field_sum(self, values: DataArray, variable2: str, level2: str, **kwargs):  # noqa: ARG002
+        """Return the sum of the values."""
+
+        value2 = self.values(name=variable2, level=level2)
+        sum2 = values + value2
+        value2.close()
+
+        return sum2
+
     def _get_data_levels(self, vertical_dim: str):
         """
         Values of the vertical dimension.
@@ -142,7 +127,7 @@ class UPPData(specs.VarSpec):
           vertical_dim   the name of the vertical dimension
         """
         dim = [str(coord) for coord in self.ds.coords if vertical_dim in str(coord)][0]
-        return self.ds.coords[dim].values
+        return self.ds.coords[dim].to_numpy()
 
     def _get_field(self, spec: dict) -> DataArray:
         """
@@ -292,7 +277,7 @@ class UPPData(specs.VarSpec):
         coords = sorted(
             [str(c) for c in list(self.ds.coords) if any(ele in str(c) for ele in ["lat", "lon"])]
         )
-        return [self.ds.coords[c].values for c in coords]
+        return [self.ds.coords[c].to_numpy() for c in coords]
 
     @property
     def lev_descriptor(self):

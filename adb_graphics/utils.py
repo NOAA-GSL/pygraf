@@ -21,6 +21,8 @@ from typing import Any
 import numpy as np
 import yaml
 from matplotlib.axes import Axes
+from uwtools.api.config import YAMLConfig
+from uwtools.config.support import uw_yaml_loader
 
 
 def cfgrib_spec(config: dict, model: str) -> dict:
@@ -130,7 +132,7 @@ def get_func(val: str):
     return getattr(module, fun_name)
 
 
-def join_ranges(loader: yaml.Loader, node: yaml.Node) -> Any:  # noqa: ARG001
+def join_ranges(loader: yaml.SafeLoader, node: yaml.Node) -> Any:  # noqa: ARG001
     """
     Merge two or more different ranges into a single array for color bar clevs.
 
@@ -154,7 +156,14 @@ def join_ranges(loader: yaml.Loader, node: yaml.Node) -> Any:  # noqa: ARG001
     return np.concatenate(list_, axis=0)
 
 
-yaml.add_constructor("!join_ranges", join_ranges, Loader=yaml.Loader)
+def arange_constructor(loader: yaml.SafeLoader, node: yaml.Node) -> Any:  # noqa: ARG001
+    return np.arange(*[float(n.value) for n in node.value])
+
+
+def load_yaml(config: Path | str):
+    yaml.add_constructor("!join_ranges", join_ranges, Loader=uw_yaml_loader())
+    yaml.add_constructor("!arange", arange_constructor, Loader=uw_yaml_loader())
+    return YAMLConfig(config)
 
 
 def label_line(ax: Axes, label: str, segment: np.ndarray, **kwargs):

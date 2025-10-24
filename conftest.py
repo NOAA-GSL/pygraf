@@ -37,3 +37,9 @@ def natfile(request):
 def prsfile():
     """Interface to  pass a grib file to pytest."""
     return Path("tests", "data", "wrfprs_hrconus_07.grib2")
+
+
+@pytest.fixture
+def spec_file():
+    """Interface to  pass a grib file to pytest."""
+    return Path("adb_graphics", "default_specs.yml")

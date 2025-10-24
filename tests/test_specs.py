@@ -1,12 +1,9 @@
 from pathlib import Path
 
 import numpy as np
-import yaml
 from pytest import fixture, mark
 
 from adb_graphics import specs, utils
-
-yaml.add_constructor("!join_ranges", utils.join_ranges, Loader=yaml.Loader)
 
 
 class Spec(specs.VarSpec):
@@ -14,8 +11,7 @@ class Spec(specs.VarSpec):
     Concrete class for the VarSpec abstract class.
     """
 
-    with Path("adb_graphics/default_specs.yml").open() as c:
-        cfg = yaml.load(c, Loader=yaml.Loader)
+    cfg = utils.load_yaml(Path("adb_graphics/default_specs.yml"))
 
     @property
     def clevs(self):

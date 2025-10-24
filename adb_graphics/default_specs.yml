@@ -11,7 +11,7 @@
 #
 #   clevs: specifies the contour levels by one of the following methods
 #      - a list with no quotes
-#      - a numpy.arange specified as "!!python/object/apply:numpy.arange [list]"
+#      - a numpy.arange specified as "!arange [list]"
 #        with quotes. Specify "list" as with numpy.arange() like this --
 #        [[start, ]stop[, increment]]]. start and increment are options.
 #      - the name of a function to be called that will return a list.
@@ -116,7 +116,7 @@
         shortName: rare
         typeOfLevel: heightAboveGround
         level: 1000
-    clevs: !!python/object/apply:numpy.arange [5, 76, 5]
+    clevs: !arange [5, 76, 5]
     cmap: NWSReflectivity
     colors: cref_colors
     ncl_name: REFD_P0_L103_{grid}
@@ -765,7 +765,7 @@ cref: # Composite reflectivity
 crefmax: # Comp reflectivity (max over forecast)
   sfc:
     accumulate: True
-    clevs: !!python/object/apply:numpy.arange [5, 76, 5]
+    clevs: !arange [5, 76, 5]
     cmap: NWSReflectivity
     colors: cref_colors
     ncl_name: REFC_P0_L200_{grid}
@@ -786,7 +786,7 @@ ctop: # Cloud top height
       shortName: gh
       typeOfLevel: cloudTop
       level: 0
-    clevs: !!python/object/apply:numpy.arange [0, 61, 5]
+    clevs: !arange [0, 61, 5]
     cmap: gist_ncar
     colors: ceil_colors
     ncl_name: HGT_P0_L3_{grid}
@@ -800,7 +800,7 @@ dewp: # Dew point temperaeure
       shortName: 2d
       level: 2
       typeOfLevel: heightAboveGround
-    clevs: !!python/object/apply:numpy.arange [-50, 141, 10]
+    clevs: !arange [-50, 141, 10]
     cmap: gist_ncar
     colors: tsfc_colors
     ncl_name: DPT_P0_L103_{grid}
@@ -814,7 +814,7 @@ dlwrf: # Downward Longwave Radiation Flux
     cfgrib:
       shortName: sdlwrf
       typeOfLevel: surface
-    clevs: !!python/object/apply:numpy.arange [200, 501, 12]
+    clevs: !arange [200, 501, 12]
     cmap: gist_ncar
     colors: radiation_colors
     ncl_name: DLWRF_P0_L1_{grid}
@@ -822,7 +822,7 @@ dlwrf: # Downward Longwave Radiation Flux
     title: Downward LW Radiation Flux, Surface
     unit: W/m$^{2}$
   top: # Nominal top of atmosphere
-    clevs: !!python/object/apply:numpy.arange [80, 341, 2]
+    clevs: !arange [80, 341, 2]
     cmap: ir_rgbv_r
     colors: radiation_mix_colors
     ncl_name: DLWRF_P0_L8_{grid}
@@ -835,7 +835,7 @@ dlwrfavg: # Downward Longwave Radiation Flux Average
     cfgrib:
       shortName: avg_sdlwrf
       typeOfLevel: surface
-    clevs: !!python/object/apply:numpy.arange [200, 501, 12]
+    clevs: !arange [200, 501, 12]
     cmap: gist_ncar
     colors: radiation_colors
     ncl_name: DLWRF_P0_L1_{grid}_avg6h
@@ -855,7 +855,7 @@ dswrf: # Downward Shortwave Radiation Flux
     title: Downward SW Radiation Flux, Surface
   top: # Nominal top of atmosphere
     <<: *radiation_flux
-    clevs: !!python/object/apply:numpy.arange [50, 851, 10]
+    clevs: !arange [50, 851, 10]
     cmap: Greys_r
     colors: radiation_bw_colors
     ncl_name: DSWRF_P0_L8_{grid}
@@ -915,7 +915,7 @@ echotop: # Echo Top
         parameterCategory: 16
         typeOfLevel: atmosphereSingleLayer
         level: 0
-    clevs: !!python/object/apply:numpy.arange [4, 50, 3]
+    clevs: !arange [4, 50, 3]
     cmap: NWSReflectivity
     colors: cref_colors
     ncl_name: 
@@ -1014,7 +1014,7 @@ G113bt: # GOES-W Brightness temperature, water vapor (Ch 3)
         parameterNumber: 242
         typeOfLevel: atmosphere
         level: 0
-    clevs: !!python/object/apply:numpy.arange [-80, 41, 1]
+    clevs: !arange [-80, 41, 1]
     cmap: WVCIMSS_r
     colors: goes_colors
     ncl_name: SBT113_P0_L8_{grid}
@@ -1057,7 +1057,7 @@ gh: # Geopotential height
     cfgrib:
       shortName: gh
       typeOfLevel: isobaricInhPa
-    clevs: !!python/object/apply:numpy.arange [6, 4680, 6]
+    clevs: !arange [6, 4680, 6]
     cmap: rainbow
     colors: terrain_colors
     ncl_name:
@@ -1074,27 +1074,27 @@ gh: # Geopotential height
     <<: *ua_gh
   500mb:
     <<: *ua_gh
-    clevs: !!python/object/apply:numpy.arange [504, 601, 6]
+    clevs: !arange [504, 601, 6]
     ticks: 6
   700mb:
     <<: *ua_gh
-    clevs: !!python/object/apply:numpy.arange [201, 373, 3]
+    clevs: !arange [201, 373, 3]
   850mb:
     <<: *ua_gh
-    clevs: !!python/object/apply:numpy.arange [3, 600, 3]
+    clevs: !arange [3, 600, 3]
   925mb:
     <<: *ua_gh
-    clevs: !!python/object/apply:numpy.arange [3, 600, 3]
+    clevs: !arange [3, 600, 3]
   1000mb:
     <<: *ua_gh
-    clevs: !!python/object/apply:numpy.arange [500, 600, 10]
+    clevs: !arange [500, 600, 10]
   sfc:
     <<: *ua_gh
     cfgrib:
       shortName: orog
       typeOfLevel: surface
       level: 0
-    clevs: !!python/object/apply:numpy.arange [0, 5000, 250]
+    clevs: !arange [0, 5000, 250]
     cmap: gist_earth
     ncl_name: HGT_P0_L1_{grid}
     ticks: 0
@@ -1131,7 +1131,7 @@ gust:
       shortName: gust
       typeOfLevel: surface
       level: 0
-    clevs: !!python/object/apply:numpy.arange [5, 95, 5]
+    clevs: !arange [5, 95, 5]
     cmap: gist_ncar
     colors: wind_colors
     ncl_name: GUST_P0_L1_{grid}
@@ -1186,7 +1186,7 @@ hailcast: # Max 1h Hail diameter
     title: Max 1h Hail Diameter at Sfc from HAILCAST
 hlcy: # Helicity
   in16: &hlcy # Hourly updraft helicity over 1-6 km layer
-    clevs: !!python/object/apply:numpy.arange [25, 301, 25]
+    clevs: !arange [25, 301, 25]
     cmap: gist_ncar
     colors: rainbow12_colors
     ncl_name: UPHL_P0_2L103_{grid}
@@ -1200,7 +1200,7 @@ hlcy: # Helicity
       parameterNumber: 15
       topLevel: 5000
       bottomLevel: 2000
-    clevs: !!python/object/apply:numpy.arange [25, 301, 25]
+    clevs: !arange [25, 301, 25]
     ncl_name: UPHL_P0_2L103_{grid}
     split: True
     title: 2-5km Updraft Helicity
@@ -1210,7 +1210,7 @@ hlcy: # Helicity
       typeOfLevel: heightAboveGroundLayer
       topLevel: 2000
       bottomLevel: 0
-    clevs: !!python/object/apply:numpy.arange [-300, -24, 25]
+    clevs: !arange [-300, -24, 25]
     cmap: gist_ncar
     colors: rainbow12_reverse
     ncl_name: VAR_0_7_200_P8_2L103_{grid}_min1h
@@ -1378,7 +1378,7 @@ icprb: # Icing Probability
   # levels chosen are arbitrary based on initial plot samples
   # additional levels may be requested in the future.
   500ft: &icprb
-    clevs: !!python/object/apply:numpy.arange [5, 86, 10]
+    clevs: !arange [5, 86, 10]
     cmap: gist_ncar
     colors: icprb_colors
     ncl_name: ICPRB_P0_L102_{grid}
@@ -1440,7 +1440,7 @@ lcl: # Lifted condensation level
       shortName: gh
       typeOfLevel: adiabaticCondensation
       level: 0
-    clevs: !!python/object/apply:numpy.arange [0, 5000, 250]
+    clevs: !arange [0, 5000, 250]
     cmap: rainbow
     colors: lcl_colors
     contours:
@@ -1482,7 +1482,7 @@ li: # Lifted Index
       shortName: 4lftx
       typeOfLevel: pressureFromGroundLayer
       topLevel: 18000
-    clevs: !!python/object/apply:numpy.arange [-15, 16]
+    clevs: !arange [-15, 16]
     cmap: Spectral
     colors: lifted_index_colors
     ncl_name: 4LFTX_P0_2L108_{grid}
@@ -1538,7 +1538,7 @@ ltng: # Lightning
       shortName: ltng
       typeOfLevel: atmosphere
       level: 0
-    clevs: !!python/object/apply:numpy.arange [5, 91, 5]
+    clevs: !arange [5, 91, 5]
     cmap: jet
     colors: graupel_colors
     ncl_name: LTNG_P8_L10_{grid}_max1h
@@ -1634,7 +1634,7 @@ pres:
       shortName: sp
       level: 0
       typeOfLevel: surface
-    clevs: !!python/object/apply:numpy.arange [650, 1051, 4]
+    clevs: !arange [650, 1051, 4]
     cmap: gist_ncar
     colors: ps_colors
     ncl_name: PRES_P0_L1_{grid}
@@ -1652,7 +1652,7 @@ pres:
         shortName: mslet
         typeOfLevel: meanSea
         level: 0
-    clevs: !!python/object/apply:numpy.arange [976, 1051, 4]
+    clevs: !arange [976, 1051, 4]
     cmap: Spectral_r
     colors: pmsl_colors
     ncl_name:
@@ -1685,7 +1685,7 @@ presmin:
       shortName: mslet
       typeOfLevel: meanSea
       level: 0
-    clevs: !!python/object/apply:numpy.arange [860, 1001, 10]
+    clevs: !arange [860, 1001, 10]
     cmap: NWSReflectivity
     colors: cref_colors
     ncl_name:
@@ -1715,7 +1715,7 @@ ptmp: # Potential temperature
         shortName: pt
         typeOfLevel: surface
         level: 0
-    clevs: !!python/object/apply:numpy.arange [210, 350, 5]
+    clevs: !arange [210, 350, 5]
     cmap: jet
     colors: t_colors
     ncl_name: POT_P0_L103_{grid}
@@ -1788,7 +1788,7 @@ pwtr: # Precipitable water
     cfgrib:
       shortName: pwat
       typeOfLevel: atmosphereSingleLayer
-    clevs: !!python/object/apply:numpy.arange [4, 81, 4]
+    clevs: !arange [4, 81, 4]
     cmap: gist_ncar
     colors: pw_colors
     ncl_name: PWAT_P0_L200_{grid}
@@ -2044,7 +2044,7 @@ sipd: # Supercooled Large Droplet Icing
   # levels chosen are arbitrary based on initial plot samples
   # additional levels may be requested in the future.
   500ft: &sipd
-    clevs: !!python/object/apply:numpy.arange [5, 86, 10]
+    clevs: !arange [5, 86, 10]
     cmap: gist_ncar
     colors: icprb_colors
     ncl_name: SIPD_P0_L102_{grid}
@@ -2125,7 +2125,7 @@ soilt: # Soil Temperature
       typeOfLevel: depthBelowLandLayer
       scaledValueOfFirstFixedSurface: 0
       scaledValueOfSecondFixedSurface: 0
-    clevs: !!python/object/apply:numpy.arange [235, 331, 5]
+    clevs: !arange [235, 331, 5]
     cmap: gist_ncar
     colors: tsfc_colors
     ncl_name: TSOIL_P0_2L106_{grid}
@@ -2345,7 +2345,7 @@ temp: # Temperature
       shortName: 2t
       level: 2
       typeOfLevel: heightAboveGround
-    clevs: !!python/object/apply:numpy.arange [-32, 33, 2]
+    clevs: !arange [-32, 33, 2]
     cmap: Spectral_r
     colors: centered_diff
     ncl_name: TMP_P0_L103_{grid} # 2m Temp
@@ -2364,7 +2364,7 @@ temp: # Temperature
       shortName: 2t
       level: 2
       typeOfLevel: heightAboveGround
-    clevs: !!python/object/apply:numpy.arange [-50, 141, 10]
+    clevs: !arange [-50, 141, 10]
     cmap: gist_ncar
     colors: tsfc_colors
     ncl_name: TMP_P0_L103_{grid}
@@ -2377,7 +2377,7 @@ temp: # Temperature
     cfgrib:
       shortName: t
       typeOfLevel: isobaricInhPa
-    clevs: !!python/object/apply:numpy.arange [-40, 40, 2.5]
+    clevs: !arange [-40, 40, 2.5]
     cmap: jet
     colors: ua_temp_colors
     contours:
@@ -2465,10 +2465,10 @@ totp: # Hourly total precipitation
       pres_msl:
         colors: red
         linewidths: 0.4
-        levels: !!python/object/apply:numpy.arange [650, 1051, 2]
+        levels: !arange [650, 1051, 2]
       thick_500mb:
         colors: blue
-        levels: !!python/object/apply:numpy.arange [402, 601, 6]
+        levels: !arange [402, 601, 6]
         linewidths: 0.4
         linestyles: dashed
     ncl_name: APCP_P8_L1_{grid}_acc1h
@@ -2485,10 +2485,10 @@ totp6h: # 6-hourly total precipitation
       pres_msl:
         colors: red
         linewidths: 0.4
-        levels: !!python/object/apply:numpy.arange [650, 1051, 2]
+        levels: !arange [650, 1051, 2]
       thick_500mb:
         colors: blue
-        levels: !!python/object/apply:numpy.arange [402, 601, 6]
+        levels: !arange [402, 601, 6]
         linewidths: 0.4
         linestyles: dashed
     ncl_name: APCP_P8_L1_{grid}_acc6h
@@ -2611,7 +2611,7 @@ ulwrf: # Upward Longwave Radiation Flux
       shortName: sulwrf
       typeOfLevel: surface
       stepType: instant
-    clevs: !!python/object/apply:numpy.arange [350, 601, 10]
+    clevs: !arange [350, 601, 10]
     cmap: gist_ncar
     colors: radiation_colors
     ncl_name: ULWRF_P0_L1_{grid}
@@ -2629,7 +2629,7 @@ ulwrf: # Upward Longwave Radiation Flux
         typeOfLevel: nominalTop
         level: 0
         stepType: avg
-    clevs: !!python/object/apply:numpy.arange [80, 341, 2]
+    clevs: !arange [80, 341, 2]
     cmap: ir_rgbv_r
     colors: radiation_mix_colors
     ncl_name: ULWRF_P0_L8_{grid}
@@ -2643,7 +2643,7 @@ ulwrfavg: # Upward Longwave Radiation Flux
       shortName: sulwrf
       typeOfLevel: surface
       stepType: avg
-    clevs: !!python/object/apply:numpy.arange [350, 601, 10]
+    clevs: !arange [350, 601, 10]
     cmap: gist_ncar
     colors: radiation_colors
     ncl_name: ULWRF_P0_L1_{grid}_avg6h
@@ -2655,7 +2655,7 @@ ulwrfavg: # Upward Longwave Radiation Flux
       parameterName: Upward long-wave radiation flux
       typeOfLevel: nominalTop
       stepType: avg
-    clevs: !!python/object/apply:numpy.arange [80, 341, 2]
+    clevs: !arange [80, 341, 2]
     cmap: ir_rgbv_r
     colors: radiation_mix_colors
     ncl_name: ULWRF_P0_L8_{grid}_avg6h
@@ -2682,7 +2682,7 @@ uswrf: # Upward Shortwave Radiation Flux
       parameterCategory: 4
       typeOfLevel: nominalTop
       level: 0
-    clevs: !!python/object/apply:numpy.arange [50, 851, 10]
+    clevs: !arange [50, 851, 10]
     cmap: Greys_r
     colors: radiation_bw_colors
     ncl_name: USWRF_P0_L8_{grid}
@@ -2702,7 +2702,7 @@ uswrfavg: # Upward Shortwave Radiation Flux Average
     title: Upward SW Radiation Flux 6h Avg, Surface
   top: # Nominal top of atmosphere
     <<: *radiation_flux
-    clevs: !!python/object/apply:numpy.arange [50, 851, 10]
+    clevs: !arange [50, 851, 10]
     cmap: Greys_r
     colors: radiation_bw_colors
     ncl_name: USWRF_P8_L8_{grid}_avg6h
@@ -2783,7 +2783,7 @@ vig: # Vertically-integrated graupel
       parameterNumber: 74
       typeOfLevel: atmosphereSingleLayer
       level: 0
-    clevs: !!python/object/apply:numpy.arange [5, 91, 5]
+    clevs: !arange [5, 91, 5]
     cmap: jet
     colors: graupel_colors
     ncl_name: TCOLG_P8_L200_{grid}_max1h
@@ -2819,7 +2819,7 @@ vort: # Absolute vorticity
     cfgrib:
       shortName: absv
       typeOfLevel: isobaricInhPa
-    clevs: !!python/object/apply:numpy.arange [6, 29, 2]
+    clevs: !arange [6, 29, 2]
     cmap: gist_ncar
     colors: vort_colors
     contours:
@@ -2838,7 +2838,7 @@ vvel: # Vertical velocity
       rrfs:
         shortName: wz
         typeOfLevel: isobaricInhPa
-    clevs: !!python/object/apply:numpy.arange [-17, 34, 5]
+    clevs: !arange [-17, 34, 5]
     cmap: gist_ncar
     colors: vvel_colors
     contours:
@@ -2866,7 +2866,7 @@ vvort: # Vertical vorticity
       shortName: max_vo
       typeOfLevel: heightAboveGroundLayer
       level: 1000
-    clevs: !!python/object/apply:numpy.arange [0.0025, 0.0301, 0.0025]
+    clevs: !arange [0.0025, 0.0301, 0.0025]
     cmap: gist_ncar
     colors: vort_colors
     ncl_name: RELV_P8_2L103_{grid}_max1h
@@ -2911,7 +2911,7 @@ windmax:
       shortName: max_10si
       typeOfLevel: heightAboveGround
       level: 10
-    clevs: !!python/object/apply:numpy.arange [5, 95, 5]
+    clevs: !arange [5, 95, 5]
     cmap: gist_ncar
     colors: wind_colors
     ncl_name: WIND_P8_L103_{grid}_max1h
@@ -2925,7 +2925,7 @@ wspeed: # Wind Speed
       shortName: 10u
       level: 10
       typeOfLevel: heightAboveGround
-    clevs: !!python/object/apply:numpy.arange [5, 95, 5]
+    clevs: !arange [5, 95, 5]
     cmap: gist_ncar
     colors: wind_colors
     ncl_name: UGRD_P0_L103_{grid}
