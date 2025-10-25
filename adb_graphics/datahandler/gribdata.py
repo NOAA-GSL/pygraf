@@ -142,77 +142,7 @@ class UPPData(specs.VarSpec):
         first_variable_name = list(ds.data_vars)[0]
         return DataArray(ds[first_variable_name])
 
-    def _get_level(self, field: DataArray, level: str, spec: dict, **kwargs) -> int:
-        """
-        Returns the value of the level to for a 3D array.
-
-        Arg:
-          field:     dataset object for a given variable
-          level:     string describing the level atmospheric level; corresponds
-                     to a key in default specs
-          spec:      the specifications dictionary to use for the variable in
-                     question
-
-        kwargs:
-          split:      bool sometimes passed in through transforms that indicates
-                      a level string should be split, e.g. 06km.
-
-        Return:
-          Integer value corresponding to the array index for the atmospheric
-          level.
-
-        """
-
-        # The index of the requested level
-        lev = spec.get("vertical_index")
-        if lev is not None:
-            return int(lev)
-
-        vertical_dim = self.vertical_dim(field)
-
-        # numeric_level returns a list of length 1 (e.g. [500] for 500 mb) or of
-        # length 2 when split=True and it's like 0-6 km, so returns [0, 6000]
-        requested_level, _ = self.numeric_level(
-            level=level,
-            split=kwargs.get("split", spec.get("split")),
-        )
-
-        # data_levels contains a list of vertical dimension values
-        data_levels = self._get_data_levels(vertical_dim)
-
-        # For split-level variables, like 0-6km, find the matching index by
-        # looping through both the possible vertical level arrays.
-        if len(data_levels) == 2 and len(requested_level) == 2:
-            for lev, levset in enumerate(zip(*[list(lev) for lev in data_levels], strict=True)):
-                if sorted(levset) == requested_level:
-                    return lev
-
-        # For single-level variables, like 500mb, use the argwhere function to
-        # return the matching index
-        if len(requested_level) == 1:
-            for dim_levels in data_levels:
-                lev = np.argwhere(dim_levels == requested_level[0])
-                try:
-                    if lev or lev == [0]:
-                        return int(lev[0])
-                except ValueError:
-                    print(f"BAD LEVEL is {lev} for {field.name}")
-
-            print(
-                f"Could not find a level for {field.name} at requested \
-                  level = {requested_level} for variable levels = {data_levels}. Index \
-                  was {lev}."
-            )
-
-        # If neither of those cases worked out appropriately, raise an error.
-        msg = (
-            f"Length of requested_level ({len(requested_level)}) or "
-            f"data_levels ({len(data_levels)}) bad!"
-            f" {level} {field.name}"
-        )
-        raise ValueError(msg)
-
-    def get_transform(self, transforms: dict | str, val: DataArray) -> DataArray:
+    def get_transform(self, transforms: dict | list | str, val: DataArray) -> DataArray:
         """
         Applies a set of one or more transforms to an np.array of
         data values.
@@ -258,15 +188,18 @@ class UPPData(specs.VarSpec):
         lons = lons + adjust
         max_x, max_y = np.shape(lats)
 
+        msg = f"site location is outside your domain! {site_lat} {site_lon}"
+        if not lats.min() < site_lat < lats.max() or not lons.min() < site_lon < lons.max():
+            print(msg)
+            return (-1, -1)
+
         # Numpy magic to grab the X, Y grid point nearest the profile site
-        # pylint: disable=unbalanced-tuple-unpacking
         x, y = np.unravel_index(
             (np.abs(lats - site_lat) + np.abs(lons - site_lon)).argmin(), lats.shape
         )
-        # pylint: enable=unbalanced-tuple-unpacking
 
         if x <= 0 or y <= 0 or x >= max_x or y >= max_y:
-            print(f"site location is outside your domain! {site_lat} {site_lon}")
+            print(msg)
             return (-1, -1)
 
         return (x, y)
@@ -857,7 +790,7 @@ class ProfileData(UPPData):
         if self.site_lon < 0:
             self.site_lon = self.site_lon + 360.0
 
-    def values(self, level: str | None = None, name: str | None = None, **kwargs) -> DataArray:
+    def values(self, level: str | None = None, name: str | None = None, **kwargs) -> DataArray:  # noqa: ARG002
         """
         Returns the numpy array of values at the object's x, y location for the
         requested variable. Transforms are performed in the child class.
@@ -883,10 +816,6 @@ class ProfileData(UPPData):
         if not name:
             name = self.short_name
 
-        one_lev = kwargs.get("one_lev", False)
-        vertical_index = kwargs.get("vertical_index")
-        split = kwargs.get("split")
-
         # Retrive the location for the profile
         x, y = self.get_xypoint(self.site_lat, self.site_lon)
 
@@ -894,20 +823,12 @@ class ProfileData(UPPData):
         field = self.field
 
         profile = field[::]
-        lev = 0
         # 2D
         if len(profile.shape) == 2:
             profile = profile[x, y]
         # 3D
         elif len(profile.shape) == 3:
-            if one_lev:
-                if vertical_index is None:
-                    lev = self._get_level(field, level, {}, split=split)
-                else:
-                    lev = int(vertical_index)
-                profile = profile[lev, x, y]
-            else:
-                profile = profile[:, x, y]
+            profile = profile[:, x, y]
         return profile
 
     def vector_magnitude(

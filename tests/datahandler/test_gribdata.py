@@ -1,8 +1,8 @@
 from datetime import datetime
 
 import numpy as np
-from pytest import fixture
-from xarray import DataArray
+from pytest import fixture, mark
+from xarray import DataArray, ones_like, zeros_like
 
 from adb_graphics import utils
 from adb_graphics.datahandler import gribdata, gribfile
@@ -30,9 +30,27 @@ def spec(spec_file):
 
 
 @fixture
-def uppdata_obj(hrrr_data, spec):
+def uppdata_obj(hrrr_data, prsfile, spec):
     return ConcreteUPPData(
         ds=hrrr_data,
+        short_name="temp",
+        spec=spec,
+        fhr=15,
+        grib_path=prsfile,
+    )
+
+
+@fixture
+def uppdata_multilev_obj(prsfile, spec):
+    ds = gribfile.GribFile(
+        prsfile,
+        var_config={
+            "shortName": "t",
+            "typeOfLevel": "isobaricInhPa",
+        },
+    ).contents
+    return ConcreteUPPData(
+        ds=ds,
         short_name="temp",
         spec=spec,
         fhr=15,
@@ -61,22 +79,11 @@ def test_uppdata_field(uppdata_obj):
     assert np.array_equal(uppdata_obj.field, uppdata_obj.ds.t)
 
 
-def test_uppdata_field_column_max(prsfile, spec):
-    ds = gribfile.GribFile(
-        prsfile,
-        var_config={
-            "shortName": "t",
-            "typeOfLevel": "isobaricInhPa",
-        },
-    ).contents
-    uppdata_obj = ConcreteUPPData(
-        ds=ds,
-        short_name="temp",
-        spec=spec,
-        fhr=15,
+def test_uppdata_field_column_max(uppdata_multilev_obj):
+    assert np.array_equal(
+        uppdata_multilev_obj.field_column_max(), uppdata_multilev_obj.ds.t.max(axis=0)
     )
-    assert np.array_equal(uppdata_obj.field_column_max(), ds.t.max(axis=0))
-    assert uppdata_obj.field_column_max().shape == (1059, 1799)
+    assert uppdata_multilev_obj.field_column_max().shape == (1059, 1799)
 
 
 def test_uppdata_field_diff(uppdata_obj):
@@ -84,26 +91,67 @@ def test_uppdata_field_diff(uppdata_obj):
     assert np.array_equal(summed_field, uppdata_obj.ds.t * 0)
 
 
-def test_uppdata_field_mean(prsfile, spec):
-    ds = gribfile.GribFile(
-        prsfile,
-        var_config={
-            "shortName": "t",
-            "typeOfLevel": "isobaricInhPa",
-        },
-    ).contents
-    uppdata_obj = ConcreteUPPData(
-        ds=ds,
-        short_name="temp",
-        spec=spec,
-        fhr=15,
-    )
+def test_uppdata_field_mean(uppdata_multilev_obj):
     levels = ["500mb", "800mb"]
-    mean = uppdata_obj.field_mean(values=uppdata_obj.field, levels=levels)
-    assert np.array_equal(mean, ds.t.sel(isobaricInhPa=[500, 800]).mean("isobaricInhPa"))
+    mean = uppdata_multilev_obj.field_mean(values=uppdata_multilev_obj.field, levels=levels)
+    assert np.array_equal(
+        mean, uppdata_multilev_obj.ds.t.sel(isobaricInhPa=[500, 800]).mean("isobaricInhPa")
+    )
     assert mean.shape == (1059, 1799)
 
 
 def test_uppdata_field_sum(uppdata_obj):
     summed_field = uppdata_obj.field_sum(values=uppdata_obj.field, variable2="temp", level2="sfc")
     assert np.array_equal(summed_field, uppdata_obj.ds.t * 2)
+
+
+def test_uppdata__get_data_levels(uppdata_multilev_obj):
+    assert np.array_equal(
+        uppdata_multilev_obj._get_data_levels("isobaricInhPa"),
+        uppdata_multilev_obj.ds.coords["isobaricInhPa"].to_numpy(),
+    )
+
+
+def test_uppdata__get_field(prsfile, uppdata_obj):
+    spec = {"shortName": "t", "typeOfLevel": "isobaricInhPa", "level": 500}
+    field = uppdata_obj._get_field(spec=spec)
+    ds = gribfile.GribFile(
+        prsfile,
+        var_config=spec,
+    ).contents
+    assert np.array_equal(field, ds.t)
+
+
+@mark.parametrize(
+    "transforms",
+    [
+        "conversions.percent",
+        ["conversions.percent", "opposite"],
+        {"funcs": "field_diff", "kwargs": {"variable2": "temp", "level2": "sfc"}},
+    ],
+)
+def test_uppdata_get_transform(transforms, uppdata_obj):
+    val = ones_like(uppdata_obj.ds.t) if not isinstance(transforms, dict) else uppdata_obj.ds.t
+    field = uppdata_obj.get_transform(transforms, val)
+    expected = 0
+    match transforms:
+        case dict():
+            expected = zeros_like(uppdata_obj.ds.t)
+        case list():
+            expected = val * -100.0
+        case str():
+            expected = val * 100.0
+    assert np.array_equal(field, expected)
+
+
+@mark.parametrize(
+    ("lat", "lon", "expected"),
+    [(40.019, 360 - 105.2747, (595, 679)), (25.7617, 360 - 80.1918, (109, 1487))],
+)
+def test_uppdata_get_xypoint(expected, lat, lon, uppdata_obj):
+    assert uppdata_obj.get_xypoint(lat, lon) == expected
+
+
+@mark.parametrize(("lat", "lon"), [(88.0, 270.0), (40, 180), (10, 330), (30, 345)])
+def test_uppdata_get_xypoint_outside(lat, lon, uppdata_obj):
+    assert uppdata_obj.get_xypoint(lat, lon) == (-1, -1)
