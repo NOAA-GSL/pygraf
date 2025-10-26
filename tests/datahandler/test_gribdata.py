@@ -19,7 +19,7 @@ def hrrr_data(prsfile):
         prsfile,
         var_config={
             "shortName": "t",
-            "typeOfLevel": "surface",
+            "typeOfLevel": "isobaricInhPa",
         },
     ).contents
 
@@ -155,3 +155,47 @@ def test_uppdata_get_xypoint(expected, lat, lon, uppdata_obj):
 @mark.parametrize(("lat", "lon"), [(88.0, 270.0), (40, 180), (10, 330), (30, 345)])
 def test_uppdata_get_xypoint_outside(lat, lon, uppdata_obj):
     assert uppdata_obj.get_xypoint(lat, lon) == (-1, -1)
+
+
+def test_uppdata_latlons(uppdata_obj):
+    lats = uppdata_obj.ds.coords["latitude"].to_numpy()
+    lons = uppdata_obj.ds.coords["longitude"].to_numpy()
+    assert [
+        np.array_equal(act, exp)
+        for act, exp in zip(uppdata_obj.latlons(), [lats, lons], strict=True)
+    ]
+
+
+@mark.parametrize("factor", [1, -1, 0, -20.0, 6543.0])
+def test_uppdata_opposite(factor, uppdata_obj):
+    ds = ones_like(uppdata_obj.field) * factor
+    assert np.array_equal(uppdata_obj.opposite(ds), -ds)
+
+
+def test_uppdata_valid_dt(uppdata_obj):
+    assert uppdata_obj.valid_dt == datetime(2020, 10, 9, 23)
+
+
+def test_uppdata_vspec(uppdata_obj):
+    expected = {
+        "cfgrib": {"shortName": "t", "typeOfLevel": "isobaricInhPa"},
+        "clevs": np.arange(-40, 40, 2.5),
+        "cmap": "jet",
+        "colors": "ua_temp_colors",
+        "contours": {
+            "pres_sfc": {"levels": [0, 500], "colors": "k", "linewidths": 0.6},
+            "gh": {"colors": "grey"},
+        },
+        "hatches": {"pres_sfc": {"hatches": ["", "..."], "levels": [0, 500]}},
+        "ncl_name": {"prs": "TMP_P0_L100_{grid}", "nat": "TMP_P0_L105_{grid}"},
+        "ticks": 5,
+        "transform": "conversions.k_to_c",
+        "unit": "C",
+        "wind": True,
+    }
+    vspec = uppdata_obj.vspec
+    # Can't test the array items with ==, so check them separately and then remove.
+    assert np.array_equal(vspec["clevs"], expected["clevs"])
+    vspec.pop("clevs")
+    expected.pop("clevs")
+    assert uppdata_obj.vspec == expected

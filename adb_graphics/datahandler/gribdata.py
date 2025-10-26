@@ -8,7 +8,6 @@ import abc
 from copy import deepcopy
 from datetime import datetime, timedelta
 from pathlib import Path
-from string import ascii_letters, digits
 from typing import Any
 
 import numpy as np
@@ -186,7 +185,6 @@ class UPPData(specs.VarSpec):
         lats, lons = self.latlons()
         adjust = 360 if np.any(lons < 0) else 0
         lons = lons + adjust
-        max_x, max_y = np.shape(lats)
 
         msg = f"site location is outside your domain! {site_lat} {site_lon}"
         if not lats.min() < site_lat < lats.max() or not lons.min() < site_lon < lons.max():
@@ -198,13 +196,9 @@ class UPPData(specs.VarSpec):
             (np.abs(lats - site_lat) + np.abs(lons - site_lon)).argmin(), lats.shape
         )
 
-        if x <= 0 or y <= 0 or x >= max_x or y >= max_y:
-            print(msg)
-            return (-1, -1)
-
         return (x, y)
 
-    def latlons(self):
+    def latlons(self) -> list[np.ndarray]:
         """Returns the set of latitudes and longitudes."""
 
         coords = sorted(
@@ -212,50 +206,8 @@ class UPPData(specs.VarSpec):
         )
         return [self.ds.coords[c].to_numpy() for c in coords]
 
-    @property
-    def lev_descriptor(self):
-        """Returns the descriptor for the variable's level type."""
-
-        return self.field.level_type
-
-    def numeric_level(
-        self, index_match: bool = True, level: str | None = None, split: str | None = None
-    ) -> tuple[list[float | int], str]:
-        """
-        Split the numeric level and unit associated with the level key.
-
-        A blank string is returned for lev_val for levels that do not contain a
-        numeric, e.g., 'sfc' or 'ua'.
-        """
-
-        level = level if level else self.level
-
-        # Gather all the numbers in the string
-        numbers = "".join([c for c in level if (c in digits or c == ".")])
-
-        # Convert the numbers to a list, and make integers or floats
-        lev_val: list[float | int]
-        if numbers:
-            if split is not None:
-                lev_val = [int(lev) for lev in numbers]
-            else:
-                lev_val = [float(numbers) if "." in numbers else int(numbers)]
-
-        # Gather all the letters
-        lev_unit = "".join([c for c in level if c in ascii_letters])
-
-        if index_match:
-            if lev_unit == "cm":
-                lev_val = [val / 100.0 for val in lev_val]
-            if lev_unit in ["mb", "mxmb"]:
-                lev_val = [val * 100.0 for val in lev_val]
-            if lev_unit in ["in", "km", "mn", "mx", "sr"]:
-                lev_val = [val * 1000.0 for val in lev_val]
-
-        return lev_val, lev_unit
-
     @staticmethod
-    def opposite(values: DataArray, **kwargs):  # noqa: ARG004
+    def opposite(values: DataArray, **kwargs) -> DataArray:  # noqa: ARG004
         """Returns the opposite of input values."""
 
         return -values
@@ -273,21 +225,6 @@ class UPPData(specs.VarSpec):
     @abc.abstractmethod
     def values(self, level: str | None = None, name: str | None = None, **kwargs) -> DataArray:
         """Returns the values of a given variable."""
-
-    @staticmethod
-    def vertical_dim(field: DataArray) -> str:
-        """
-        Find the name of the vertical dimension.
-
-        Looking through the field's dimensions for one that includes "lv". Return the first matching
-        instance.
-        """
-
-        for dims in list(field.dims):
-            dim = str(dims)
-            if "lv" in dim or "probability" in dim:
-                return dim
-        return ""
 
     @property
     def vspec(self):
