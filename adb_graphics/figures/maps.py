@@ -23,7 +23,7 @@ from matplotlib.contour import QuadContourSet
 from mpl_toolkits.basemap import Basemap, shiftgrid
 
 from adb_graphics.datahandler import gribdata, gribfile
-from adb_graphics.utils import cfgrib_spec, numeric_level
+from adb_graphics.utils import cfgrib_spec, set_level
 
 # FULL_TILES is a list of strings that includes the labels GSL attaches to some of
 # the wgrib2 cutouts used for larger domains like RAP, RRFS NA, and global.
@@ -137,31 +137,13 @@ class MapFields:
         self.tile = kwargs.get("tile", "full")
 
         self.map_spec = deepcopy(self.fields_spec[self.name][self.level])
-        self.set_level(self.level, self.map_spec)
+        set_level(self.level, self.model, self.map_spec)
         # Required if map_type is "diff"
         if map_type == "diff":
             self.grib_path2: Path | str = kwargs.get("grib_path2", "")
             if not self.grib_path2:
                 msg = "Diff map requires a second grib path. Provide grib_path2 argument!"
                 raise ValueError(msg)
-
-    def set_level(self, level: str, spec: dict):
-        nlevel, _ = numeric_level(level=level, index_match=False)
-        level_info = any(
-            key
-            for keys in cfgrib_spec(spec["cfgrib"], self.model)
-            for key in ("level", "top", "bottom", "Surface")
-            if key in keys
-        )
-        if nlevel and not level_info:
-            if spec["cfgrib"].get(self.model):
-                spec["cfgrib"][self.model]["level"] = nlevel
-            else:
-                spec["cfgrib"]["level"] = nlevel
-        # if spec["cfgrib"].get("level") is None and not spec["cfgrib"].get("stepRange") and not \
-        #    spec["cfgrib"].get("topLevel") and not \
-        #    spec["cfgrib"].get("typeOfLevel") == "surface" and not \
-        #    spec["cfgrib"].get("scaledValueOfFirstFixedSurface"):
 
     @property
     def shaded(self):
@@ -213,7 +195,7 @@ class MapFields:
         winds = []
         for var in ("u", "v"):
             wind_spec = self.fields_spec[var][lev]
-            self.set_level(lev, wind_spec)
+            set_level(lev, self.model, wind_spec)
             ds = gribfile.GribFile(
                 self.grib_path, cfgrib_spec(wind_spec["cfgrib"], self.model)
             ).contents
@@ -242,7 +224,7 @@ class MapFields:
                 var, lev = overlay, self.level
 
             overlay_spec = deepcopy(self.fields_spec[var][lev])
-            self.set_level(lev, overlay_spec)
+            set_level(lev, self.model, overlay_spec)
             ds = gribfile.GribFile(
                 self.grib_path, cfgrib_spec(overlay_spec["cfgrib"], self.model)
             ).contents
@@ -829,7 +811,7 @@ class DataMap:
             loc="left",
         )
 
-        level, lev_unit = f.numeric_level(index_match=False)
+        level, lev_unit = f.numeric_level()
         units = f"({f.units}, shaded)" if f.vspec.get("print_units", True) else ""
 
         # Title or Atmospheric level and unit in the high center
@@ -983,7 +965,7 @@ class DiffMap(DataMap):
             loc="left",
         )
 
-        level, lev_unit = f.numeric_level(index_match=False)
+        level, lev_unit = f.numeric_level()
         units = f"({f.units}, shaded)" if f.vspec.get("print_units", True) else ""
 
         # Title or Atmospheric level and unit in the high center
@@ -1070,7 +1052,7 @@ class MultiPanelDataMap(DataMap):
             transform=ax.transAxes,
         )
 
-        level, lev_unit = f.numeric_level(index_match=False)
+        level, lev_unit = f.numeric_level()
         units = f"({f.units}, shaded)" if f.vspec.get("print_units", True) else ""
 
         # Title or Atmospheric level and unit in the high center

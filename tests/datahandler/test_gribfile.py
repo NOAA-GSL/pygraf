@@ -8,7 +8,7 @@ from adb_graphics.datahandler import gribfile
 def test_gribfile(prsfile):
     gf = gribfile.GribFile(
         filename=Path(prsfile),
-        var_config={
+        cfgrib_config={
             "shortName": "sp",
             "typeOfLevel": "surface",
         },
@@ -26,7 +26,7 @@ def test_gribfiles():
     gribfiles = [Path(f) for f in paths]
     gf = gribfile.GribFiles(
         filenames=gribfiles,
-        var_config={
+        cfgrib_config={
             "shortName": "sp",
             "typeOfLevel": "surface",
         },

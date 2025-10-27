@@ -315,7 +315,7 @@ def load_specs(arg: str | Path) -> dict:
     return specs
 
 
-def numeric_level(index_match: bool = True, level: str | None = None):
+def numeric_level(level: str | None = None) -> tuple[float | int | str, str]:
     """
     Split the numeric level and unit associated with the level key.
 
@@ -330,18 +330,12 @@ def numeric_level(index_match: bool = True, level: str | None = None):
 
     # Convert the numbers to a list, and make integers or floats
     if numbers:
-        lev_val = [float(numbers) if "." in numbers else int(numbers)]
+        lev_val = float(numbers) if "." in numbers else int(numbers)
+    else:
+        return "", ""
 
     # Gather all the letters
     lev_unit = "".join([c for c in level if c in ascii_letters])
-
-    if index_match:
-        if lev_unit == "cm":
-            lev_val = [val / 100.0 for val in lev_val]
-        if lev_unit in ["mb", "mxmb"]:
-            lev_val = [val * 100.0 for val in lev_val]
-        if lev_unit in ["in", "km", "mn", "mx", "sr"]:
-            lev_val = [val * 1000.0 for val in lev_val]
 
     return lev_val, lev_unit
 
@@ -398,6 +392,21 @@ def to_datetime(string: str):
     """Return a datetime object give a string like YYYYMMDDHH."""
 
     return datetime.strptime(string, "%Y%m%d%H")
+
+
+def set_level(level: str, model: str, spec: dict):
+    nlevel, _ = numeric_level(level=level)
+    level_info = any(
+        key
+        for keys in cfgrib_spec(spec["cfgrib"], model)
+        for key in ("level", "top", "bottom", "Surface")
+        if key in keys
+    )
+    if nlevel and not level_info:
+        if spec["cfgrib"].get(model):
+            spec["cfgrib"][model]["level"] = nlevel
+        else:
+            spec["cfgrib"]["level"] = nlevel
 
 
 @timer

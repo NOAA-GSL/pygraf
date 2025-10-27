@@ -12,11 +12,11 @@ import xarray as xr
 class GribFile:
     """Wrappers and helper functions for interfacing with cfgrib."""
 
-    def __init__(self, filename: Path | str, var_config: dict):
+    def __init__(self, filename: Path | str, cfgrib_config: dict):
         # pylint: disable=unused-argument
 
         self.filename = filename
-        self.var_config = var_config
+        self.cfgrib_config = cfgrib_config
         self.contents = self._load()
 
     def _load(self) -> xr.Dataset:
@@ -29,7 +29,7 @@ class GribFile:
             self.filename,
             engine="cfgrib",
             lock=False,
-            backend_kwargs=({"filter_by_keys": self.var_config}),
+            backend_kwargs=({"filter_by_keys": self.cfgrib_config}),
         )
 
 
@@ -42,7 +42,7 @@ class GribFiles:
     def __init__(
         self,
         filenames: list[Path],
-        var_config: dict,
+        cfgrib_config: dict,
         **kwargs,
     ):
         """
@@ -62,7 +62,7 @@ class GribFiles:
 
         self.model = kwargs.get("model", "")
         self.filenames = filenames
-        self.var_config = var_config
+        self.cfgrib_config = cfgrib_config
         self.contents = self._load()
 
     def _load(self, filenames: list[Path] | None = None):
@@ -73,5 +73,5 @@ class GribFiles:
             engine="cfgrib",
             concat_dim="time",
             combine="nested",
-            backend_kwargs=({"filter_by_keys": self.var_config}),
+            backend_kwargs=({"filter_by_keys": self.cfgrib_config}),
         )

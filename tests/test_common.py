@@ -372,6 +372,8 @@ class TestDefaultSpecs:
             "top",  # nominal top of atmosphere
             "total",  # total clouds
             "ua",  # upper air
+            "uanat",  # upper air native file
+            "uaprs",  # upper air prs file
         ]
 
         allowed_lev_type = [

@@ -8,10 +8,9 @@ import abc
 from copy import deepcopy
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any
 
 import numpy as np
-from matplotlib import cm
+from matplotlib.pyplot import get_cmap
 from pandas import to_datetime
 from xarray import DataArray, Dataset
 
@@ -204,7 +203,11 @@ class UPPData(specs.VarSpec):
         coords = sorted(
             [str(c) for c in list(self.ds.coords) if any(ele in str(c) for ele in ["lat", "lon"])]
         )
-        return [self.ds.coords[c].to_numpy() for c in coords]
+        lat = self.ds.coords[coords[0]].to_numpy()
+        if len(lat.shape) == 1 and lat[-1] < lat[0]:
+            lat = lat[::-1]
+        lon = self.ds.coords[coords[-1]].to_numpy()
+        return [lat, lon]
 
     @staticmethod
     def opposite(values: DataArray, **kwargs) -> DataArray:  # noqa: ARG004
@@ -265,7 +268,7 @@ class FieldData(UPPData):
         Generates a field of Aviation Flight Rules from Ceil and Vis.
         """
 
-        ceil = values.to_dataarray().squeeze()
+        ceil = values
         vis = self.values(name="vis", level="sfc")
 
         flru = np.where((ceil > 1.0) & (ceil < 3.0), 1.01, 0.0)
@@ -285,28 +288,26 @@ class FieldData(UPPData):
         The LinearSegmentedColormap specified by the config key 'cmap'.
         """
 
-        return cm.get_cmap(self.vspec["cmap"])
+        return get_cmap(self.vspec["cmap"])
 
     @property
-    def colors(self) -> Any:
+    def colors(self) -> np.ndarray:
         """
-        Returns a list of colors, specified by the config key "colors".
-
-        The yaml file "colors" key may contain a list or a function to be
-        called.
+        Returns an array of colors, specified by the config key "colors".
         """
 
-        color_spec = self.vspec.get("colors")
-
-        if isinstance(color_spec, (list, np.ndarray)):
-            return np.asarray(color_spec)
+        color_spec = self.vspec.get("colors", "")
+        if not color_spec:
+            msg = f"No colors definition found for {self.short_name} at {self.level}"
+            raise errors.NoGraphicsDefinitionForVariableError(msg)
         try:
             ret = self.__getattribute__(color_spec)
-            if callable(ret):
-                return ret()
-        except AttributeError:
-            return color_spec
-        return ret
+        except AttributeError as e:
+            msg = f"There is no color definition named {color_spec}"
+            raise AttributeError(msg) from e
+        if callable(ret):
+            return np.asarray(ret())
+        return np.asarray(ret)
 
     @property
     def corners(self) -> list:
@@ -319,14 +320,23 @@ class FieldData(UPPData):
         """
 
         lat, lon = self.latlons()
-        if self.model in ["global", "hfip", "obs"]:
-            ret = [lat[-1], lat[0], lon[0], lon[-1]]
-        elif self.model == "global_mpas":
-            ret = [lat[0], lat[-1], lon[0], lon[-1]]
-        else:
-            ret = [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
+        if len(lat.shape) == 2:
+            return [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
+        return [lat[0], lat[-1], lon[0], lon[-1]]
 
-        return ret
+    @property
+    def data(self) -> DataArray:
+        """
+        Sets the data property on the object for use when we need to update
+        the values associated with a given object -- helpful for differences.
+        """
+        if not hasattr(self, "_data"):
+            return self.values()
+        return self._data
+
+    @data.setter
+    def data(self, value: DataArray):
+        self._data = value
 
     def fire_weather_index(self, values: DataArray, **kwargs):  # noqa: ARG002
         """
@@ -352,9 +362,7 @@ class FieldData(UPPData):
             return FieldData(**args).values(do_transform=False)
 
         # Gather fields from the input
-        veg = (
-            values.to_dataarray().squeeze()
-        )  # Chose this value as the main one in the default_specs
+        veg = np.asarray(values)
         temp = _load_field(level="2m", short_name="temp")
         dewpt = _load_field(level="2m", short_name="dewp")
         weasd = _load_field(level="sfc", short_name="weasd")
@@ -391,7 +399,7 @@ class FieldData(UPPData):
 
         return fwi
 
-    def grid_info(self):
+    def grid_info(self) -> dict:
         """Returns a dict that includes the grid info for the full grid."""
 
         # Keys are grib names, values are Basemap argument names
@@ -472,19 +480,19 @@ class FieldData(UPPData):
     def run_max(values: DataArray, **kwargs):  # noqa: ARG004
         """Finds the max hourly value over all the forecast lead times available."""
 
-        return values.max(dim="fcst_hr")
+        return values.max(dim="step")
 
     @staticmethod
     def run_min(values: DataArray, **kwargs):  # noqa: ARG004
         """Finds the min hourly value over all the forecast lead times available."""
 
-        return values.min(dim="fcst_hr")
+        return values.min(dim="step")
 
     @staticmethod
     def run_total(values: DataArray, **kwargs):  # noqa: ARG004
         """Sums over all the forecast lead times available."""
 
-        return values.sum(dim="fcst_hr")
+        return values.sum(dim="step")
 
     def supercooled_liquid_water(self, **kwargs):  # noqa: ARG002
         """
@@ -505,8 +513,8 @@ class FieldData(UPPData):
         pres_sfc = self.values(name="pres", level="sfc") * 100.0  # convert back to Pa
         pres_nat_lev = self.values(name="pres", level="ua", one_lev=False)
         temp = self.values(name="temp", level="ua", one_lev=False)
-        cloud_mixing_ratio = self.values(name="clwmr", level="ua", one_lev=False)
-        rain_mixing_ratio = self.values(name="rwmr", level="ua", one_lev=False)
+        cloud_mixing_ratio = self.values(name="clwmr", level="uanat", one_lev=False)
+        rain_mixing_ratio = self.values(name="rwmr", level="uanat", one_lev=False)
 
         gravity = 9.81
         slw = pres_sfc * 0.0  # start with array of zero values
@@ -534,7 +542,6 @@ class FieldData(UPPData):
         rain_mixing_ratio.close()
         return slw
 
-    @property
     def ticks(self) -> int:
         """
         Returns the number of color bar tick marks from the yaml config
@@ -551,20 +558,6 @@ class FieldData(UPPData):
         """
 
         return str(self.vspec.get("unit", self.field.units))
-
-    @property
-    def data(self) -> DataArray:
-        """
-        Sets the data property on the object for use when we need to update
-        the values associated with a given object -- helpful for differences.
-        """
-        if not hasattr(self, "_data"):
-            return self.values()
-        return self._data
-
-    @data.setter
-    def data(self, value: DataArray):
-        self._data = value
 
     def values(self, level: str | None = None, name: str | None = None, **kwargs) -> DataArray:
         """
@@ -586,7 +579,7 @@ class FieldData(UPPData):
         """
 
         level = level or self.level
-        vals: DataArray = self.ds.to_dataarray().sqeeze()
+        vals: DataArray = self.ds.to_dataarray().squeeze()
         spec = self.vspec
 
         do_transform = kwargs.get("do_transform", True)
@@ -596,21 +589,12 @@ class FieldData(UPPData):
             spec = deepcopy(self.spec.get(name, {}).get(level, {}))
             if not spec and name is not None:
                 raise errors.NoGraphicsDefinitionForVariableError(name, level)
-            cfkeys = utils.cfgrib_spec(spec["cfgrib"], self.model)
-            nlevel = utils.numeric_level(level=level, index_match=False)[0]
-            level_info = any(
-                key
-                for keys in utils.cfgrib_spec(spec["cfgrib"], self.model)
-                for key in ("level", "top", "bottom", "Surface")
-                if key in keys
-            )
-            if nlevel and not level_info:
-                cfkeys["level"] = utils.numeric_level(level=level, index_match=False)[0]
-            vals = self._get_field(cfkeys)
+            utils.set_level(level=level, model=self.model, spec=spec)
+            vals = self._get_field(spec["cfgrib"].get(self.model, spec["cfgrib"]))
 
         transforms = spec.get("transform")
         if transforms and do_transform:
-            vals = self.get_transform(transforms, self.field)
+            vals = self.get_transform(transforms, vals)
 
         return vals
 
@@ -629,13 +613,15 @@ class FieldData(UPPData):
 
         if cfkeys:
             if cfkeys.get("level") is None:
-                cfkeys["level"] = utils.numeric_level(level=self.level, index_match=False)[0]
+                cfkeys["level"] = utils.numeric_level(level=self.level)[0]
             field2_spec = {"cfgrib": cfkeys}
+            utils.set_level(level=self.level, model=self.model, spec=field2_spec)
         elif field2_id:
-            var, lev = field2_id.split(".")
+            var, lev = field2_id.split("_")
             field2_spec = self.spec
             for key in (var, lev):
                 field2_spec = field2_spec[key]
+            utils.set_level(level=lev, model=self.model, spec=field2_spec)
         else:
             msg = "Must supply a field2_id if cfkeys is not explicitly provided."
             raise ValueError(msg)
@@ -651,7 +637,6 @@ class FieldData(UPPData):
             "grib_path": self.grib_path,
         }
         field2 = FieldData(**args).ds
-
         mag = conversions.magnitude(
             field1.to_dataarray().squeeze(), field2.to_dataarray().squeeze()
         )
@@ -659,33 +644,6 @@ class FieldData(UPPData):
         field2.close()
 
         return mag
-
-    def wind(self, level: bool | str) -> list[DataArray]:
-        """
-        Returns the u, v wind components as a list (length 2) of arrays.
-
-        Input:
-            level      bool or level key. If True, use same level as self,
-                       if a string level key is provided, use wind at that
-                       level.
-        """
-
-        level = self.level if level and isinstance(level, bool) else level
-
-        # Just in case wind gets called with level=False
-        if not level:
-            return []
-
-        # Create FieldData objects for u, v components
-        field_lambda = lambda ds, level, var: FieldData(
-            ds=ds,
-            fhr=self.fhr,
-            level=level,
-            short_name=var,
-        ).field
-        u, v = [field_lambda(self.ds, level, var) for var in ["u", "v"]]
-
-        return [u, v]
 
 
 class ProfileData(UPPData):
