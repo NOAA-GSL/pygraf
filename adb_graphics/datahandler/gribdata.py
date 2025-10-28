@@ -229,6 +229,56 @@ class UPPData(specs.VarSpec):
     def values(self, level: str | None = None, name: str | None = None, **kwargs) -> DataArray:
         """Returns the values of a given variable."""
 
+    def vector_magnitude(
+        self,
+        field1: Dataset,
+        cfkeys: dict | None = None,
+        field2_id: str | None = None,
+        **kwargs,  # noqa: ARG002
+    ):
+        """
+        Returns the vector magnitude of two component vector fields.
+
+        The second field can be specified by either a dict of cfkeys or a default_specs identifier
+        in the form <name>_<level>.
+
+        """
+
+        if cfkeys:
+            if cfkeys.get("level") is None:
+                typeoflevel = cfkeys["typeOfLevel"]
+                cfkeys["level"] = field1.coords[typeoflevel].to_numpy().item()
+            field2_spec = {"cfgrib": cfkeys}
+            utils.set_level(level=self.level, model=self.model, spec=field2_spec)
+        elif field2_id:
+            var, lev = field2_id.split("_")
+            field2_spec = self.spec
+            for key in (var, lev):
+                field2_spec = field2_spec[key]
+            utils.set_level(level=lev, model=self.model, spec=field2_spec)
+        else:
+            msg = "Must supply a field2_id if cfkeys is not explicitly provided."
+            raise errors.ArgumentError(msg)
+
+        ds = gribfile.GribFile(self.grib_path, field2_spec["cfgrib"]).contents
+        args = {
+            "ds": ds,
+            "fhr": self.fhr,
+            "level": self.level,
+            "model": self.model,
+            "short_name": self.short_name,
+            "spec": self.spec,
+            "grib_path": self.grib_path,
+        }
+        field2 = FieldData(**args).ds
+        mag = conversions.magnitude(
+            field1.to_dataarray().squeeze(), field2.to_dataarray().squeeze()
+        )
+        field1.close()
+        field2.close()
+
+        return mag
+
     @property
     def vspec(self):
         """Return the graphics specification for a given level."""
@@ -305,8 +355,6 @@ class FieldData(UPPData):
         except AttributeError as e:
             msg = f"There is no color definition named {color_spec}"
             raise AttributeError(msg) from e
-        if callable(ret):
-            return np.asarray(ret())
         return np.asarray(ret)
 
     @property
@@ -462,11 +510,11 @@ class FieldData(UPPData):
             grid_info[bm_arg] = val
             del val
 
-            if self.model == "hrrrhi":
-                grid_info["lat_0"] = 20.44
-                grid_info["lon_0"] = 202.54
-                grid_info["width"] = 2000000
-                grid_info["height"] = 2000000
+        #    if self.model == "hrrrhi":
+        #        grid_info["lat_0"] = 20.44
+        #        grid_info["lon_0"] = 202.54
+        #        grid_info["width"] = 2000000
+        #        grid_info["height"] = 2000000
 
         return grid_info
 
@@ -480,19 +528,19 @@ class FieldData(UPPData):
     def run_max(values: DataArray, **kwargs):  # noqa: ARG004
         """Finds the max hourly value over all the forecast lead times available."""
 
-        return values.max(dim="step")
+        return values.max(dim="step")  # pragma: no cover
 
     @staticmethod
     def run_min(values: DataArray, **kwargs):  # noqa: ARG004
         """Finds the min hourly value over all the forecast lead times available."""
 
-        return values.min(dim="step")
+        return values.min(dim="step")  # pragma: no cover
 
     @staticmethod
     def run_total(values: DataArray, **kwargs):  # noqa: ARG004
         """Sums over all the forecast lead times available."""
 
-        return values.sum(dim="step")
+        return values.sum(dim="step")  # pragma: no cover
 
     def supercooled_liquid_water(self, **kwargs):  # noqa: ARG002
         """
@@ -587,7 +635,7 @@ class FieldData(UPPData):
         if name is not None:
             # Get the spec dict and ncl_name for the given variable name
             spec = deepcopy(self.spec.get(name, {}).get(level, {}))
-            if not spec and name is not None:
+            if not spec:
                 raise errors.NoGraphicsDefinitionForVariableError(name, level)
             utils.set_level(level=level, model=self.model, spec=spec)
             vals = self._get_field(spec["cfgrib"].get(self.model, spec["cfgrib"]))
@@ -597,53 +645,6 @@ class FieldData(UPPData):
             vals = self.get_transform(transforms, vals)
 
         return vals
-
-    def vector_magnitude(
-        self,
-        field1: Dataset,
-        cfkeys: dict | None = None,
-        field2_id: str | None = None,
-        **kwargs,  # noqa: ARG002
-    ):
-        """
-        Returns the vector magnitude of two component vector fields. The
-        input fields can be either NCL names (string) or full data fields. The
-        first layer of a variable is returned if none is provided.
-        """
-
-        if cfkeys:
-            if cfkeys.get("level") is None:
-                cfkeys["level"] = utils.numeric_level(level=self.level)[0]
-            field2_spec = {"cfgrib": cfkeys}
-            utils.set_level(level=self.level, model=self.model, spec=field2_spec)
-        elif field2_id:
-            var, lev = field2_id.split("_")
-            field2_spec = self.spec
-            for key in (var, lev):
-                field2_spec = field2_spec[key]
-            utils.set_level(level=lev, model=self.model, spec=field2_spec)
-        else:
-            msg = "Must supply a field2_id if cfkeys is not explicitly provided."
-            raise ValueError(msg)
-
-        ds = gribfile.GribFile(self.grib_path, field2_spec["cfgrib"]).contents
-        args = {
-            "ds": ds,
-            "fhr": self.fhr,
-            "level": self.level,
-            "model": self.model,
-            "short_name": self.short_name,
-            "spec": self.spec,
-            "grib_path": self.grib_path,
-        }
-        field2 = FieldData(**args).ds
-        mag = conversions.magnitude(
-            field1.to_dataarray().squeeze(), field2.to_dataarray().squeeze()
-        )
-        field1.close()
-        field2.close()
-
-        return mag
 
 
 class ProfileData(UPPData):
@@ -688,7 +689,7 @@ class ProfileData(UPPData):
     def values(self, level: str | None = None, name: str | None = None, **kwargs) -> DataArray:  # noqa: ARG002
         """
         Returns the numpy array of values at the object's x, y location for the
-        requested variable. Transforms are performed in the child class.
+        requested variable.
 
         Optional Input:
             name       the short name of a field other than defined in self
@@ -708,16 +709,18 @@ class ProfileData(UPPData):
         # level refers to the level key in the specs file.
         level = level if level is not None else "ua"
 
-        if not name:
-            name = self.short_name
-
+        if name is not None:
+            # Get the spec dict and ncl_name for the given variable name
+            spec = deepcopy(self.spec.get(name, {}).get(level, {}))
+            if not spec:
+                raise errors.NoGraphicsDefinitionForVariableError(name, level)
+            utils.set_level(level=level, model=self.model, spec=spec)
+            profile = self._get_field(spec["cfgrib"].get(self.model, spec["cfgrib"]))
+        else:
+            profile = self.field[::]
         # Retrive the location for the profile
         x, y = self.get_xypoint(self.site_lat, self.site_lon)
 
-        # Get the full 2- or 3-D field
-        field = self.field
-
-        profile = field[::]
         # 2D
         if len(profile.shape) == 2:
             profile = profile[x, y]
@@ -725,37 +728,3 @@ class ProfileData(UPPData):
         elif len(profile.shape) == 3:
             profile = profile[:, x, y]
         return profile
-
-    def vector_magnitude(
-        self,
-        field1: DataArray,
-        field2: DataArray,
-        level: str = "ua",
-        vertical_index: int | None = None,
-        **kwargs,
-    ) -> DataArray:
-        """
-        The vector magnitude of two component vector profiles.
-
-        The input fields can be either NCL names (string) or full data fields.
-
-        If no layer or level is provided, the default 'ua' will be used in self.values.
-        """
-
-        if isinstance(field1, str):
-            field1 = self.values(
-                level=level,
-                ncl_name=field1,
-                vertical_index=vertical_index,
-                **kwargs,
-            )
-
-        if isinstance(field2, str):
-            field2 = self.values(
-                level=level,
-                ncl_name=field2,
-                vertical_index=vertical_index,
-                **kwargs,
-            )
-
-        return conversions.magnitude(field1, field2)

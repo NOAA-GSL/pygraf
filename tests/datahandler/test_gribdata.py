@@ -26,11 +26,6 @@ def hrrr_data(prsfile):
 
 
 @fixture
-def spec(spec_file):
-    return utils.load_yaml(spec_file)
-
-
-@fixture
 def fielddata_obj(hrrr_data, prsfile, spec):
     return gribdata.FieldData(
         ds=hrrr_data,
@@ -40,6 +35,30 @@ def fielddata_obj(hrrr_data, prsfile, spec):
         short_name="temp",
         spec=spec,
     )
+
+
+@fixture
+def profiledata_obj(natfile, spec):
+    ds = gribfile.GribFile(
+        natfile,
+        cfgrib_config={
+            "shortName": "t",
+            "typeOfLevel": "hybrid",
+        },
+    )
+    return gribdata.ProfileData(
+        ds=ds.contents,
+        fhr=15,
+        grib_path=natfile,
+        loc=" DNR  23062 72469  39.77 104.88 1611 Denver, CO",
+        short_name="temp",
+        spec=spec,
+    )
+
+
+@fixture
+def spec(spec_file):
+    return utils.load_yaml(spec_file)
 
 
 @fixture
@@ -179,6 +198,19 @@ def test_uppdata_latlons(uppdata_obj):
     ]
 
 
+def test_uppdata_latlons_lats_flipped(uppdata_obj):
+    # Test a 1D latitude option (like in Global, etc.)
+    ds = uppdata_obj.ds.sel(y=500)
+    lats = ds.coords["latitude"].to_numpy()
+    ds.coords["latitude"] = (("x"), lats[::-1])
+    lons = ds.coords["longitude"].to_numpy()
+    uppdata_obj.ds = ds
+    assert [
+        np.array_equal(act, exp)
+        for act, exp in zip(uppdata_obj.latlons(), [lats, lons], strict=True)
+    ]
+
+
 @mark.parametrize("factor", [1, -1, 0, -20.0, 6543.0])
 def test_uppdata_opposite(factor, uppdata_obj):
     ds = ones_like(uppdata_obj.field) * factor
@@ -187,6 +219,79 @@ def test_uppdata_opposite(factor, uppdata_obj):
 
 def test_uppdata_valid_dt(uppdata_obj):
     assert uppdata_obj.valid_dt == datetime(2025, 10, 6, 15)
+
+
+def test_uppdata_vector_magnitude_cfkeys(prsfile, spec):
+    ds = gribfile.GribFile(
+        prsfile,
+        cfgrib_config={
+            "shortName": "u",
+            "typeOfLevel": "isobaricInhPa",
+            "level": 250,
+        },
+    )
+    fd = ConcreteUPPData(
+        ds=ds.contents,
+        fhr=15,
+        grib_path=prsfile,
+        level="250mb",
+        short_name="u",
+        spec=spec,
+    )
+    vm = fd.vector_magnitude(
+        field1=fd.ds, cfkeys={"shortName": "v", "typeOfLevel": "isobaricInhPa"}
+    )
+    assert not np.array_equal(vm, ds.contents.u)
+
+
+def test_uppdata_vector_magnitude_field2_id(prsfile, spec):
+    ds = gribfile.GribFile(
+        prsfile,
+        cfgrib_config={
+            "shortName": "u",
+            "typeOfLevel": "isobaricInhPa",
+            "level": 250,
+        },
+    )
+    fd = ConcreteUPPData(
+        ds=ds.contents,
+        fhr=15,
+        grib_path=prsfile,
+        level="250mb",
+        short_name="u",
+        spec=spec,
+    )
+    vm = fd.vector_magnitude(field1=fd.ds, field2_id="v_250mb")
+    assert not np.array_equal(vm, ds.contents.u)
+
+
+def test_uppdata_vector_magnitude_no_field2_args(uppdata_obj):
+    with raises(errors.ArgumentError):
+        uppdata_obj.vector_magnitude(uppdata_obj.ds)
+
+
+def test_uppdata_vector_magnitude_options_equal(prsfile, spec):
+    ds = gribfile.GribFile(
+        prsfile,
+        cfgrib_config={
+            "shortName": "u",
+            "typeOfLevel": "isobaricInhPa",
+            "level": 250,
+        },
+    )
+    fd = ConcreteUPPData(
+        ds=ds.contents,
+        fhr=15,
+        grib_path=prsfile,
+        level="250mb",
+        short_name="u",
+        spec=spec,
+    )
+    vm_cfkeys = fd.vector_magnitude(
+        field1=fd.ds, cfkeys={"shortName": "v", "typeOfLevel": "isobaricInhPa"}
+    )
+    vm_field2 = fd.vector_magnitude(field1=fd.ds, field2_id="v_250mb")
+    assert np.array_equal(vm_cfkeys, vm_field2)
 
 
 def test_uppdata_vspec(uppdata_obj):
@@ -212,6 +317,12 @@ def test_uppdata_vspec(uppdata_obj):
     vspec.pop("clevs")
     expected.pop("clevs")
     assert uppdata_obj.vspec == expected
+
+
+def test_uppdata_vspec_bad(uppdata_obj):
+    uppdata_obj.short_name = "foo"
+    with raises(errors.NoGraphicsDefinitionForVariableError):
+        uppdata_obj.vspec  # noqa: B018
 
 
 def test_fielddata_aviation_flight_rules(prsfile, spec):
@@ -278,6 +389,13 @@ def test_fielddata_corners_single_dim(fielddata_obj):
         237.28047200000003,
         225.90452026573686,
     ]
+
+
+def test_fielddata_data_getter_and_setter(fielddata_obj):
+    assert np.array_equal(fielddata_obj.data, fielddata_obj.values())
+    new_data = ones_like(fielddata_obj.ds.t)
+    fielddata_obj.data = new_data
+    assert np.array_equal(fielddata_obj.data, new_data)
 
 
 def test_fielddata_fire_weather_index(prsfile, spec):
@@ -404,69 +522,29 @@ def test_fielddata_values_no_args_transform(fielddata_obj):
     assert np.array_equal(fielddata_obj.values(), -field.t)
 
 
-def test_fielddata_vector_magnitude_cfkeys(prsfile, spec):
-    ds = gribfile.GribFile(
-        prsfile,
-        cfgrib_config={
-            "shortName": "u",
-            "typeOfLevel": "isobaricInhPa",
-            "level": 250,
-        },
-    )
-    fd = gribdata.FieldData(
-        ds=ds.contents,
-        fhr=15,
-        grib_path=prsfile,
-        level="250mb",
-        short_name="u",
-        spec=spec,
-    )
-    vm = fd.vector_magnitude(
-        field1=fd.ds, cfkeys={"shortName": "v", "typeOfLevel": "isobaricInhPa"}
-    )
-    assert not np.array_equal(vm, ds.contents.u)
+def test_fielddata_values_bad_name_level(fielddata_obj):
+    with raises(errors.NoGraphicsDefinitionForVariableError):
+        fielddata_obj.values(level="foo", name="temp")
+    with raises(errors.NoGraphicsDefinitionForVariableError):
+        fielddata_obj.values(level="sfc", name="foo")
+    with raises(errors.NoGraphicsDefinitionForVariableError):
+        fielddata_obj.values(level="bar", name="foo")
 
 
-def test_fielddata_vector_magnitude_field2_id(prsfile, spec):
-    ds = gribfile.GribFile(
-        prsfile,
-        cfgrib_config={
-            "shortName": "u",
-            "typeOfLevel": "isobaricInhPa",
-            "level": 250,
-        },
-    )
-    fd = gribdata.FieldData(
-        ds=ds.contents,
-        fhr=15,
-        grib_path=prsfile,
-        level="250mb",
-        short_name="u",
-        spec=spec,
-    )
-    vm = fd.vector_magnitude(field1=fd.ds, field2_id="v_250mb")
-    assert not np.array_equal(vm, ds.contents.u)
+def test_profiledata_values(profiledata_obj):
+    assert profiledata_obj.values().shape == (50,)
 
 
-def test_fielddata_vector_magnitude_options_equal(prsfile, spec):
-    ds = gribfile.GribFile(
-        prsfile,
-        cfgrib_config={
-            "shortName": "u",
-            "typeOfLevel": "isobaricInhPa",
-            "level": 250,
-        },
-    )
-    fd = gribdata.FieldData(
-        ds=ds.contents,
-        fhr=15,
-        grib_path=prsfile,
-        level="250mb",
-        short_name="u",
-        spec=spec,
-    )
-    vm_cfkeys = fd.vector_magnitude(
-        field1=fd.ds, cfkeys={"shortName": "v", "typeOfLevel": "isobaricInhPa"}
-    )
-    vm_field2 = fd.vector_magnitude(field1=fd.ds, field2_id="v_250mb")
-    assert np.array_equal(vm_cfkeys, vm_field2)
+def test_profiledata_values_bad_name_level(profiledata_obj):
+    with raises(errors.NoGraphicsDefinitionForVariableError):
+        profiledata_obj.values(level="foo", name="temp")
+    with raises(errors.NoGraphicsDefinitionForVariableError):
+        profiledata_obj.values(level="sfc", name="foo")
+    with raises(errors.NoGraphicsDefinitionForVariableError):
+        profiledata_obj.values(level="bar", name="foo")
+
+
+def test_profiledata_values_one_level(profiledata_obj):
+    value = profiledata_obj.values(name="hlcy", level="sr01")
+    assert value.shape == ()  # A single number
+    assert value == 47.7
