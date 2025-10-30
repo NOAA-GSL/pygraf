@@ -17,3 +17,6 @@ typecheck:
 unittest:
 	pytest --cov -k "not hrrr" -n 4 .
 
+memtest:
+	pytest --memray -k"not hrrr" .
+

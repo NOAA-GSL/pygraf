@@ -460,16 +460,19 @@ cell: # Storm cell motion
     cfgrib:
       shortName: ustm
       typeOfLevel: heightAboveGroundLayer
-      level: 6000
+      bottomLevel: 6000
     ncl_name: USTM_P0_2L103_{grid}
     transform:
       funcs: [vector_magnitude, conversions.ms_to_kt]
       kwargs:
-        cfkeys:
-          shortName: vstm
-          typeOfLevel: heightAboveGroundLayer
-          level: 6000
+        field2_id: cellv
     unit: kt
+cellv:
+  ua:
+    cfgrib:
+      shortName: vstm
+      typeOfLevel: heightAboveGroundLayer
+      bottomLevel: 6000
 ceil: # Ceiling
   ua: &ceil
     cfgrib:
@@ -1104,6 +1107,9 @@ gh: # Geopotential height
     unit: gpm
   ua:
     <<: *ua_gh
+    cfgrib:
+      shortName: gh
+      typeOfLevel: hybrid
 ghtfl: # Ground Heat Flux
   sfc:
     cfgrib:
@@ -1786,16 +1792,18 @@ ptyp: # Hourly total precipitation
     transform: conversions.kgm2_to_in
     unit: in
 pwtr: # Precipitable water
-  sfc:
+  sfc: &pwtr
     cfgrib:
       shortName: pwat
       typeOfLevel: atmosphereSingleLayer
+      level: 0
     clevs: !arange [4, 81, 4]
     cmap: gist_ncar
     colors: pw_colors
     ncl_name: PWAT_P0_L200_{grid}
     ticks: 4
     unit: mm
+
 ref: # Maximum reflectivity for past hour at 1 km AGL
   m10:
     <<: *refl
@@ -1986,15 +1994,7 @@ shear:
     transform:
       funcs: [vector_magnitude, conversions.ms_to_kt]
       kwargs:
-        cfkeys:
-          shortName: vvcsh
-          typeOfLevel: heightAboveGroundLayer
-          topLevel: 0
-          level: 0
-          bottomLevel: 1000
-        one_lev: True
-        split: True
-        level: 01km
+        field2_id: vshear_01km
     ticks: 0
     title: 0–1 km Bulk Shear
     unit: kt
@@ -2011,16 +2011,23 @@ shear:
     transform:
       funcs: [vector_magnitude, conversions.ms_to_kt]
       kwargs:
-        cfkeys:
-          shortName: vvcsh
-          typeOfLevel: heightAboveGroundLayer
-          level: 0
-          topLevel: 0
-          bottomLevel: 6000
-        one_lev: True
-        split: True
-        level: 06km
+        field2_id: vshear_06km
     title: 0–6 km Bulk Shear
+vshear:
+  01km:
+    cfgrib:
+      shortName: vvcsh
+      typeOfLevel: heightAboveGroundLayer
+      topLevel: 0
+      level: 0
+      bottomLevel: 1000
+  06km:
+    cfgrib:
+      shortName: vvcsh
+      typeOfLevel: heightAboveGroundLayer
+      level: 0
+      topLevel: 0
+      bottomLevel: 6000
 shtfl: # Sensible Heat Net Flux
   sfc: &shtflsfc
     cfgrib:
@@ -2316,7 +2323,7 @@ sphum: # Specific humidity
   ua:
     cfgrib:
       shortName: q
-      typeOfLevel: isobaricInhPa
+      typeOfLevel: hybrid
     ncl_name: SPFH_P0_L105_{grid}
 ssrun: # Storm Surface Runoff
   sfc: &precip
@@ -2611,6 +2618,9 @@ u:
     transform: conversions.ms_to_kt
   ua:
     <<: *ua_uwind
+    cfgrib:
+      shortName: u
+      typeOfLevel: hybrid
 ulwrf: # Upward Longwave Radiation Flux
   sfc:
     <<: *radiation_flux
@@ -2768,6 +2778,9 @@ v:
     transform: conversions.ms_to_kt
   ua:
     <<: *ua_vwind
+    cfgrib:
+      shortName: v
+      typeOfLevel: hybrid
 vbdsf: # Incoming Direct Radiation
   sfc:
     <<: *incoming_radiation
@@ -2941,10 +2954,7 @@ wspeed: # Wind Speed
     transform:
       funcs: [vector_magnitude, conversions.ms_to_kt]
       kwargs:
-        cfkeys:
-          shortName: 10v
-          level: 10
-          typeOfLevel: heightAboveGround
+        field2_id: v_10m
     unit: kt
     wind: True
   5mb: &ua_wspeed_high
@@ -2964,9 +2974,7 @@ wspeed: # Wind Speed
     transform:
       funcs: [vector_magnitude, conversions.ms_to_kt]
       kwargs:
-        cfkeys:
-          shortName: v
-          typeOfLevel: isobaricInhPa
+        field2_id: v
     unit: kt
     wind: True
   10mb:
@@ -3005,9 +3013,7 @@ wspeed: # Wind Speed
     transform:
       funcs: [vector_magnitude, conversions.ms_to_kt]
       kwargs:
-        cfkeys:
-          shortName: v
-          typeOfLevel: isobaricInhPa
+        field2_id: v
   max: # Hourly Maximum 10m Wind
     <<: *ua_wspeed
     cfgrib:

@@ -68,8 +68,8 @@ def create_skewt(cla: Namespace, fhr: int, grib_path: Path, workdir: Path):
     Generate arguments for parallel processing of Skew T graphics,
     and generate a pool of workers to complete the tasks.
     """
-
-    args = [(cla, fhr, grib_path, site, workdir) for site in cla.sites]
+    vspec = utils.cfgrib_spec(cla.spec["temp"]["ua"], cla.model_name)
+    args = [(cla, fhr, grib_path, site, vspec, workdir) for site in cla.sites]
 
     print(f"Queueing {len(args)} Skew Ts")
     with Pool(processes=cla.nprocs) as pool:
@@ -108,7 +108,6 @@ def create_maps(
                         grib_paths,
                         level,
                         model,
-                        spec,
                         variable,
                         workdir,
                         tile,

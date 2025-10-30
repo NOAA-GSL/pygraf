@@ -231,9 +231,8 @@ class UPPData(specs.VarSpec):
 
     def vector_magnitude(
         self,
-        field1: Dataset,
-        cfkeys: dict | None = None,
-        field2_id: str | None = None,
+        field1: DataArray,
+        field2_id: str,
         **kwargs,  # noqa: ARG002
     ):
         """
@@ -243,37 +242,9 @@ class UPPData(specs.VarSpec):
         in the form <name>_<level>.
 
         """
-
-        if cfkeys:
-            if cfkeys.get("level") is None:
-                typeoflevel = cfkeys["typeOfLevel"]
-                cfkeys["level"] = field1.coords[typeoflevel].to_numpy().item()
-            field2_spec = {"cfgrib": cfkeys}
-            utils.set_level(level=self.level, model=self.model, spec=field2_spec)
-        elif field2_id:
-            var, lev = field2_id.split("_")
-            field2_spec = self.spec
-            for key in (var, lev):
-                field2_spec = field2_spec[key]
-            utils.set_level(level=lev, model=self.model, spec=field2_spec)
-        else:
-            msg = "Must supply a field2_id if cfkeys is not explicitly provided."
-            raise errors.ArgumentError(msg)
-
-        ds = gribfile.GribFile(self.grib_path, field2_spec["cfgrib"]).contents
-        args = {
-            "ds": ds,
-            "fhr": self.fhr,
-            "level": self.level,
-            "model": self.model,
-            "short_name": self.short_name,
-            "spec": self.spec,
-            "grib_path": self.grib_path,
-        }
-        field2 = FieldData(**args).ds
-        mag = conversions.magnitude(
-            field1.to_dataarray().squeeze(), field2.to_dataarray().squeeze()
-        )
+        var, lev = field2_id.split("_") if "_" in field2_id else (field2_id, self.level)
+        field2 = self.values(level=lev, name=var)
+        mag = conversions.magnitude(field1, field2)
         field1.close()
         field2.close()
 
@@ -590,6 +561,7 @@ class FieldData(UPPData):
         rain_mixing_ratio.close()
         return slw
 
+    @property
     def ticks(self) -> int:
         """
         Returns the number of color bar tick marks from the yaml config

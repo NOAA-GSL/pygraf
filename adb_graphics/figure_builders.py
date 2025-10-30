@@ -11,9 +11,11 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import axes
-from xarray import Dataset
 
-from adb_graphics.figures import maps, skewt
+from adb_graphics.datahandler import gribfile
+from adb_graphics.figures import skewt
+from adb_graphics.figures.maps import DataMap, DiffMap, Map, MapFields, MultiPanelDataMap
+from adb_graphics.utils import cfgrib_spec
 
 AIRPORTS = Path("static/Airports_locs.txt")
 
@@ -33,7 +35,7 @@ def add_obs_panel(
     """
 
     ax.axis("on")
-    map_fields = maps.MapFields(
+    map_fields = MapFields(
         fhr=0,
         fields_spec=spec,
         grib_path=obs_file,
@@ -41,14 +43,14 @@ def add_obs_panel(
         model="obs",
         name=short_name,
     )
-    m = maps.Map(
+    m = Map(
         airport_fn=AIRPORTS,
         ax=ax,
         grid_info=proj_info,
         model="obs",
         tile=tile,
     )
-    dm = maps.MultiPanelDataMap(
+    dm = MultiPanelDataMap(
         map_fields=map_fields,
         map_=m,
         member="obs",
@@ -56,23 +58,19 @@ def add_obs_panel(
     )
 
     # Draw the map
-    dm.draw(show=True)
+    return dm.draw()
 
 
-def parallel_maps(
+def parallel_maps(  # noqa: PLR0912
     cla: Namespace,
     fhr: int,
     grib_path: Path,
     level: str,
-    model: str,
-    spec: dict,
     variable: str,
     workdir: Path,
     tile: str = "full",
     dp2: Path | None = None,
 ):
-    # pylint: disable=too-many-arguments,too-many-locals
-    # pylint: disable=too-many-branches,too-many-statements
     """
     Function that creates plan-view maps, either a single panel, or
     multipanel for a forecast ensemble. Can be used in parallel.
@@ -83,9 +81,6 @@ def parallel_maps(
       grib_path  path to grib file
       level      the vertical level of the variable to be plotted
                  corresponding to a key in the specs file
-      model      model name: rap, hrrr, hrrre, rrfs, rtma
-      spec       the dictionary of specifications for the given variable
-                 and level
       variable   the name of the variable section in the specs file
       workdir    output directory
       tile
@@ -96,39 +91,49 @@ def parallel_maps(
     """
 
     fig, axes = set_figure(cla.model_name, cla.graphic_type, tile)
-
+    spec = cla.specs[variable][level]
     # set last_panel to send into DataMap for colorbar control
     last_panel = False
 
     # Declare the type of object depending on graphic type
     map_classes = {
-        "enspanel": maps.MultiPanelDataMap,
-        "diff": maps.DiffMap,
+        "enspanel": MultiPanelDataMap,
+        "diff": DiffMap,
     }
-    map_class = map_classes.get(cla.graphic_type, maps.DataMap)
+    map_class = map_classes.get(cla.graphic_type, DataMap)
 
+    top_left = 0
+    center_left = 4
+    lower_left = 8
     for index, current_ax in enumerate(axes):
-        if current_ax is axes[-1] or index == cla.ens_size:
+        if current_ax is axes[-1]:
             last_panel = True
         mem = None
         if cla.graphic_type == "enspanel":
             # Don't put data in the top left or bottom left panels.
-            if index in (0, 8):
+            if index in (top_left, lower_left):
                 current_ax.axis("off")
 
-            # If we have less than 10 members, skip the remaining panels.
-            if index > cla.ens_size:
-                continue
+            ## If we have less than 10 members, skip the remaining panels.
+            # if index > cla.ens_size:
+            #    continue
 
             # Shenanigans to match ensemble member to panel index
-            center_left = 4
-            lower_left = 8
-            mem = 0 if index == center_left else index
-            mem = mem if mem < center_left else index - 1
-            mem = mem if mem < lower_left else index - 2
+            match index:
+                case x if x in (top_left, center_left, lower_left):
+                    mem = 0
+                case x if x > lower_left:
+                    mem = index - 2
+                case x if x > center_left:
+                    mem = index - 1
+                case x if x < center_left:
+                    mem = index
+            # mem = 0 if index in (top_left, center_left, lower_left) else index
+            # mem = mem if mem < center_left else index - 1
+            # mem = mem if mem < lower_left else index - 2
 
         # Create an object that holds all the fields for this map
-        map_fields = maps.MapFields(
+        map_fields = MapFields(
             grib_path=grib_path,
             grib_path2=dp2,
             fhr=fhr,
@@ -136,16 +141,16 @@ def parallel_maps(
             level=level,
             name=variable,
             map_type=cla.graphic_type,
-            model=model,
+            model=cla.model_name,
             tile=tile,
         )
 
         # Generate a map object
-        m = maps.Map(
+        m = Map(
             airport_fn=AIRPORTS,
             ax=current_ax,
             grid_info=map_fields.shaded.grid_info(),
-            model=model,
+            model=cla.model_name,
             plot_airports=spec.get("plot_airports", True),
             tile=tile,
         )
@@ -208,11 +213,10 @@ def parallel_maps(
     plt.clf()
     # Closes all the figure windows.
     plt.close("all")
-    del m
     gc.collect()
 
 
-def parallel_skewt(cla: Namespace, fhr: int, ds: Dataset, site: str, workdir: Path):
+def parallel_skewt(cla: Namespace, fhr: int, grib_path: Path, site: str, workdir: Path):
     """
     Function that creates a single SkewT plot.
 
@@ -225,7 +229,8 @@ def parallel_skewt(cla: Namespace, fhr: int, ds: Dataset, site: str, workdir: Pa
       site       the string representation of the site from the sites file
       workdir    output directory
     """
-
+    cf = cfgrib_spec(cla.specs["temp"]["ua"]["cfgrib"], cla.model_name)
+    ds = gribfile.GribFile(grib_path, cf).contents
     skew = skewt.SkewTDiagram(
         ds=ds,
         fhr=fhr,
@@ -233,6 +238,8 @@ def parallel_skewt(cla: Namespace, fhr: int, ds: Dataset, site: str, workdir: Pa
         loc=site,
         max_plev=cla.max_plev,
         model_name=cla.model_name,
+        spec=cla.specs,
+        grib_path=grib_path,
     )
     skew.create_diagram()
     outfile = f"{skew.site_code}_{skew.site_num}_skewt_f{fhr:03d}.png"

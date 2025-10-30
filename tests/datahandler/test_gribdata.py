@@ -221,7 +221,7 @@ def test_uppdata_valid_dt(uppdata_obj):
     assert uppdata_obj.valid_dt == datetime(2025, 10, 6, 15)
 
 
-def test_uppdata_vector_magnitude_cfkeys(prsfile, spec):
+def test_uppdata_vector_magnitude(prsfile, spec):
     ds = gribfile.GribFile(
         prsfile,
         cfgrib_config={
@@ -238,60 +238,8 @@ def test_uppdata_vector_magnitude_cfkeys(prsfile, spec):
         short_name="u",
         spec=spec,
     )
-    vm = fd.vector_magnitude(
-        field1=fd.ds, cfkeys={"shortName": "v", "typeOfLevel": "isobaricInhPa"}
-    )
+    vm = fd.vector_magnitude(field1=fd.ds.u, field2_id="v_250mb")
     assert not np.array_equal(vm, ds.contents.u)
-
-
-def test_uppdata_vector_magnitude_field2_id(prsfile, spec):
-    ds = gribfile.GribFile(
-        prsfile,
-        cfgrib_config={
-            "shortName": "u",
-            "typeOfLevel": "isobaricInhPa",
-            "level": 250,
-        },
-    )
-    fd = ConcreteUPPData(
-        ds=ds.contents,
-        fhr=15,
-        grib_path=prsfile,
-        level="250mb",
-        short_name="u",
-        spec=spec,
-    )
-    vm = fd.vector_magnitude(field1=fd.ds, field2_id="v_250mb")
-    assert not np.array_equal(vm, ds.contents.u)
-
-
-def test_uppdata_vector_magnitude_no_field2_args(uppdata_obj):
-    with raises(errors.ArgumentError):
-        uppdata_obj.vector_magnitude(uppdata_obj.ds)
-
-
-def test_uppdata_vector_magnitude_options_equal(prsfile, spec):
-    ds = gribfile.GribFile(
-        prsfile,
-        cfgrib_config={
-            "shortName": "u",
-            "typeOfLevel": "isobaricInhPa",
-            "level": 250,
-        },
-    )
-    fd = ConcreteUPPData(
-        ds=ds.contents,
-        fhr=15,
-        grib_path=prsfile,
-        level="250mb",
-        short_name="u",
-        spec=spec,
-    )
-    vm_cfkeys = fd.vector_magnitude(
-        field1=fd.ds, cfkeys={"shortName": "v", "typeOfLevel": "isobaricInhPa"}
-    )
-    vm_field2 = fd.vector_magnitude(field1=fd.ds, field2_id="v_250mb")
-    assert np.array_equal(vm_cfkeys, vm_field2)
 
 
 def test_uppdata_vspec(uppdata_obj):
@@ -474,13 +422,13 @@ def test_fielddata_supercooled_liquid_water(natfile, spec):
 
 
 def test_fielddata_ticks_default(fielddata_obj):
-    assert fielddata_obj.ticks() == 10
+    assert fielddata_obj.ticks == 10
 
 
 def test_fielddata_ticks_in_vspec(fielddata_obj):
     ticks = 22
     fielddata_obj.vspec["ticks"] = ticks
-    assert fielddata_obj.ticks() == ticks
+    assert fielddata_obj.ticks == ticks
 
 
 def test_fielddata_units_default(fielddata_obj):

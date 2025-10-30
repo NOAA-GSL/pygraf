@@ -23,7 +23,7 @@ from matplotlib.contour import QuadContourSet
 from mpl_toolkits.basemap import Basemap, shiftgrid
 
 from adb_graphics.datahandler import gribdata, gribfile
-from adb_graphics.utils import cfgrib_spec, set_level
+from adb_graphics.utils import cfgrib_spec, numeric_level, set_level
 
 # FULL_TILES is a list of strings that includes the labels GSL attaches to some of
 # the wgrib2 cutouts used for larger domains like RAP, RRFS NA, and global.
@@ -500,6 +500,7 @@ class DataMap:
             ticks=ticks,
         )
 
+        tick_labels = [str(t) for t in ticks]
         if self.field.short_name == "flru":
             tick_labels = [label.rjust(30) for label in ["VFR", "MVFR", "IFR", "LIFR", ""]]
 
@@ -811,7 +812,7 @@ class DataMap:
             loc="left",
         )
 
-        level, lev_unit = f.numeric_level()
+        level, lev_unit = numeric_level(f.level)
         units = f"({f.units}, shaded)" if f.vspec.get("print_units", True) else ""
 
         # Title or Atmospheric level and unit in the high center
@@ -892,8 +893,8 @@ class DataMap:
         """Helper function to create mesh for various plot."""
 
         lat, lon = field.latlons()
-        if self.map.model == "obs":
-            lat, lon = np.meshgrid(lat, lon, sparse=False, indexing="ij")
+        # if self.map.model == "obs":
+        #    lat, lon = np.meshgrid(lat, lon, sparse=False, indexing="ij")
 
         adjust = 360 if np.any(lon < 0) else 0
         return self.map.m(adjust + lon, lat)

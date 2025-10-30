@@ -72,8 +72,6 @@ class SkewTDiagram(gribdata.ProfileData):
         self.model_name = kwargs.get("model_name", "Analysis")
 
     def _add_hydrometeors(self, hydro_subplot: Axes):
-        # pylint: disable=too-many-locals
-
         mixing_ratios: dict[str, HydroPlotSettings] = {
             "clwmr": {
                 "color": "blue",
@@ -112,11 +110,8 @@ class SkewTDiagram(gribdata.ProfileData):
             },
         }
 
-        profiles = self.atmo_profiles  # dictionary
-        pres = profiles.get("pres").get("data")
-        temp = profiles.get("temp").get("data")
-        nlevs = len(pres)  # determine number of vertical levels
-        pres_sfc = pres[0]  # need correct surface pressure value!
+        pres = self.atmo_profiles.get("pres").get("data")
+        temp = self.atmo_profiles.get("temp").get("data")
         handles = []
         gravity = 9.81  # m/s^2
 
@@ -131,14 +126,17 @@ class SkewTDiagram(gribdata.ProfileData):
             scale = settings.get("scale", 1.0)
             try:
                 profile = self.values(name=mixr) * 1000.0 * scale
-            except errors.GribReadError:
-                print(f"missing {mixr} for hydrometeor plot, skipping that field.")
-                continue
+            except (errors.NoGraphicsDefinitionForVariableError, IndexError):
+                try:
+                    profile = self.values(name=mixr, level="uanat") * 1000.0 * scale
+                except errors.NoGraphicsDefinitionForVariableError:
+                    print(f"missing {mixr} for hydrometeor plot, skipping that field.")
+                    continue
             mixr_total: units = 0.0
-            for n in range(nlevs):
+            for n in range(len(pres)):
                 if n == 0:
-                    pres_layer = 2 * (pres_sfc - pres[n])  # layer depth
-                    pres_sigma = pres_sfc - pres_layer  # pressure at next sigma level
+                    pres_layer = 2 * (pres[0] - pres[n])  # layer depth
+                    pres_sigma = pres[0] - pres_layer  # pressure at next sigma level
                 else:
                     pres_layer = 2 * (pres_sigma - pres[n])  # layer depth
                     pres_sigma = pres_sigma - pres_layer  # pressure at next sigma level
@@ -149,6 +147,7 @@ class SkewTDiagram(gribdata.ProfileData):
             profile = DataArray.where((profile > 10.0), 10.0, profile)  # noqa: PLR2004
 
             # plot line
+            profile = profile[: pres.shape[0]]
             hydro_subplot.plot(
                 profile,
                 pres,
@@ -187,9 +186,7 @@ class SkewTDiagram(gribdata.ProfileData):
                         layer = False
 
             # compute vertically integrated amount and add legend line
-            line = (
-                f"{settings.get('label'):<7s} {mixr_total.magnitude:>10.3f} {settings.get('units')}"
-            )
+            line = f"{settings.get('label'):<7s} {mixr_total:>10.3f} {settings.get('units')}"
             if scale != 1.0:
                 line = (
                     f"{settings.get('label'):<5s}(x{scale}) {mixr_total.magnitude:.3f} "
@@ -234,9 +231,8 @@ class SkewTDiagram(gribdata.ProfileData):
         for name, items in self.thermo_variables.items():
             # Magic to get the desired number of decimals to appear.
             decimals = items.get("decimals", 0)
-            value = items["data"]
-            if value != "--":
-                value = int(value) if decimals == 0 else value.round(decimals=decimals).to_numpy()
+            data = items["data"]
+            value = int(data) if decimals == 0 else data.round(decimals=decimals).to_numpy()
 
             # Sure would have been nice to use a variable in the f string to
             # denote the format per variable.
@@ -312,7 +308,7 @@ class SkewTDiagram(gribdata.ProfileData):
 
             # Only return values up to the maximum pressure level requested
             if var == "pres" and top is None:
-                top = np.sum(np.where(tmp.magnitude >= self.max_plev)) - 1
+                top = np.where(tmp.magnitude >= self.max_plev)[0][-1]
 
             atmo_vars[var]["data"] = tmp[:top]
 
@@ -408,7 +404,7 @@ class SkewTDiagram(gribdata.ProfileData):
         temp = profiles.get("temp").get("data").to("degC")
         sphum = profiles.get("sphum").get("data")
 
-        dewpt = np.array(mpcalc.dewpoint_from_specific_humidity(sphum, temp, pres).to("degC"))
+        dewpt = np.array(mpcalc.dewpoint_from_specific_humidity(pres, temp, sphum).to("degC"))
         wspd = np.array(mpcalc.wind_speed(u, v))
         wdir = np.array(mpcalc.wind_direction(u, v))
 
@@ -433,7 +429,7 @@ class SkewTDiagram(gribdata.ProfileData):
         temp = profiles.get("temp").get("data")
         sphum = profiles.get("sphum").get("data")
 
-        dewpt = mpcalc.dewpoint_from_specific_humidity(sphum, temp, pres).to("degF")
+        dewpt = mpcalc.dewpoint_from_specific_humidity(pres, temp, sphum).to("degF")
 
         # Pressure vs temperature
         skew.plot(pres, temp, "r", linewidth=1.5)
@@ -539,8 +535,8 @@ class SkewTDiagram(gribdata.ProfileData):
         mixing_lines = np.array([1, 2, 3, 5, 8, 12, 16, 20]).reshape(-1, 1) / 1000
         mix_pr = np.arange(1001, 400, -50) * units.hPa
         skew.plot_mixing_lines(
-            w=mixing_lines,
-            p=mix_pr,
+            mixing_ratio=mixing_lines,
+            pressure=mix_pr,
             colors="green",
             linestyles=(0, (5, 10)),
             linewidth=0.7,
@@ -657,7 +653,6 @@ class SkewTDiagram(gribdata.ProfileData):
 
             except errors.GribReadError:
                 tmp = DataArray([])
-
             thermo[var]["data"] = tmp
             thermo[var]["units"] = spec.get("unit")
 

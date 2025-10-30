@@ -263,6 +263,7 @@ def label_lines(ax: Axes, lines: Any, labels: np.ndarray, offset: float = 0, **k
         kwargs["color"] = lines.get_color()[0]
 
     for i, line in enumerate(lines.get_segments()):
+        assert not labels[i].ndim > 1
         label = int(labels[i])
         label_line(ax, str(label), line, align=True, offset=offset, **kwargs)
 
