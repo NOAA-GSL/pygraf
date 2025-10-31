@@ -1,4 +1,3 @@
-# pylint: disable=invalid-name
 """
 A set of generic utilities available to all the adb_graphics components.
 """
@@ -11,6 +10,7 @@ import sys
 import time
 from collections.abc import Callable
 from datetime import datetime, timedelta
+from importlib import import_module
 from importlib.util import find_spec
 from math import atan2, degrees
 from multiprocessing import Process
@@ -41,7 +41,7 @@ def create_zip(files_to_zip: list[str], zipf: Path | str):
     while True:
         if not lock_file.exists():
             # Create the lock
-            fd = lock_file.open()
+            lock_file.touch()
             print(f"Writing to zip file {zipf} for files like: {files_to_zip[0][-10:]}")
 
             cmd = f"zip -uj {zipf} {' '.join(files_to_zip)}"
@@ -63,7 +63,6 @@ def create_zip(files_to_zip: list[str], zipf: Path | str):
                     Path(file_to_zip).unlink(missing_ok=True)
             finally:
                 # Remove the lock
-                fd.close()
                 lock_file.unlink(missing_ok=True)
             break
         # Wait before trying to obtain the lock on the file
@@ -110,11 +109,7 @@ def get_func(val: str):
     dictionary of functions: how to load without converting to strings."
     """
 
-    if "." in val:
-        module_name, fun_name = val.rsplit(".", 1)
-    else:
-        module_name = "__main__"
-        fun_name = val
+    module_name, fun_name = val.rsplit(".", 1)
 
     mod_spec = find_spec(module_name, package="adb_graphics")
     if mod_spec is None:
@@ -123,11 +118,7 @@ def get_func(val: str):
         msg = "Could not find {module_name} in current environment."
         raise ValueError(msg)
 
-    try:
-        __import__(mod_spec.name)
-    except ImportError:
-        print(f"Could not load {module_name} while trying to locate function in get_func")
-        raise
+    import_module(mod_spec.name)
     module = sys.modules[mod_spec.name]
     return getattr(module, fun_name)
 
@@ -160,7 +151,7 @@ def arange_constructor(loader: yaml.SafeLoader, node: yaml.Node) -> Any:  # noqa
     return np.arange(*[float(n.value) for n in node.value])
 
 
-def load_yaml(config: Path | str):
+def load_yaml(config: Path | str) -> YAMLConfig:
     yaml.add_constructor("!join_ranges", join_ranges, Loader=uw_yaml_loader())
     yaml.add_constructor("!arange", arange_constructor, Loader=uw_yaml_loader())
     return YAMLConfig(config)

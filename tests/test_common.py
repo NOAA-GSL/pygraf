@@ -126,7 +126,7 @@ class TestDefaultSpecs:
             assert self.is_a_key(short_name)
 
             if lev:
-                assert self.cfg.get(short_name).get(lev) is not None
+                assert self.cfg.get(short_name, {}).get(lev) is not None
 
             for arg in args:
                 assert arg in accepted_args
