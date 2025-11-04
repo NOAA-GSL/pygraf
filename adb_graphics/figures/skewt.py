@@ -5,8 +5,9 @@ Log-P diagram using MetPy.
 """
 
 from functools import cached_property
+from math import atan2, degrees
 from pathlib import Path
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
 
 import matplotlib.font_manager as fm
 import matplotlib.lines as mlines
@@ -22,7 +23,7 @@ from metpy.units import units
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from xarray import DataArray, Dataset
 
-from adb_graphics import errors, utils
+from adb_graphics import errors
 from adb_graphics.datahandler import gribdata
 
 if TYPE_CHECKING:
@@ -508,7 +509,7 @@ class SkewTDiagram(gribdata.ProfileData):
             linestyles="solid",
             linewidth=0.7,
         )
-        utils.label_lines(
+        label_lines(
             ax=skew.ax,
             lines=skew.dry_adiabats,
             labels=dry_adiabats.magnitude,
@@ -525,7 +526,7 @@ class SkewTDiagram(gribdata.ProfileData):
             linestyles="solid",
             linewidth=0.7,
         )
-        utils.label_lines(
+        label_lines(
             ax=skew.ax,
             lines=skew.moist_adiabats,
             labels=moist_adiabats.magnitude,
@@ -541,7 +542,7 @@ class SkewTDiagram(gribdata.ProfileData):
             linestyles=(0, (5, 10)),
             linewidth=0.7,
         )
-        utils.label_lines(
+        label_lines(
             ax=skew.ax,
             lines=skew.mixing_lines,
             labels=mixing_lines * 1000,
@@ -690,3 +691,105 @@ class SkewTDiagram(gribdata.ProfileData):
             loc="center",
             position=(-2.5, 1.0),
         )
+
+
+def label_line(ax: Axes, label: str, segment: np.ndarray, **kwargs):
+    """
+    Label a single line with line2D label data.
+
+    Input:
+
+      ax        the SkewT object axis
+      label     label to be used for the current line
+      segment   a list (array) of values for the current line
+
+    Key Word Arguments
+
+      align     optional bool to enable the rotation of the label to line angle
+      end       the end of the line at which to put the label. 'bottom' or 'top'
+      offset    index to use for the "end" of the array
+
+      Any kwargs accepted by matplotlib's text box.
+    """
+
+    # Strip non-text-box key word arguments and set default if they don't exist
+    align = kwargs.pop("align", True)
+    end = kwargs.pop("end", "bottom")
+    offset = kwargs.pop("offset", 0)
+
+    # Label location
+    if end == "bottom":
+        x, y = segment[0 + offset, :]
+        ip = 1 + offset
+    elif end == "top":
+        x, y = segment[-1 - offset, :]
+        ip = -1 - offset
+
+    if align:
+        # Compute the slope
+        dx = segment[ip, 0] - segment[ip - 1, 0]
+        dy = segment[ip, 1] - segment[ip - 1, 1]
+        ang = degrees(atan2(dy, dx))
+
+        # Transform to screen co-ordinates
+        pt = np.array([x, y]).reshape((1, 2))
+        trans_angle = ax.transData.transform_angles(np.array((ang,)), pt)[0]
+
+        if end == "top":
+            trans_angle -= 180
+
+    else:
+        trans_angle = 0
+
+    # Set a bunch of keyword arguments
+    if ("horizontalalignment" not in kwargs) and ("ha" not in kwargs):
+        kwargs["ha"] = "center"
+
+    if ("verticalalignment" not in kwargs) and ("va" not in kwargs):
+        kwargs["va"] = "center"
+
+    if "backgroundcolor" not in kwargs:
+        kwargs["backgroundcolor"] = ax.get_facecolor()
+
+    if "clip_on" not in kwargs:
+        kwargs["clip_on"] = True
+
+    if "fontsize" not in kwargs:
+        kwargs["fontsize"] = "larger"
+
+    if "fontweight" not in kwargs:
+        kwargs["fontweight"] = "bold"
+
+    # Larger value (e.g., 2.0) to move box in front of other diagram elements
+    if "zorder" not in kwargs:
+        kwargs["zorder"] = 1.50
+
+    # Place the text box label on the line.
+    ax.text(x, y, label, rotation=trans_angle, **kwargs)
+
+
+def label_lines(ax: Axes, lines: Any, labels: np.ndarray, offset: float = 0, **kwargs):
+    """
+    Plots labels on a set of lines from SkewT.
+
+    Input:
+
+      ax      the SkewT object axis
+      lines   the SkewT object special lines
+      labels  list of labels to be used
+      offset  index to use for the "end" of the array
+
+    Key Word Arguments
+
+      color   line color
+
+      Along with any other kwargs accepted by matplotlib's text box.
+    """
+
+    if "color" not in kwargs:
+        kwargs["color"] = lines.get_color()[0]
+
+    for i, line in enumerate(lines.get_segments()):
+        assert not labels[i].ndim > 1
+        label = int(labels[i])
+        label_line(ax, str(label), line, align=True, offset=offset, **kwargs)

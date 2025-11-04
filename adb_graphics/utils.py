@@ -2,7 +2,6 @@
 A set of generic utilities available to all the adb_graphics components.
 """
 
-import argparse
 import functools
 import glob
 import subprocess
@@ -12,7 +11,6 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 from importlib import import_module
 from importlib.util import find_spec
-from math import atan2, degrees
 from multiprocessing import Process
 from pathlib import Path
 from string import ascii_letters, digits
@@ -20,7 +18,6 @@ from typing import Any
 
 import numpy as np
 import yaml
-from matplotlib.axes import Axes
 from uwtools.api.config import YAMLConfig
 from uwtools.config.support import uw_yaml_loader
 
@@ -52,19 +49,19 @@ def create_zip(files_to_zip: list[str], zipf: Path | str):
                     check=True,
                     shell=True,
                 )
-            except:  # noqa: E722
-                print(f"Error on writing zip file! {sys.exc_info()[0]}")
+            except Exception as e:
                 count += 1
                 if count >= retry:
-                    raise
+                    msg = "Error on writing zip file!"
+                    raise RuntimeError(msg) from e
             else:
                 # Zipping was successful. Remove files that were zipped
                 for file_to_zip in files_to_zip:
                     Path(file_to_zip).unlink(missing_ok=True)
+                break
             finally:
                 # Remove the lock
                 lock_file.unlink(missing_ok=True)
-            break
         # Wait before trying to obtain the lock on the file
         time.sleep(5)
 
@@ -157,151 +154,26 @@ def load_yaml(config: Path | str) -> YAMLConfig:
     return YAMLConfig(config)
 
 
-def label_line(ax: Axes, label: str, segment: np.ndarray, **kwargs):
-    """
-    Label a single line with line2D label data.
-
-    Input:
-
-      ax        the SkewT object axis
-      label     label to be used for the current line
-      segment   a list (array) of values for the current line
-
-    Key Word Arguments
-
-      align     optional bool to enable the rotation of the label to line angle
-      end       the end of the line at which to put the label. 'bottom' or 'top'
-      offset    index to use for the "end" of the array
-
-      Any kwargs accepted by matplotlib's text box.
-    """
-
-    # Strip non-text-box key word arguments and set default if they don't exist
-    align = kwargs.pop("align", True)
-    end = kwargs.pop("end", "bottom")
-    offset = kwargs.pop("offset", 0)
-
-    # Label location
-    if end == "bottom":
-        x, y = segment[0 + offset, :]
-        ip = 1 + offset
-    elif end == "top":
-        x, y = segment[-1 - offset, :]
-        ip = -1 - offset
-
-    if align:
-        # Compute the slope
-        dx = segment[ip, 0] - segment[ip - 1, 0]
-        dy = segment[ip, 1] - segment[ip - 1, 1]
-        ang = degrees(atan2(dy, dx))
-
-        # Transform to screen co-ordinates
-        pt = np.array([x, y]).reshape((1, 2))
-        trans_angle = ax.transData.transform_angles(np.array((ang,)), pt)[0]
-
-        if end == "top":
-            trans_angle -= 180
-
-    else:
-        trans_angle = 0
-
-    # Set a bunch of keyword arguments
-    if ("horizontalalignment" not in kwargs) and ("ha" not in kwargs):
-        kwargs["ha"] = "center"
-
-    if ("verticalalignment" not in kwargs) and ("va" not in kwargs):
-        kwargs["va"] = "center"
-
-    if "backgroundcolor" not in kwargs:
-        kwargs["backgroundcolor"] = ax.get_facecolor()
-
-    if "clip_on" not in kwargs:
-        kwargs["clip_on"] = True
-
-    if "fontsize" not in kwargs:
-        kwargs["fontsize"] = "larger"
-
-    if "fontweight" not in kwargs:
-        kwargs["fontweight"] = "bold"
-
-    # Larger value (e.g., 2.0) to move box in front of other diagram elements
-    if "zorder" not in kwargs:
-        kwargs["zorder"] = 1.50
-
-    # Place the text box label on the line.
-    ax.text(x, y, label, rotation=trans_angle, **kwargs)
-
-
-def label_lines(ax: Axes, lines: Any, labels: np.ndarray, offset: float = 0, **kwargs):
-    """
-    Plots labels on a set of lines from SkewT.
-
-    Input:
-
-      ax      the SkewT object axis
-      lines   the SkewT object special lines
-      labels  list of labels to be used
-      offset  index to use for the "end" of the array
-
-    Key Word Arguments
-
-      color   line color
-
-      Along with any other kwargs accepted by matplotlib's text box.
-    """
-
-    if "color" not in kwargs:
-        kwargs["color"] = lines.get_color()[0]
-
-    for i, line in enumerate(lines.get_segments()):
-        assert not labels[i].ndim > 1
-        label = int(labels[i])
-        label_line(ax, str(label), line, align=True, offset=offset, **kwargs)
-
-
 def load_sites(arg: str | Path) -> list[str]:
     """Check that the sites file exists, and return its contents."""
 
     # Check that the file exists
-    path = path_exists(arg)
+    path = Path(arg)
+    path.exists()
 
     with path.open() as sites_file:
         sites: list[str] = sites_file.readlines()
     return sites
 
 
-def uniq_wgrib2_list(inlist: list[str]):
-    """
-    Given a list of wgrib2 output fields, returns a uniq list of fields for
-    simplifying a grib2 dataset. Uniqueness is defined by the wgrib output from
-    field 3 (colon delimted) onward, although the original full grib record must
-    be included in the wgrib2 command below.
-    """
-
-    uniq_field_set = set()
-    uniq_list = []
-    for infield in inlist:
-        infield_info = infield.split(":")
-        if len(infield_info) <= 3:  # noqa: PLR2004
-            continue
-        infield_str = ":".join(infield_info[3:])
-        if infield_str not in uniq_field_set:
-            uniq_list.append(infield)
-        uniq_field_set.add(infield_str)
-
-    return uniq_list
-
-
-def load_specs(arg: str | Path) -> dict:
+def load_specs(arg: str | Path) -> YAMLConfig:
     """Check to make sure arg file exists. Return its contents."""
 
     spec_file = Path(arg)
-    assert spec_file.exists()
-
-    specs: dict
-    with spec_file.open() as fn:
-        specs = yaml.load(fn, Loader=yaml.Loader)
-
+    if not spec_file.exists():
+        msg = f"The spec file {spec_file} does not exist."
+        raise FileNotFoundError(msg)
+    specs = load_yaml(spec_file)
     specs["file"] = spec_file
 
     return specs
@@ -360,9 +232,24 @@ def path_exists(path: Path | str):
     ret_path = Path(path)
     if not ret_path.exists():
         msg = f"{path} does not exist!"
-        raise argparse.ArgumentTypeError(msg)
+        raise FileNotFoundError(msg)
 
     return ret_path
+
+
+def set_level(level: str, model: str, spec: dict):
+    nlevel, _ = numeric_level(level=level)
+    level_info = any(
+        key
+        for keys in cfgrib_spec(spec["cfgrib"], model)
+        for key in ("level", "top", "bottom", "Surface")
+        if key in keys
+    )
+    if nlevel and not level_info:
+        if spec["cfgrib"].get(model) is not None:
+            spec["cfgrib"][model]["level"] = nlevel
+        else:
+            spec["cfgrib"]["level"] = nlevel
 
 
 def timer(func: Callable):
@@ -386,19 +273,26 @@ def to_datetime(string: str):
     return datetime.strptime(string, "%Y%m%d%H")
 
 
-def set_level(level: str, model: str, spec: dict):
-    nlevel, _ = numeric_level(level=level)
-    level_info = any(
-        key
-        for keys in cfgrib_spec(spec["cfgrib"], model)
-        for key in ("level", "top", "bottom", "Surface")
-        if key in keys
-    )
-    if nlevel and not level_info:
-        if spec["cfgrib"].get(model):
-            spec["cfgrib"][model]["level"] = nlevel
-        else:
-            spec["cfgrib"]["level"] = nlevel
+def uniq_wgrib2_list(inlist: list[str]):
+    """
+    Given a list of wgrib2 output fields, returns a uniq list of fields for
+    simplifying a grib2 dataset. Uniqueness is defined by the wgrib output from
+    field 3 (colon delimted) onward, although the original full grib record must
+    be included in the wgrib2 command below.
+    """
+
+    uniq_field_set = set()
+    uniq_list = []
+    for infield in inlist:
+        infield_info = infield.split(":")
+        if len(infield_info) <= 3:  # noqa: PLR2004
+            continue
+        infield_str = ":".join(infield_info[3:])
+        if infield_str not in uniq_field_set:
+            uniq_list.append(infield)
+        uniq_field_set.add(infield_str)
+
+    return uniq_list
 
 
 @timer

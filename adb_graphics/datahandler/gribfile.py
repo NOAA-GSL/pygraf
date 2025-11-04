@@ -29,7 +29,11 @@ class GribFile:
             self.filename,
             engine="cfgrib",
             lock=False,
-            backend_kwargs=({"filter_by_keys": self.cfgrib_config}),
+            backend_kwargs=(
+                {
+                    "filter_by_keys": self.cfgrib_config,
+                }
+            ),
         )
 
 
