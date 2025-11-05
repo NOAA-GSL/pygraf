@@ -326,6 +326,8 @@ class FieldData(UPPData):
         except AttributeError as e:
             msg = f"There is no color definition named {color_spec}"
             raise AttributeError(msg) from e
+        if callable(ret):
+            return ret()
         return np.asarray(ret)
 
     @property
@@ -451,41 +453,41 @@ class FieldData(UPPData):
 
         if self.model != "hrrrhi":
             grid_info["corners"] = self.corners
-        # if self.grid_suffix in ['GLC0']:
-        #    attrs = ['Latin1', 'Latin2', 'Lov']
-        # elif self.grid_suffix == 'GST0':
-        #    attrs = ['Lov']
-        #    grid_info['projection'] = 'stere'
-        #    grid_info['lat_0'] = 90
-        # elif self.grid_suffix == 'GLL0':
-        #    attrs = []
-        #    grid_info['projection'] = 'cyl'
-        # else:
-        #    attrs = []
-        #    grid_info['projection'] = 'rotpole'
+            # if self.grid_suffix in ['GLC0']:
+            #    attrs = ['Latin1', 'Latin2', 'Lov']
+            # elif self.grid_suffix == 'GST0':
+            #    attrs = ['Lov']
+            #    grid_info['projection'] = 'stere'
+            #    grid_info['lat_0'] = 90
+            # elif self.grid_suffix == 'GLL0':
+            #    attrs = []
+            #    grid_info['projection'] = 'cyl'
+            # else:
+            #    attrs = []
+            #    grid_info['projection'] = 'rotpole'
 
-        #    # CenterLon in RAP and Longitude_of_southern_pole in RRFS
-        #    lon_0 = lat.attrs.get('CenterLon', lat.attrs.get('Longitude_of_southern_pole'))
-        #    grid_info['lon_0'] = lon_0[0] - 360
+            #    # CenterLon in RAP and Longitude_of_southern_pole in RRFS
+            #    lon_0 = lat.attrs.get('CenterLon', lat.attrs.get('Longitude_of_southern_pole'))
+            #    grid_info['lon_0'] = lon_0[0] - 360
 
-        #    # CenterLat in RAP and Latitude_of_southern_pole in RRFS
-        #    center_lat = lat.attrs.get('CenterLat', lat.attrs.get('Latitude_of_southern_pole'))
-        #    grid_info['o_lat_p'] = - center_lat[0] if center_lat[0] < 0 else 90 - center_lat[0]
+            #    # CenterLat in RAP and Latitude_of_southern_pole in RRFS
+            #    center_lat = lat.attrs.get('CenterLat', lat.attrs.get('Latitude_of_southern_pole'))
+            #    grid_info['o_lat_p'] = - center_lat[0] if center_lat[0] < 0 else 90 - center_lat[0]
 
-        #    grid_info['o_lon_p'] = 180
+            #    grid_info['o_lon_p'] = 180
 
-        for attr in attrs:
-            bm_arg = keys_to_basemap[attr]
-            val = var_info.attrs[attr]
-            val = val[0] if isinstance(val, np.ndarray) else val
-            grid_info[bm_arg] = val
-            del val
+            for attr in attrs:
+                bm_arg = keys_to_basemap[attr]
+                val = var_info.attrs[attr]
+                val = val[0] if isinstance(val, np.ndarray) else val
+                grid_info[bm_arg] = val
+                del val
 
-        #    if self.model == "hrrrhi":
-        #        grid_info["lat_0"] = 20.44
-        #        grid_info["lon_0"] = 202.54
-        #        grid_info["width"] = 2000000
-        #        grid_info["height"] = 2000000
+        else:
+            grid_info["lat_0"] = 20.44
+            grid_info["lon_0"] = 202.54
+            grid_info["width"] = 2000000
+            grid_info["height"] = 2000000
 
         return grid_info
 

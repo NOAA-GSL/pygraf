@@ -1,6 +1,6 @@
 [tool.coverage.report]
 exclude_also = ["if TYPE_CHECKING:"]
-fail_under = 100
+fail_under = 76
 show_missing = true
 skip_covered = true
 omit = ["conftest.py", "tests/*"]

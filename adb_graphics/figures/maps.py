@@ -1,5 +1,3 @@
-# pylint: disable=invalid-name,too-few-public-methods
-
 """
 Module contains classes relevant to plotting maps. The Map class handles all the
 functionality related to a Basemap, and adding airports to a blank map. The
@@ -127,9 +125,9 @@ class MapFields:
         map_type: str | None = None,
         **kwargs,
     ):
-        self.grib_path = grib_path
         self.fhr = fhr
         self.fields_spec = deepcopy(fields_spec)
+        self.grib_path = grib_path
         self.level = level
         self.map_type = map_type
         self.model = kwargs.get("model", "")
@@ -159,7 +157,6 @@ class MapFields:
             "grib_path": self.grib_path,
         }
         field = gribdata.FieldData(**args)
-
         if self.map_type == "diff":
             args["ds"] = gribfile.GribFile(self.grib_path2, cf).contents
             args["grib_path"] = self.grib_path2
@@ -222,7 +219,6 @@ class MapFields:
                 var, lev = overlay.split("_")
             else:
                 var, lev = overlay, self.level
-
             overlay_spec = deepcopy(self.fields_spec[var][lev])
             set_level(lev, self.model, overlay_spec)
             ds = gribfile.GribFile(
@@ -245,7 +241,6 @@ class MapFields:
 
 
 class Map:
-    # pylint: disable=too-many-instance-attributes
     """
     Class includes utilities needed to create a Basemap object, add airport
     locations, and draw the blank map.
@@ -256,12 +251,9 @@ class Map:
           ax            figure axis
 
     Keyword Arguments:
-          map_proj      dict describing the map projection to use.
+          grid_info     dict describing the map projection to use.
                         The only options currently are for lcc settings in
                         _get_basemap()
-          corners       list of values lat and lon of lower left (ll) and upper
-                        right(ur) corners:
-                             ll_lat, ur_lat, ll_lon, ur_lon
           model         model designation used to trigger higher resolution maps if needed
                         also used to turn off plotting of airports on global maps
           plot_airports bool to allow airport plotting to be turned off for
@@ -273,11 +265,11 @@ class Map:
 
     def __init__(self, airport_fn: Path, ax: Axes, **kwargs):
         self.ax = ax
+        self.airport_fn = airport_fn
         self.grid_info = kwargs.get("grid_info", {})
         self.model = kwargs.get("model", "")
         self.plot_airports = kwargs.get("plot_airports", True)
         self.tile = kwargs.get("tile", "full")
-        self.airports = self.load_airports(airport_fn)
 
         if self.model == "hrrr" and "WFIP3" in self.tile:
             self.grid_info.update({"lat_1": 40.6, "lat_2": 40.6, "lon_0": 289.2})
@@ -285,7 +277,7 @@ class Map:
             if self.tile in FULL_TILES:
                 self.corners = self.grid_info.pop("corners")
             else:
-                self.corners = self.get_corners()
+                self.corners = TILE_DEFS[self.tile]["corners"]
                 self.grid_info.pop("corners")
         else:
             self.corners = None
@@ -293,9 +285,9 @@ class Map:
                 self.width = self.grid_info.pop("width")
                 self.height = self.grid_info.pop("height")
             else:
-                self.width = self.get_width()
+                self.width = TILE_DEFS[self.tile]["width"]
                 self.grid_info.pop("width")
-                self.height = self.get_height()
+                self.height = TILE_DEFS[self.tile]["height"]
                 self.grid_info.pop("height")
 
         # Some of Hawaii's smaller islands and islands in the Caribbean don't
@@ -346,9 +338,9 @@ class Map:
 
     def draw_airports(self):
         """Plot each of the airport locations on the map."""
-
-        lats = self.airports[:, 0]
-        lons = 360 + self.airports[:, 1]  # Convert to positive longitude
+        airports = self.load_airports()
+        lats = airports[:, 0]
+        lons = 360 + airports[:, 1]  # Convert to positive longitude
         x, y = self.m(lons, lats)
         self.m.plot(
             x,
@@ -393,37 +385,9 @@ class Map:
 
         return Basemap(**basemap_args)
 
-    def get_corners(self):
-        """
-        Gather the corners for a specific tile.
-
-        Corners are supplied in the following format:
-
-        lat and lon of lower left (ll) and upper right(ur) corners:
-             ll_lat, ur_lat, ll_lon, ur_lon
-        """
-
-        return TILE_DEFS[self.tile]["corners"]
-
-    def get_width(self):
-        """
-        Gather the width for a specific tile.
-        """
-
-        return TILE_DEFS[self.tile]["width"]
-
-    def get_height(self):
-        """
-        Gather the height for a specific tile.
-        """
-
-        return TILE_DEFS[self.tile]["height"]
-
-    @staticmethod
-    def load_airports(fn: Path):
+    def load_airports(self):
         """Load lat, lon pairs from a text file, return a list of lists."""
-
-        with fn.open() as f:
+        with self.airport_fn.open() as f:
             data = f.readlines()
         return np.array([line.strip().split(",") for line in data], dtype=float)
 
@@ -704,8 +668,9 @@ class DataMap:
     def _draw_field_values(self, ax: Axes):
         """Add the text value of the field at airport locations."""
         annotate_decimal = self.field.vspec.get("annotate_decimal", 0)
-        lats = self.map.airports[:, 0]
-        lons = 360 + self.map.airports[:, 1]
+        airports = self.map.load_airports()
+        lats = airports[:, 0]
+        lons = 360 + airports[:, 1]
         x, y = self.map.m(lons, lats)
         if self.map.corners is None:
             return

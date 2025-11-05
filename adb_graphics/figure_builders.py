@@ -90,7 +90,7 @@ def parallel_maps(  # noqa: PLR0912
       dp2        path to a second grib file
     """
 
-    fig, axes = set_figure(cla.model_name, cla.graphic_type, tile)
+    fig, axes = set_figure(cla.images[0], cla.graphic_type, tile)
     spec = cla.specs[variable][level]
     # set last_panel to send into DataMap for colorbar control
     last_panel = False
@@ -141,16 +141,15 @@ def parallel_maps(  # noqa: PLR0912
             level=level,
             name=variable,
             map_type=cla.graphic_type,
-            model=cla.model_name,
+            model=cla.images[0],
             tile=tile,
         )
-
         # Generate a map object
         m = Map(
             airport_fn=AIRPORTS,
             ax=current_ax,
             grid_info=map_fields.shaded.grid_info(),
-            model=cla.model_name,
+            model=cla.images[0],
             plot_airports=spec.get("plot_airports", True),
             tile=tile,
         )
@@ -229,7 +228,7 @@ def parallel_skewt(cla: Namespace, fhr: int, grib_path: Path, site: str, workdir
       site       the string representation of the site from the sites file
       workdir    output directory
     """
-    cf = cfgrib_spec(cla.specs["temp"]["ua"]["cfgrib"], cla.model_name)
+    cf = cfgrib_spec(cla.specs["temp"]["ua"]["cfgrib"], cla.images[0])
     ds = gribfile.GribFile(grib_path, cf).contents
     skew = skewt.SkewTDiagram(
         ds=ds,

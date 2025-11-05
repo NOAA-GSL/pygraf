@@ -68,7 +68,7 @@ def create_skewt(cla: Namespace, fhr: int, grib_path: Path, workdir: Path):
     Generate arguments for parallel processing of Skew T graphics,
     and generate a pool of workers to complete the tasks.
     """
-    vspec = utils.cfgrib_spec(cla.spec["temp"]["ua"], cla.model_name)
+    vspec = utils.cfgrib_spec(cla.spec["temp"]["ua"], cla.images[0])
     args = [(cla, fhr, grib_path, site, vspec, workdir) for site in cla.sites]
 
     print(f"Queueing {len(args)} Skew Ts")
@@ -82,7 +82,6 @@ def create_maps(
     grib_paths: list[Path],
     workdir: Path,
     grib_path2: Path | None = None,
-    **kwargs,
 ):
     """
     Generate arguments for parallel processing of plan-view maps and
@@ -105,19 +104,17 @@ def create_maps(
                     (
                         cla,
                         fhr,
-                        grib_paths,
+                        grib_paths[0],
                         level,
-                        model,
                         variable,
                         workdir,
                         tile,
                         grib_path2,
-                        kwargs,
                     )
                 )
 
-        print(f"Queueing {len(args)} maps")
         #        parallel_maps(*args[-1])
+        print(f"Queueing {len(args)} maps")
         with Pool(processes=cla.nprocs) as pool:
             pool.starmap(parallel_maps, args)
 
@@ -474,7 +471,7 @@ def remove_proc_grib_files(cla: Namespace) -> None:
     combined_fn = COMBINED_FN.format(fhr=999, uniq=999).replace("999", "*")
     combined_fp = cla.output_path / combined_fn
 
-    combined_files = glob.glob(combined_fp)
+    combined_files = glob.glob(str(combined_fp))
 
     if combined_files:
         print("Removing combined files: ")
