@@ -7,8 +7,16 @@ function defined.
 
 from pathlib import Path
 
+import glob
 import pytest
 
+@pytest.fixture(scope="session", autouse=True)
+def cleanup_data_idx():
+    yield # Nothing to be done before tests
+    breakpoint()
+    print("Removing idx files from test data")
+    for path in glob.glob("tests/data/*.idx"):
+        Path(path).unlink()
 
 def pytest_addoption(parser):
     """Define command line arguments to be parsed."""

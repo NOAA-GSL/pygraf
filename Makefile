@@ -1,7 +1,14 @@
-TARGETS = format lint test typecheck unittest
+TARGETS = devenv env format lint test typecheck unittest
+DEVPKGS = $(shell cat devpkgs)
 
 .PHONY: $(TARGETS)
 
+
+devenv: env
+	mamba install -y -n $(ENVNAME) $(DEVPKGS)
+
+env:
+	mamba env create -y -f environment.yml
 
 format:
 	@./format
