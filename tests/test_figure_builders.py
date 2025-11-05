@@ -43,6 +43,7 @@ def parallel_maps_args(prsfile, spec, tmp_path):
             "img_res": 72,
             "model_name": "hrrr",
             "specs": spec,
+            "images": ["hrrr", []],
         }
     )
     return {
@@ -65,6 +66,7 @@ def parallel_skewt_args(natfile, spec, tmp_path):
             "model_name": "hrrr",
             "start_time": datetime(2025, 10, 6, 0),
             "specs": spec,
+            "images": ["hrrr", []],
         }
     )
     return {

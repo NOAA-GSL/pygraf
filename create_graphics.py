@@ -88,7 +88,6 @@ def create_maps(
     generate a pool of workers to complete the task.
     """
 
-    model = cla.images[0]
     for tile in cla.tiles:
         args = []
         for variable, levels in cla.images[1].items():
@@ -580,7 +579,6 @@ def graphics_driver(cla: Namespace):
             if old_enough:
                 grib_paths.append(grib_path)
                 fcst_hours.remove(fhr)
-                fhr_as_list = [fhr]
             else:
                 if cla.all_leads:
                     # Wait on the missing file for an arbitrary 90% of wait time
@@ -644,7 +642,6 @@ def graphics_driver(cla: Namespace):
                     fhr=fhr,
                     grib_paths=grib_paths,
                     workdir=workdir,
-                    coord_dims={"ens_mem": ens_members, "fcst_hr": fhr_as_list},
                 )
 
             # Zip png files and remove the originals in a subprocess

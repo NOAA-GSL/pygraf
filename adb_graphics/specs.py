@@ -29,7 +29,7 @@ class VarSpec(abc.ABC):
         others = get_cmap(self.vspec.get("cmap"), 15)(range(1, 15, 1))
         return np.concatenate((grays, others))
 
-    def centered_diff(self, cmap: str | None = None, nlev: int | None = None)->np.ndarray:
+    def centered_diff(self, cmap: str | None = None, nlev: int | None = None) -> np.ndarray:
         """
         Returns the colors specified by levels and cmap in default spec, but
         with white center.

@@ -327,7 +327,7 @@ class FieldData(UPPData):
             msg = f"There is no color definition named {color_spec}"
             raise AttributeError(msg) from e
         if callable(ret):
-            return ret()
+            return np.ndarray(ret())
         return np.asarray(ret)
 
     @property

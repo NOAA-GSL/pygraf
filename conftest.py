@@ -5,18 +5,19 @@ Each CLA needs to be defined in pytest_addoption and to have a pytest.fixture
 function defined.
 """
 
+import glob
 from pathlib import Path
 
-import glob
 import pytest
+
 
 @pytest.fixture(scope="session", autouse=True)
 def cleanup_data_idx():
-    yield # Nothing to be done before tests
-    breakpoint()
+    yield  # Nothing to be done before tests
     print("Removing idx files from test data")
     for path in glob.glob("tests/data/*.idx"):
         Path(path).unlink()
+
 
 def pytest_addoption(parser):
     """Define command line arguments to be parsed."""
