@@ -112,10 +112,10 @@ def create_maps(
                     )
                 )
 
-        #        parallel_maps(*args[-1])
-        print(f"Queueing {len(args)} maps")
-        with Pool(processes=cla.nprocs) as pool:
-            pool.starmap(parallel_maps, args)
+                parallel_maps(*args[-1])
+        #print(f"Queueing {len(args)} maps")
+        #with Pool(processes=cla.nprocs) as pool:
+        #    pool.starmap(parallel_maps, args)
 
 
 def generate_tile_list(arg_list: list) -> list[str]:

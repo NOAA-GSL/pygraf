@@ -327,7 +327,7 @@ class FieldData(UPPData):
             msg = f"There is no color definition named {color_spec}"
             raise AttributeError(msg) from e
         if callable(ret):
-            return np.ndarray(ret())
+            return np.asarray(ret())
         return np.asarray(ret)
 
     @property
@@ -430,6 +430,7 @@ class FieldData(UPPData):
             GRIB_Latin2InDegrees="lat_1",
             GRIB_Latin1InDegrees="lat_2",
             GRIB_LoVInDegrees="lon_0",
+            GRIB_orientationOfTheGridInDegrees="lon_0",
             Latin2="lat_1",
             Latin1="lat_2",
             Lov="lon_0",
@@ -442,23 +443,25 @@ class FieldData(UPPData):
         grid_info: dict[str, str | float | int | list] = {}
         var_info = self.field
         grid_def = var_info.attrs["GRIB_gridDefinitionDescription"].lower()
-        if "lambert" in grid_def:
-            attrs = [
-                "GRIB_Latin1InDegrees",
-                "GRIB_Latin2InDegrees",
-                "GRIB_LoVInDegrees",
-            ]
-            grid_info["projection"] = "lcc"
-            grid_info["lat_0"] = 39.0
+        match grid_def:
+            case x if "lambert" in x:
+                attrs = [
+                    "GRIB_Latin1InDegrees",
+                    "GRIB_Latin2InDegrees",
+                    "GRIB_LoVInDegrees",
+                ]
+                grid_info["projection"] = "lcc"
+                grid_info["lat_0"] = 39.0
+            case x if "polar stereographic" in x:
+                attrs = ['GRIB_orientationOfTheGridInDegrees']
+                grid_info['projection'] = 'stere'
+                grid_info['lat_0'] = 90
 
         if self.model != "hrrrhi":
             grid_info["corners"] = self.corners
             # if self.grid_suffix in ['GLC0']:
             #    attrs = ['Latin1', 'Latin2', 'Lov']
             # elif self.grid_suffix == 'GST0':
-            #    attrs = ['Lov']
-            #    grid_info['projection'] = 'stere'
-            #    grid_info['lat_0'] = 90
             # elif self.grid_suffix == 'GLL0':
             #    attrs = []
             #    grid_info['projection'] = 'cyl'
