@@ -21,6 +21,7 @@ from multiprocessing import Pool
 from pathlib import Path
 
 import yaml
+from uwtools.api.config import get_yaml_config
 
 from adb_graphics import errors, utils
 from adb_graphics.figure_builders import parallel_maps, parallel_skewt
@@ -68,7 +69,7 @@ def create_skewt(cla: Namespace, fhr: int, grib_path: Path, workdir: Path):
     Generate arguments for parallel processing of Skew T graphics,
     and generate a pool of workers to complete the tasks.
     """
-    vspec = utils.cfgrib_spec(cla.spec["temp"]["ua"], cla.images[0])
+    vspec = utils.cfgrib_spec(cla.specs["temp"]["ua"], cla.images[0])
     args = [(cla, fhr, grib_path, site, vspec, workdir) for site in cla.sites]
 
     print(f"Queueing {len(args)} Skew Ts")
@@ -612,7 +613,9 @@ def graphics_driver(cla: Namespace):
                 "Graphics will be created for input files\n",
                 f"Output graphics directory: {workdir} \n{LOG_BREAK}",
             )
-
+            full_spec = get_yaml_config(cla.specs)
+            full_spec.dereference(context={"fhr": int(fhr)})
+            cla.specs = full_spec
             if cla.graphic_type == "skewts":
                 create_skewt(cla, fhr, grib_path, workdir)
             elif cla.graphic_type == "maps":

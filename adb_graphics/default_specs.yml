@@ -85,13 +85,13 @@
         level: 0
         typeOfLevel: surface
         stepType: accum
-        stepRange: "15-16"
+        stepRange: '{{ "%d-%d" % (fhr-1, fhr) }}'
       rrfs:
         parameterNumber: 50
         level: 0
         typeOfLevel: surface
         stepType: accum
-        stepRange: "15-16"
+        stepRange: '{{ "%d-%d" % (fhr-1, fhr) }}'
     clevs: [0.03, 0.05, 0.1, 0.5, 1, 2, 3, 4, 5, 6, 7, 8]
     cmap: gist_ncar
     colors: snow_colors
@@ -127,7 +127,7 @@ acfrozr: # Run Total Graupel
   sfc: &graupel
     cfgrib:
       parameterNumber: 227
-      stepRange: 0-16
+      stepRange: '{{ "%d-%d" % (0, fhr) }}'
       typeOfLevel: surface
     clevs: [0.002, 0.01, 0.05, 0.1, 0.25, 0.5, 0.75, 1, 2]
     cmap: gist_ncar
@@ -153,7 +153,7 @@ acpcp: # Accumulated run total precipitation
       shortName: tp
       level: 0
       typeOfLevel: surface
-      stepRange: 0-16
+      stepRange: '{{ "%d-%d" % (0, fhr) }}'
       stepType: accum
     clevs: [0.01, 0.1, 0.25, 0.5, 1, 2, 3, 5, 10, 15, 20, 40]
     cmap: gist_ncar
@@ -278,12 +278,12 @@ acsnw: # Run Total Accumulated Snow Using 10:1 Ratio
         level: 0
         typeOfLevel: surface
         stepType: accum
-        stepRange: "0-16"
+        stepRange: '{{ "%d-%d" % (0, fhr) }}'
       rrfs:
         parameterNumber: 50
         level: 0
         typeOfLevel: surface
-        stepRange: "0-16"
+        stepRange: '{{ "%d-%d" % (0, fhr) }}'
     clevs: [0.01, 0.1, 1, 2, 3, 4, 6, 8, 10, 12, 18, 24]
     cmap: gist_ncar
     colors: snow_colors
@@ -1558,7 +1558,7 @@ lwtp: # Lightning with total precip
       shortName: tp
       typeOfLevel: surface
       stepType: accum
-      #stepRange: # startswith fhr - 1
+      stepRange: '{{ "%d-%d" % (fhr-1, fhr) }}'
     clevs: [0.25, 0.50, 0.75, 1.0, 2.0]
     cmap: gist_ncar
     colors: pcp_colors_high
@@ -1737,7 +1737,7 @@ ptyp: # Hourly total precipitation
       typeOfLevel: surface
       level: 0
       stepType: accum
-      stepRange: 15-16
+      stepRange: '{{ "%d-%d" % (fhr-1, fhr) }}'
     clevs: [0.002, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 1.0, 2.0]
     cmap: gist_ncar
     colors: pcp_colors
@@ -2473,7 +2473,7 @@ totp: # Hourly total precipitation
     cfgrib:
       shortName: tp
       typeOfLevel: surface
-      stepRange: 15-16
+      stepRange: '{{ "%d-%d" % (fhr-1, fhr) }}'
       stepType: accum
     contours:
       pres_msl:
@@ -2493,7 +2493,7 @@ totp6h: # 6-hourly total precipitation
     cfgrib:
       shortName: tp
       typeOfLevel: surface
-      #stepRange: # startswith 0
+      stepRange: '{{ "%d-%d" % (0, fhr) }}'
       stepType: accum
     contours:
       pres_msl:
