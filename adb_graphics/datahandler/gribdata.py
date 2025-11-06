@@ -243,7 +243,7 @@ class UPPData(specs.VarSpec):
 
         """
         var, lev = field2_id.split("_") if "_" in field2_id else (field2_id, self.level)
-        field2 = self.values(level=lev, name=var)
+        field2 = self.values(level=lev, name=var, do_transform=False)
         mag = conversions.magnitude(field1, field2)
         field1.close()
         field2.close()
