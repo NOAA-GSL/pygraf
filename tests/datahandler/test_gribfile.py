@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from pytest import mark
 from xarray import Dataset
 
 from adb_graphics.datahandler import gribfile
@@ -18,6 +19,7 @@ def test_gribfile(prsfile):
     assert len(gf.contents.data_vars["sp"].shape) == 2
 
 
+@mark.skip(reason="This test requires test data that is not yet available.")
 def test_gribfiles():
     paths = [
         "/Users/cholt/work/pygraf_cfgrib/sample_data/rrfs_a/2025101312/rrfs.t12z.prslev.3km.f016.conus.grib2",

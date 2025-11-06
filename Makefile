@@ -1,5 +1,6 @@
 TARGETS = devenv env format lint test typecheck unittest
 DEVPKGS = $(shell cat devpkgs)
+ENVNAME = pygraf
 
 .PHONY: $(TARGETS)
 
