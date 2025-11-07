@@ -119,7 +119,7 @@ class MapFields:
         self,
         fhr: int,
         fields_spec: dict,
-        grib_path: Path,
+        grib_paths: list[Path],
         level: str,
         name: str,
         map_type: str | None = None,
@@ -127,7 +127,7 @@ class MapFields:
     ):
         self.fhr = fhr
         self.fields_spec = deepcopy(fields_spec)
-        self.grib_path = grib_path
+        self.grib_paths = grib_paths
         self.level = level
         self.map_type = map_type
         self.model = kwargs.get("model", "")
@@ -146,7 +146,7 @@ class MapFields:
     @property
     def shaded(self):
         cf = cfgrib_spec(self.map_spec["cfgrib"], self.model)
-        ds = gribfile.GribFile(self.grib_path, cf).contents
+        ds = gribfile.GribFiles(self.grib_paths, cf).contents
         args = {
             "ds": ds,
             "fhr": self.fhr,
@@ -154,7 +154,7 @@ class MapFields:
             "model": self.model,
             "short_name": self.name,
             "spec": self.fields_spec,
-            "grib_path": self.grib_path,
+            "grib_path": self.grib_paths[-1],
         }
         field = gribdata.FieldData(**args)
         if self.map_type == "diff":
@@ -193,8 +193,8 @@ class MapFields:
         for var in ("u", "v"):
             wind_spec = self.fields_spec[var][lev]
             set_level(lev, self.model, wind_spec)
-            ds = gribfile.GribFile(
-                self.grib_path, cfgrib_spec(wind_spec["cfgrib"], self.model)
+            ds = gribfile.GribFiles(
+                self.grib_paths, cfgrib_spec(wind_spec["cfgrib"], self.model)
             ).contents
             args = {
                 "ds": ds,
@@ -203,7 +203,7 @@ class MapFields:
                 "model": self.model,
                 "short_name": var,
                 "spec": self.fields_spec,
-                "grib_path": self.grib_path,
+                "grib_path": self.grib_paths[-1],
             }
             winds.append(gribdata.FieldData(**args))
         return winds
@@ -221,8 +221,8 @@ class MapFields:
                 var, lev = overlay, self.level
             overlay_spec = deepcopy(self.fields_spec[var][lev])
             set_level(lev, self.model, overlay_spec)
-            ds = gribfile.GribFile(
-                self.grib_path, cfgrib_spec(overlay_spec["cfgrib"], self.model)
+            ds = gribfile.GribFiles(
+                self.grib_paths, cfgrib_spec(overlay_spec["cfgrib"], self.model)
             ).contents
             args = {
                 "ds": ds,
@@ -231,7 +231,7 @@ class MapFields:
                 "model": self.model,
                 "short_name": var,
                 "spec": self.fields_spec,
-                "grib_path": self.grib_path,
+                "grib_path": self.grib_paths[-1],
             }
             overlay_obj = gribdata.FieldData(**args)
             # Set the attributes for the overlay field
@@ -766,8 +766,8 @@ class DataMap:
         """Draw the title for a map."""
 
         f = self.field
-        atime = f.date_to_str(f.anl_dt)
-        vtime = f.date_to_str(f.valid_dt)
+        atime = f.date_to_str(f.anl_dt[0])
+        vtime = f.date_to_str(f.valid_dt[0])
 
         # Analysis time (top) and forecast hour with Valid Time (bottom) on the left
         plt.title(

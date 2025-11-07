@@ -78,5 +78,7 @@ class GribFiles:
             engine="cfgrib",
             concat_dim="time",
             combine="nested",
-            backend_kwargs=({"filter_by_keys": self.cfgrib_config}),
+            backend_kwargs=({"filter_by_keys": self.cfgrib_config,
+                    "read_keys": ['orientationOfTheGridInDegrees'],
+                             })
         )

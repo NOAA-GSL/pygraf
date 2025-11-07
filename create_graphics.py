@@ -99,12 +99,17 @@ def create_maps(
                 if not spec:
                     msg = f"graphics: {variable} {level}"
                     raise errors.NoGraphicsDefinitionForVariableError(msg)
+                accumulate = spec.get("accumulate", False)
+                vspec = utils.cfgrib_spec(spec["cfgrib"], cla.images[0])
+                grib_acc = vspec.get("stepRange", "").startswith("-1") or vspec.get("stepRange") == "0-0"
+                if (accumulate or grib_acc) and fhr == 0:
+                    continue
 
                 args.append(
                     (
                         cla,
                         fhr,
-                        grib_paths[0],
+                        grib_paths if accumulate else grib_paths[-1:],
                         level,
                         variable,
                         workdir,
@@ -554,6 +559,9 @@ def graphics_driver(cla: Namespace):
                 if old_enough:
                     grib_paths.append(grib_path)
 
+
+    orig_spec = copy.deepcopy(cla.specs)
+
     # Allow this task to run concurrently with UPP by continuing to check for
     # new files as they become available.
     while fcst_hours:
@@ -613,7 +621,7 @@ def graphics_driver(cla: Namespace):
                 "Graphics will be created for input files\n",
                 f"Output graphics directory: {workdir} \n{LOG_BREAK}",
             )
-            full_spec = get_yaml_config(cla.specs)
+            full_spec = get_yaml_config(orig_spec)
             full_spec.dereference(context={"fhr": int(fhr)})
             cla.specs = full_spec
             if cla.graphic_type == "skewts":

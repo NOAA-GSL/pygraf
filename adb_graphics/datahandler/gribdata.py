@@ -456,7 +456,20 @@ class FieldData(UPPData):
                 attrs = ['GRIB_orientationOfTheGridInDegrees']
                 grid_info['projection'] = 'stere'
                 grid_info['lat_0'] = 90
-
+            case x if "rotated latitude/longitude" in x:
+                attrs = []
+                grid_info['projection'] = 'rotpole'
+                #center_lon = var_info.attrs["GRIB_longitudeOfLastGridPointInDegrees"]
+                center_lon = var_info.attrs["GRIB_longitudeOfLastGridPointInDegrees"]
+                #grid_info["lon_0"] = center_lon - 360
+                grid_info["lon_0"] = center_lon +180
+                center_lat = var_info.attrs["GRIB_latitudeOfLastGridPointInDegrees"]
+                grid_info['o_lat_p'] = -center_lat if center_lat < 0 else center_lat
+                #grid_info['o_lat_p'] = -center_lat if center_lat < 0 else 90 - center_lat
+                grid_info['o_lon_p'] = 180
+            case _:
+                msg = f"Can't define grid for {grid_def}"
+                raise ValueError(msg)
         if self.model != "hrrrhi":
             grid_info["corners"] = self.corners
             # if self.grid_suffix in ['GLC0']:
@@ -467,7 +480,6 @@ class FieldData(UPPData):
             #    grid_info['projection'] = 'cyl'
             # else:
             #    attrs = []
-            #    grid_info['projection'] = 'rotpole'
 
             #    # CenterLon in RAP and Longitude_of_southern_pole in RRFS
             #    lon_0 = lat.attrs.get('CenterLon', lat.attrs.get('Longitude_of_southern_pole'))
@@ -477,7 +489,6 @@ class FieldData(UPPData):
             #    center_lat = lat.attrs.get('CenterLat', lat.attrs.get('Latitude_of_southern_pole'))
             #    grid_info['o_lat_p'] = - center_lat[0] if center_lat[0] < 0 else 90 - center_lat[0]
 
-            #    grid_info['o_lon_p'] = 180
 
             for attr in attrs:
                 bm_arg = keys_to_basemap[attr]
@@ -504,19 +515,19 @@ class FieldData(UPPData):
     def run_max(values: DataArray, **kwargs):  # noqa: ARG004
         """Finds the max hourly value over all the forecast lead times available."""
 
-        return values.max(dim="step")  # pragma: no cover
+        return values.max(dim="time")  # pragma: no cover
 
     @staticmethod
     def run_min(values: DataArray, **kwargs):  # noqa: ARG004
         """Finds the min hourly value over all the forecast lead times available."""
 
-        return values.min(dim="step")  # pragma: no cover
+        return values.min(dim="time")  # pragma: no cover
 
     @staticmethod
     def run_total(values: DataArray, **kwargs):  # noqa: ARG004
         """Sums over all the forecast lead times available."""
 
-        return values.sum(dim="step")  # pragma: no cover
+        return values.sum(dim="time")  # pragma: no cover
 
     def supercooled_liquid_water(self, **kwargs):  # noqa: ARG002
         """

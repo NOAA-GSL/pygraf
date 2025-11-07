@@ -64,7 +64,7 @@ def add_obs_panel(
 def parallel_maps(  # noqa: PLR0912
     cla: Namespace,
     fhr: int,
-    grib_path: Path,
+    grib_paths: list[Path],
     level: str,
     variable: str,
     workdir: Path,
@@ -78,7 +78,7 @@ def parallel_maps(  # noqa: PLR0912
     Input:
 
       fhr        forecast hour
-      grib_path  path to grib file
+      grib_paths paths to grib files
       level      the vertical level of the variable to be plotted
                  corresponding to a key in the specs file
       variable   the name of the variable section in the specs file
@@ -134,7 +134,7 @@ def parallel_maps(  # noqa: PLR0912
 
         # Create an object that holds all the fields for this map
         map_fields = MapFields(
-            grib_path=grib_path,
+            grib_paths=grib_paths,
             grib_path2=dp2,
             fhr=fhr,
             fields_spec=cla.specs,
