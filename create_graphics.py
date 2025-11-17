@@ -71,7 +71,7 @@ def create_skewt(cla: Namespace, fhr: int, grib_path: Path, workdir: Path):
     args = [(cla, fhr, grib_path, site, workdir) for site in cla.sites]
 
     print(f"Queueing {len(args)} Skew Ts")
-    #parallel_skewt(*args[0])
+    # parallel_skewt(*args[0])
     with Pool(processes=cla.nprocs) as pool:
         pool.starmap(parallel_skewt, args)
 
@@ -100,7 +100,9 @@ def create_maps(
                     raise errors.NoGraphicsDefinitionForVariableError(msg)
                 accumulate = spec.get("accumulate", False)
                 vspec = utils.cfgrib_spec(spec["cfgrib"], cla.images[0])
-                grib_acc = vspec.get("stepRange", "").startswith("-1") or vspec.get("stepRange") == "0-0"
+                grib_acc = (
+                    vspec.get("stepRange", "").startswith("-1") or vspec.get("stepRange") == "0-0"
+                )
                 if (accumulate or grib_acc) and fhr == 0:
                     continue
 
@@ -557,7 +559,6 @@ def graphics_driver(cla: Namespace):
                     raise FileNotFoundError(" ".join(msg))
                 if old_enough:
                     grib_paths.append(grib_path)
-
 
     orig_spec = copy.deepcopy(cla.specs)
 

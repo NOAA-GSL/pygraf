@@ -148,7 +148,7 @@ class SkewTDiagram(gribdata.ProfileData):
             profile = where((profile > 10.0), 10.0, profile)  # noqa: PLR2004
 
             # plot line
-            profile = profile[:pres.shape[0]]
+            profile = profile[: pres.shape[0]]
             hydro_subplot.plot(
                 profile,
                 pres,
@@ -187,24 +187,19 @@ class SkewTDiagram(gribdata.ProfileData):
                         layer = False
 
             # compute vertically integrated amount and add legend line
-            line = f"{settings.get('label'):<7s} {mixr_total.values:>10.3f} {settings.get('units')}"
+            label = settings.get("label")
+            line = f"{label:<7s} {mixr_total.to_numpy():>10.3f} {settings.get('units')}"
             if scale != 1.0:
-                line = (
-                    f"{settings.get('label'):<5s}(x{scale}) {mixr_total.values:.3f} "
-                    f"{settings.get('units')}"
-                )
+                line = f"{label:<5s}(x{scale}) {mixr_total.to_numpy():.3f} {settings.get('units')}"
             lines.append(line)
 
-            label = f"{settings.get('label'):<7s}"
-            if scale != 1.0:
-                label = f"{settings.get('label'):<5s}(x{scale})"
             handles.append(
                 mlines.Line2D(
                     [],
                     [],
                     color=settings.get("color"),
                     fillstyle="none",
-                    label=label,
+                    label=f"{label:<5s}(x{scale})" if scale != 1.0 else f"{label:<7s}",
                     linewidth=1.0,
                     marker=settings.get("marker"),
                     markersize=8,

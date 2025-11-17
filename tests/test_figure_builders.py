@@ -27,7 +27,7 @@ def fielddata_obj(hrrr_data, prsfile, spec):
     return gribdata.FieldData(
         ds=hrrr_data.contents,
         fhr=15,
-        grib_path=prsfile,
+        grib_paths=[prsfile],
         level="cref",
         short_name="temp",
         spec=spec,
@@ -49,7 +49,7 @@ def parallel_maps_args(prsfile, spec, tmp_path):
     return {
         "cla": cla,
         "fhr": 15,
-        "grib_path": prsfile,
+        "grib_paths": [prsfile],
         "level": "sfc",
         "variable": "temp",
         "workdir": tmp_path,

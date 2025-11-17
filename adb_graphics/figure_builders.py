@@ -15,7 +15,6 @@ from matplotlib import axes
 from adb_graphics.datahandler import gribfile
 from adb_graphics.figures import skewt
 from adb_graphics.figures.maps import DataMap, DiffMap, Map, MapFields, MultiPanelDataMap
-from adb_graphics.utils import cfgrib_spec
 
 AIRPORTS = Path("static/Airports_locs.txt")
 
@@ -38,7 +37,7 @@ def add_obs_panel(
     map_fields = MapFields(
         fhr=0,
         fields_spec=spec,
-        grib_path=obs_file,
+        grib_paths=[obs_file],
         level="obs",
         model="obs",
         name=short_name,

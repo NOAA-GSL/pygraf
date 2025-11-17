@@ -29,7 +29,7 @@ def hrrr_data(prsfile):
 def fielddata_obj(hrrr_data, prsfile, spec):
     return gribdata.FieldData(
         ds=hrrr_data,
-        fhr=15,
+        fhr=16,
         grib_path=prsfile,
         level="sfc",
         short_name="temp",
@@ -48,7 +48,7 @@ def profiledata_obj(natfile, spec):
     )
     return gribdata.ProfileData(
         ds=ds.contents,
-        fhr=15,
+        fhr=16,
         grib_path=natfile,
         loc=" DNR  23062 72469  39.77 104.88 1611 Denver, CO",
         short_name="temp",
@@ -58,7 +58,9 @@ def profiledata_obj(natfile, spec):
 
 @fixture
 def spec(spec_file):
-    return utils.load_yaml(spec_file)
+    spec = utils.load_yaml(spec_file)
+    spec.dereference(context={"fhr": 16})
+    return spec
 
 
 @fixture
@@ -67,7 +69,7 @@ def uppdata_obj(hrrr_data, prsfile, spec):
         ds=hrrr_data,
         short_name="temp",
         spec=spec,
-        fhr=15,
+        fhr=16,
         grib_path=prsfile,
     )
 
@@ -85,7 +87,8 @@ def uppdata_multilev_obj(prsfile, spec):
         ds=ds,
         short_name="temp",
         spec=spec,
-        fhr=15,
+        fhr=16,
+        grib_path=prsfile,
     )
 
 
@@ -218,7 +221,7 @@ def test_uppdata_opposite(factor, uppdata_obj):
 
 
 def test_uppdata_valid_dt(uppdata_obj):
-    assert uppdata_obj.valid_dt == datetime(2025, 10, 6, 15)
+    assert uppdata_obj.valid_dt == datetime(2025, 10, 6, 16)
 
 
 def test_uppdata_vector_magnitude(prsfile, spec):
@@ -232,7 +235,7 @@ def test_uppdata_vector_magnitude(prsfile, spec):
     )
     fd = ConcreteUPPData(
         ds=ds.contents,
-        fhr=15,
+        fhr=16,
         grib_path=prsfile,
         level="250mb",
         short_name="u",
@@ -283,7 +286,7 @@ def test_fielddata_aviation_flight_rules(prsfile, spec):
     )
     fd = gribdata.FieldData(
         ds=ds.contents,
-        fhr=15,
+        fhr=16,
         grib_path=prsfile,
         level="sfc",
         short_name="flru",
@@ -356,7 +359,7 @@ def test_fielddata_fire_weather_index(prsfile, spec):
     )
     fd = gribdata.FieldData(
         ds=ds.contents,
-        fhr=15,
+        fhr=16,
         grib_path=prsfile,
         level="sfc",
         short_name="firewxtransform",
@@ -390,7 +393,7 @@ def test_fielddata_icing_adjust_trace(prsfile, spec):
     )
     fd = gribdata.FieldData(
         ds=ds.contents,
-        fhr=15,
+        fhr=16,
         grib_path=prsfile,
         level="sfc",
         short_name="flru",
@@ -411,7 +414,7 @@ def test_fielddata_supercooled_liquid_water(natfile, spec):
     )
     fd = gribdata.FieldData(
         ds=ds.contents,
-        fhr=15,
+        fhr=16,
         grib_path=natfile,
         level="sfc",
         short_name="slw",

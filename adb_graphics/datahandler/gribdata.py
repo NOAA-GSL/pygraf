@@ -37,7 +37,7 @@ class UPPData(specs.VarSpec):
     def __init__(self, ds: Dataset, short_name: str, spec: dict, **kwargs):
         # Parse kwargs first
         self.model = kwargs.get("model", "")
-        self.grib_path = Path(kwargs.get("grib_path", ""))
+        self.grib_path = Path(kwargs.get("grib_paths", [kwargs.get("grib_path")])[0])
 
         self.spec = spec
         self.short_name = short_name
@@ -453,34 +453,34 @@ class FieldData(UPPData):
                 grid_info["projection"] = "lcc"
                 grid_info["lat_0"] = 39.0
             case x if "polar stereographic" in x:
-                attrs = ['GRIB_orientationOfTheGridInDegrees']
-                grid_info['projection'] = 'stere'
-                grid_info['lat_0'] = 90
-            case x if x == "rotated latitude/longitude": # RRFS NA
+                attrs = ["GRIB_orientationOfTheGridInDegrees"]
+                grid_info["projection"] = "stere"
+                grid_info["lat_0"] = 90
+            case x if x == "rotated latitude/longitude":  # RRFS NA
                 attrs = []
-                grid_info['projection'] = 'rotpole'
-                lon_0 = var_info.attrs.get('GRIB_longitudeOfSouthernPoleInDegrees')
-                grid_info['lon_0'] = lon_0 - 360
-                center_lat = var_info.attrs.get('GRIB_latitudeOfSouthernPoleInDegrees')
-                grid_info['o_lat_p'] = - center_lat if center_lat < 0 else 90 - center_lat
-                grid_info['o_lon_p'] = 180
+                grid_info["projection"] = "rotpole"
+                lon_0: float = var_info.attrs["GRIB_longitudeOfSouthernPoleInDegrees"]
+                grid_info["lon_0"] = lon_0 - 360
+                center_lat: float = var_info.attrs["GRIB_latitudeOfSouthernPoleInDegrees"]
+                grid_info["o_lat_p"] = -center_lat if center_lat < 0 else 90 - center_lat
+                grid_info["o_lon_p"] = 180
 
-            case x if "equidistant cylindrical" in x: # GFS
+            case x if "equidistant cylindrical" in x:  # GFS
                 attrs = []
                 grid_info["projection"] = "cyl"
-            case x if "rotate" in x: # RAP
+            case x if "rotate" in x:  # RAP
                 attrs = []
-                grid_info['projection'] = 'rotpole'
-                #center_lon = var_info.attrs["GRIB_longitudeOfLastGridPointInDegrees"]
-                #center_lon = var_info.attrs["GRIB_longitudeOfLastGridPointInDegrees"]
-                #grid_info["lon_0"] = center_lon - 360
-                grid_info["lon_0"] =  - 106.
-                #center_lat = var_info.attrs["GRIB_latitudeOfLastGridPointInDegrees"]
+                grid_info["projection"] = "rotpole"
+                # center_lon = var_info.attrs["GRIB_longitudeOfLastGridPointInDegrees"]
+                # center_lon = var_info.attrs["GRIB_longitudeOfLastGridPointInDegrees"]
+                # grid_info["lon_0"] = center_lon - 360
+                grid_info["lon_0"] = -106.0
+                # center_lat = var_info.attrs["GRIB_latitudeOfLastGridPointInDegrees"]
                 center_lat = 54
-                grid_info['o_lat_p'] = 90 - center_lat
-                #grid_info['o_lat_p'] = -center_lat if center_lat < 0 else 90 - center_lat
-                grid_info['o_lon_p'] = 180
-                #grid_info["corners"] = [-10.590603, 46.591938, -139.08585, 22.66102]
+                grid_info["o_lat_p"] = 90 - center_lat
+                # grid_info['o_lat_p'] = -center_lat if center_lat < 0 else 90 - center_lat
+                grid_info["o_lon_p"] = 180
+                # grid_info["corners"] = [-10.590603, 46.591938, -139.08585, 22.66102]
             case _:
                 msg = f"Can't define grid for {grid_def}"
                 raise ValueError(msg)
@@ -503,7 +503,6 @@ class FieldData(UPPData):
             #    # CenterLat in RAP and Latitude_of_southern_pole in RRFS
             #    center_lat = lat.attrs.get('CenterLat', lat.attrs.get('Latitude_of_southern_pole'))
             #    grid_info['o_lat_p'] = - center_lat[0] if center_lat[0] < 0 else 90 - center_lat[0]
-
 
             for attr in attrs:
                 bm_arg = keys_to_basemap[attr]
