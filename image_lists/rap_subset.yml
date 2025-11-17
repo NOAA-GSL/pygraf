@@ -1,17 +1,17 @@
 hourly:
   model: rap
   variables:
-    1hsnw:
-      - sfc
-    acsnod:
-      - sfc
-    acsnw:
-      - sfc
+#    1hsnw:
+#      - sfc
+#    acsnod:
+#      - sfc
     acfrozr:
       - sfc
     acfrzr:
       - sfc
     acpcp:
+      - sfc
+    acsnw:
       - sfc
     cape:
       - mu

@@ -456,22 +456,37 @@ class FieldData(UPPData):
                 attrs = ['GRIB_orientationOfTheGridInDegrees']
                 grid_info['projection'] = 'stere'
                 grid_info['lat_0'] = 90
-            case x if "rotated latitude/longitude" in x:
+            case x if x == "rotated latitude/longitude": # RRFS NA
+                attrs = []
+                grid_info['projection'] = 'rotpole'
+                lon_0 = var_info.attrs.get('GRIB_longitudeOfSouthernPoleInDegrees')
+                grid_info['lon_0'] = lon_0 - 360
+                center_lat = var_info.attrs.get('GRIB_latitudeOfSouthernPoleInDegrees')
+                grid_info['o_lat_p'] = - center_lat if center_lat < 0 else 90 - center_lat
+                grid_info['o_lon_p'] = 180
+
+            case x if "equidistant cylindrical" in x: # GFS
+                attrs = []
+                grid_info["projection"] = "cyl"
+            case x if "rotate" in x: # RAP
                 attrs = []
                 grid_info['projection'] = 'rotpole'
                 #center_lon = var_info.attrs["GRIB_longitudeOfLastGridPointInDegrees"]
-                center_lon = var_info.attrs["GRIB_longitudeOfLastGridPointInDegrees"]
+                #center_lon = var_info.attrs["GRIB_longitudeOfLastGridPointInDegrees"]
                 #grid_info["lon_0"] = center_lon - 360
-                grid_info["lon_0"] = center_lon +180
-                center_lat = var_info.attrs["GRIB_latitudeOfLastGridPointInDegrees"]
-                grid_info['o_lat_p'] = -center_lat if center_lat < 0 else center_lat
+                grid_info["lon_0"] =  - 106.
+                #center_lat = var_info.attrs["GRIB_latitudeOfLastGridPointInDegrees"]
+                center_lat = 54
+                grid_info['o_lat_p'] = 90 - center_lat
                 #grid_info['o_lat_p'] = -center_lat if center_lat < 0 else 90 - center_lat
                 grid_info['o_lon_p'] = 180
+                #grid_info["corners"] = [-10.590603, 46.591938, -139.08585, 22.66102]
             case _:
                 msg = f"Can't define grid for {grid_def}"
                 raise ValueError(msg)
         if self.model != "hrrrhi":
-            grid_info["corners"] = self.corners
+            if not grid_info.get("corners"):
+                grid_info["corners"] = self.corners
             # if self.grid_suffix in ['GLC0']:
             #    attrs = ['Latin1', 'Latin2', 'Lov']
             # elif self.grid_suffix == 'GST0':
@@ -632,7 +647,7 @@ class FieldData(UPPData):
         if transforms and do_transform:
             vals = self.get_transform(transforms, vals)
 
-        return vals
+        return vals if "global" not in self.model else vals[::-1, :]
 
 
 class ProfileData(UPPData):

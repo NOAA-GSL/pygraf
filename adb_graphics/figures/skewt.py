@@ -21,7 +21,7 @@ from matplotlib.ticker import FixedLocator
 from metpy.plots import Hodograph, SkewT
 from metpy.units import units
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-from xarray import DataArray, Dataset
+from xarray import DataArray, Dataset, where
 
 from adb_graphics import errors
 from adb_graphics.datahandler import gribdata
@@ -144,11 +144,11 @@ class SkewTDiagram(gribdata.ProfileData):
                     mixr_total = mixr_total + pres_layer / gravity * profile[n]
 
             # limit values to upper and lower values of plotting range
-            profile = DataArray.where((profile > 0.0) & (profile < 1.0e-4), 1.0e-4, profile)  # noqa: PLR2004
-            profile = DataArray.where((profile > 10.0), 10.0, profile)  # noqa: PLR2004
+            profile = where((profile > 0.0) & (profile < 1.0e-4), 1.0e-4, profile)  # noqa: PLR2004
+            profile = where((profile > 10.0), 10.0, profile)  # noqa: PLR2004
 
             # plot line
-            profile = profile[: pres.shape[0]]
+            profile = profile[:pres.shape[0]]
             hydro_subplot.plot(
                 profile,
                 pres,
@@ -187,10 +187,10 @@ class SkewTDiagram(gribdata.ProfileData):
                         layer = False
 
             # compute vertically integrated amount and add legend line
-            line = f"{settings.get('label'):<7s} {mixr_total:>10.3f} {settings.get('units')}"
+            line = f"{settings.get('label'):<7s} {mixr_total.values:>10.3f} {settings.get('units')}"
             if scale != 1.0:
                 line = (
-                    f"{settings.get('label'):<5s}(x{scale}) {mixr_total.magnitude:.3f} "
+                    f"{settings.get('label'):<5s}(x{scale}) {mixr_total.values:.3f} "
                     f"{settings.get('units')}"
                 )
             lines.append(line)
@@ -217,7 +217,7 @@ class SkewTDiagram(gribdata.ProfileData):
         # Draw the vertically integrated amounts box
         hydro_subplot.text(
             0.02,
-            0.95,
+            0.98,
             contents,
             bbox=dict(facecolor="white", edgecolor="black", alpha=0.7),
             fontproperties=fm.FontProperties(family="monospace"),
@@ -297,21 +297,13 @@ class SkewTDiagram(gribdata.ProfileData):
             },
         }
 
-        top = None
         for var, items in atmo_vars.items():
             # Get the profile values and attach MetPy units
             tmp = np.asarray(self.values(name=var)) * items["units"]
 
             # Apply any needed transdecimals
             transform = items.get("transform")
-            if transform:
-                tmp = tmp.to(transform)
-
-            # Only return values up to the maximum pressure level requested
-            if var == "pres" and top is None:
-                top = np.where(tmp.magnitude >= self.max_plev)[0][-1]
-
-            atmo_vars[var]["data"] = tmp[:top]
+            atmo_vars[var]["data"] = tmp.to(transform) if transform else tmp
 
         return atmo_vars
 
@@ -670,7 +662,8 @@ class SkewTDiagram(gribdata.ProfileData):
             f"{self.model_name}: {atime}\nFcst Hr: {self.fhr}",
             fontsize=16,
             loc="left",
-            position=(-4.8, 1.03),
+            x=-4.8,
+            y=1.03,
         )
 
         # Top Right
@@ -678,7 +671,8 @@ class SkewTDiagram(gribdata.ProfileData):
             f"Valid: {vtime}",
             fontsize=16,
             loc="right",
-            position=(-0.20, 1.03),
+            x=-0.20,
+            y=1.03,
         )
 
         # Center
@@ -689,7 +683,8 @@ class SkewTDiagram(gribdata.ProfileData):
             site_title,
             fontsize=12,
             loc="center",
-            position=(-2.5, 1.0),
+            x=-2.5,
+            y=1.0,
         )
 
 

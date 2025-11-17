@@ -112,6 +112,10 @@
         shortName: refd
         typeOfLevel: heightAboveGround
         level: 1000
+      global:
+        shortName: refd
+        typeOfLevel: heightAboveGround
+        level: 1000
       rrfs:
         shortName: rare
         typeOfLevel: heightAboveGround
@@ -299,6 +303,10 @@ acsnw: # Run Total Accumulated Snow Using 10:1 Ratio
     unit: in
 aodbc: # Black Carbon AOD
   sfc: &aod
+    cfgrib:
+      parameterNumber: 102
+      typeOfLevel: atmosphere
+      constituentType: 62009
     clevs: [.1, .16, .23, .29, .36, .42, .49, .55, .61, .68, .74, .81, .87, 1]
     cmap: jet
     colors: aod_colors
@@ -309,35 +317,64 @@ aodbc: # Black Carbon AOD
 aodfd: # Fine Dust AOD
   sfc:
     <<: *aod
+    cfgrib:
+      parameterNumber: 102
+      typeOfLevel: atmosphere
+      constituentType: 62001
     ncl_name: AOTK_P48_L10_{grid}_A62001
     title: Fine Dust Aerosol Optical Depth
 aodhg: # OPT2 AOD
   sfc:
     <<: *aod
+    cfgrib:
+      parameterNumber: 102
+      typeOfLevel: atmosphere
+      constituentType: 62007
     ncl_name: AOTK_P48_L10_{grid}_A62007
     title: Total OPT2 Aerosol Optical Depth
 aodoc: # Organic Carbon AOD
   sfc:
     <<: *aod
+    cfgrib:
+      parameterNumber: 102
+      typeOfLevel: atmosphere
+      constituentType: 62010
     ncl_name: AOTK_P48_L10_{grid}_A62010
     title: Organic Carbon Aerosol Optical Depth
 aodss: # Sea Salt AOD
   sfc:
     <<: *aod
+    cfgrib:
+      parameterNumber: 102
+      typeOfLevel: atmosphere
+      constituentType: 62008
     ncl_name: AOTK_P48_L10_{grid}_A62008
     title: Sea Salt Aerosol Optical Depth
 aodsulf: # Sulfate AOD
   sfc:
     <<: *aod
+    cfgrib:
+      parameterNumber: 102
+      typeOfLevel: atmosphere
+      constituentType: 62006
     ncl_name: AOTK_P48_L10_{grid}_A62006
     title: Sulfate Aerosol Optical Depth
 aodtot: # Total AOD
   sfc:
     <<: *aod
+    cfgrib:
+      parameterNumber: 102
+      typeOfLevel: atmosphere
+      constituentType: 62000
     ncl_name: AOTK_P48_L10_{grid}_A62000
     title: Total Aerosol Optical Depth
 bc: # Black Carbon
   sfc: &bcsfc
+    cfgrib:
+      shortName: pmtf
+      typeOfLevel: hybrid
+      constituentType: 62014
+      level: 1
     clevs: [0.05, 0.1, 0.2, 0.5, 1, 2, 3, 4, 5, 7, 10, 15, 20, 30]
     cmap: jet
     colors: aod_colors
@@ -354,12 +391,22 @@ bc: # Black Carbon
 bc1: # Black Carbon 1
   sfc:
     <<: *bcsfc
+    cfgrib:
+      shortName: pmtf
+      typeOfLevel: hybrid
+      constituentType: 62014
+      level: 1
     ncl_name: PMTF_P48_L105_{grid}_A62014
     title: Surface Black Carbon 1
     transform: []
 bc2: # Black Carbon 2
   sfc:
     <<: *bcsfc
+    cfgrib:
+      shortName: pmtf
+      typeOfLevel: hybrid
+      constituentType: 62013
+      level: 1
     ncl_name: PMTF_P48_L105_{grid}_A62013
     title: Surface Black Carbon 2
     transform: []
@@ -672,6 +719,10 @@ coarsedust: # Coarse dust
 colbc: # Column Black Carbon
   sfc: &col
     # clevs: [0.00000005, 0.0000001, 0.00000015, 0.0000002, 0.0000005, 0.000001, 0.000002, 0.000003, 0.000004, 0.000005, 0.0000075, 0.00001, 0.000015, 0.00002]
+    cfgrib:
+      parameterNumber: 1
+      typeOfLevel: atmosphere
+      constituentType: 62009
     clevs: [0.05, 0.1, 0.15, 0.2, 0.5, 1, 2, 3, 4, 5, 7, 10, 15, 20]
     cmap: jet
     colors: aod_colors
@@ -684,36 +735,62 @@ colbc: # Column Black Carbon
 colfd: # Column Fine Dust
   sfc:
     <<: *col
+    cfgrib:
+      parameterNumber: 1
+      typeOfLevel: atmosphere
+      constituentType: 62001
     clevs: [2.5, 5, 7.5, 10, 25, 50, 100, 150, 200, 250, 375, 500, 750, 1000]
     ncl_name: COLMD_P48_L10_{grid}_A62001
     title: Column Fine Dust
 coloc: # Column Organic Carbon
   sfc:
     <<: *col
+    cfgrib:
+      parameterNumber: 1
+      typeOfLevel: atmosphere
+      constituentType: 62010
     clevs: [0.5, 1,  5, 10, 20, 30, 40, 50, 80, 100, 120, 150, 200, 250]
     ncl_name: COLMD_P48_L10_{grid}_A62010
     title: Column Organic Carbon
 colpm10: # Column PM10
   sfc:
     <<: *col
+    cfgrib:
+      parameterNumber: 1
+      typeOfLevel: atmosphere
+      constituentType: 62000
+      scaledValueOfFirstSize: 10
     clevs: [4, 5, 10, 20, 30, 40, 50, 100, 200, 300, 400, 500, 1000, 2000]
     ncl_name: COLMD_P48_L10_{grid}_A62000
     title: Column PM10
 colpm25: # Column PM25
   sfc:
     <<: *col
+    cfgrib:
+      parameterNumber: 1
+      typeOfLevel: atmosphere
+      constituentType: 62000
+      scaledValueOfFirstSize: 25
     clevs: [0.25, 0.5, 0.75, 1, 2.5, 5, 10, 15, 20, 25, 30, 50, 75, 100]
     ncl_name: COLMD_P48_L10_{grid}_A62000_1
     title: Column PM25
 colss: # Column Sea Salt
   sfc:
     <<: *col
+    cfgrib:
+      parameterNumber: 1
+      typeOfLevel: atmosphere
+      constituentType: 62008
     clevs: [0.1, 0.6, 3, 6, 10, 13, 16, 20, 23, 26, 30, 33, 36, 100]
     ncl_name: COLMD_P48_L10_{grid}_A62008
     title: Column Sea Salt
 colsu: # Column Sulfate
   sfc:
     <<: *col
+    cfgrib:
+      parameterNumber: 1
+      typeOfLevel: atmosphere
+      constituentType: 62006
     clevs: [2, 3, 4, 5, 7.5, 10, 15, 20, 30, 40, 50, 100, 200, 300]
     ncl_name: COLMD_P48_L10_{grid}_A62006
     title: Column Sulfate
@@ -758,6 +835,10 @@ cref: # Composite reflectivity
       hrrr:
         shortName: refc
         typeOfLevel: atmosphere
+        level: 0
+      global:
+        shortName: refc
+        typeOfLevel: atmosphereSingleLayer
         level: 0
       rrfs:
         parameterNumber: 5
@@ -838,7 +919,7 @@ dlwrfavg: # Downward Longwave Radiation Flux Average
   sfc:
     <<: *radiation_flux
     cfgrib:
-      shortName: avg_sdlwrf
+      shortName: sdlwrf
       typeOfLevel: surface
     clevs: !arange [200, 501, 12]
     cmap: gist_ncar
@@ -870,7 +951,7 @@ dswrfavg: # Downward Shortwave Radiation Flux Average
   sfc:
     <<: *radiation_flux
     cfgrib:
-      shortName: avg_sdswrf
+      shortName: sdswrf
       typeOfLevel: surface
     clevs: [0, 50, 100, 150, 200, 250, 300, 400, 500, 600, 700, 800, 900, 1000]
     colors: rainbow12_colors
@@ -879,6 +960,11 @@ dswrfavg: # Downward Shortwave Radiation Flux Average
     title: Downward SW Radiation Flux 6h Avg, Surface
 fd: # Fine dust, global chem
   sfc:
+    cfgrib:
+      shortName: pmtf
+      typeOfLevel: hybrid
+      level: 1
+      constituentType: 62001
     clevs: [1, 2, 4, 6, 8, 12, 16, 20, 25, 30, 40, 60, 100, 200]
     cmap: jet
     colors: aod_colors
@@ -1127,12 +1213,15 @@ ghtfl: # Ground Heat Flux
 grle: # Graupel
   ua:
     cfgrib:
-      prs:
-        shortName: grle
-        typeOfLevel: isobaricInhPa
+      shortName: grle
+      typeOfLevel: isobaricInhPa
     ncl_name:
       nat: GRLE_P0_L105_{grid}
       prs: GRLE_P0_L100_{grid}
+  uanat:
+    cfgrib:
+      shortName: grle
+      typeOfLevel: hybrid
 gust:
   10m:
     cfgrib:
@@ -1360,10 +1449,18 @@ hlcytot:
     title: Run Total 2-5km Max Updraft Helicity
     transform: run_max
 hpbl: # Height of Planetary Boundary Layer
-  sfc: 
+  sfc:
     cfgrib:
-      shortName: blh
-      typeOfLevel: surface
+      hrrr:
+        shortName: blh
+        typeOfLevel: surface
+      global:
+        parameterNumber: 196
+        parameterCategory: 3
+        typeOfLevel: surface
+      rap:
+        shortName: blh
+        typeOfLevel: surface
     clevs: [25, 50, 100, 200, 300, 500, 750, 1000, 1500, 2000, 2500, 3000, 4000, 5000]
     cmap: ir_rgbv
     colors: pbl_colors
@@ -1374,14 +1471,17 @@ hpbl: # Height of Planetary Boundary Layer
 icmr: # Ice Water Mixing Ratio
   ua:
     cfgrib:
-      prs:
-        shortName: icmr
-        typeOfLevel: isobaricInhPa
+      shortName: icmr
+      typeOfLevel: isobaricInhPa
     ncl_name:
       nat:
         - ICMR_P0_L105_{grid}
         - CIMIXR_P0_L105_{grid}
       prs: ICMR_P0_L100_{grid}
+  uanat:
+    cfgrib:
+      parameterNumber: 82
+      typeOfLevel: hybrid
 icprb: # Icing Probability
   # levels chosen are arbitrary based on initial plot samples
   # additional levels may be requested in the future.
@@ -1596,6 +1696,11 @@ mref: # Maximum reflectivity for past hour at 1 km AGL
     title: Max 1km agl Reflectivity (over prev hr)
 oc: # Organic Carbon
   sfc: &ocsfc
+    cfgrib:
+      shortName: pmtf
+      typeOfLevel: hybrid
+      level: 1
+      constituentType: 62014
     clevs: [0.05, 0.1, 0.5, 1, 2, 3, 5, 7, 10, 15, 20, 30, 50, 100]
     cmap: jet
     colors: aod_colors
@@ -1612,17 +1717,32 @@ oc: # Organic Carbon
 oc1: # Organic Carbon 1
   sfc:
     <<: *ocsfc
+    cfgrib:
+      shortName: pmtf
+      typeOfLevel: hybrid
+      level: 1
+      constituentType: 62016
     ncl_name: PMTF_P48_L105_{grid}_A62016
     title: Surface Organic Carbon 1
     transform: []
 oc2: # Organic Carbon 2
   sfc:
     <<: *ocsfc
+    cfgrib:
+      shortName: pmtf
+      typeOfLevel: hybrid
+      level: 1
+      constituentType: 62015
     ncl_name: PMTF_P48_L105_{grid}_A62015
     title: Surface Organic Carbon 2
     transform: []
 PM10: # PM10, global chem
   sfc: &pmsfc
+    cfgrib:
+      shortName: pmtc
+      typeOfLevel: surface
+      constituentType: 62000
+      scaledValueOfFirstSize: 10
     clevs: [0.5, 1, 2, 5, 10, 20, 30, 50, 70, 100, 150, 200, 500, 1000]
     cmap: jet
     colors: aod_colors
@@ -1634,6 +1754,11 @@ PM10: # PM10, global chem
 PM25: # PM25, global chem
   sfc:
     <<: *pmsfc
+    cfgrib:
+      shortName: pmtf
+      typeOfLevel: surface
+      constituentType: 62000
+      scaledValueOfFirstSize: 25
     ncl_name: PMTF_P48_L1_{grid}_A62000
     title: PM25
 pres:
@@ -1656,10 +1781,15 @@ pres:
         shortName: mslma
         typeOfLevel: meanSea
         level: 0
+      global:
+        shortName: prmsl
+        typeOfLevel: meanSea
+        level: 0
       rrfs:
         shortName: mslet
         typeOfLevel: meanSea
         level: 0
+      parameterNumber: 192
     clevs: !arange [976, 1051, 4]
     cmap: Spectral_r
     colors: pmsl_colors
@@ -1970,6 +2100,10 @@ rwmr: # Rain Mixing Ratio
     ncl_name: RWMR_P0_L100_{grid}
 seasalt: # Fine dust, global chem
   sfc:
+    cfgrib:
+      shortName: pmtf
+      typeOfLevel: surface
+      constituentType: 62008
     clevs: [0.05, 0.1, 0.5, 1, 2, 3, 5, 10, 15, 20, 30, 40, 50, 100]
     cmap: jet
     colors: aod_colors
@@ -2096,12 +2230,15 @@ slw: # Supercooled Liquid Water -- requires nat data
 snmr: # Snow Mixing Ratio
   ua:
     cfgrib:
-      prs:
-        shortName: snmr
-        typeOfLevel: isobaricInhPa
+      shortName: snmr
+      typeOfLevel: isobaricInhPa
     ncl_name:
       nat: SNMR_P0_L105_{grid}
       prs: SNMR_P0_L100_{grid}
+  uanat:
+    cfgrib:
+      shortName: snmr
+      typeOfLevel: hybrid
 snod: # Snow Depth
   sfc:
     <<: *snow
@@ -2162,10 +2299,21 @@ soilt: # Soil Temperature
   10cm:
     <<: *soilt_levs
     cfgrib:
-      shortName: st
-      typeOfLevel: depthBelowLandLayer
-      scaledValueOfFirstFixedSurface: 10
-      scaledValueOfSecondFixedSurface: 10
+      hrrr:
+        shortName: st
+        typeOfLevel: depthBelowLandLayer
+        scaledValueOfFirstFixedSurface: 10
+        scaledValueOfSecondFixedSurface: 10
+      global:
+        shortName: st
+        typeOfLevel: depthBelowLandLayer
+        scaledValueOfFirstFixedSurface: 0
+        scaledValueOfSecondFixedSurface: 10
+      rrfs:
+        shortName: st
+        typeOfLevel: depthBelowLandLayer
+        scaledValueOfFirstFixedSurface: 10
+        scaledValueOfSecondFixedSurface: 10
     title: Soil Temperature at 10cm
   30cm:
     <<: *soilt_levs
@@ -2189,10 +2337,21 @@ soilt: # Soil Temperature
   1m:
     <<: *soilt_levs
     cfgrib:
-      shortName: st
-      typeOfLevel: depthBelowLandLayer
-      scaledValueOfFirstFixedSurface: 100
-      scaledValueOfSecondFixedSurface: 100
+      hrrr:
+        shortName: st
+        typeOfLevel: depthBelowLandLayer
+        scaledValueOfFirstFixedSurface: 100
+        scaledValueOfSecondFixedSurface: 100
+      global:
+        shortName: st
+        typeOfLevel: depthBelowLandLayer
+        scaledValueOfFirstFixedSurface: 40
+        scaledValueOfSecondFixedSurface: 100
+      rrfs:
+        shortName: st
+        typeOfLevel: depthBelowLandLayer
+        scaledValueOfFirstFixedSurface: 100
+        scaledValueOfSecondFixedSurface: 100
     title: Soil Temperature at 1m
   1.6m:
     <<: *soilt_levs
@@ -2243,10 +2402,16 @@ soilw: # Soil Moisture
   10cm:
     <<: *soilw_levs
     cfgrib:
-      shortName: soilw
-      typeOfLevel: depthBelowLandLayer
-      scaledValueOfFirstFixedSurface: 10
-      scaledValueOfSecondFixedSurface: 10
+      hrrr: &soilw_cfgrib_10
+        shortName: soilw
+        typeOfLevel: depthBelowLandLayer
+        scaledValueOfFirstFixedSurface: 10
+        scaledValueOfSecondFixedSurface: 10
+      global:
+        <<: *soilw_cfgrib_10
+        scaledValueOfFirstFixedSurface: 0
+      rrfs:
+        <<: *soilw_cfgrib_10
     title: Soil Moisture at 10cm
   30cm:
     <<: *soilw_levs
@@ -2275,10 +2440,16 @@ soilw: # Soil Moisture
   1m:
     <<: *soilw_levs
     cfgrib:
-      shortName: soilw
-      typeOfLevel: depthBelowLandLayer
-      scaledValueOfFirstFixedSurface: 100
-      scaledValueOfSecondFixedSurface: 100
+      hrrr: &soilw_cfgrib_100
+        shortName: soilw
+        typeOfLevel: depthBelowLandLayer
+        scaledValueOfFirstFixedSurface: 100
+        scaledValueOfSecondFixedSurface: 100
+      global:
+        <<: *soilw_cfgrib_100
+        scaledValueOfFirstFixedSurface: 40
+      rrfs:
+        <<: *soilw_cfgrib_100
     title: Soil Moisture at 1m
   1.6m:
     <<: *soilw_levs
@@ -2342,6 +2513,11 @@ ssrun: # Storm Surface Runoff
     unit: in
 sulf: # Sulfate, global chem
   sfc:
+    cfgrib:
+      shortName: pmtf
+      typeOfLevel: hybrid
+      level: 1
+      constituentType: 62006
     clevs: [0.05, 0.1, 0.2, 0.5, 1, 2, 3, 5, 10, 15, 20, 30 ,40 ,50]
     cmap: jet
     colors: aod_colors
@@ -2852,6 +3028,9 @@ vort: # Absolute vorticity
 vvel: # Vertical velocity
   700mb:
     cfgrib:
+      global:
+        shortName: w
+        typeOfLevel: isobaricInhPa
       hrrr:
         shortName: w
         typeOfLevel: isobaricInhPa

@@ -228,8 +228,7 @@ def parallel_skewt(cla: Namespace, fhr: int, grib_path: Path, site: str, workdir
       site       the string representation of the site from the sites file
       workdir    output directory
     """
-    cf = cfgrib_spec(cla.specs["temp"]["ua"]["cfgrib"], cla.images[0])
-    ds = gribfile.GribFile(grib_path, cf).contents
+    ds = gribfile.GribFile(grib_path, cla.specs["temp"]["ua"]["cfgrib"]).contents
     skew = skewt.SkewTDiagram(
         ds=ds,
         fhr=fhr,
