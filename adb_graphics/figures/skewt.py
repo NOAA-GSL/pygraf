@@ -21,7 +21,8 @@ from matplotlib.ticker import FixedLocator
 from metpy.plots import Hodograph, SkewT
 from metpy.units import units
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-from xarray import DataArray, Dataset, where
+from uwtools.api.config import YAMLConfig
+from xarray import DataArray, where
 
 from adb_graphics import errors
 from adb_graphics.datahandler import gribdata
@@ -58,19 +59,25 @@ class SkewTDiagram(gribdata.ProfileData):
     be included.
     """
 
-    def __init__(self, ds: Dataset, loc: str, **kwargs):
+    def __init__(
+        self,
+        fhr: int,
+        grib_paths: list[Path],
+        loc: str,
+        model: str,
+        spec: dict | YAMLConfig,
+        max_plev: int | None = 0,
+        model_name: str | None = "Analysis",
+    ):
         # Initialize on the temperature field since we need to gather
         # field-specific data from this object, e.g. dates, lat, lon, etc.
 
         super().__init__(
-            ds=ds,
-            loc=loc,
-            short_name="temp",
-            **kwargs,
+            fhr=fhr, grib_paths=grib_paths, loc=loc, model=model, short_name="temp", spec=spec
         )
 
-        self.max_plev = kwargs.get("max_plev", 0)
-        self.model_name = kwargs.get("model_name", "Analysis")
+        self.max_plev = max_plev
+        self.model_name = model_name
 
     def _add_hydrometeors(self, hydro_subplot: Axes):
         mixing_ratios: dict[str, HydroPlotSettings] = {
@@ -392,20 +399,19 @@ class SkewTDiagram(gribdata.ProfileData):
         temp = profiles.get("temp").get("data").to("degC")
         sphum = profiles.get("sphum").get("data")
 
-        dewpt = np.array(mpcalc.dewpoint_from_specific_humidity(pres, temp, sphum).to("degC"))
-        wspd = np.array(mpcalc.wind_speed(u, v))
-        wdir = np.array(mpcalc.wind_direction(u, v))
-
-        pres = np.array(pres)
-        temp = np.array(temp)
+        dewpt = mpcalc.dewpoint_from_specific_humidity(pressure=pres, specific_humidity=sphum).to(
+            "degC"
+        )
+        wspd = mpcalc.wind_speed(u, v)
+        wdir = mpcalc.wind_direction(u, v)
 
         profile = pd.DataFrame(
             {
-                "LEVEL": pres,
-                "TEMP": temp,
-                "DWPT": dewpt,
-                "WDIR": wdir,
-                "WSPD": wspd,
+                "LEVEL": pres.magnitude,
+                "TEMP": temp.magnitude,
+                "DWPT": dewpt.magnitude,
+                "WDIR": wdir.magnitude,
+                "WSPD": wspd.magnitude,
             }
         )
 
@@ -417,7 +423,9 @@ class SkewTDiagram(gribdata.ProfileData):
         temp = profiles.get("temp").get("data")
         sphum = profiles.get("sphum").get("data")
 
-        dewpt = mpcalc.dewpoint_from_specific_humidity(pres, temp, sphum).to("degF")
+        dewpt = mpcalc.dewpoint_from_specific_humidity(pressure=pres, specific_humidity=sphum).to(
+            "degF"
+        )
 
         # Pressure vs temperature
         skew.plot(pres, temp, "r", linewidth=1.5)
@@ -633,7 +641,7 @@ class SkewTDiagram(gribdata.ProfileData):
                 raise errors.NoGraphicsDefinitionForVariableError(varname, lev)
 
             try:
-                tmp = self.values(level=lev, name=varname, one_lev=True)
+                tmp = self.values(level=lev, name=varname)
 
                 transforms = spec.get("transform")
                 if transforms:

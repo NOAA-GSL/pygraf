@@ -48,7 +48,6 @@ class GribFiles:
         self,
         filenames: list[Path],
         cfgrib_config: dict,
-        **kwargs,
     ):
         """
         Initialize GribFiles object.
@@ -60,12 +59,9 @@ class GribFiles:
                       forecast lead times ('01fcst'), and all the free forecast
                       hours after that ('free_fcst').
           filetype    key to use for dict when setting variable_names
-
-        kwargs:
           model       string describing the model type
         """
 
-        self.model = kwargs.get("model", "")
         self.filenames = filenames
         self.cfgrib_config = cfgrib_config
         self.contents = self._load()

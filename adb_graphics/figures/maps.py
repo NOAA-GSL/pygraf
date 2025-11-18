@@ -20,8 +20,8 @@ from matplotlib.axes import Axes
 from matplotlib.contour import QuadContourSet
 from mpl_toolkits.basemap import Basemap, shiftgrid
 
-from adb_graphics.datahandler import gribdata, gribfile
-from adb_graphics.utils import cfgrib_spec, numeric_level, set_level
+from adb_graphics.datahandler import gribdata
+from adb_graphics.utils import numeric_level, set_level
 
 # FULL_TILES is a list of strings that includes the labels GSL attaches to some of
 # the wgrib2 cutouts used for larger domains like RAP, RRFS NA, and global.
@@ -145,21 +145,17 @@ class MapFields:
 
     @property
     def shaded(self):
-        cf = cfgrib_spec(self.map_spec["cfgrib"], self.model)
-        ds = gribfile.GribFiles(self.grib_paths, cf).contents
         args = {
-            "ds": ds,
             "fhr": self.fhr,
             "level": self.level,
             "model": self.model,
             "short_name": self.name,
             "spec": self.fields_spec,
-            "grib_path": self.grib_paths[-1],
+            "grib_paths": self.grib_paths,
         }
         field = gribdata.FieldData(**args)
         if self.map_type == "diff":
-            args["ds"] = gribfile.GribFile(self.grib_path2, cf).contents
-            args["grib_path"] = self.grib_path2
+            args["grib_paths"] = [self.grib_path2]
             field2 = gribdata.FieldData(**args)
             field.data = field.values() - field2.values()
 
@@ -193,17 +189,13 @@ class MapFields:
         for var in ("u", "v"):
             wind_spec = self.fields_spec[var][lev]
             set_level(lev, self.model, wind_spec)
-            ds = gribfile.GribFiles(
-                self.grib_paths, cfgrib_spec(wind_spec["cfgrib"], self.model)
-            ).contents
             args = {
-                "ds": ds,
                 "fhr": self.fhr,
                 "level": lev,
                 "model": self.model,
                 "short_name": var,
                 "spec": self.fields_spec,
-                "grib_path": self.grib_paths[-1],
+                "grib_paths": self.grib_paths,
             }
             winds.append(gribdata.FieldData(**args))
         return winds
@@ -221,17 +213,13 @@ class MapFields:
                 var, lev = overlay, self.level
             overlay_spec = deepcopy(self.fields_spec[var][lev])
             set_level(lev, self.model, overlay_spec)
-            ds = gribfile.GribFiles(
-                self.grib_paths, cfgrib_spec(overlay_spec["cfgrib"], self.model)
-            ).contents
             args = {
-                "ds": ds,
                 "fhr": self.fhr,
                 "level": lev,
                 "model": self.model,
                 "short_name": var,
                 "spec": self.fields_spec,
-                "grib_path": self.grib_paths[-1],
+                "grib_paths": self.grib_paths,
             }
             overlay_obj = gribdata.FieldData(**args)
             # Set the attributes for the overlay field
@@ -766,8 +754,8 @@ class DataMap:
         """Draw the title for a map."""
 
         f = self.field
-        atime = f.date_to_str(f.anl_dt[0])
-        vtime = f.date_to_str(f.valid_dt[0])
+        atime = f.date_to_str(f.anl_dt)
+        vtime = f.date_to_str(f.valid_dt)
 
         # Analysis time (top) and forecast hour with Valid Time (bottom) on the left
         plt.title(

@@ -30,7 +30,6 @@ def test_gribfiles():
             "shortName": "sp",
             "typeOfLevel": "surface",
         },
-        model="rrfs",
     )
     assert isinstance(gf.contents, Dataset)
     assert len(gf.contents.data_vars) == 1

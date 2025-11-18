@@ -23,13 +23,13 @@ def hrrr_data(prsfile):
 
 
 @fixture
-def fielddata_obj(hrrr_data, prsfile, spec):
+def fielddata_obj(prsfile, spec):
     return gribdata.FieldData(
-        ds=hrrr_data.contents,
-        fhr=15,
+        model="hrrr",
+        fhr=16,
         grib_paths=[prsfile],
-        level="cref",
-        short_name="temp",
+        level="sfc",
+        short_name="cref",
         spec=spec,
     )
 
@@ -48,7 +48,7 @@ def parallel_maps_args(prsfile, spec, tmp_path):
     )
     return {
         "cla": cla,
-        "fhr": 15,
+        "fhr": 16,
         "grib_paths": [prsfile],
         "level": "sfc",
         "variable": "temp",
@@ -71,8 +71,8 @@ def parallel_skewt_args(natfile, spec, tmp_path):
     )
     return {
         "cla": cla,
-        "fhr": 15,
-        "grib_path": natfile,
+        "fhr": 16,
+        "grib_paths": [natfile],
         "site": " DNR  23062 72469  39.77 104.88 1611 Denver, CO",
         "workdir": tmp_path,
     }
@@ -90,7 +90,7 @@ def test_add_obs_panel(fielddata_obj, spec):
     args = {
         "ax": ax[8],
         "model_name": "hrrr",
-        "obs_file": fielddata_obj.grib_path,  # fake it with model data
+        "obs_file": fielddata_obj.grib_paths[0],  # fake it with model data
         "proj_info": fielddata_obj.grid_info(),
         "spec": spec,
         "short_name": "cref",
@@ -103,7 +103,7 @@ def test_add_obs_panel(fielddata_obj, spec):
 
 def test_parallel_maps(parallel_maps_args, tmp_path):
     figure_builders.parallel_maps(**parallel_maps_args)
-    assert (tmp_path / "temp_full_sfc_f015.png").is_file()
+    assert (tmp_path / "temp_full_sfc_f016.png").is_file()
 
 
 def test_parallel_maps_enspanel(parallel_maps_args, tmp_path):
@@ -135,7 +135,7 @@ def test_parallel_maps_enspanel(parallel_maps_args, tmp_path):
         call.title().assert_called_once()
         call.add_logo().assert_called_once()
         aop.assert_called_once()
-        assert (tmp_path / "temp_full_sfc_f015.png").is_file()
+        assert (tmp_path / "temp_full_sfc_f016.png").is_file()
 
 
 def test_parallel_maps_mem_leak(parallel_maps_args):
@@ -154,8 +154,8 @@ def test_parallel_maps_mem_leak(parallel_maps_args):
 
 def test_parallel_skewt(parallel_skewt_args, tmp_path):
     figure_builders.parallel_skewt(**parallel_skewt_args)
-    assert (tmp_path / "DNR_72469_skewt_f015.png").is_file()
-    assert (tmp_path / "DNR.72469.skewt.2025100600_f015.csv").is_file()
+    assert (tmp_path / "DNR_72469_skewt_f016.png").is_file()
+    assert (tmp_path / "DNR.72469.skewt.2025100600_f016.csv").is_file()
 
 
 def test_set_figure_enspanel_full():

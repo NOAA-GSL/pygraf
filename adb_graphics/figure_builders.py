@@ -12,7 +12,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import axes
 
-from adb_graphics.datahandler import gribfile
 from adb_graphics.figures import skewt
 from adb_graphics.figures.maps import DataMap, DiffMap, Map, MapFields, MultiPanelDataMap
 
@@ -214,7 +213,7 @@ def parallel_maps(  # noqa: PLR0912
     gc.collect()
 
 
-def parallel_skewt(cla: Namespace, fhr: int, grib_path: Path, site: str, workdir: Path):
+def parallel_skewt(cla: Namespace, fhr: int, grib_paths: list[Path], site: str, workdir: Path):
     """
     Function that creates a single SkewT plot.
 
@@ -227,16 +226,14 @@ def parallel_skewt(cla: Namespace, fhr: int, grib_path: Path, site: str, workdir
       site       the string representation of the site from the sites file
       workdir    output directory
     """
-    ds = gribfile.GribFile(grib_path, cla.specs["temp"]["ua"]["cfgrib"]).contents
     skew = skewt.SkewTDiagram(
-        ds=ds,
         fhr=fhr,
-        filetype=cla.file_type,
+        grib_paths=grib_paths,
         loc=site,
+        model=cla.images[0],
+        spec=cla.specs,
         max_plev=cla.max_plev,
         model_name=cla.model_name,
-        spec=cla.specs,
-        grib_path=grib_path,
     )
     skew.create_diagram()
     outfile = f"{skew.site_code}_{skew.site_num}_skewt_f{fhr:03d}.png"

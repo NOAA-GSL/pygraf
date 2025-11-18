@@ -6,32 +6,26 @@ from pytest import fixture, mark, raises
 from xarray import DataArray, ones_like, zeros_like
 
 from adb_graphics import errors, utils
-from adb_graphics.datahandler import gribdata, gribfile
+from adb_graphics.datahandler import gribdata
 
 
 class ConcreteUPPData(gribdata.UPPData):
-    def values(self, level: str | None = None, name: str | None = None, **kwargs) -> DataArray:  # noqa: ARG002
-        return self.ds.to_dataarray().squeeze()
+    def values(
+        self,
+        level: str | None = None,  # noqa: ARG002
+        name: str | None = None,  # noqa: ARG002
+        do_transform: bool = True,  # noqa: ARG002
+    ) -> DataArray:
+        return self.ds.to_dataarray().squeeze()  # type: ignore[no-any-return]
 
 
 @fixture
-def hrrr_data(prsfile):
-    return gribfile.GribFile(
-        prsfile,
-        cfgrib_config={
-            "shortName": "t",
-            "typeOfLevel": "surface",
-        },
-    ).contents
-
-
-@fixture
-def fielddata_obj(hrrr_data, prsfile, spec):
+def fielddata_obj(prsfile, spec):
     return gribdata.FieldData(
-        ds=hrrr_data,
         fhr=16,
-        grib_path=prsfile,
+        grib_paths=[prsfile],
         level="sfc",
+        model="hrrr",
         short_name="temp",
         spec=spec,
     )
@@ -39,18 +33,11 @@ def fielddata_obj(hrrr_data, prsfile, spec):
 
 @fixture
 def profiledata_obj(natfile, spec):
-    ds = gribfile.GribFile(
-        natfile,
-        cfgrib_config={
-            "shortName": "t",
-            "typeOfLevel": "hybrid",
-        },
-    )
     return gribdata.ProfileData(
-        ds=ds.contents,
         fhr=16,
-        grib_path=natfile,
+        grib_paths=[natfile],
         loc=" DNR  23062 72469  39.77 104.88 1611 Denver, CO",
+        model="hrrr",
         short_name="temp",
         spec=spec,
     )
@@ -64,31 +51,36 @@ def spec(spec_file):
 
 
 @fixture
-def uppdata_obj(hrrr_data, prsfile, spec):
+def uppdata_obj(natfile, spec):
     return ConcreteUPPData(
-        ds=hrrr_data,
+        model="hrrr",
         short_name="temp",
         spec=spec,
         fhr=16,
-        grib_path=prsfile,
+        grib_paths=[natfile],
     )
 
 
 @fixture
-def uppdata_multilev_obj(prsfile, spec):
-    ds = gribfile.GribFile(
-        prsfile,
-        cfgrib_config={
-            "shortName": "t",
-            "typeOfLevel": "isobaricInhPa",
-        },
-    ).contents
+def uppdata_multilev_obj(natfile, spec):
     return ConcreteUPPData(
-        ds=ds,
+        model="hrrr",
         short_name="temp",
         spec=spec,
         fhr=16,
-        grib_path=prsfile,
+        grib_paths=[natfile],
+    )
+
+
+@fixture
+def uppdata_multilev_prs_obj(prsfile, spec):
+    return ConcreteUPPData(
+        level="500mb",
+        model="hrrr",
+        short_name="temp",
+        spec=spec,
+        fhr=16,
+        grib_paths=[prsfile],
     )
 
 
@@ -111,50 +103,54 @@ def test_uppdata_date_to_str(uppdata_obj):
 
 
 def test_uppdata_field(uppdata_obj):
-    assert np.array_equal(uppdata_obj.field, uppdata_obj.ds.t)
+    assert np.array_equal(uppdata_obj.field, uppdata_obj.ds.t.squeeze())
 
 
 def test_uppdata_field_column_max(uppdata_multilev_obj):
     assert np.array_equal(
-        uppdata_multilev_obj.field_column_max(), uppdata_multilev_obj.ds.t.max(axis=0)
+        uppdata_multilev_obj.field_column_max(), uppdata_multilev_obj.ds.t.squeeze().max(axis=0)
     )
     assert uppdata_multilev_obj.field_column_max().shape == (1059, 1799)
 
 
 def test_uppdata_field_diff(uppdata_obj):
     summed_field = uppdata_obj.field_diff(values=uppdata_obj.field, variable2="temp", level2="sfc")
-    assert np.array_equal(summed_field, uppdata_obj.ds.t * 0)
+    assert np.array_equal(summed_field, uppdata_obj.ds.t.squeeze() * 0)
 
 
-def test_uppdata_field_mean(uppdata_multilev_obj):
+def test_uppdata_field_mean(prsfile, spec):
+    dataobj = ConcreteUPPData(
+        level="mean",
+        model="hrrr",
+        short_name="rh",
+        spec=spec,
+        fhr=16,
+        grib_paths=[prsfile],
+    )
     levels = ["500mb", "800mb"]
-    mean = uppdata_multilev_obj.field_mean(values=uppdata_multilev_obj.field, levels=levels)
+    mean = dataobj.field_mean(values=dataobj.field, levels=levels)
     assert np.array_equal(
-        mean, uppdata_multilev_obj.ds.t.sel(isobaricInhPa=[500, 800]).mean("isobaricInhPa")
+        mean, dataobj.ds.r.squeeze().sel(isobaricInhPa=[500, 800]).mean("isobaricInhPa")
     )
     assert mean.shape == (1059, 1799)
 
 
 def test_uppdata_field_sum(uppdata_obj):
     summed_field = uppdata_obj.field_sum(values=uppdata_obj.field, variable2="temp", level2="sfc")
-    assert np.array_equal(summed_field, uppdata_obj.ds.t * 2)
+    assert np.array_equal(summed_field, uppdata_obj.ds.t.squeeze() * 2)
 
 
-def test_uppdata__get_data_levels(uppdata_multilev_obj):
+def test_uppdata__get_data_levels(uppdata_multilev_prs_obj):
     assert np.array_equal(
-        uppdata_multilev_obj._get_data_levels("isobaricInhPa"),
-        uppdata_multilev_obj.ds.coords["isobaricInhPa"].to_numpy(),
+        uppdata_multilev_prs_obj._get_data_levels("isobaricInhPa"),
+        uppdata_multilev_prs_obj.ds.coords["isobaricInhPa"].to_numpy(),
     )
 
 
-def test_uppdata__get_field(prsfile, uppdata_obj):
+def test_uppdata__get_field(uppdata_multilev_prs_obj):
     spec = {"shortName": "t", "typeOfLevel": "isobaricInhPa", "level": 500}
-    field = uppdata_obj._get_field(spec=spec)
-    ds = gribfile.GribFile(
-        prsfile,
-        cfgrib_config=spec,
-    ).contents
-    assert np.array_equal(field, ds.t)
+    field = uppdata_multilev_prs_obj._get_field(cfgribspec=spec)
+    assert np.array_equal(field, uppdata_multilev_prs_obj.ds.t.sel(isobaricInhPa=500).squeeze())
 
 
 @mark.parametrize(
@@ -225,24 +221,16 @@ def test_uppdata_valid_dt(uppdata_obj):
 
 
 def test_uppdata_vector_magnitude(prsfile, spec):
-    ds = gribfile.GribFile(
-        prsfile,
-        cfgrib_config={
-            "shortName": "u",
-            "typeOfLevel": "isobaricInhPa",
-            "level": 250,
-        },
-    )
     fd = ConcreteUPPData(
-        ds=ds.contents,
-        fhr=16,
-        grib_path=prsfile,
+        model="hrrr",
         level="250mb",
+        fhr=16,
+        grib_paths=[prsfile],
         short_name="u",
         spec=spec,
     )
     vm = fd.vector_magnitude(field1=fd.ds.u, field2_id="v_250mb")
-    assert not np.array_equal(vm, ds.contents.u)
+    assert not np.array_equal(vm, fd.ds.u)
 
 
 def test_uppdata_vspec(uppdata_obj):
@@ -277,18 +265,11 @@ def test_uppdata_vspec_bad(uppdata_obj):
 
 
 def test_fielddata_aviation_flight_rules(prsfile, spec):
-    ds = gribfile.GribFile(
-        prsfile,
-        cfgrib_config={
-            "shortName": "gh",
-            "typeOfLevel": "cloudCeiling",
-        },
-    )
     fd = gribdata.FieldData(
-        ds=ds.contents,
         fhr=16,
-        grib_path=prsfile,
+        grib_paths=[prsfile],
         level="sfc",
+        model="hrrr",
         short_name="flru",
         spec=spec,
     )
@@ -350,18 +331,11 @@ def test_fielddata_data_getter_and_setter(fielddata_obj):
 
 
 def test_fielddata_fire_weather_index(prsfile, spec):
-    ds = gribfile.GribFile(
-        prsfile,
-        cfgrib_config={
-            "shortName": "vgtyp",
-            "typeOfLevel": "surface",
-        },
-    )
     fd = gribdata.FieldData(
-        ds=ds.contents,
         fhr=16,
-        grib_path=prsfile,
+        grib_paths=[prsfile],
         level="sfc",
+        model="hrrr",
         short_name="firewxtransform",
         spec=spec,
     )
@@ -384,18 +358,11 @@ def test_fielddata_grid_info_lambert(fielddata_obj):
 
 
 def test_fielddata_icing_adjust_trace(prsfile, spec):
-    ds = gribfile.GribFile(
-        prsfile,
-        cfgrib_config={
-            "shortName": "gh",
-            "typeOfLevel": "cloudCeiling",
-        },
-    )
     fd = gribdata.FieldData(
-        ds=ds.contents,
         fhr=16,
-        grib_path=prsfile,
+        grib_paths=[prsfile],
         level="sfc",
+        model="hrrr",
         short_name="flru",
         spec=spec,
     )
@@ -405,23 +372,16 @@ def test_fielddata_icing_adjust_trace(prsfile, spec):
 
 
 def test_fielddata_supercooled_liquid_water(natfile, spec):
-    ds = gribfile.GribFile(
-        natfile,
-        cfgrib_config={
-            "shortName": "t",
-            "typeOfLevel": "surface",
-        },
-    )
     fd = gribdata.FieldData(
-        ds=ds.contents,
         fhr=16,
-        grib_path=natfile,
+        grib_paths=[natfile],
         level="sfc",
+        model="hrrr",
         short_name="slw",
         spec=spec,
     )
     slw = fd.supercooled_liquid_water()
-    assert not np.array_equal(slw, ds.contents.t)
+    assert not np.array_equal(slw, fd.ds.t.squeeze())
 
 
 def test_fielddata_ticks_default(fielddata_obj):
@@ -450,27 +410,31 @@ def test_fielddata_units_in_vspec(fielddata_obj):
 def test_fielddata_values_args_no_transform(fielddata_obj, lev, var):
     fielddata_obj.vspec["transform"] = None
     fielddata_obj.model = "hrrr"
-    assert not np.array_equal(fielddata_obj.values(level=lev, name=var), fielddata_obj.ds.t)
+    assert not np.array_equal(
+        fielddata_obj.values(level=lev, name=var), fielddata_obj.ds.t.squeeze()
+    )
 
 
 def test_fielddata_values_args_transform(fielddata_obj):
     fielddata_obj.vspec["transform"] = "opposite"
     fielddata_obj.model = "hrrr"
-    assert np.array_equal(fielddata_obj.values(level="sfc", name="temp"), -fielddata_obj.ds.t)
+    assert np.array_equal(
+        fielddata_obj.values(level="sfc", name="temp"), -fielddata_obj.ds.t.squeeze()
+    )
 
 
 def test_fielddata_values_no_args_no_transform(fielddata_obj):
     field = ones_like(fielddata_obj.ds)
     fielddata_obj.ds = field
     fielddata_obj.vspec["transform"] = None
-    assert np.array_equal(fielddata_obj.values(), field.t)
+    assert np.array_equal(fielddata_obj.values(), field.t.squeeze())
 
 
 def test_fielddata_values_no_args_transform(fielddata_obj):
     field = ones_like(fielddata_obj.ds)
     fielddata_obj.ds = field
     fielddata_obj.vspec["transform"] = "opposite"
-    assert np.array_equal(fielddata_obj.values(), -field.t)
+    assert np.array_equal(fielddata_obj.values(), -field.t.squeeze())
 
 
 def test_fielddata_values_bad_name_level(fielddata_obj):

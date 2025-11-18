@@ -7,16 +7,17 @@ Classes that handle the specifics of grib files from UPP.
 import abc
 from copy import deepcopy
 from datetime import datetime, timedelta
+from functools import cached_property
 from pathlib import Path
 
 import numpy as np
 from matplotlib.pyplot import get_cmap
 from pandas import to_datetime
-from xarray import DataArray, Dataset
+from uwtools.api.config import YAMLConfig
+from xarray import DataArray
 
 from adb_graphics import conversions, errors, specs, utils
 from adb_graphics.datahandler import gribfile
-from adb_graphics.utils import cfgrib_spec
 
 
 class UPPData(specs.VarSpec):
@@ -26,26 +27,29 @@ class UPPData(specs.VarSpec):
 
     Input:
         ds:          xarray dataset from grib file
+        model:       name of the model from the image list
         short_name:  name of variable corresponding to entry in specs configuration
-
-    kwargs:
-        config:      path to a user-specified configuration file
-        model:       string describing the model type
-
+        spec:        full specs dictionary
     """
 
-    def __init__(self, ds: Dataset, short_name: str, spec: dict, **kwargs):
-        # Parse kwargs first
-        self.model = kwargs.get("model", "")
-        self.grib_path = Path(kwargs.get("grib_paths", [kwargs.get("grib_path")])[0])
-
+    def __init__(
+        self,
+        fhr: int,
+        grib_paths: list[Path],
+        model: str,
+        short_name: str,
+        spec: dict | YAMLConfig,
+        level: str | None = "ua",
+    ):
+        self.grib_paths = grib_paths
+        self.model = model
         self.spec = spec
         self.short_name = short_name
-        self.level = "ua"
+        self.level = level
 
-        self.fhr = str(kwargs["fhr"])
-
-        self.ds = ds
+        self.fhr = fhr
+        cf = utils.cfgrib_spec(self.vspec["cfgrib"], self.model)
+        self.ds = gribfile.GribFiles(self.grib_paths, cf).contents.squeeze()
 
     @property
     def anl_dt(self) -> datetime:
@@ -75,13 +79,12 @@ class UPPData(specs.VarSpec):
 
         return date.strftime("%Y%m%d %H UTC")
 
-    @property
+    @cached_property
     def field(self) -> DataArray:
         """
         Get the first DataArray out of the Dataset.
         """
-        first_variable_name = list(self.ds.data_vars)[0]
-        return DataArray(self.ds[first_variable_name])
+        return self._get_field(self.vspec["cfgrib"].get(self.model, self.vspec["cfgrib"]))
 
     def field_column_max(self, **kwargs):  # noqa: ARG002
         """Returns the column max of the values."""
@@ -127,16 +130,15 @@ class UPPData(specs.VarSpec):
         dim = [str(coord) for coord in self.ds.coords if vertical_dim in str(coord)][0]
         return self.ds.coords[dim].to_numpy()
 
-    def _get_field(self, spec: dict) -> DataArray:
+    def _get_field(self, cfgribspec: dict) -> DataArray:
         """
         Given a cfgrib block, return the DataArray.
 
         Arg:
-          spec       the specifications dictionary to use for the variable in
+          cfgribspec the specifications dictionary to use for the variable in
                      question
         """
-
-        ds = gribfile.GribFile(self.grib_path, spec).contents
+        ds = gribfile.GribFiles(self.grib_paths, cfgribspec).contents.squeeze()
         first_variable_name = list(ds.data_vars)[0]
         return DataArray(ds[first_variable_name])
 
@@ -226,7 +228,9 @@ class UPPData(specs.VarSpec):
         return self.anl_dt + fh
 
     @abc.abstractmethod
-    def values(self, level: str | None = None, name: str | None = None, **kwargs) -> DataArray:
+    def values(
+        self, level: str | None = None, name: str | None = None, do_transform: bool = True
+    ) -> DataArray:
         """Returns the values of a given variable."""
 
     def vector_magnitude(
@@ -277,12 +281,28 @@ class FieldData(UPPData):
 
     """
 
-    def __init__(self, ds: Dataset, level: str, short_name: str, **kwargs):
-        super().__init__(ds, short_name, **kwargs)
-
+    def __init__(
+        self,
+        fhr: int,
+        grib_paths: list[Path],
+        level: str,
+        model: str,
+        short_name: str,
+        spec: dict | YAMLConfig,
+        member: str | None = None,
+        contour_kwargs: dict | None = None,
+    ):
+        super().__init__(
+            fhr=fhr,
+            grib_paths=grib_paths,
+            level=level,
+            model=model,
+            short_name=short_name,
+            spec=spec,
+        )
         self.level = level
-        self.contour_kwargs = kwargs.get("contour_kwargs", {})
-        self.mem = kwargs.get("member")
+        self.contour_kwargs = {} if contour_kwargs is None else contour_kwargs
+        self.mem = member
 
     def aviation_flight_rules(self, values: DataArray, **kwargs):  # noqa: ARG002
         """
@@ -369,18 +389,14 @@ class FieldData(UPPData):
         """
 
         def _load_field(level: str, short_name: str):
-            spec = cfgrib_spec(self.spec[short_name][level]["cfgrib"], self.model)
-            ds = gribfile.GribFile(self.grib_path, spec).contents
-            args = {
-                "ds": ds,
-                "fhr": self.fhr,
-                "level": level,
-                "model": self.model,
-                "short_name": short_name,
-                "spec": self.spec,
-                "grib_path": self.grib_path,
-            }
-            return FieldData(**args).values(do_transform=False)
+            return FieldData(
+                fhr=int(self.fhr),
+                grib_paths=self.grib_paths,
+                level=level,
+                model=self.model,
+                short_name=short_name,
+                spec=self.spec,
+            ).values(do_transform=False)
 
         # Gather fields from the input
         veg = np.asarray(values)
@@ -560,10 +576,10 @@ class FieldData(UPPData):
         """
 
         pres_sfc = self.values(name="pres", level="sfc") * 100.0  # convert back to Pa
-        pres_nat_lev = self.values(name="pres", level="ua", one_lev=False)
-        temp = self.values(name="temp", level="ua", one_lev=False)
-        cloud_mixing_ratio = self.values(name="clwmr", level="uanat", one_lev=False)
-        rain_mixing_ratio = self.values(name="rwmr", level="uanat", one_lev=False)
+        pres_nat_lev = self.values(name="pres", level="ua")
+        temp = self.values(name="temp", level="ua")
+        cloud_mixing_ratio = self.values(name="clwmr", level="uanat")
+        rain_mixing_ratio = self.values(name="rwmr", level="uanat")
 
         gravity = 9.81
         slw = pres_sfc * 0.0  # start with array of zero values
@@ -609,30 +625,23 @@ class FieldData(UPPData):
 
         return str(self.vspec.get("unit", self.field.units))
 
-    def values(self, level: str | None = None, name: str | None = None, **kwargs) -> DataArray:
+    def values(
+        self, level: str | None = None, name: str | None = None, do_transform: bool = True
+    ) -> DataArray:
         """
         Returns the numpy array of values at the requested level for the
         variable after applying any unit conversion to the original data.
 
         Optional Input:
-            name       the name of a field other than defined in self
-            level      the desired level of the named field
-
-        kwargs:
-            do_transform    bool flag. to call, or not, the transform specified
-                            in specs (default: True)
-            ncl_name        the NCL-assigned Grib2 name (default: '')
-            one_lev         bool flag. if True, get the single level of the variable
-                            (default: True)
-            vertical_index  the index (int) of the desired vertical level
+            level         the desired level of the named field
+            name          the name of a field other than defined in self
+            do_transform  apply a standard transformation of units, etc.?
 
         """
 
-        level = level or self.level
+        level = str(level or self.level)
         vals: DataArray = self.ds.to_dataarray().squeeze()
         spec = self.vspec
-
-        do_transform = kwargs.get("do_transform", True)
 
         if name is not None:
             # Get the spec dict and ncl_name for the given variable name
@@ -668,8 +677,18 @@ class ProfileData(UPPData):
 
     """
 
-    def __init__(self, ds: Dataset, loc: str, short_name: str, **kwargs):
-        super().__init__(ds, short_name, **kwargs)
+    def __init__(
+        self,
+        fhr: int,
+        grib_paths: list[Path],
+        loc: str,
+        model: str,
+        short_name: str,
+        spec: dict | YAMLConfig,
+    ):
+        super().__init__(
+            fhr=fhr, grib_paths=grib_paths, model=model, short_name=short_name, spec=spec
+        )
 
         # The first 31 columns are space delimted
         self.site_code, _, self.site_num, lat, lon = loc[:31].split()
@@ -688,7 +707,12 @@ class ProfileData(UPPData):
         if self.site_lon < 0:
             self.site_lon = self.site_lon + 360.0
 
-    def values(self, level: str | None = None, name: str | None = None, **kwargs) -> DataArray:  # noqa: ARG002
+    def values(
+        self,
+        level: str | None = None,
+        name: str | None = None,
+        do_transform: bool = True,  # noqa: ARG002
+    ) -> DataArray:
         """
         Returns the numpy array of values at the object's x, y location for the
         requested variable.
@@ -697,13 +721,6 @@ class ProfileData(UPPData):
             name       the short name of a field other than defined in self
             level      the level of the alternate field to use, default='ua' for
                        upper air
-
-        kwargs:
-            ncl_name         the NCL name of the variable to be retrieved
-            one_lev          bool flag. if True, get the single level of the variable
-            split            bool flag. if True, level string numbers are split
-                             into a list, e.g. used to get [0, 6000] from 06km
-            vertical_index   the index of the required level
 
         """
 
@@ -717,9 +734,9 @@ class ProfileData(UPPData):
             if not spec:
                 raise errors.NoGraphicsDefinitionForVariableError(name, level)
             utils.set_level(level=level, model=self.model, spec=spec)
-            profile = self._get_field(spec["cfgrib"].get(self.model, spec["cfgrib"]))
+            profile = self._get_field(spec["cfgrib"].get(self.model, spec["cfgrib"])).squeeze()
         else:
-            profile = self.field[::]
+            profile = self.field.squeeze()
         # Retrive the location for the profile
         x, y = self.get_xypoint(self.site_lat, self.site_lon)
 
