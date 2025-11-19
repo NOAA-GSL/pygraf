@@ -157,7 +157,7 @@ class MapFields:
         if self.map_type == "diff":
             args["grib_paths"] = [self.grib_path2]
             field2 = gribdata.FieldData(**args)
-            field.data = field.values() - field2.values()
+            field.data = field.data - field2.data
 
         return field
 
@@ -578,7 +578,7 @@ class DataMap:
         field = self.field
         levels = self.field.clevs
         colors = self.field.colors
-        vals = self.field.values()
+        vals = self.field.data
 
         value_to_color = np.full_like(vals, colors[0], dtype="object")
         num_levels = len(levels)
@@ -596,7 +596,7 @@ class DataMap:
 
         # Scatter plot dots are sized by value. Doing this here alters the size
         # without altering the colors we just set.
-        field.data = np.log10(field.values()) * 20
+        field.data = np.log10(field.data) * 20
 
         self._draw_field(
             ax=ax,

@@ -1,5 +1,3 @@
-# pylint: disable=invalid-name, too-many-public-methods, too-many-lines
-
 """
 Classes that handle the specifics of grib files from UPP.
 """
@@ -11,6 +9,7 @@ from functools import cached_property
 from pathlib import Path
 
 import numpy as np
+from cfgrib import DatasetBuildError
 from matplotlib.pyplot import get_cmap
 from pandas import to_datetime
 from uwtools.api.config import YAMLConfig
@@ -48,12 +47,17 @@ class UPPData(specs.VarSpec):
         self.level = level
 
         self.fhr = fhr
-        cf = utils.cfgrib_spec(self.vspec["cfgrib"], self.model)
+        cf = deepcopy(self.vspec)
+        utils.set_level(level=str(level), model=self.model, spec=cf)
+        cf = utils.cfgrib_spec(cf["cfgrib"], self.model)
         self.cf_name = cf.pop("shortName", "unknown")
         self.vertical_dim = cf["typeOfLevel"]
-        if not cf.get("stepType"):
-            cf["stepType"] = "instant"
-        self.ds = gribfile.GribFiles(self.grib_paths, cf).contents.squeeze()
+        try:
+            self.ds = gribfile.GribFiles(self.grib_paths, cf).contents.squeeze()
+        except DatasetBuildError as e:
+            if "stepType" in str(e):
+                cf["stepType"] = "instant"
+            self.ds = gribfile.GribFiles(self.grib_paths, cf).contents.squeeze()
 
     @property
     def anl_dt(self) -> datetime:
@@ -120,7 +124,6 @@ class UPPData(specs.VarSpec):
         for var in ds:
             if ds[var].attrs["GRIB_shortName"] == var_name:
                 return DataArray(ds[var])
-
         msg = f"Variable {var_name} not found in dataset."
         raise ValueError(msg)
 
@@ -354,7 +357,7 @@ class FieldData(UPPData):
         the values associated with a given object -- helpful for differences.
         """
         if not hasattr(self, "_data"):
-            return self.values()
+            self._data = self.values()
         return self._data
 
     @data.setter
@@ -670,9 +673,7 @@ class FieldData(UPPData):
             if not spec:
                 raise errors.NoGraphicsDefinitionForVariableError(name, level)
             utils.set_level(level=level, model=self.model, spec=spec)
-            vals = self._get_field(spec["cfgrib"].get(self.model, spec["cfgrib"]))
-        else:
-            vals = self.ds.get(self.cf_name)
+        vals = self._get_field(spec["cfgrib"].get(self.model, spec["cfgrib"]))
 
         transforms = spec.get("transform")
         if transforms and do_transform:
@@ -704,8 +705,8 @@ class ProfileData(UPPData):
         self,
         fhr: int,
         grib_paths: list[Path],
-        loc: str,
         model: str,
+        loc: str,
         short_name: str,
         spec: dict | YAMLConfig,
     ):
@@ -745,7 +746,6 @@ class ProfileData(UPPData):
                        upper air
 
         """
-
         # Set the defaults here since this is an instance of an abstract method
         # level refers to the level key in the specs file.
         level = level if level is not None else "ua"

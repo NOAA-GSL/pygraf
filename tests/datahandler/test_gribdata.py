@@ -147,10 +147,12 @@ def test_uppdata_field(uppdata_obj_ro):
 
 
 def test_uppdata_field_column_max(prsfile, spec):
+    spec = get_yaml_config(spec)
+    spec.dereference(context={"file_type": "prs"})
     fd = gribdata.FieldData(
         fhr=16,
         grib_paths=[prsfile],
-        level="500mb",
+        level="ua",
         model="hrrr",
         short_name="temp",
         spec=spec,
@@ -290,7 +292,7 @@ def test_uppdata_vector_magnitude(prsfile, spec):
 
 def test_uppdata_vspec(uppdata_obj_ro):
     expected = {
-        "cfgrib": {"stepType": "instant", "typeOfLevel": "hybrid"},
+        "cfgrib": {"shortName": "t", "typeOfLevel": "hybrid"},
         "clevs": np.arange(-40, 40, 2.5),
         "cmap": "jet",
         "colors": "ua_temp_colors",

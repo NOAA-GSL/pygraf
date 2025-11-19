@@ -226,11 +226,19 @@ def parallel_skewt(cla: Namespace, fhr: int, grib_paths: list[Path], site: str, 
       site       the string representation of the site from the sites file
       workdir    output directory
     """
+    # deduce model name
+    possible_namers = (cla.model_name, cla.data_root, cla.file_tmpl)
+    model = ""
+    for name in ("global", "hrrr", "rrfs"):
+        if any(name in namer.lower() if isinstance(namer, str) else name in str(namer[0]).lower() for namer in possible_namers):
+
+            model = name
+            break
     skew = skewt.SkewTDiagram(
         fhr=fhr,
         grib_paths=grib_paths,
         loc=site,
-        model=cla.images[0],
+        model=model,
         spec=cla.specs,
         max_plev=cla.max_plev,
         model_name=cla.model_name,

@@ -6,6 +6,7 @@ from unittest.mock import call, patch
 
 import numpy as np
 from pytest import fixture
+from uwtools.api.config import get_yaml_config
 
 from adb_graphics import figure_builders, utils
 from adb_graphics.datahandler import gribdata
@@ -13,6 +14,8 @@ from adb_graphics.datahandler import gribdata
 
 @fixture
 def fielddata_obj(prsfile, spec):
+    spec = get_yaml_config(spec)
+    spec.dereference(context={"file_type": "prs"})
     return gribdata.FieldData(
         model="hrrr",
         fhr=16,
@@ -25,6 +28,8 @@ def fielddata_obj(prsfile, spec):
 
 @fixture
 def parallel_maps_args(prsfile, spec, tmp_path):
+    spec = get_yaml_config(spec)
+    spec.dereference(context={"file_type": "prs"})
     cla = Namespace(
         **{  # noqa: PIE804
             "ens_size": 0,
@@ -47,6 +52,8 @@ def parallel_maps_args(prsfile, spec, tmp_path):
 
 @fixture
 def parallel_skewt_args(natfile, spec, tmp_path):
+    spec = get_yaml_config(spec)
+    spec.dereference(context={"file_type": "nat"})
     cla = Namespace(
         **{  # noqa: PIE804
             "file_type": "nat",
@@ -67,12 +74,16 @@ def parallel_skewt_args(natfile, spec, tmp_path):
     }
 
 
-@fixture
+@fixture(scope="module")
 def spec(spec_file):
-    return utils.load_yaml(spec_file)
+    spec = utils.load_yaml(spec_file)
+    spec.dereference(context={"fhr": 16})
+    return spec
 
 
 def test_add_obs_panel(fielddata_obj, spec):
+    spec = get_yaml_config(spec)
+    spec.dereference(context={"file_type": "nat"})
     fig, ax = figure_builders.set_figure("hrrr", "enspanel", "full")
     # Overwriting this explicitly since the cfgrib should indefinitely come from the model data.
     spec["cref"]["obs"]["cfgrib"] = spec["1ref"]["1000m"]["cfgrib"]["hrrr"]

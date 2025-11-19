@@ -1244,9 +1244,11 @@ hail: # Max 1h Hail diameter
         shortName: hail
         typeOfLevel: sigma
         level: 0
+        stepType: max
       rrfs:
         shortName: hail
         typeOfLevel: surface
+        stepType: max
     clevs: [0.10, 0.25, 0.50, 0.75, 1.0, 1.5, 2.0, 2.5, 3.0]
     cmap: gist_ncar
     colors: hail_colors
@@ -1262,9 +1264,11 @@ hail: # Max 1h Hail diameter
         shortName: hail
         typeOfLevel: atmosphere
         level: 0
+        stepType: max
       rrfs:
         shortName: hail
         typeOfLevel: surface
+        stepType: max
     ncl_name: HAIL_P8_L10_{grid}_max1h
     title: Max 1h Hail/Graupel Diameter, Entire Column
 hailcast: # Max 1h Hail diameter
@@ -1298,6 +1302,7 @@ hlcy: # Helicity
       typeOfLevel: heightAboveGroundLayer
       topLevel: 2000
       bottomLevel: 0
+      stepType: min
     clevs: !arange [-300, -24, 25]
     cmap: gist_ncar
     colors: rainbow12_reverse
@@ -1313,6 +1318,7 @@ hlcy: # Helicity
       typeOfLevel: heightAboveGroundLayer
       topLevel: 3000
       bottomLevel: 0
+      stepType: min
     title: 0-3km Min Updraft Helicity (over prv hr)
   mn16: &hlcy_mn16 # Hourly minimum of updraft helicity over 1-6 km layer
     <<: *hlcy_mn
@@ -1324,6 +1330,7 @@ hlcy: # Helicity
       typeOfLevel: heightAboveGroundLayer
       topLevel: 5000
       bottomLevel: 2000
+      stepType: min
     title: 2-5km Min Updraft Helicity (over prv hr)
   mx02: &hlcy_mx02 # Hourly maximum of updraft helicity over 0-2 km layer
     <<: *hlcy
@@ -1332,6 +1339,7 @@ hlcy: # Helicity
       typeOfLevel: heightAboveGroundLayer
       topLevel: 2000
       bottomLevel: 0
+      stepType: max
     clevs: !join_ranges [[12.5, 87.6, 12.5], [100, 301, 25]]
     colors: rainbow16_colors
     ncl_name: MXUPHL_P8_2L103_{grid}_max1h
@@ -1345,6 +1353,7 @@ hlcy: # Helicity
       typeOfLevel: heightAboveGroundLayer
       topLevel: 3000
       bottomLevel: 0
+      stepType: max
     clevs: !join_ranges [[12.5, 87.6, 12.5], [100, 301, 25]]
     colors: rainbow16_colors
     ncl_name: MXUPHL_P8_2L103_{grid}_max1h
@@ -1366,6 +1375,7 @@ hlcy: # Helicity
       typeOfLevel: heightAboveGroundLayer
       topLevel: 5000
       bottomLevel: 2000
+      stepType: max
     clevs: !join_ranges [[25, 176, 25], [200, 601, 50]]
     colors: rainbow16_colors
     ncl_name: MXUPHL_P8_2L103_{grid}_max1h
@@ -2615,7 +2625,7 @@ temp: # Temperature
     <<: *ua_temp
     cfgrib:
       shortName: t
-      typeOfLevel: hybrid
+      typeOfLevel: '{{ "isobaricInhPa" if file_type == "prs" else "hybrid" }}'
 thick:
   500mb:
     <<: *ua_gh
@@ -3047,6 +3057,7 @@ vvort: # Vertical vorticity
       shortName: max_vo
       typeOfLevel: heightAboveGroundLayer
       level: 1000
+      stepType: max
     clevs: !arange [0.0025, 0.0301, 0.0025]
     cmap: gist_ncar
     colors: vort_colors
@@ -3060,6 +3071,7 @@ vvort: # Vertical vorticity
       shortName: max_vo
       typeOfLevel: heightAboveGroundLayer
       level: 2000
+      stepType: max
     title: 0-2km Max Vertical Vorticity (over prev hour)
 weasd: # Water equivalent of accumulated snow depth
   sfc:
@@ -3092,6 +3104,7 @@ windmax:
       shortName: max_10si
       typeOfLevel: heightAboveGround
       level: 10
+      stepType: max
     clevs: !arange [5, 95, 5]
     cmap: gist_ncar
     colors: wind_colors
@@ -3160,6 +3173,10 @@ wspeed: # Wind Speed
       typeOfLevel: heightAboveGround
       level: 80
     title: 80m Wind
+    transform:
+      funcs: [vector_magnitude, conversions.ms_to_kt]
+      kwargs:
+        field2_id: v_80m
   850mb:
     <<: *ua_wspeed
     cfgrib:
@@ -3181,6 +3198,7 @@ wspeed: # Wind Speed
       shortName: max_10si
       typeOfLevel: heightAboveGround
       level: 10
+      stepType: max
     ncl_name: WIND_P8_L103_{grid}_max1h
     title: Max 10m Wind (over prev hour)
     transform: conversions.ms_to_kt
@@ -3192,11 +3210,13 @@ wspeed: # Wind Speed
         typeOfLevel: pressureFromGroundLayer
         topLevel: 10000
         bottomLevel: 100000
+        stepType: max
       rrfs:
         parameterNumber: 221
         typeOfLevel: isobaricLayer
         topLevel: 100
         bottomLevel: 1000
+        stepType: max
     clevs: [-40, -35, -30, -25, -22.5, -20, -17.5, -15, -12.5, -10, -7.5, -5, -2.5, -2, -1.5, -1, -0.5]
     cmap: jet
     colors: mdn_colors
@@ -3211,11 +3231,13 @@ wspeed: # Wind Speed
         typeOfLevel: pressureFromGroundLayer
         topLevel: 10000
         bottomLevel: 100000
+        stepType: max
       rrfs:
         parameterNumber: 220
         typeOfLevel: isobaricLayer
         topLevel: 100
         bottomLevel: 1000
+        stepType: max
     clevs: [0.5, 1, 1.5, 2, 2.5, 5, 7.5, 10, 12.5, 15, 17.5, 20, 22.5, 25, 30, 35, 40]
     cmap: jet
     colors: mup_colors
