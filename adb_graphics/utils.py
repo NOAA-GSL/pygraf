@@ -63,7 +63,7 @@ def create_zip(files_to_zip: list[str], zipf: Path | str):
                 # Remove the lock
                 lock_file.unlink(missing_ok=True)
         # Wait before trying to obtain the lock on the file
-        time.sleep(5)
+        time.sleep(1)
 
 
 def fhr_list(args: list[int]) -> list[int]:

@@ -195,7 +195,7 @@ class TestDefaultSpecs:
                 for key in kwargs:
                     if key not in all_params:
                         msg = (
-                            f"Function key {key} is not an explicit parameter"
+                            f"Function key {key} is not an explicit parameter "
                             f"in any of the transforms: {funcs}!"
                         )
                         warnings.warn(msg, UserWarning, stacklevel=2)
@@ -373,7 +373,6 @@ class TestDefaultSpecs:
             "total",  # total clouds
             "ua",  # upper air
             "uanat",  # upper air native file
-            "uaprs",  # upper air prs file
         ]
 
         allowed_lev_type = [

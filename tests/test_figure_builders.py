@@ -8,18 +8,7 @@ import numpy as np
 from pytest import fixture
 
 from adb_graphics import figure_builders, utils
-from adb_graphics.datahandler import gribdata, gribfile
-
-
-@fixture
-def hrrr_data(prsfile):
-    return gribfile.GribFile(
-        prsfile,
-        cfgrib_config={
-            "shortName": "t",
-            "typeOfLevel": "surface",
-        },
-    )
+from adb_graphics.datahandler import gribdata
 
 
 @fixture

@@ -14,7 +14,7 @@ import numpy as np
 from matplotlib.pyplot import get_cmap
 from pandas import to_datetime
 from uwtools.api.config import YAMLConfig
-from xarray import DataArray
+from xarray import DataArray, ufuncs, where
 
 from adb_graphics import conversions, errors, specs, utils
 from adb_graphics.datahandler import gribfile
@@ -49,6 +49,10 @@ class UPPData(specs.VarSpec):
 
         self.fhr = fhr
         cf = utils.cfgrib_spec(self.vspec["cfgrib"], self.model)
+        self.cf_name = cf.pop("shortName", "unknown")
+        self.vertical_dim = cf["typeOfLevel"]
+        if not cf.get("stepType"):
+            cf["stepType"] = "instant"
         self.ds = gribfile.GribFiles(self.grib_paths, cf).contents.squeeze()
 
     @property
@@ -86,40 +90,6 @@ class UPPData(specs.VarSpec):
         """
         return self._get_field(self.vspec["cfgrib"].get(self.model, self.vspec["cfgrib"]))
 
-    def field_column_max(self, **kwargs):  # noqa: ARG002
-        """Returns the column max of the values."""
-
-        return self.values().max(axis=0)
-
-    def field_diff(self, values: DataArray, variable2: str, level2: str, **kwargs):  # noqa: ARG002
-        """Subtracts the values from variable2 from self.field."""
-
-        value2 = self.values(name=variable2, level=level2)
-        diff = values - value2
-        value2.close()
-
-        return diff
-
-    def field_mean(
-        self,
-        values: DataArray,
-        levels: list,
-        **kwargs,  # noqa: ARG002
-    ):
-        """Returns the mean of the values over the vertical dimension."""
-
-        levs = [int(x[:-2]) for x in levels]
-        return values.sel(isobaricInhPa=levs).mean("isobaricInhPa")
-
-    def field_sum(self, values: DataArray, variable2: str, level2: str, **kwargs):  # noqa: ARG002
-        """Return the sum of the values."""
-
-        value2 = self.values(name=variable2, level=level2)
-        sum2 = values + value2
-        value2.close()
-
-        return sum2
-
     def _get_data_levels(self, vertical_dim: str):
         """
         Values of the vertical dimension.
@@ -138,9 +108,21 @@ class UPPData(specs.VarSpec):
           cfgribspec the specifications dictionary to use for the variable in
                      question
         """
-        ds = gribfile.GribFiles(self.grib_paths, cfgribspec).contents.squeeze()
-        first_variable_name = list(ds.data_vars)[0]
-        return DataArray(ds[first_variable_name])
+        if cfgribspec["typeOfLevel"] != self.vertical_dim:
+            ds = gribfile.GribFiles(self.grib_paths, cfgribspec).contents.squeeze()
+        else:
+            ds = self.ds
+
+        var_name = cfgribspec.get("shortName", self.cf_name)
+        if (field := ds.get(var_name)) is not None:
+            return DataArray(field)
+
+        for var in ds:
+            if ds[var].attrs["GRIB_shortName"] == var_name:
+                return DataArray(ds[var])
+
+        msg = f"Variable {var_name} not found in dataset."
+        raise ValueError(msg)
 
     def get_transform(self, transforms: dict | list | str, val: DataArray) -> DataArray:
         """
@@ -312,12 +294,12 @@ class FieldData(UPPData):
         ceil = values
         vis = self.values(name="vis", level="sfc")
 
-        flru = np.where((ceil > 1.0) & (ceil < 3.0), 1.01, 0.0)
-        flru = np.where((vis > 3.0) & (vis < 5.0), 1.01, flru)
-        flru = np.where((ceil > 0.5) & (ceil < 1.0), 2.01, flru)
-        flru = np.where((vis > 1.0) & (vis < 3.0), 2.01, flru)
-        flru = np.where((ceil > 0.0) & (ceil < 0.5), 3.01, flru)
-        flru = np.where((vis < 1.0), 3.01, flru)
+        flru = where((ceil > 1.0) & (ceil < 3.0), 1.01, 0.0)
+        flru = where((vis > 3.0) & (vis < 5.0), 1.01, flru)
+        flru = where((ceil > 0.5) & (ceil < 1.0), 2.01, flru)
+        flru = where((vis > 1.0) & (vis < 3.0), 2.01, flru)
+        flru = where((ceil > 0.0) & (ceil < 0.5), 3.01, flru)
+        flru = where((vis < 1.0), 3.01, flru)
 
         vis.close()
 
@@ -379,6 +361,45 @@ class FieldData(UPPData):
     def data(self, value: DataArray):
         self._data = value
 
+    def field_column_max(self, values: DataArray, **kwargs):  # noqa: ARG002
+        """Returns the column max of the values."""
+
+        return values.max(dim=self.vertical_dim)
+
+    def field_diff(self, values: DataArray, variable2: str, level2: str, **kwargs):
+        """Subtracts the values from variable2 from self.field."""
+
+        value2 = self.values(
+            name=variable2, level=level2, do_transform=kwargs.get("do_transform", True)
+        )
+        diff = values - value2
+        value2.close()
+
+        return diff
+
+    def field_mean(
+        self,
+        values: DataArray,
+        levels: list,
+        **kwargs,
+    ):
+        """Returns the mean of the values over the vertical dimension."""
+
+        levels = kwargs["global_levels"] if "global" in self.model else levels
+        levs = [int(x[:-2]) for x in levels]
+        return values.sel(isobaricInhPa=levs).mean("isobaricInhPa")
+
+    def field_sum(self, values: DataArray, variable2: str, level2: str, **kwargs):
+        """Return the sum of the values."""
+
+        value2 = self.values(
+            name=variable2, level=level2, do_transform=kwargs.get("do_transform", True)
+        )
+        sum2 = values + value2
+        value2.close()
+
+        return sum2
+
     def fire_weather_index(self, values: DataArray, **kwargs):  # noqa: ARG002
         """
         Generates a field of Fire Weather Index.
@@ -399,30 +420,31 @@ class FieldData(UPPData):
             ).values(do_transform=False)
 
         # Gather fields from the input
-        veg = np.asarray(values)
-        temp = _load_field(level="2m", short_name="temp")
-        dewpt = _load_field(level="2m", short_name="dewp")
-        weasd = _load_field(level="sfc", short_name="weasd")
-        gust = _load_field(level="10m", short_name="gust")
-        soilm = _load_field(level="sfc", short_name="soilm")
+        veg = values
+
+        temp = self.values(level="2m", name="temp", do_transform=False)
+        dewpt = self.values(level="2m", name="dewp", do_transform=False)
+        weasd = self.values(level="sfc", name="weasd", do_transform=False)
+        gust = self.values(level="10m", name="gust", do_transform=False)
+        soilm = self.values(level="sfc", name="soilm", do_transform=False)
 
         # A few derived fields
         dewpt_depression = temp - dewpt
-        dewpt_depression = np.where(dewpt_depression < 0, 0, dewpt_depression)
-        dewpt_depression = np.maximum(15.0, dewpt_depression)
+        dewpt_depression = where(dewpt_depression < 0, 0, dewpt_depression)
+        dewpt_depression = ufuncs.maximum(15.0, dewpt_depression)
         gust_max = np.maximum(3.0, gust)
 
         snowc = (25.0 - weasd) / 25.0
-        snowc = np.where(snowc > 0.0, snowc, 0.0)
+        snowc = where(snowc > 0.0, snowc, 0.0)
 
         mois = 0.01 * (100.0 - soilm)
 
         # Set urban (13), snow/ice (15), barren (16), and water (17) to 0.
         for vegtype in [13, 15, 16, 17]:
-            veg = np.where(veg == vegtype, 0, veg)
+            veg = where(veg == vegtype, 0, veg)
 
         # Set all others vegetation types to 1
-        veg = np.where(veg > 0, 1, veg)
+        veg = where(veg > 0, 1, veg)
 
         fwi = veg * (2.37 * (gust_max**1.11) * (dewpt_depression**0.92) * (mois**6.95) * snowc)
 
@@ -539,7 +561,7 @@ class FieldData(UPPData):
     def icing_adjust_trace(values: DataArray, **kwargs):  # noqa: ARG004
         """Changes the value of ICSEV trace from 4.0 to 0.5, to maintain ascending order."""
 
-        return np.where(values == 4.0, 0.5, values)
+        return where(values == 4.0, 0.5, values)
 
     @staticmethod
     def run_max(values: DataArray, **kwargs):  # noqa: ARG004
@@ -574,12 +596,11 @@ class FieldData(UPPData):
 
         The process is iterative to the topof the atmosphere.
         """
-
         pres_sfc = self.values(name="pres", level="sfc") * 100.0  # convert back to Pa
         pres_nat_lev = self.values(name="pres", level="ua")
         temp = self.values(name="temp", level="ua")
-        cloud_mixing_ratio = self.values(name="clwmr", level="uanat")
-        rain_mixing_ratio = self.values(name="rwmr", level="uanat")
+        cloud_mixing_ratio = self.values(name="clwmr", level="ua")
+        rain_mixing_ratio = self.values(name="rwmr", level="ua")
 
         gravity = 9.81
         slw = pres_sfc * 0.0  # start with array of zero values
@@ -593,9 +614,9 @@ class FieldData(UPPData):
                 pres_layer = 2 * (pres_sigma[:, :] - pres_nat_lev[n, :, :])  # layer depth
                 pres_sigma = pres_sigma - pres_layer  # pressure at next sigma level
             # compute supercooled water in layer and add to previous values
-            supercool_locs = np.where(
-                (temp[n, :, :] < 0.0),
-                cloud_mixing_ratio[n, :, :] + rain_mixing_ratio[n, :, :],
+            supercool_locs = where(
+                (temp[n, ::] < 0.0),
+                cloud_mixing_ratio[n, ::] + rain_mixing_ratio[n, ::],
                 0.0,
             )
             slw = slw + pres_layer / gravity * supercool_locs
@@ -650,6 +671,8 @@ class FieldData(UPPData):
                 raise errors.NoGraphicsDefinitionForVariableError(name, level)
             utils.set_level(level=level, model=self.model, spec=spec)
             vals = self._get_field(spec["cfgrib"].get(self.model, spec["cfgrib"]))
+        else:
+            vals = self.ds.get(self.cf_name)
 
         transforms = spec.get("transform")
         if transforms and do_transform:
@@ -689,7 +712,6 @@ class ProfileData(UPPData):
         super().__init__(
             fhr=fhr, grib_paths=grib_paths, model=model, short_name=short_name, spec=spec
         )
-
         # The first 31 columns are space delimted
         self.site_code, _, self.site_num, lat, lon = loc[:31].split()
 

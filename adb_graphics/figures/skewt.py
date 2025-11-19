@@ -134,7 +134,7 @@ class SkewTDiagram(gribdata.ProfileData):
             scale = settings.get("scale", 1.0)
             try:
                 profile = self.values(name=mixr) * 1000.0 * scale
-            except (errors.NoGraphicsDefinitionForVariableError, IndexError):
+            except (errors.NoGraphicsDefinitionForVariableError, IndexError, ValueError):
                 try:
                     profile = self.values(name=mixr, level="uanat") * 1000.0 * scale
                 except errors.NoGraphicsDefinitionForVariableError:

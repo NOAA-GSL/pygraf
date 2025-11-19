@@ -622,7 +622,7 @@ def graphics_driver(cla: Namespace):
                 f"Output graphics directory: {workdir} \n{LOG_BREAK}",
             )
             full_spec = utils.load_yaml(orig_spec)
-            full_spec.dereference(context={"fhr": int(fhr)})
+            full_spec.dereference(context={"fhr": int(fhr), "file_type": cla.file_type})
             cla.specs = full_spec
             if cla.graphic_type == "skewts":
                 create_skewt(cla, fhr, grib_path, workdir)

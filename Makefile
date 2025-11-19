@@ -22,7 +22,7 @@ typecheck:
 	mypy --install-types --non-interactive .
 
 unittest:
-	pytest --cov -k "not hrrr" -n 8 .
+	pytest --cov -k "not hrrr" -n 4 .
 
 memtest:
 	pytest --memray -k"not hrrr" .

@@ -3,6 +3,7 @@ from datetime import datetime
 import numpy as np
 from matplotlib.pyplot import get_cmap
 from pytest import fixture, mark, raises
+from uwtools.api.config import get_yaml_config
 from xarray import DataArray, ones_like, zeros_like
 
 from adb_graphics import errors, utils
@@ -21,6 +22,8 @@ class ConcreteUPPData(gribdata.UPPData):
 
 @fixture
 def fielddata_obj(prsfile, spec):
+    spec = get_yaml_config(spec)
+    spec.dereference(context={"file_type": "prs"})
     return gribdata.FieldData(
         fhr=16,
         grib_paths=[prsfile],
@@ -31,8 +34,24 @@ def fielddata_obj(prsfile, spec):
     )
 
 
-@fixture
+@fixture(scope="module")
+def fielddata_obj_ro(prsfile, spec):
+    spec = get_yaml_config(spec)
+    spec.dereference(context={"file_type": "prs"})
+    return gribdata.FieldData(
+        fhr=16,
+        grib_paths=[prsfile],
+        level="sfc",
+        model="hrrr",
+        short_name="temp",
+        spec=spec,
+    )
+
+
+@fixture(scope="module")
 def profiledata_obj(natfile, spec):
+    spec = get_yaml_config(spec)
+    spec.dereference(context={"file_type": "nat"})
     return gribdata.ProfileData(
         fhr=16,
         grib_paths=[natfile],
@@ -43,7 +62,7 @@ def profiledata_obj(natfile, spec):
     )
 
 
-@fixture
+@fixture(scope="module")
 def spec(spec_file):
     spec = utils.load_yaml(spec_file)
     spec.dereference(context={"fhr": 16})
@@ -52,7 +71,24 @@ def spec(spec_file):
 
 @fixture
 def uppdata_obj(natfile, spec):
+    spec = get_yaml_config(spec)
+    spec.dereference(context={"file_type": "nat"})
     return ConcreteUPPData(
+        level="ua",
+        model="hrrr",
+        short_name="temp",
+        spec=spec,
+        fhr=16,
+        grib_paths=[natfile],
+    )
+
+
+@fixture(scope="module")
+def uppdata_obj_ro(natfile, spec):
+    spec = get_yaml_config(spec)
+    spec.dereference(context={"file_type": "nat"})
+    return ConcreteUPPData(
+        level="ua",
         model="hrrr",
         short_name="temp",
         spec=spec,
@@ -63,6 +99,8 @@ def uppdata_obj(natfile, spec):
 
 @fixture
 def uppdata_multilev_obj(natfile, spec):
+    spec = get_yaml_config(spec)
+    spec.dereference(context={"file_type": "nat"})
     return ConcreteUPPData(
         model="hrrr",
         short_name="temp",
@@ -74,6 +112,8 @@ def uppdata_multilev_obj(natfile, spec):
 
 @fixture
 def uppdata_multilev_prs_obj(prsfile, spec):
+    spec = get_yaml_config(spec)
+    spec.dereference(context={"file_type": "prs"})
     return ConcreteUPPData(
         level="500mb",
         model="hrrr",
@@ -84,13 +124,13 @@ def uppdata_multilev_prs_obj(prsfile, spec):
     )
 
 
-def test_uppdata_anl_dt(uppdata_obj):
-    dt = uppdata_obj.anl_dt
+def test_uppdata_anl_dt(uppdata_obj_ro):
+    dt = uppdata_obj_ro.anl_dt
     assert dt == datetime(2025, 10, 6, 0)
 
 
-def test_uppdata_clevs_array(uppdata_obj):
-    assert np.array_equal(uppdata_obj.clevs, np.arange(-40, 40, 2.5))
+def test_uppdata_clevs_array(uppdata_obj_ro):
+    assert np.array_equal(uppdata_obj_ro.clevs, np.arange(-40, 40, 2.5))
 
 
 def test_uppdata_clevs_list(uppdata_obj):
@@ -98,28 +138,37 @@ def test_uppdata_clevs_list(uppdata_obj):
     assert np.array_equal(uppdata_obj.clevs, np.asarray([1, 2, 3]))
 
 
-def test_uppdata_date_to_str(uppdata_obj):
-    assert uppdata_obj.date_to_str(uppdata_obj.anl_dt) == "20251006 00 UTC"
+def test_uppdata_date_to_str(uppdata_obj_ro):
+    assert uppdata_obj_ro.date_to_str(uppdata_obj_ro.anl_dt) == "20251006 00 UTC"
 
 
-def test_uppdata_field(uppdata_obj):
-    assert np.array_equal(uppdata_obj.field, uppdata_obj.ds.t.squeeze())
+def test_uppdata_field(uppdata_obj_ro):
+    assert np.array_equal(uppdata_obj_ro.field, uppdata_obj_ro.ds.t.squeeze())
 
 
-def test_uppdata_field_column_max(uppdata_multilev_obj):
-    assert np.array_equal(
-        uppdata_multilev_obj.field_column_max(), uppdata_multilev_obj.ds.t.squeeze().max(axis=0)
+def test_uppdata_field_column_max(prsfile, spec):
+    fd = gribdata.FieldData(
+        fhr=16,
+        grib_paths=[prsfile],
+        level="500mb",
+        model="hrrr",
+        short_name="temp",
+        spec=spec,
     )
-    assert uppdata_multilev_obj.field_column_max().shape == (1059, 1799)
+    column_max = fd.field_column_max(values=fd.ds.t)
+    assert np.array_equal(column_max, fd.ds.t.squeeze().max(axis=0))
+    assert column_max.shape == (1059, 1799)
 
 
-def test_uppdata_field_diff(uppdata_obj):
-    summed_field = uppdata_obj.field_diff(values=uppdata_obj.field, variable2="temp", level2="sfc")
-    assert np.array_equal(summed_field, uppdata_obj.ds.t.squeeze() * 0)
+def test_uppdata_field_diff(fielddata_obj_ro):
+    summed_field = fielddata_obj_ro.field_diff(
+        values=fielddata_obj_ro.field, variable2="temp", level2="sfc", do_transform=False
+    )
+    assert np.array_equal(summed_field, fielddata_obj_ro.ds.t.squeeze() * 0)
 
 
 def test_uppdata_field_mean(prsfile, spec):
-    dataobj = ConcreteUPPData(
+    dataobj = gribdata.FieldData(
         level="mean",
         model="hrrr",
         short_name="rh",
@@ -135,9 +184,11 @@ def test_uppdata_field_mean(prsfile, spec):
     assert mean.shape == (1059, 1799)
 
 
-def test_uppdata_field_sum(uppdata_obj):
-    summed_field = uppdata_obj.field_sum(values=uppdata_obj.field, variable2="temp", level2="sfc")
-    assert np.array_equal(summed_field, uppdata_obj.ds.t.squeeze() * 2)
+def test_uppdata_field_sum(fielddata_obj_ro):
+    summed_field = fielddata_obj_ro.field_sum(
+        values=fielddata_obj_ro.field, variable2="temp", level2="sfc", do_transform=False
+    )
+    assert np.array_equal(summed_field, fielddata_obj_ro.ds.t.squeeze() * 2)
 
 
 def test_uppdata__get_data_levels(uppdata_multilev_prs_obj):
@@ -150,7 +201,7 @@ def test_uppdata__get_data_levels(uppdata_multilev_prs_obj):
 def test_uppdata__get_field(uppdata_multilev_prs_obj):
     spec = {"shortName": "t", "typeOfLevel": "isobaricInhPa", "level": 500}
     field = uppdata_multilev_prs_obj._get_field(cfgribspec=spec)
-    assert np.array_equal(field, uppdata_multilev_prs_obj.ds.t.sel(isobaricInhPa=500).squeeze())
+    assert np.array_equal(field, uppdata_multilev_prs_obj.ds.t.squeeze())
 
 
 @mark.parametrize(
@@ -158,16 +209,20 @@ def test_uppdata__get_field(uppdata_multilev_prs_obj):
     [
         "conversions.percent",
         ["conversions.percent", "opposite"],
-        {"funcs": "field_diff", "kwargs": {"variable2": "temp", "level2": "sfc"}},
+        {
+            "funcs": "field_diff",
+            "kwargs": {"variable2": "temp", "level2": "sfc", "do_transform": False},
+        },
     ],
 )
-def test_uppdata_get_transform(transforms, uppdata_obj):
-    val = ones_like(uppdata_obj.ds.t) if not isinstance(transforms, dict) else uppdata_obj.ds.t
-    field = uppdata_obj.get_transform(transforms, val)
+def test_uppdata_get_transform(fielddata_obj_ro, transforms):
+    temp = fielddata_obj_ro.ds.t
+    val = ones_like(temp) if not isinstance(transforms, dict) else temp
+    field = fielddata_obj_ro.get_transform(transforms, val)
     expected = 0
     match transforms:
         case dict():
-            expected = zeros_like(uppdata_obj.ds.t)
+            expected = zeros_like(temp)
         case list():
             expected = val * -100.0
         case str():
@@ -179,21 +234,21 @@ def test_uppdata_get_transform(transforms, uppdata_obj):
     ("lat", "lon", "expected"),
     [(40.019, 360 - 105.2747, (595, 679)), (25.7617, 360 - 80.1918, (109, 1487))],
 )
-def test_uppdata_get_xypoint(expected, lat, lon, uppdata_obj):
-    assert uppdata_obj.get_xypoint(lat, lon) == expected
+def test_uppdata_get_xypoint(expected, lat, lon, uppdata_obj_ro):
+    assert uppdata_obj_ro.get_xypoint(lat, lon) == expected
 
 
 @mark.parametrize(("lat", "lon"), [(88.0, 270.0), (40, 180), (10, 330), (30, 345)])
-def test_uppdata_get_xypoint_outside(lat, lon, uppdata_obj):
-    assert uppdata_obj.get_xypoint(lat, lon) == (-1, -1)
+def test_uppdata_get_xypoint_outside(lat, lon, uppdata_obj_ro):
+    assert uppdata_obj_ro.get_xypoint(lat, lon) == (-1, -1)
 
 
-def test_uppdata_latlons(uppdata_obj):
-    lats = uppdata_obj.ds.coords["latitude"].to_numpy()
-    lons = uppdata_obj.ds.coords["longitude"].to_numpy()
+def test_uppdata_latlons(uppdata_obj_ro):
+    lats = uppdata_obj_ro.ds.coords["latitude"].to_numpy()
+    lons = uppdata_obj_ro.ds.coords["longitude"].to_numpy()
     assert [
         np.array_equal(act, exp)
-        for act, exp in zip(uppdata_obj.latlons(), [lats, lons], strict=True)
+        for act, exp in zip(uppdata_obj_ro.latlons(), [lats, lons], strict=True)
     ]
 
 
@@ -211,13 +266,13 @@ def test_uppdata_latlons_lats_flipped(uppdata_obj):
 
 
 @mark.parametrize("factor", [1, -1, 0, -20.0, 6543.0])
-def test_uppdata_opposite(factor, uppdata_obj):
-    ds = ones_like(uppdata_obj.field) * factor
-    assert np.array_equal(uppdata_obj.opposite(ds), -ds)
+def test_uppdata_opposite(factor, uppdata_obj_ro):
+    ds = ones_like(uppdata_obj_ro.field) * factor
+    assert np.array_equal(uppdata_obj_ro.opposite(ds), -ds)
 
 
-def test_uppdata_valid_dt(uppdata_obj):
-    assert uppdata_obj.valid_dt == datetime(2025, 10, 6, 16)
+def test_uppdata_valid_dt(uppdata_obj_ro):
+    assert uppdata_obj_ro.valid_dt == datetime(2025, 10, 6, 16)
 
 
 def test_uppdata_vector_magnitude(prsfile, spec):
@@ -233,9 +288,9 @@ def test_uppdata_vector_magnitude(prsfile, spec):
     assert not np.array_equal(vm, fd.ds.u)
 
 
-def test_uppdata_vspec(uppdata_obj):
+def test_uppdata_vspec(uppdata_obj_ro):
     expected = {
-        "cfgrib": {"shortName": "t", "typeOfLevel": "hybrid"},
+        "cfgrib": {"stepType": "instant", "typeOfLevel": "hybrid"},
         "clevs": np.arange(-40, 40, 2.5),
         "cmap": "jet",
         "colors": "ua_temp_colors",
@@ -250,12 +305,12 @@ def test_uppdata_vspec(uppdata_obj):
         "unit": "C",
         "wind": True,
     }
-    vspec = uppdata_obj.vspec
-    # Can't test the array items with ==, so check them separately and then remove.
-    assert np.array_equal(vspec["clevs"], np.asarray(expected["clevs"]))
-    vspec.pop("clevs")
-    expected.pop("clevs")
-    assert uppdata_obj.vspec == expected
+    vspec = uppdata_obj_ro.vspec
+    # Can't test the array items with ==, so check them separately.
+    actual_clevs = vspec.pop("clevs")
+    expected_clevs = expected.pop("clevs")
+    assert np.array_equal(actual_clevs, np.asarray(expected_clevs))
+    assert uppdata_obj_ro.vspec == expected
 
 
 def test_uppdata_vspec_bad(uppdata_obj):
@@ -279,8 +334,8 @@ def test_fielddata_aviation_flight_rules(prsfile, spec):
     assert flru.min() == 0.0
 
 
-def test_fielddata_cmap(fielddata_obj):
-    assert fielddata_obj.cmap == get_cmap("gist_ncar")
+def test_fielddata_cmap(fielddata_obj_ro):
+    assert fielddata_obj_ro.cmap == get_cmap("gist_ncar")
 
 
 @mark.parametrize("color_def", ["aod_colors", "shear_colors", "vvel_colors"])
@@ -345,8 +400,8 @@ def test_fielddata_fire_weather_index(prsfile, spec):
     assert firewx.min() == 0
 
 
-def test_fielddata_grid_info_lambert(fielddata_obj):
-    grid_info = fielddata_obj.grid_info()
+def test_fielddata_grid_info_lambert(fielddata_obj_ro):
+    grid_info = fielddata_obj_ro.grid_info()
     assert grid_info == {
         "corners": [21.13812299999999, 47.84219502248864, 237.28047200000003, 299.08280722816215],
         "lat_0": 39.0,
@@ -358,6 +413,8 @@ def test_fielddata_grid_info_lambert(fielddata_obj):
 
 
 def test_fielddata_icing_adjust_trace(prsfile, spec):
+    spec = get_yaml_config(spec)
+    spec.dereference(context={"file_type": "prs"})
     fd = gribdata.FieldData(
         fhr=16,
         grib_paths=[prsfile],
@@ -372,6 +429,8 @@ def test_fielddata_icing_adjust_trace(prsfile, spec):
 
 
 def test_fielddata_supercooled_liquid_water(natfile, spec):
+    spec = get_yaml_config(spec)
+    spec.dereference(context={"file_type": "nat"})
     fd = gribdata.FieldData(
         fhr=16,
         grib_paths=[natfile],
@@ -384,8 +443,8 @@ def test_fielddata_supercooled_liquid_water(natfile, spec):
     assert not np.array_equal(slw, fd.ds.t.squeeze())
 
 
-def test_fielddata_ticks_default(fielddata_obj):
-    assert fielddata_obj.ticks == 10
+def test_fielddata_ticks_default(fielddata_obj_ro):
+    assert fielddata_obj_ro.ticks == 10
 
 
 def test_fielddata_ticks_in_vspec(fielddata_obj):
@@ -394,8 +453,8 @@ def test_fielddata_ticks_in_vspec(fielddata_obj):
     assert fielddata_obj.ticks == ticks
 
 
-def test_fielddata_units_default(fielddata_obj):
-    assert fielddata_obj.units == "F"
+def test_fielddata_units_default(fielddata_obj_ro):
+    assert fielddata_obj_ro.units == "F"
 
 
 def test_fielddata_units_in_vspec(fielddata_obj):
@@ -437,13 +496,13 @@ def test_fielddata_values_no_args_transform(fielddata_obj):
     assert np.array_equal(fielddata_obj.values(), -field.t.squeeze())
 
 
-def test_fielddata_values_bad_name_level(fielddata_obj):
+def test_fielddata_values_bad_name_level(fielddata_obj_ro):
     with raises(errors.NoGraphicsDefinitionForVariableError):
-        fielddata_obj.values(level="foo", name="temp")
+        fielddata_obj_ro.values(level="foo", name="temp")
     with raises(errors.NoGraphicsDefinitionForVariableError):
-        fielddata_obj.values(level="sfc", name="foo")
+        fielddata_obj_ro.values(level="sfc", name="foo")
     with raises(errors.NoGraphicsDefinitionForVariableError):
-        fielddata_obj.values(level="bar", name="foo")
+        fielddata_obj_ro.values(level="bar", name="foo")
 
 
 def test_profiledata_values(profiledata_obj):

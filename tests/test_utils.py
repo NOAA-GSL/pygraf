@@ -70,7 +70,7 @@ def test_create_zip_locked(tmp_path):
     zipf = tmp_path / "file.zip"
     zipf_lock = tmp_path / "file.zip._lock"
     zipf_lock.touch()
-    with raises(TimeoutError), timeout(3):
+    with raises(TimeoutError), timeout(2):
         utils.create_zip([str(f) for f in [afile, bfile]], zipf)
     assert not zipf.is_file()
     assert afile.is_file()

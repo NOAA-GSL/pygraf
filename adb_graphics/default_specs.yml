@@ -686,16 +686,11 @@ cloudcover:
     ncl_name: TCDC_P0_L{level_type}_{grid}
     title: Total Cloud Cover
 clwmr: # Cloud water Mixing Ratio
-  uanat:
+  ua:
     cfgrib:
       shortName: clwmr
-      typeOfLevel: hybrid
+      typeOfLevel: '{{ "isobaricInhPa" if file_type == "prs" else "hybrid" }}'
     ncl_name: CLWMR_P0_L105_{grid}
-  uaprs:
-    cfgrib:
-      shortName: clwmr
-      typeOfLevel: isobaricInhPa
-    ncl_name: CLWMR_P0_L100_{grid}
 coarsedust: # Coarse dust
   int: &coldust
     clevs: [1, 4, 7, 11, 15, 20, 25, 30, 40, 50, 75, 150, 250, 500]
@@ -1214,14 +1209,10 @@ grle: # Graupel
   ua:
     cfgrib:
       shortName: grle
-      typeOfLevel: isobaricInhPa
+      typeOfLevel: '{{ "isobaricInhPa" if file_type == "prs" else "hybrid" }}'
     ncl_name:
       nat: GRLE_P0_L105_{grid}
       prs: GRLE_P0_L100_{grid}
-  uanat:
-    cfgrib:
-      shortName: grle
-      typeOfLevel: hybrid
 gust:
   10m:
     cfgrib:
@@ -2088,16 +2079,11 @@ rvil: # Radar-derived Vertically Integrated Liquid
     title: VIL (Reflectivity Derived)
     unit: kg/m$^{2}$
 rwmr: # Rain Mixing Ratio
-  uanat:
+  ua:
     cfgrib:
       shortName: rwmr
-      typeOfLevel: hybrid
+      typeOfLevel: '{{ "isobaricInhPa" if file_type == "prs" else "hybrid" }}'
     ncl_name: RWMR_P0_L105_{grid}
-  uaprs:
-    cfgrib:
-      shortName: rwmr
-      typeOfLevel: isobaricInhPa
-    ncl_name: RWMR_P0_L100_{grid}
 seasalt: # Fine dust, global chem
   sfc:
     cfgrib:
@@ -2218,7 +2204,7 @@ slw: # Supercooled Liquid Water -- requires nat data
   sfc:
     cfgrib:
       shortName: t
-      typeOfLevel: surface
+      typeOfLevel: hybrid
     clevs: [0.05, 0.1, 0.2, .3, .4, .5, .75, 1., 1.25, 1.5, 2., 3., 4., 5., 6.]
     cmap: gist_ncar
     colors: slw_colors
@@ -2231,14 +2217,10 @@ snmr: # Snow Mixing Ratio
   ua:
     cfgrib:
       shortName: snmr
-      typeOfLevel: isobaricInhPa
+      typeOfLevel: '{{ "isobaricInhPa" if file_type == "prs" else "hybrid" }}'
     ncl_name:
       nat: SNMR_P0_L105_{grid}
       prs: SNMR_P0_L100_{grid}
-  uanat:
-    cfgrib:
-      shortName: snmr
-      typeOfLevel: hybrid
 snod: # Snow Depth
   sfc:
     <<: *snow
