@@ -230,8 +230,10 @@ def parallel_skewt(cla: Namespace, fhr: int, grib_paths: list[Path], site: str, 
     possible_namers = (cla.model_name, cla.data_root, cla.file_tmpl)
     model = ""
     for name in ("global", "hrrr", "rrfs"):
-        if any(name in namer.lower() if isinstance(namer, str) else name in str(namer[0]).lower() for namer in possible_namers):
-
+        if any(
+            name in namer.lower() if isinstance(namer, str) else name in str(namer[0]).lower()
+            for namer in possible_namers
+        ):
             model = name
             break
     skew = skewt.SkewTDiagram(

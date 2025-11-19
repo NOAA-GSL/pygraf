@@ -60,6 +60,8 @@ def parallel_skewt_args(natfile, spec, tmp_path):
             "img_res": 72,
             "max_plev": 100,
             "model_name": "hrrr",
+            "data_root": ["path"],
+            "file_tmpl": ["filename"],
             "start_time": datetime(2025, 10, 6, 0),
             "specs": spec,
             "images": ["hrrr", []],
