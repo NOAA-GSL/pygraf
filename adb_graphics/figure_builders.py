@@ -1,4 +1,3 @@
-# pylint: disable=invalid-name
 """
 This module is where pieces of the figures are put together. Data is
 compbined with maps and skewts to provide the final product.
@@ -252,7 +251,6 @@ def parallel_skewt(cla: Namespace, fhr: int, grib_paths: list[Path], site: str, 
     print(f"Creating image file: {png_path}")
     print("*" * 80)
 
-    # pylint: disable=duplicate-code
     plt.savefig(
         png_path,
         bbox_inches="tight",

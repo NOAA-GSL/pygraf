@@ -1,4 +1,3 @@
-# pylint: disable=too-many-public-methods
 """
 This module sets the specifications for certain atmospheric variables. Typically
 this is related to a spec that needs some level of computation, i.e. a set of

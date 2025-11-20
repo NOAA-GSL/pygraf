@@ -381,7 +381,6 @@ class Map:
 
 
 class DataMap:
-    # pylint: disable=too-many-arguments
     """
     Class that combines the input data and the chosen map to plot both together.
 
