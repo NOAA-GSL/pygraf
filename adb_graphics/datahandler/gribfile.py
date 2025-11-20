@@ -77,6 +77,7 @@ class GribFiles:
             backend_kwargs=(
                 {
                     "filter_by_keys": self.cfgrib_config,
+                    "indexpath": "",
                     "read_keys": ["orientationOfTheGridInDegrees"],
                 }
             ),

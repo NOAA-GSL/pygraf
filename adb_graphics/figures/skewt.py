@@ -140,15 +140,15 @@ class SkewTDiagram(gribdata.ProfileData):
                 except errors.NoGraphicsDefinitionForVariableError:
                     print(f"missing {mixr} for hydrometeor plot, skipping that field.")
                     continue
-            mixr_total: units = 0.0
-            for n in range(len(pres)):
-                if n == 0:
-                    pres_layer = 2 * (pres[0] - pres[n])  # layer depth
-                    pres_sigma = pres[0] - pres_layer  # pressure at next sigma level
-                else:
-                    pres_layer = 2 * (pres_sigma - pres[n])  # layer depth
-                    pres_sigma = pres_sigma - pres_layer  # pressure at next sigma level
-                    mixr_total = mixr_total + pres_layer / gravity * profile[n]
+            if profile.any():
+                mixr_total: units = 0.0
+                for n in range(len(pres)):
+                    if n == 0:
+                        pres_sigma = pres[0]
+                    else:
+                        pres_layer = 2 * (pres_sigma - pres[n])  # layer depth
+                        pres_sigma = pres_sigma - pres_layer  # pressure at next sigma level
+                        mixr_total = mixr_total + pres_layer / gravity * profile[n]
 
             # limit values to upper and lower values of plotting range
             profile = where((profile > 0.0) & (profile < 1.0e-4), 1.0e-4, profile)  # noqa: PLR2004
@@ -166,32 +166,28 @@ class SkewTDiagram(gribdata.ProfileData):
                 markersize=6,
             )
             if mixr in ["clwmr", "rwmr"]:
-                hydro_subplot.plot(
-                    profile[temp.magnitude < freezing_f],
-                    pres[temp.magnitude < freezing_f],
-                    settings.get("color", ""),
-                    fillstyle="full",
-                    linewidth=0.5,
-                    marker=settings.get("marker"),
-                    markersize=6,
-                )
-                layer = False
-                for i, profile_lev in enumerate(profile):
-                    if (profile_lev > 0.0 and temp[i].magnitude < freezing_f) and not layer:
-                        layer = True
-                        p_base = pres[i].magnitude
-                    elif (profile_lev <= 0.0 or temp[i].magnitude > freezing_f) and layer:
-                        # Shade the supercooled water depth
-                        p_top = pres[i - 1].magnitude
-                        rect = plt.Rectangle(
-                            (0, p_top),
-                            100,
-                            (p_base - p_top),
-                            facecolor=settings.get("color"),
-                            alpha=0.1,
-                        )
-                        hydro_subplot.add_patch(rect)
-                        layer = False
+                freezing_levs = profile.where(
+                    (profile > 0.0) & (temp.magnitude < freezing_f), profile, 0
+                ).to_numpy()
+                if freezing_levs.any():
+                    hydro_subplot.plot(
+                        profile[temp.magnitude < freezing_f],
+                        pres[temp.magnitude < freezing_f],
+                        settings.get("color", ""),
+                        fillstyle="full",
+                        linewidth=0.5,
+                        marker=settings.get("marker"),
+                        markersize=6,
+                    )
+                    pres_levs = pres[freezing_levs > 0].magnitude
+                    rect = plt.Rectangle(
+                        (0, pres_levs[-1]),
+                        100,
+                        (pres_levs[0] - pres_levs[-1]),
+                        facecolor=settings.get("color"),
+                        alpha=0.1,
+                    )
+                    hydro_subplot.add_patch(rect)
 
             # compute vertically integrated amount and add legend line
             label = settings.get("label")
@@ -301,7 +297,7 @@ class SkewTDiagram(gribdata.ProfileData):
 
         for var, items in atmo_vars.items():
             # Get the profile values and attach MetPy units
-            tmp = np.asarray(self.values(name=var)) * items["units"]
+            tmp = self.values(name=var).to_numpy() * items["units"]
 
             # Apply any needed transdecimals
             transform = items.get("transform")
@@ -632,6 +628,16 @@ class SkewTDiagram(gribdata.ProfileData):
             },
         }
 
+        profile = gribdata.ProfileData(
+            fhr=self.fhr,
+            grib_paths=self.grib_paths,
+            level="mu",
+            loc=self.loc,
+            model=self.model,
+            short_name="cape",
+            spec=self.spec,
+        )
+
         for var, items in thermo.items():
             varname = items.get("variable", var)
             lev = items.get("level", "ua")
@@ -641,7 +647,7 @@ class SkewTDiagram(gribdata.ProfileData):
                 raise errors.NoGraphicsDefinitionForVariableError(varname, lev)
 
             try:
-                tmp = self.values(level=lev, name=varname)
+                tmp = profile.values(level=lev, name=varname)
 
                 transforms = spec.get("transform")
                 if transforms:

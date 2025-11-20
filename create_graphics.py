@@ -68,10 +68,10 @@ def create_skewt(cla: Namespace, fhr: int, grib_path: Path, workdir: Path):
     Generate arguments for parallel processing of Skew T graphics,
     and generate a pool of workers to complete the tasks.
     """
-    args = [(cla, fhr, grib_path, site, workdir) for site in cla.sites]
+    args = [(cla, fhr, [grib_path], site, workdir) for site in cla.sites]
 
     print(f"Queueing {len(args)} Skew Ts")
-    #parallel_skewt(*args[0])
+    # parallel_skewt(*args[0])
     with Pool(processes=cla.nprocs) as pool:
         pool.starmap(parallel_skewt, args)
 

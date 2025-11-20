@@ -112,18 +112,31 @@ class UPPData(specs.VarSpec):
           cfgribspec the specifications dictionary to use for the variable in
                      question
         """
+
+        def _find_var():
+            if ds.get(var_name) is not None:
+                return var_name
+
+            for var in ds:
+                if ds[var].attrs["GRIB_shortName"] == var_name:
+                    return var
+            return None
+
         if cfgribspec["typeOfLevel"] != self.vertical_dim:
             ds = gribfile.GribFiles(self.grib_paths, cfgribspec).contents.squeeze()
         else:
             ds = self.ds
 
         var_name = cfgribspec.get("shortName", self.cf_name)
-        if (field := ds.get(var_name)) is not None:
-            return DataArray(field)
+        var = _find_var()
+        if var is not None:
+            return DataArray(ds[var])
 
-        for var in ds:
-            if ds[var].attrs["GRIB_shortName"] == var_name:
-                return DataArray(ds[var])
+        ds = gribfile.GribFiles(self.grib_paths, cfgribspec).contents.squeeze()
+        var = _find_var()
+        if var is not None:
+            return DataArray(ds[var])
+
         msg = f"Variable {var_name} not found in dataset."
         raise ValueError(msg)
 
@@ -709,10 +722,18 @@ class ProfileData(UPPData):
         loc: str,
         short_name: str,
         spec: dict | YAMLConfig,
+        level: str | None = "ua",
     ):
         super().__init__(
-            fhr=fhr, grib_paths=grib_paths, model=model, short_name=short_name, spec=spec
+            fhr=fhr,
+            grib_paths=grib_paths,
+            level=level,
+            model=model,
+            short_name=short_name,
+            spec=spec,
         )
+
+        self.loc = loc
         # The first 31 columns are space delimted
         self.site_code, _, self.site_num, lat, lon = loc[:31].split()
 
