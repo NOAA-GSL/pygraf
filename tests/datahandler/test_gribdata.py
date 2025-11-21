@@ -17,7 +17,7 @@ class ConcreteUPPData(gribdata.UPPData):
         name: str | None = None,  # noqa: ARG002
         do_transform: bool = True,  # noqa: ARG002
     ) -> DataArray:
-        return self.ds.to_dataarray().squeeze()  # type: ignore[no-any-return]
+        return self.field  # type: ignore[no-any-return]
 
 
 @fixture
@@ -143,7 +143,7 @@ def test_uppdata_date_to_str(uppdata_obj_ro):
 
 
 def test_uppdata_field(uppdata_obj_ro):
-    assert np.array_equal(uppdata_obj_ro.field, uppdata_obj_ro.ds.t.squeeze())
+    assert np.array_equal(uppdata_obj_ro.field, uppdata_obj_ro.ds["t_hybrid_instant"].t)
 
 
 def test_uppdata_field_column_max(prsfile, spec):
@@ -157,8 +157,8 @@ def test_uppdata_field_column_max(prsfile, spec):
         short_name="temp",
         spec=spec,
     )
-    column_max = fd.field_column_max(values=fd.ds.t)
-    assert np.array_equal(column_max, fd.ds.t.squeeze().max(axis=0))
+    column_max = fd.field_column_max(values=fd.field)
+    assert np.array_equal(column_max, fd.field.max(axis=0))
     assert column_max.shape == (1059, 1799)
 
 
@@ -166,7 +166,7 @@ def test_uppdata_field_diff(fielddata_obj_ro):
     summed_field = fielddata_obj_ro.field_diff(
         values=fielddata_obj_ro.field, variable2="temp", level2="sfc", do_transform=False
     )
-    assert np.array_equal(summed_field, fielddata_obj_ro.ds.t.squeeze() * 0)
+    assert np.array_equal(summed_field, fielddata_obj_ro.field * 0)
 
 
 def test_uppdata_field_mean(prsfile, spec):
@@ -181,7 +181,7 @@ def test_uppdata_field_mean(prsfile, spec):
     levels = ["500mb", "800mb"]
     mean = dataobj.field_mean(values=dataobj.field, levels=levels)
     assert np.array_equal(
-        mean, dataobj.ds.r.squeeze().sel(isobaricInhPa=[500, 800]).mean("isobaricInhPa")
+        mean, dataobj.field.squeeze().sel(isobaricInhPa=[500, 800]).mean("isobaricInhPa")
     )
     assert mean.shape == (1059, 1799)
 
@@ -190,20 +190,22 @@ def test_uppdata_field_sum(fielddata_obj_ro):
     summed_field = fielddata_obj_ro.field_sum(
         values=fielddata_obj_ro.field, variable2="temp", level2="sfc", do_transform=False
     )
-    assert np.array_equal(summed_field, fielddata_obj_ro.ds.t.squeeze() * 2)
+    assert np.array_equal(summed_field, fielddata_obj_ro.field * 2)
 
 
 def test_uppdata__get_data_levels(uppdata_multilev_prs_obj):
     assert np.array_equal(
         uppdata_multilev_prs_obj._get_data_levels("isobaricInhPa"),
-        uppdata_multilev_prs_obj.ds.coords["isobaricInhPa"].to_numpy(),
+        uppdata_multilev_prs_obj.field.coords["isobaricInhPa"].to_numpy(),
     )
 
 
 def test_uppdata__get_field(uppdata_multilev_prs_obj):
     spec = {"shortName": "t", "typeOfLevel": "isobaricInhPa", "level": 500}
     field = uppdata_multilev_prs_obj._get_field(cfgribspec=spec)
-    assert np.array_equal(field, uppdata_multilev_prs_obj.ds.t.squeeze())
+    assert np.array_equal(
+        field, uppdata_multilev_prs_obj.ds["t_isobaricInhPa_instant"].t.sel(isobaricInhPa=500)
+    )
 
 
 @mark.parametrize(
@@ -218,7 +220,7 @@ def test_uppdata__get_field(uppdata_multilev_prs_obj):
     ],
 )
 def test_uppdata_get_transform(fielddata_obj_ro, transforms):
-    temp = fielddata_obj_ro.ds.t
+    temp = fielddata_obj_ro.field
     val = ones_like(temp) if not isinstance(transforms, dict) else temp
     field = fielddata_obj_ro.get_transform(transforms, val)
     expected = 0
@@ -246,8 +248,8 @@ def test_uppdata_get_xypoint_outside(lat, lon, uppdata_obj_ro):
 
 
 def test_uppdata_latlons(uppdata_obj_ro):
-    lats = uppdata_obj_ro.ds.coords["latitude"].to_numpy()
-    lons = uppdata_obj_ro.ds.coords["longitude"].to_numpy()
+    lats = uppdata_obj_ro.field.coords["latitude"].to_numpy()
+    lons = uppdata_obj_ro.field.coords["longitude"].to_numpy()
     assert [
         np.array_equal(act, exp)
         for act, exp in zip(uppdata_obj_ro.latlons(), [lats, lons], strict=True)
@@ -256,11 +258,11 @@ def test_uppdata_latlons(uppdata_obj_ro):
 
 def test_uppdata_latlons_lats_flipped(uppdata_obj):
     # Test a 1D latitude option (like in Global, etc.)
-    ds = uppdata_obj.ds.sel(y=500)
+    ds = uppdata_obj.ds["t_hybrid_instant"].sel(y=500)
     lats = ds.coords["latitude"].to_numpy()
     ds.coords["latitude"] = (("x"), lats[::-1])
     lons = ds.coords["longitude"].to_numpy()
-    uppdata_obj.ds = ds
+    uppdata_obj.ds = {"t_hybrid_instant": ds}
     assert [
         np.array_equal(act, exp)
         for act, exp in zip(uppdata_obj.latlons(), [lats, lons], strict=True)
@@ -286,8 +288,8 @@ def test_uppdata_vector_magnitude(prsfile, spec):
         short_name="u",
         spec=spec,
     )
-    vm = fd.vector_magnitude(field1=fd.ds.u, field2_id="v_250mb")
-    assert not np.array_equal(vm, fd.ds.u)
+    vm = fd.vector_magnitude(field1=fd.field, field2_id="v_250mb")
+    assert not np.array_equal(vm, fd.field)
 
 
 def test_uppdata_vspec(uppdata_obj_ro):
@@ -371,7 +373,7 @@ def test_fielddata_corners(fielddata_obj):
 
 def test_fielddata_corners_single_dim(fielddata_obj):
     # Remove one dimension for the purposes of the test
-    fielddata_obj.ds.coords["latitude"] = fielddata_obj.ds.coords["latitude"][:, 0]
+    fielddata_obj.field.coords["latitude"] = fielddata_obj.field.coords["latitude"][:, 0]
     assert fielddata_obj.corners == [
         21.13812299999999,
         47.83862349881542,
@@ -382,7 +384,7 @@ def test_fielddata_corners_single_dim(fielddata_obj):
 
 def test_fielddata_data_getter_and_setter(fielddata_obj):
     assert np.array_equal(fielddata_obj.data, fielddata_obj.values())
-    new_data = ones_like(fielddata_obj.ds.t)
+    new_data = ones_like(fielddata_obj.field)
     fielddata_obj.data = new_data
     assert np.array_equal(fielddata_obj.data, new_data)
 
@@ -442,7 +444,7 @@ def test_fielddata_supercooled_liquid_water(natfile, spec):
         spec=spec,
     )
     slw = fd.supercooled_liquid_water()
-    assert not np.array_equal(slw, fd.ds.t.squeeze())
+    assert not np.array_equal(slw, fd.field)
 
 
 def test_fielddata_ticks_default(fielddata_obj_ro):
@@ -471,29 +473,25 @@ def test_fielddata_units_in_vspec(fielddata_obj):
 def test_fielddata_values_args_no_transform(fielddata_obj, lev, var):
     fielddata_obj.vspec["transform"] = None
     fielddata_obj.model = "hrrr"
-    assert not np.array_equal(
-        fielddata_obj.values(level=lev, name=var), fielddata_obj.ds.t.squeeze()
-    )
+    assert not np.array_equal(fielddata_obj.values(level=lev, name=var), fielddata_obj.field)
 
 
 def test_fielddata_values_args_transform(fielddata_obj):
     fielddata_obj.vspec["transform"] = "opposite"
     fielddata_obj.model = "hrrr"
-    assert np.array_equal(
-        fielddata_obj.values(level="sfc", name="temp"), -fielddata_obj.ds.t.squeeze()
-    )
+    assert np.array_equal(fielddata_obj.values(level="sfc", name="temp"), -fielddata_obj.field)
 
 
 def test_fielddata_values_no_args_no_transform(fielddata_obj):
-    field = ones_like(fielddata_obj.ds)
-    fielddata_obj.ds = field
+    field = ones_like(fielddata_obj.ds["t_surface_instant"])
+    fielddata_obj.ds = {"t_surface_instant": field}
     fielddata_obj.vspec["transform"] = None
-    assert np.array_equal(fielddata_obj.values(), field.t.squeeze())
+    assert np.array_equal(fielddata_obj.values(), field.t)
 
 
 def test_fielddata_values_no_args_transform(fielddata_obj):
-    field = ones_like(fielddata_obj.ds)
-    fielddata_obj.ds = field
+    field = ones_like(fielddata_obj.ds["t_surface_instant"])
+    fielddata_obj.ds = {"t_surface_instant": field}
     fielddata_obj.vspec["transform"] = "opposite"
     assert np.array_equal(fielddata_obj.values(), -field.t.squeeze())
 

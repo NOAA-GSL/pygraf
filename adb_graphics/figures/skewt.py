@@ -140,8 +140,8 @@ class SkewTDiagram(gribdata.ProfileData):
                 except errors.NoGraphicsDefinitionForVariableError:
                     print(f"missing {mixr} for hydrometeor plot, skipping that field.")
                     continue
+            mixr_total: units = 0.0
             if profile.any():
-                mixr_total: units = 0.0
                 for n in range(len(pres)):
                     if n == 0:
                         pres_sigma = pres[0]
@@ -149,6 +149,7 @@ class SkewTDiagram(gribdata.ProfileData):
                         pres_layer = 2 * (pres_sigma - pres[n])  # layer depth
                         pres_sigma = pres_sigma - pres_layer  # pressure at next sigma level
                         mixr_total = mixr_total + pres_layer / gravity * profile[n]
+                mixr_total = mixr_total.to_numpy()
 
             # limit values to upper and lower values of plotting range
             profile = where((profile > 0.0) & (profile < 1.0e-4), 1.0e-4, profile)  # noqa: PLR2004
@@ -191,9 +192,9 @@ class SkewTDiagram(gribdata.ProfileData):
 
             # compute vertically integrated amount and add legend line
             label = settings.get("label")
-            line = f"{label:<7s} {mixr_total.to_numpy():>10.3f} {settings.get('units')}"
+            line = f"{label:<7s} {mixr_total:>10.3f} {settings.get('units')}"
             if scale != 1.0:
-                line = f"{label:<5s}(x{scale}) {mixr_total.to_numpy():.3f} {settings.get('units')}"
+                line = f"{label:<5s}(x{scale}) {mixr_total:.3f} {settings.get('units')}"
             lines.append(line)
 
             handles.append(
@@ -313,6 +314,7 @@ class SkewTDiagram(gribdata.ProfileData):
 
         skew, hydro_subplot = self._setup_diagram()
         self._title()
+        # breakpoint()
         self._plot_profile(skew)
         self._plot_wind_barbs(skew)
         self._plot_labels(skew)
@@ -628,15 +630,15 @@ class SkewTDiagram(gribdata.ProfileData):
             },
         }
 
-        profile = gribdata.ProfileData(
-            fhr=self.fhr,
-            grib_paths=self.grib_paths,
-            level="mu",
-            loc=self.loc,
-            model=self.model,
-            short_name="cape",
-            spec=self.spec,
-        )
+        # profile = gribdata.ProfileData(
+        #    fhr=self.fhr,
+        #    grib_paths=self.grib_paths,
+        #    level="mu",
+        #    loc=self.loc,
+        #    model=self.model,
+        #    short_name="cape",
+        #    spec=self.spec,
+        # )
 
         for var, items in thermo.items():
             varname = items.get("variable", var)
@@ -647,7 +649,11 @@ class SkewTDiagram(gribdata.ProfileData):
                 raise errors.NoGraphicsDefinitionForVariableError(varname, lev)
 
             try:
-                tmp = profile.values(level=lev, name=varname)
+                tmp = self.values(level=lev, name=varname)
+                # if varname == "hlcy":
+                #    tmp = tmp.sel(heightAboveGroundLayer=3000 if var == "srh03" else 1000)
+                # elif var in ("mucin", "mucape"):
+                #    tmp = tmp.sel(pressureFromGroundLayer=25500)
 
                 transforms = spec.get("transform")
                 if transforms:

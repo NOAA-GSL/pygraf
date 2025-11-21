@@ -9,7 +9,6 @@ from functools import cached_property
 from pathlib import Path
 
 import numpy as np
-from cfgrib import DatasetBuildError
 from matplotlib.pyplot import get_cmap
 from pandas import to_datetime
 from uwtools.api.config import YAMLConfig
@@ -50,14 +49,11 @@ class UPPData(specs.VarSpec):
         cf = deepcopy(self.vspec)
         utils.set_level(level=str(level), model=self.model, spec=cf)
         cf = utils.cfgrib_spec(cf["cfgrib"], self.model)
-        self.cf_name = cf.pop("shortName", "unknown")
-        self.vertical_dim = cf["typeOfLevel"]
-        try:
-            self.ds = gribfile.GribFiles(self.grib_paths, cf).contents.squeeze()
-        except DatasetBuildError as e:
-            if "stepType" in str(e):
-                cf["stepType"] = "instant"
-            self.ds = gribfile.GribFiles(self.grib_paths, cf).contents.squeeze()
+        self.vertical_coord = cf["typeOfLevel"]
+        if len(grib_paths) == 1:
+            self.ds = gribfile.WholeGribFile(self.grib_paths[0]).contents
+        else:
+            self.ds = gribfile.GribFiles(self.grib_paths, cf).contents
 
     @property
     def anl_dt(self) -> datetime:
@@ -94,15 +90,15 @@ class UPPData(specs.VarSpec):
         """
         return self._get_field(self.vspec["cfgrib"].get(self.model, self.vspec["cfgrib"]))
 
-    def _get_data_levels(self, vertical_dim: str):
+    def _get_data_levels(self, vertical_coord: str):
         """
         Values of the vertical dimension.
 
         Arg:
-          vertical_dim   the name of the vertical dimension
+          vertical_coord   the name of the vertical dimension
         """
-        dim = [str(coord) for coord in self.ds.coords if vertical_dim in str(coord)][0]
-        return self.ds.coords[dim].to_numpy()
+        dim = [str(coord) for coord in self.field.coords if vertical_coord in str(coord)][0]
+        return self.field.coords[dim].to_numpy()
 
     def _get_field(self, cfgribspec: dict) -> DataArray:
         """
@@ -114,30 +110,41 @@ class UPPData(specs.VarSpec):
         """
 
         def _find_var():
-            if ds.get(var_name) is not None:
-                return var_name
+            if ds.get(short_name) is not None:
+                return short_name
 
             for var in ds:
-                if ds[var].attrs["GRIB_shortName"] == var_name:
+                if ds[var].attrs["GRIB_shortName"] == short_name:
                     return var
             return None
 
-        if cfgribspec["typeOfLevel"] != self.vertical_dim:
-            ds = gribfile.GribFiles(self.grib_paths, cfgribspec).contents.squeeze()
-        else:
-            ds = self.ds
-
-        var_name = cfgribspec.get("shortName", self.cf_name)
+        short_name = cfgribspec.get("shortName", "unknown")
+        vertical_coord = cfgribspec["typeOfLevel"]
+        step_type = cfgribspec.get("stepType", "instant")
+        var_id = f"{short_name}_{vertical_coord}_{step_type}"
+        ds = self.ds.get(var_id)
+        if ds is None:
+            msg = f"{var_id} is not a valid key for the dataset"
+            raise ValueError(msg)
         var = _find_var()
         if var is not None:
-            return DataArray(ds[var])
-
-        ds = gribfile.GribFiles(self.grib_paths, cfgribspec).contents.squeeze()
-        var = _find_var()
-        if var is not None:
-            return DataArray(ds[var])
-
-        msg = f"Variable {var_name} not found in dataset."
+            field = ds[var]
+            top = cfgribspec.get("topLevel", cfgribspec.get("scaledValueOfFirstFixedSurface"))
+            bottom = cfgribspec.get(
+                "bottomLevel", cfgribspec.get("scaledValueOfSecondFixedSurface")
+            )
+            layered = top is not None or bottom is not None
+            level = top if top in field.coords[vertical_coord] else bottom
+            if level is None:
+                level = cfgribspec.get("level", utils.numeric_level(self.level)[0])
+            level = None if level == "" else level
+            leveled = level is not None and vertical_coord != "hybrid"
+            if len(field.coords[vertical_coord].shape) > 0 and (layered or leveled):
+                if vertical_coord == "depthBelowLandLayer" and level:
+                    level = level / 100.0
+                field = field.sel(**{vertical_coord: level})
+            return DataArray(field)
+        msg = f"Variable {short_name} not found in dataset."
         raise ValueError(msg)
 
     def get_transform(self, transforms: dict | list | str, val: DataArray) -> DataArray:
@@ -201,12 +208,16 @@ class UPPData(specs.VarSpec):
         """Returns the set of latitudes and longitudes."""
 
         coords = sorted(
-            [str(c) for c in list(self.ds.coords) if any(ele in str(c) for ele in ["lat", "lon"])]
+            [
+                str(c)
+                for c in list(self.field.coords)
+                if any(ele in str(c) for ele in ["lat", "lon"])
+            ]
         )
-        lat = self.ds.coords[coords[0]].to_numpy()
+        lat = self.field.coords[coords[0]].to_numpy()
         if len(lat.shape) == 1 and lat[-1] < lat[0]:
             lat = lat[::-1]
-        lon = self.ds.coords[coords[-1]].to_numpy()
+        lon = self.field.coords[coords[-1]].to_numpy()
         return [lat, lon]
 
     @staticmethod
@@ -380,7 +391,7 @@ class FieldData(UPPData):
     def field_column_max(self, values: DataArray, **kwargs):  # noqa: ARG002
         """Returns the column max of the values."""
 
-        return values.max(dim=self.vertical_dim)
+        return values.max(dim=self.vertical_coord)
 
     def field_diff(self, values: DataArray, variable2: str, level2: str, **kwargs):
         """Subtracts the values from variable2 from self.field."""
@@ -510,7 +521,7 @@ class FieldData(UPPData):
                 attrs = ["GRIB_orientationOfTheGridInDegrees"]
                 grid_info["projection"] = "stere"
                 grid_info["lat_0"] = 90
-            case x if x == "rotated latitude/longitude":  # RRFS NA
+            case "rotated latitude/longitude":  # RRFS NA
                 attrs = []
                 grid_info["projection"] = "rotpole"
                 lon_0: float = var_info.attrs["GRIB_longitudeOfSouthernPoleInDegrees"]
@@ -522,41 +533,12 @@ class FieldData(UPPData):
             case x if "equidistant cylindrical" in x:  # GFS
                 attrs = []
                 grid_info["projection"] = "cyl"
-            case x if "rotate" in x:  # RAP
-                attrs = []
-                grid_info["projection"] = "rotpole"
-                # center_lon = var_info.attrs["GRIB_longitudeOfLastGridPointInDegrees"]
-                # center_lon = var_info.attrs["GRIB_longitudeOfLastGridPointInDegrees"]
-                # grid_info["lon_0"] = center_lon - 360
-                grid_info["lon_0"] = -106.0
-                # center_lat = var_info.attrs["GRIB_latitudeOfLastGridPointInDegrees"]
-                center_lat = 54
-                grid_info["o_lat_p"] = 90 - center_lat
-                # grid_info['o_lat_p'] = -center_lat if center_lat < 0 else 90 - center_lat
-                grid_info["o_lon_p"] = 180
-                # grid_info["corners"] = [-10.590603, 46.591938, -139.08585, 22.66102]
             case _:
                 msg = f"Can't define grid for {grid_def}"
                 raise ValueError(msg)
         if self.model != "hrrrhi":
             if not grid_info.get("corners"):
                 grid_info["corners"] = self.corners
-            # if self.grid_suffix in ['GLC0']:
-            #    attrs = ['Latin1', 'Latin2', 'Lov']
-            # elif self.grid_suffix == 'GST0':
-            # elif self.grid_suffix == 'GLL0':
-            #    attrs = []
-            #    grid_info['projection'] = 'cyl'
-            # else:
-            #    attrs = []
-
-            #    # CenterLon in RAP and Longitude_of_southern_pole in RRFS
-            #    lon_0 = lat.attrs.get('CenterLon', lat.attrs.get('Longitude_of_southern_pole'))
-            #    grid_info['lon_0'] = lon_0[0] - 360
-
-            #    # CenterLat in RAP and Latitude_of_southern_pole in RRFS
-            #    center_lat = lat.attrs.get('CenterLat', lat.attrs.get('Latitude_of_southern_pole'))
-            #    grid_info['o_lat_p'] = - center_lat[0] if center_lat[0] < 0 else 90 - center_lat[0]
 
             for attr in attrs:
                 bm_arg = keys_to_basemap[attr]
@@ -666,7 +648,7 @@ class FieldData(UPPData):
         self, level: str | None = None, name: str | None = None, do_transform: bool = True
     ) -> DataArray:
         """
-        Returns the numpy array of values at the requested level for the
+        Returns the FieldData array of values at the requested level for the
         variable after applying any unit conversion to the original data.
 
         Optional Input:
@@ -677,7 +659,7 @@ class FieldData(UPPData):
         """
 
         level = str(level or self.level)
-        vals: DataArray = self.ds.to_dataarray().squeeze()
+        vals = self.field
         spec = self.vspec
 
         if name is not None:

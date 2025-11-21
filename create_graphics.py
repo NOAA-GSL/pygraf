@@ -68,12 +68,17 @@ def create_skewt(cla: Namespace, fhr: int, grib_path: Path, workdir: Path):
     Generate arguments for parallel processing of Skew T graphics,
     and generate a pool of workers to complete the tasks.
     """
-    args = [(cla, fhr, [grib_path], site, workdir) for site in cla.sites]
-
+    args = [(cla, fhr, grib_path, site, workdir) for site in cla.sites]
+    # Load global variable here with the full dataset? Process pool only. Try passing pickled object
+    # as preferred method.
+    # Concurrent futures library -- map a function over a pool and wait for it.
+    # global DS
+    # DS = gribfile.Gribfiles(grib_path).as_dict()
     print(f"Queueing {len(args)} Skew Ts")
-    # parallel_skewt(*args[0])
+    #parallel_skewt(*args[0])
+    # Maybe try a ThreadPool here? Threads help with io bound processes. CPU bound may be processes.
     with Pool(processes=cla.nprocs) as pool:
-        pool.starmap(parallel_skewt, args)
+       pool.starmap(parallel_skewt, args)
 
 
 def create_maps(
@@ -119,10 +124,10 @@ def create_maps(
                     )
                 )
 
-                parallel_maps(*args[-1])
-        # print(f"Queueing {len(args)} maps")
-        # with Pool(processes=cla.nprocs) as pool:
-        #    pool.starmap(parallel_maps, args)
+        #        parallel_maps(*args[-1])
+        print(f"Queueing {len(args)} maps")
+        with Pool(processes=cla.nprocs) as pool:
+            pool.starmap(parallel_maps, args)
 
 
 def generate_tile_list(arg_list: list) -> list[str]:

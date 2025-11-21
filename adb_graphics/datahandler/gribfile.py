@@ -6,6 +6,7 @@ Classes that load grib files.
 
 from pathlib import Path
 
+import cfgrib
 import xarray as xr
 
 
@@ -69,7 +70,7 @@ class GribFiles:
     def _load(self, filenames: list[Path] | None = None):
         """Load the set of files into a single XArray structure."""
         filenames = self.filenames if filenames is None else filenames
-        return xr.open_mfdataset(
+        ds = xr.open_mfdataset(
             filenames,
             engine="cfgrib",
             concat_dim="time",
@@ -77,8 +78,44 @@ class GribFiles:
             backend_kwargs=(
                 {
                     "filter_by_keys": self.cfgrib_config,
-                    "indexpath": "",
+                    "indexpath": "",  # create a temp file here or pyfakefs to hold it in mem. check
+                    # unittests in wxvx
                     "read_keys": ["orientationOfTheGridInDegrees"],
                 }
             ),
         )
+        return {_var_id(ds, list(ds.data_vars)[0]): ds}
+
+
+class WholeGribFile:
+    def __init__(
+        self,
+        filename: Path,
+    ):
+        self.filename = filename
+        self.contents = self._load(filename)
+
+    def _load(self, filename: Path):
+        datasets = cfgrib.open_datasets(
+            str(filename), read_keys=["orientationOfTheGridInDegrees", "parameterNumber"]
+        )
+
+        all_fields: dict = {}
+        for ds in datasets:
+            for var in ds.data_vars:
+                # var_name = var if var != "unknown" else ds[var].attrs.get("GRIB_cfName",
+                # ds[var].attrs.get("GRIB_shortName"))
+                var_id = _var_id(ds, str(var))
+                if all_fields.get(var_id) is None:
+                    all_fields[var_id] = ds
+                else:
+                    msg = f"Multiple entries for {var_id} when opening {filename}"
+                    raise ValueError(msg)
+        return all_fields
+
+
+def _var_id(ds: xr.Dataset, var: str):
+    vertical_dim = ds[list(ds.data_vars)[0]].attrs.get("GRIB_typeOfLevel")
+    var_name = ds[var].attrs.get("GRIB_shortName")
+    step_type = ds[var].attrs.get("GRIB_stepType", "nostepType")
+    return f"{var_name}_{vertical_dim}_{step_type}"

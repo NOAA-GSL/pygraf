@@ -70,7 +70,7 @@ def parallel_skewt_args(natfile, spec, tmp_path):
     return {
         "cla": cla,
         "fhr": 16,
-        "grib_paths": [natfile],
+        "grib_path": natfile,
         "site": " DNR  23062 72469  39.77 104.88 1611 Denver, CO",
         "workdir": tmp_path,
     }

@@ -212,7 +212,7 @@ def parallel_maps(  # noqa: PLR0912
     gc.collect()
 
 
-def parallel_skewt(cla: Namespace, fhr: int, grib_paths: list[Path], site: str, workdir: Path):
+def parallel_skewt(cla: Namespace, fhr: int, grib_path: Path, site: str, workdir: Path):
     """
     Function that creates a single SkewT plot.
 
@@ -237,7 +237,7 @@ def parallel_skewt(cla: Namespace, fhr: int, grib_paths: list[Path], site: str, 
             break
     skew = skewt.SkewTDiagram(
         fhr=fhr,
-        grib_paths=grib_paths,
+        grib_paths=[grib_path],
         loc=site,
         model=model,
         spec=cla.specs,
