@@ -22,7 +22,7 @@ from metpy.plots import Hodograph, SkewT
 from metpy.units import units
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from uwtools.api.config import YAMLConfig
-from xarray import DataArray, where
+from xarray import DataArray, Dataset, where
 
 from adb_graphics import errors
 from adb_graphics.datahandler import gribdata
@@ -62,7 +62,7 @@ class SkewTDiagram(gribdata.ProfileData):
     def __init__(
         self,
         fhr: int,
-        grib_paths: list[Path],
+        ds: dict[str, Dataset],
         loc: str,
         model: str,
         spec: dict | YAMLConfig,
@@ -72,9 +72,7 @@ class SkewTDiagram(gribdata.ProfileData):
         # Initialize on the temperature field since we need to gather
         # field-specific data from this object, e.g. dates, lat, lon, etc.
 
-        super().__init__(
-            fhr=fhr, grib_paths=grib_paths, loc=loc, model=model, short_name="temp", spec=spec
-        )
+        super().__init__(fhr=fhr, ds=ds, loc=loc, model=model, short_name="temp", spec=spec)
 
         self.max_plev = max_plev
         self.model_name = model_name
@@ -298,11 +296,11 @@ class SkewTDiagram(gribdata.ProfileData):
 
         for var, items in atmo_vars.items():
             # Get the profile values and attach MetPy units
-            tmp = self.values(name=var).to_numpy() * items["units"]
+            vals = self.values(name=var).to_numpy() * items["units"]
 
-            # Apply any needed transdecimals
+            # Apply any needed transformations
             transform = items.get("transform")
-            atmo_vars[var]["data"] = tmp.to(transform) if transform else tmp
+            atmo_vars[var]["data"] = vals.to(transform) if transform else vals
 
         return atmo_vars
 
@@ -630,16 +628,6 @@ class SkewTDiagram(gribdata.ProfileData):
             },
         }
 
-        # profile = gribdata.ProfileData(
-        #    fhr=self.fhr,
-        #    grib_paths=self.grib_paths,
-        #    level="mu",
-        #    loc=self.loc,
-        #    model=self.model,
-        #    short_name="cape",
-        #    spec=self.spec,
-        # )
-
         for var, items in thermo.items():
             varname = items.get("variable", var)
             lev = items.get("level", "ua")
@@ -649,19 +637,14 @@ class SkewTDiagram(gribdata.ProfileData):
                 raise errors.NoGraphicsDefinitionForVariableError(varname, lev)
 
             try:
-                tmp = self.values(level=lev, name=varname)
-                # if varname == "hlcy":
-                #    tmp = tmp.sel(heightAboveGroundLayer=3000 if var == "srh03" else 1000)
-                # elif var in ("mucin", "mucape"):
-                #    tmp = tmp.sel(pressureFromGroundLayer=25500)
-
+                vals = self.values(level=lev, name=varname)
                 transforms = spec.get("transform")
                 if transforms:
-                    tmp = self.get_transform(transforms, tmp)
+                    vals = self.get_transform(transforms, vals)
 
             except errors.GribReadError:
-                tmp = DataArray([])
-            thermo[var]["data"] = tmp
+                vals = DataArray([])
+            thermo[var]["data"] = vals
             thermo[var]["units"] = spec.get("unit")
 
         return thermo

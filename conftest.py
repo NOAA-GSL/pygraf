@@ -8,10 +8,12 @@ function defined.
 import glob
 from pathlib import Path
 
-import pytest
+from pytest import fixture
+
+from adb_graphics.datahandler import gribfile
 
 
-@pytest.fixture(scope="session", autouse=True)
+@fixture(scope="session", autouse=True)
 def cleanup_data_idx():
     yield  # Nothing to be done before tests
     print("Removing idx files from test data")
@@ -35,20 +37,30 @@ def pytest_addoption(parser):
     )
 
 
-@pytest.fixture(scope="session")
+@fixture(scope="session")
 def natfile():
     """Interface to  pass a grib file to pytest."""
 
     return Path("tests", "data", "wrfnat_hrconus_16.grib2")
 
 
-@pytest.fixture(scope="session")
+@fixture(scope="session")
 def prsfile():
     """Interface to  pass a grib file to pytest."""
     return Path("tests", "data", "wrfprs_hrconus_16.grib2")
 
 
-@pytest.fixture(scope="session")
+@fixture(scope="session")
 def spec_file():
     """Interface to  pass a grib file to pytest."""
     return Path("adb_graphics", "default_specs.yml")
+
+
+@fixture(scope="session")
+def prs_ds(prsfile):
+    return gribfile.WholeGribFile(prsfile).contents
+
+
+@fixture(scope="session")
+def nat_ds(natfile):
+    return gribfile.WholeGribFile(natfile).contents

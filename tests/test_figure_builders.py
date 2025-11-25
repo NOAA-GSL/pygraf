@@ -13,13 +13,13 @@ from adb_graphics.datahandler import gribdata
 
 
 @fixture
-def fielddata_obj(prsfile, spec):
+def fielddata_obj(prs_ds, spec):
     spec = get_yaml_config(spec)
     spec.dereference(context={"file_type": "prs"})
     return gribdata.FieldData(
         model="hrrr",
         fhr=16,
-        grib_paths=[prsfile],
+        ds=prs_ds,
         level="sfc",
         short_name="cref",
         spec=spec,
@@ -27,7 +27,7 @@ def fielddata_obj(prsfile, spec):
 
 
 @fixture
-def parallel_maps_args(prsfile, spec, tmp_path):
+def parallel_maps_args(prs_ds, spec, tmp_path):
     spec = get_yaml_config(spec)
     spec.dereference(context={"file_type": "prs"})
     cla = Namespace(
@@ -43,7 +43,7 @@ def parallel_maps_args(prsfile, spec, tmp_path):
     return {
         "cla": cla,
         "fhr": 16,
-        "grib_paths": [prsfile],
+        "dataset": prs_ds,
         "level": "sfc",
         "variable": "temp",
         "workdir": tmp_path,
@@ -51,7 +51,7 @@ def parallel_maps_args(prsfile, spec, tmp_path):
 
 
 @fixture
-def parallel_skewt_args(natfile, spec, tmp_path):
+def parallel_skewt_args(nat_ds, spec, tmp_path):
     spec = get_yaml_config(spec)
     spec.dereference(context={"file_type": "nat"})
     cla = Namespace(
@@ -70,7 +70,7 @@ def parallel_skewt_args(natfile, spec, tmp_path):
     return {
         "cla": cla,
         "fhr": 16,
-        "grib_path": natfile,
+        "dataset": nat_ds,
         "site": " DNR  23062 72469  39.77 104.88 1611 Denver, CO",
         "workdir": tmp_path,
     }
@@ -83,7 +83,7 @@ def spec(spec_file):
     return spec
 
 
-def test_add_obs_panel(fielddata_obj, spec):
+def test_add_obs_panel(fielddata_obj, nat_ds, spec):
     spec = get_yaml_config(spec)
     spec.dereference(context={"file_type": "nat"})
     fig, ax = figure_builders.set_figure("hrrr", "enspanel", "full")
@@ -92,7 +92,7 @@ def test_add_obs_panel(fielddata_obj, spec):
     args = {
         "ax": ax[8],
         "model_name": "hrrr",
-        "obs_file": fielddata_obj.grib_paths[0],  # fake it with model data
+        "dataset": nat_ds,  # fake it with model data
         "proj_info": fielddata_obj.grid_info(),
         "spec": spec,
         "short_name": "cref",
@@ -108,10 +108,10 @@ def test_parallel_maps(parallel_maps_args, tmp_path):
     assert (tmp_path / "temp_full_sfc_f016.png").is_file()
 
 
-def test_parallel_maps_enspanel(parallel_maps_args, tmp_path):
+def test_parallel_maps_enspanel(parallel_maps_args, prsfile, tmp_path):
     parallel_maps_args["cla"].ens_size = 9
     parallel_maps_args["cla"].graphic_type = "enspanel"
-    parallel_maps_args["cla"].obs_file_path = tmp_path
+    parallel_maps_args["cla"].obs_file_path = prsfile
     parallel_maps_args["cla"].specs["temp"]["sfc"]["include_obs"] = True
 
     with (

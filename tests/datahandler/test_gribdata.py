@@ -21,12 +21,12 @@ class ConcreteUPPData(gribdata.UPPData):
 
 
 @fixture
-def fielddata_obj(prsfile, spec):
+def fielddata_obj(prs_ds, spec):
     spec = get_yaml_config(spec)
     spec.dereference(context={"file_type": "prs"})
     return gribdata.FieldData(
         fhr=16,
-        grib_paths=[prsfile],
+        ds=prs_ds,
         level="sfc",
         model="hrrr",
         short_name="temp",
@@ -35,12 +35,12 @@ def fielddata_obj(prsfile, spec):
 
 
 @fixture(scope="module")
-def fielddata_obj_ro(prsfile, spec):
+def fielddata_obj_ro(prs_ds, spec):
     spec = get_yaml_config(spec)
     spec.dereference(context={"file_type": "prs"})
     return gribdata.FieldData(
         fhr=16,
-        grib_paths=[prsfile],
+        ds=prs_ds,
         level="sfc",
         model="hrrr",
         short_name="temp",
@@ -49,12 +49,12 @@ def fielddata_obj_ro(prsfile, spec):
 
 
 @fixture(scope="module")
-def profiledata_obj(natfile, spec):
+def profiledata_obj(nat_ds, spec):
     spec = get_yaml_config(spec)
     spec.dereference(context={"file_type": "nat"})
     return gribdata.ProfileData(
         fhr=16,
-        grib_paths=[natfile],
+        ds=nat_ds,
         loc=" DNR  23062 72469  39.77 104.88 1611 Denver, CO",
         model="hrrr",
         short_name="temp",
@@ -70,7 +70,7 @@ def spec(spec_file):
 
 
 @fixture
-def uppdata_obj(natfile, spec):
+def uppdata_obj(nat_ds, spec):
     spec = get_yaml_config(spec)
     spec.dereference(context={"file_type": "nat"})
     return ConcreteUPPData(
@@ -79,12 +79,12 @@ def uppdata_obj(natfile, spec):
         short_name="temp",
         spec=spec,
         fhr=16,
-        grib_paths=[natfile],
+        ds=nat_ds,
     )
 
 
 @fixture(scope="module")
-def uppdata_obj_ro(natfile, spec):
+def uppdata_obj_ro(nat_ds, spec):
     spec = get_yaml_config(spec)
     spec.dereference(context={"file_type": "nat"})
     return ConcreteUPPData(
@@ -93,12 +93,12 @@ def uppdata_obj_ro(natfile, spec):
         short_name="temp",
         spec=spec,
         fhr=16,
-        grib_paths=[natfile],
+        ds=nat_ds,
     )
 
 
 @fixture
-def uppdata_multilev_obj(natfile, spec):
+def uppdata_multilev_obj(nat_ds, spec):
     spec = get_yaml_config(spec)
     spec.dereference(context={"file_type": "nat"})
     return ConcreteUPPData(
@@ -106,12 +106,12 @@ def uppdata_multilev_obj(natfile, spec):
         short_name="temp",
         spec=spec,
         fhr=16,
-        grib_paths=[natfile],
+        ds=nat_ds,
     )
 
 
 @fixture
-def uppdata_multilev_prs_obj(prsfile, spec):
+def uppdata_multilev_prs_obj(prs_ds, spec):
     spec = get_yaml_config(spec)
     spec.dereference(context={"file_type": "prs"})
     return ConcreteUPPData(
@@ -120,7 +120,7 @@ def uppdata_multilev_prs_obj(prsfile, spec):
         short_name="temp",
         spec=spec,
         fhr=16,
-        grib_paths=[prsfile],
+        ds=prs_ds,
     )
 
 
@@ -146,12 +146,12 @@ def test_uppdata_field(uppdata_obj_ro):
     assert np.array_equal(uppdata_obj_ro.field, uppdata_obj_ro.ds["t_hybrid_instant"].t)
 
 
-def test_uppdata_field_column_max(prsfile, spec):
+def test_uppdata_field_column_max(prs_ds, spec):
     spec = get_yaml_config(spec)
     spec.dereference(context={"file_type": "prs"})
     fd = gribdata.FieldData(
         fhr=16,
-        grib_paths=[prsfile],
+        ds=prs_ds,
         level="ua",
         model="hrrr",
         short_name="temp",
@@ -169,14 +169,14 @@ def test_uppdata_field_diff(fielddata_obj_ro):
     assert np.array_equal(summed_field, fielddata_obj_ro.field * 0)
 
 
-def test_uppdata_field_mean(prsfile, spec):
+def test_uppdata_field_mean(prs_ds, spec):
     dataobj = gribdata.FieldData(
         level="mean",
         model="hrrr",
         short_name="rh",
         spec=spec,
         fhr=16,
-        grib_paths=[prsfile],
+        ds=prs_ds,
     )
     levels = ["500mb", "800mb"]
     mean = dataobj.field_mean(values=dataobj.field, levels=levels)
@@ -279,12 +279,12 @@ def test_uppdata_valid_dt(uppdata_obj_ro):
     assert uppdata_obj_ro.valid_dt == datetime(2025, 10, 6, 16)
 
 
-def test_uppdata_vector_magnitude(prsfile, spec):
+def test_uppdata_vector_magnitude(prs_ds, spec):
     fd = ConcreteUPPData(
         model="hrrr",
         level="250mb",
         fhr=16,
-        grib_paths=[prsfile],
+        ds=prs_ds,
         short_name="u",
         spec=spec,
     )
@@ -323,10 +323,10 @@ def test_uppdata_vspec_bad(uppdata_obj):
         uppdata_obj.vspec  # noqa: B018
 
 
-def test_fielddata_aviation_flight_rules(prsfile, spec):
+def test_fielddata_aviation_flight_rules(prs_ds, spec):
     fd = gribdata.FieldData(
         fhr=16,
-        grib_paths=[prsfile],
+        ds=prs_ds,
         level="sfc",
         model="hrrr",
         short_name="flru",
@@ -389,10 +389,10 @@ def test_fielddata_data_getter_and_setter(fielddata_obj):
     assert np.array_equal(fielddata_obj.data, new_data)
 
 
-def test_fielddata_fire_weather_index(prsfile, spec):
+def test_fielddata_fire_weather_index(prs_ds, spec):
     fd = gribdata.FieldData(
         fhr=16,
-        grib_paths=[prsfile],
+        ds=prs_ds,
         level="sfc",
         model="hrrr",
         short_name="firewxtransform",
@@ -416,12 +416,12 @@ def test_fielddata_grid_info_lambert(fielddata_obj_ro):
     }
 
 
-def test_fielddata_icing_adjust_trace(prsfile, spec):
+def test_fielddata_icing_adjust_trace(prs_ds, spec):
     spec = get_yaml_config(spec)
     spec.dereference(context={"file_type": "prs"})
     fd = gribdata.FieldData(
         fhr=16,
-        grib_paths=[prsfile],
+        ds=prs_ds,
         level="sfc",
         model="hrrr",
         short_name="flru",
@@ -432,12 +432,12 @@ def test_fielddata_icing_adjust_trace(prsfile, spec):
     assert np.array_equal(icing_adjust_trace, ones_like(field) * 0.5)
 
 
-def test_fielddata_supercooled_liquid_water(natfile, spec):
+def test_fielddata_supercooled_liquid_water(nat_ds, spec):
     spec = get_yaml_config(spec)
     spec.dereference(context={"file_type": "nat"})
     fd = gribdata.FieldData(
         fhr=16,
-        grib_paths=[natfile],
+        ds=nat_ds,
         level="sfc",
         model="hrrr",
         short_name="slw",

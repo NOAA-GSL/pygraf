@@ -1,13 +1,10 @@
-# pylint: disable=invalid-name
 """
 Driver for creating all the SkewT diagrams needed for a specific input dataset.
 """
 
-# pylint: disable=wrong-import-position, wrong-import-order
 import matplotlib as mpl
 
 mpl.use("Agg")
-# pylint: enable=wrong-import-position, wrong-import-order
 
 import copy
 import glob
@@ -23,6 +20,7 @@ from pathlib import Path
 import yaml
 
 from adb_graphics import errors, utils
+from adb_graphics.datahandler import gribfile
 from adb_graphics.figure_builders import parallel_maps, parallel_skewt
 from adb_graphics.figures import maps
 
@@ -68,17 +66,15 @@ def create_skewt(cla: Namespace, fhr: int, grib_path: Path, workdir: Path):
     Generate arguments for parallel processing of Skew T graphics,
     and generate a pool of workers to complete the tasks.
     """
-    args = [(cla, fhr, grib_path, site, workdir) for site in cla.sites]
+    ds = gribfile.WholeGribFile(grib_path).contents
+    args = [(cla, fhr, ds, site, workdir) for site in cla.sites]
     # Load global variable here with the full dataset? Process pool only. Try passing pickled object
     # as preferred method.
     # Concurrent futures library -- map a function over a pool and wait for it.
-    # global DS
-    # DS = gribfile.Gribfiles(grib_path).as_dict()
     print(f"Queueing {len(args)} Skew Ts")
-    #parallel_skewt(*args[0])
-    # Maybe try a ThreadPool here? Threads help with io bound processes. CPU bound may be processes.
+    # parallel_skewt(*args[0])
     with Pool(processes=cla.nprocs) as pool:
-       pool.starmap(parallel_skewt, args)
+        pool.starmap(parallel_skewt, args)
 
 
 def create_maps(
@@ -93,6 +89,7 @@ def create_maps(
     generate a pool of workers to complete the task.
     """
 
+    ds = gribfile.WholeGribFile(grib_paths[-1]).contents
     for tile in cla.tiles:
         args = []
         for variable, levels in cla.images[1].items():
@@ -110,12 +107,14 @@ def create_maps(
                 )
                 if (accumulate or grib_acc) and fhr == 0:
                     continue
+                if accumulate:
+                    ads = gribfile.GribFiles(grib_paths, vspec).contents
 
                 args.append(
                     (
                         cla,
                         fhr,
-                        grib_paths if accumulate else grib_paths[-1:],
+                        ads if accumulate else ds,
                         level,
                         variable,
                         workdir,

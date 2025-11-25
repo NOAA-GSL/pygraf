@@ -10,7 +10,9 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import axes
+from xarray import Dataset
 
+from adb_graphics.datahandler import gribfile
 from adb_graphics.figures import skewt
 from adb_graphics.figures.maps import DataMap, DiffMap, Map, MapFields, MultiPanelDataMap
 
@@ -20,14 +22,14 @@ AIRPORTS = Path("static/Airports_locs.txt")
 def add_obs_panel(
     ax: axes.Axes,
     model_name: str,
-    obs_file: Path,
+    dataset: dict[str, Dataset],
     proj_info: dict,
     spec: dict,
     short_name: str,
     tile: str,
 ):
     """
-    Plot observation data provided by the obs_file
+    Plot observation data provided by the dataset
     path using the assigned projection.
     """
 
@@ -35,7 +37,7 @@ def add_obs_panel(
     map_fields = MapFields(
         fhr=0,
         fields_spec=spec,
-        grib_paths=[obs_file],
+        ds=dataset,
         level="obs",
         model="obs",
         name=short_name,
@@ -58,15 +60,15 @@ def add_obs_panel(
     return dm.draw()
 
 
-def parallel_maps(  # noqa: PLR0912
+def parallel_maps(  # noqa: PLR0915, PLR0912
     cla: Namespace,
     fhr: int,
-    grib_paths: list[Path],
+    dataset: dict[str, Dataset],
     level: str,
     variable: str,
     workdir: Path,
     tile: str = "full",
-    dp2: Path | None = None,
+    ds2: Path | None = None,
 ):
     """
     Function that creates plan-view maps, either a single panel, or
@@ -75,16 +77,15 @@ def parallel_maps(  # noqa: PLR0912
     Input:
 
       fhr        forecast hour
-      grib_paths paths to grib files
+      dataset    loaded data
       level      the vertical level of the variable to be plotted
                  corresponding to a key in the specs file
       variable   the name of the variable section in the specs file
       workdir    output directory
-      tile
 
     Optional:
       tile       the label of the tile being plotted
-      dp2        path to a second grib file
+      ds2        second dataset
     """
 
     fig, axes = set_figure(cla.images[0], cla.graphic_type, tile)
@@ -111,11 +112,14 @@ def parallel_maps(  # noqa: PLR0912
             if index in (top_left, lower_left):
                 current_ax.axis("off")
 
-            ## If we have less than 10 members, skip the remaining panels.
-            # if index > cla.ens_size:
-            #    continue
-
             # Shenanigans to match ensemble member to panel index
+            # ----------------
+            # |   | 1 | 2 | 3 |
+            # ----------------
+            # | 0 | 4 | 5 | 6 |
+            # ----------------
+            # | o | 7 | 8 | 9 |
+            # ----------------
             match index:
                 case x if x in (top_left, center_left, lower_left):
                     mem = 0
@@ -125,14 +129,11 @@ def parallel_maps(  # noqa: PLR0912
                     mem = index - 1
                 case x if x < center_left:
                     mem = index
-            # mem = 0 if index in (top_left, center_left, lower_left) else index
-            # mem = mem if mem < center_left else index - 1
-            # mem = mem if mem < lower_left else index - 2
 
         # Create an object that holds all the fields for this map
         map_fields = MapFields(
-            grib_paths=grib_paths,
-            grib_path2=dp2,
+            ds=dataset,
+            ds2=ds2,
             fhr=fhr,
             fields_spec=cla.specs,
             level=level,
@@ -169,10 +170,11 @@ def parallel_maps(  # noqa: PLR0912
                 if spec.get("include_obs", False) and cla.obs_file_path:
                     # Add observation panel to lower left. Currently only
                     # supported for composite reflectivity.
+                    obs_ds = gribfile.WholeGribFile(cla.obs_file_path).contents
                     add_obs_panel(
                         ax=axes[8],
                         model_name=cla.model_name,
-                        obs_file=cla.obs_file_path,
+                        dataset=obs_ds,
                         proj_info=map_fields.shaded.grid_info(),
                         short_name=variable,
                         spec=cla.specs,
@@ -212,7 +214,7 @@ def parallel_maps(  # noqa: PLR0912
     gc.collect()
 
 
-def parallel_skewt(cla: Namespace, fhr: int, grib_path: Path, site: str, workdir: Path):
+def parallel_skewt(cla: Namespace, fhr: int, dataset: dict[str, Dataset], site: str, workdir: Path):
     """
     Function that creates a single SkewT plot.
 
@@ -237,7 +239,7 @@ def parallel_skewt(cla: Namespace, fhr: int, grib_path: Path, site: str, workdir
             break
     skew = skewt.SkewTDiagram(
         fhr=fhr,
-        grib_paths=[grib_path],
+        ds=dataset,
         loc=site,
         model=model,
         spec=cla.specs,

@@ -6,16 +6,14 @@ import abc
 from copy import deepcopy
 from datetime import datetime, timedelta
 from functools import cached_property
-from pathlib import Path
 
 import numpy as np
 from matplotlib.pyplot import get_cmap
 from pandas import to_datetime
 from uwtools.api.config import YAMLConfig
-from xarray import DataArray, ufuncs, where
+from xarray import DataArray, Dataset, ufuncs, where
 
 from adb_graphics import conversions, errors, specs, utils
-from adb_graphics.datahandler import gribfile
 
 
 class UPPData(specs.VarSpec):
@@ -33,13 +31,12 @@ class UPPData(specs.VarSpec):
     def __init__(
         self,
         fhr: int,
-        grib_paths: list[Path],
+        ds: dict[str, Dataset],
         model: str,
         short_name: str,
         spec: dict | YAMLConfig,
         level: str | None = "ua",
     ):
-        self.grib_paths = grib_paths
         self.model = model
         self.spec = spec
         self.short_name = short_name
@@ -50,10 +47,7 @@ class UPPData(specs.VarSpec):
         utils.set_level(level=str(level), model=self.model, spec=cf)
         cf = utils.cfgrib_spec(cf["cfgrib"], self.model)
         self.vertical_coord = cf["typeOfLevel"]
-        if len(grib_paths) == 1:
-            self.ds = gribfile.WholeGribFile(self.grib_paths[0]).contents
-        else:
-            self.ds = gribfile.GribFiles(self.grib_paths, cf).contents
+        self.ds = ds
 
     @property
     def anl_dt(self) -> datetime:
@@ -122,8 +116,8 @@ class UPPData(specs.VarSpec):
         vertical_coord = cfgribspec["typeOfLevel"]
         step_type = cfgribspec.get("stepType", "instant")
         var_id = f"{short_name}_{vertical_coord}_{step_type}"
-        ds = self.ds.get(var_id)
-        if ds is None:
+        ds: Dataset | dict = self.ds.get(var_id, {})
+        if ds == {}:
             msg = f"{var_id} is not a valid key for the dataset"
             raise ValueError(msg)
         var = _find_var()
@@ -293,7 +287,7 @@ class FieldData(UPPData):
     def __init__(
         self,
         fhr: int,
-        grib_paths: list[Path],
+        ds: dict[str, Dataset],
         level: str,
         model: str,
         short_name: str,
@@ -303,7 +297,7 @@ class FieldData(UPPData):
     ):
         super().__init__(
             fhr=fhr,
-            grib_paths=grib_paths,
+            ds=ds,
             level=level,
             model=model,
             short_name=short_name,
@@ -435,16 +429,6 @@ class FieldData(UPPData):
         weather conditions are most likely to lead to wildfires.
 
         """
-
-        def _load_field(level: str, short_name: str):
-            return FieldData(
-                fhr=int(self.fhr),
-                grib_paths=self.grib_paths,
-                level=level,
-                model=self.model,
-                short_name=short_name,
-                spec=self.spec,
-            ).values(do_transform=False)
 
         # Gather fields from the input
         veg = values
@@ -699,7 +683,7 @@ class ProfileData(UPPData):
     def __init__(
         self,
         fhr: int,
-        grib_paths: list[Path],
+        ds: dict[str, Dataset],
         model: str,
         loc: str,
         short_name: str,
@@ -708,7 +692,7 @@ class ProfileData(UPPData):
     ):
         super().__init__(
             fhr=fhr,
-            grib_paths=grib_paths,
+            ds=ds,
             level=level,
             model=model,
             short_name=short_name,

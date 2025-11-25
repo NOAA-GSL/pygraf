@@ -19,6 +19,7 @@ import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.contour import QuadContourSet
 from mpl_toolkits.basemap import Basemap, shiftgrid
+from xarray import Dataset
 
 from adb_graphics.datahandler import gribdata
 from adb_graphics.utils import numeric_level, set_level
@@ -119,7 +120,7 @@ class MapFields:
         self,
         fhr: int,
         fields_spec: dict,
-        grib_paths: list[Path],
+        ds: dict[str, Dataset],
         level: str,
         name: str,
         map_type: str | None = None,
@@ -127,7 +128,7 @@ class MapFields:
     ):
         self.fhr = fhr
         self.fields_spec = deepcopy(fields_spec)
-        self.grib_paths = grib_paths
+        self.ds = ds
         self.level = level
         self.map_type = map_type
         self.model = kwargs.get("model", "")
@@ -138,9 +139,9 @@ class MapFields:
         set_level(self.level, self.model, self.map_spec)
         # Required if map_type is "diff"
         if map_type == "diff":
-            self.grib_path2: Path | str = kwargs.get("grib_path2", "")
-            if not self.grib_path2:
-                msg = "Diff map requires a second grib path. Provide grib_path2 argument!"
+            self.ds2: Path | str = kwargs.get("ds2", "")
+            if not self.ds2:
+                msg = "Diff map requires a second grib path. Provide ds2 argument!"
                 raise ValueError(msg)
 
     @property
@@ -151,11 +152,11 @@ class MapFields:
             "model": self.model,
             "short_name": self.name,
             "spec": self.fields_spec,
-            "grib_paths": self.grib_paths,
+            "ds": self.ds,
         }
         field = gribdata.FieldData(**args)
         if self.map_type == "diff":
-            args["grib_paths"] = [self.grib_path2]
+            args["ds"] = self.ds2
             field2 = gribdata.FieldData(**args)
             field.data = field.data - field2.data
 
@@ -195,7 +196,7 @@ class MapFields:
                 "model": self.model,
                 "short_name": var,
                 "spec": self.fields_spec,
-                "grib_paths": self.grib_paths,
+                "ds": self.ds,
             }
             winds.append(gribdata.FieldData(**args))
         return winds
@@ -219,7 +220,7 @@ class MapFields:
                 "model": self.model,
                 "short_name": var,
                 "spec": self.fields_spec,
-                "grib_paths": self.grib_paths,
+                "ds": self.ds,
             }
             overlay_obj = gribdata.FieldData(**args)
             # Set the attributes for the overlay field
