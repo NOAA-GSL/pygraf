@@ -365,8 +365,10 @@ class FieldData(UPPData):
 
         lat, lon = self.latlons()
         if len(lat.shape) == 2:
-            return [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
-        return [lat[0], lat[-1], lon[0], lon[-1]]
+            return [
+                np.round(x, decimals=6) for x in [lat[0, 0], lat[-1, -1], lon[0, 0], lon[-1, -1]]
+            ]
+        return [np.round(x, decimals=6) for x in [lat[0], lat[-1], lon[0], lon[-1]]]
 
     @property
     def data(self) -> DataArray:

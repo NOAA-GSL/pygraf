@@ -364,10 +364,10 @@ def test_fielddata_colors_bad(fielddata_obj):
 
 def test_fielddata_corners(fielddata_obj):
     assert fielddata_obj.corners == [
-        21.13812299999999,
-        47.84219502248864,
-        237.28047200000003,
-        299.08280722816215,
+        21.138123,
+        47.842195,
+        237.280472,
+        299.082807,
     ]
 
 
@@ -375,10 +375,10 @@ def test_fielddata_corners_single_dim(fielddata_obj):
     # Remove one dimension for the purposes of the test
     fielddata_obj.field.coords["latitude"] = fielddata_obj.field.coords["latitude"][:, 0]
     assert fielddata_obj.corners == [
-        21.13812299999999,
-        47.83862349881542,
-        237.28047200000003,
-        225.90452026573686,
+        21.138123,
+        47.838623,
+        237.280472,
+        225.904520,
     ]
 
 
@@ -407,7 +407,7 @@ def test_fielddata_fire_weather_index(prs_ds, spec):
 def test_fielddata_grid_info_lambert(fielddata_obj_ro):
     grid_info = fielddata_obj_ro.grid_info()
     assert grid_info == {
-        "corners": [21.13812299999999, 47.84219502248864, 237.28047200000003, 299.08280722816215],
+        "corners": [21.138123, 47.842195, 237.280472, 299.082807],
         "lat_0": 39.0,
         "lat_1": 38.5,
         "lat_2": 38.5,
