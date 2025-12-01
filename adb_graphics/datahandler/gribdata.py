@@ -46,7 +46,11 @@ class UPPData(specs.VarSpec):
         cf = deepcopy(self.vspec)
         utils.set_level(level=str(level), model=self.model, spec=cf)
         cf = utils.cfgrib_spec(cf["cfgrib"], self.model)
-        self.vertical_coord = cf["typeOfLevel"]
+        try:
+            self.vertical_coord = cf["typeOfLevel"]
+        except KeyError:
+            msg = f"typOfLevel is not a key for {short_name} at {level}. cf: {cf}"
+            raise KeyError(msg)
         self.ds = ds
 
     @property

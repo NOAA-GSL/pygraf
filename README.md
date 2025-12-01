@@ -40,7 +40,7 @@ activate this environment, do the following:
 
 ```
 module use -a /contrib/miniconda3/modulefiles
-module load miniconda3
+module load miniconda3/25.11.0
 conda activate pygraf
 ```
 
