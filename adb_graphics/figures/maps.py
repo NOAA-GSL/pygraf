@@ -303,7 +303,7 @@ class Map:
             self.m.drawcoastlines(linewidth=0.5)
         except ValueError:
             self.m.drawcounties(
-                color="gray",
+                color="black",
                 linewidth=0.4,
                 zorder=2,
             )
@@ -311,7 +311,7 @@ class Map:
             if self.model not in ["global", "hfip"] and self.tile not in FULL_TILES:
                 self.m.drawcounties(
                     antialiased=False,
-                    color="gray",
+                    color="black",
                     linewidth=0.1,
                     zorder=2,
                 )
