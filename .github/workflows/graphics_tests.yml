@@ -26,7 +26,7 @@ jobs:
           cache-environment: true
       - name: Install dev pkgs
         run: make devenv
-        shell: bash -el {0}
+        shell: micromamba-shell {0}
       - name: Lint code
         run: make lint
       - name: Test code
