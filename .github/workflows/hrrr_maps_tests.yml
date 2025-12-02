@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        shell: bash -l {0}
+        shell: bash -el {0}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v5
@@ -45,6 +45,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           environment-file: environment.yml
+          miniforge-version: latest
       - name: Install dev pkgs
         run: make devenv
       - name: Test code

@@ -23,8 +23,8 @@ typecheck:
 	mypy --install-types --non-interactive .
 
 unittest:
-	pytest --cov -k "not hrrr" -n 4 .
+	pytest --cov -k "not hrrr_maps" -n 4 .
 
 memtest:
-	pytest --memray -k"not hrrr" .
+	pytest --memray -k "not hrrr" .
 

@@ -34,7 +34,7 @@ def maps_args(tmp_path) -> list:
     ]
 
 
-def test_hrrr_parse_args(tmp_path):
+def test_hrrr_maps_parse_args(tmp_path):
     """
     Test parse_args for basic parsing success.
     Checks if parse_args returns 'maps' in the graphic_type field.
@@ -63,7 +63,7 @@ def test_hrrr_parse_args(tmp_path):
     assert test_args.graphic_type == "maps"
 
 
-def test_hrrr_file_count(maps_args, tmp_path):
+def test_hrrr_maps_file_count(maps_args, tmp_path):
     """
     Test for file count in directory.
     Can be extended to cover multiple folders.
