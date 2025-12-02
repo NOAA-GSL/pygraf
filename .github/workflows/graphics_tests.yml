@@ -25,7 +25,7 @@ jobs:
           cache-downloads: true
           cache-environment: true
       - name: Install dev pkgs
-        run: make devenv
+        run: mamba activate && make devenv
       - name: Lint code
         run: make lint
       - name: Test code
