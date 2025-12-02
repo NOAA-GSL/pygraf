@@ -2,9 +2,9 @@ hourly:
   model: hrrr
   variables:
     hlcytot:
-        - mn02
-        - mn03
-        - mn25
-        - mx02
-        - mx03
-        - mx25
+      - mn02
+      - mn03
+      - mn25
+      - mx02
+      - mx03
+      - mx25

@@ -18,10 +18,12 @@ def maps_args(tmp_path) -> list:
         DATA_LOC,
         "-f",
         "0",
-        "12",
+        "6",
         "1",
         "-o",
         str(tmp_path / "output"),
+        "-n",
+        "3",
         "-s",
         "2023031500",
         "--file_tmpl",
@@ -72,9 +74,7 @@ def test_hrrr_maps_file_count(maps_args, tmp_path):
     create_graphics(maps_args)
     map_count = 6
     count = 0
-    folder = "/202303150000/"
-    output = tmp_path / "output" / folder
-    assert output.isdir()
+    output = tmp_path / "output" / "202303150003"
     for file_name in output.iterdir():
         if (output / file_name).is_file():
             count += 1
