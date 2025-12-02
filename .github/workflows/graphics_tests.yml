@@ -15,18 +15,18 @@ jobs:
         shell: bash -el {0}
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v5
         with:
           lfs: true
-      - name: Install Micromamba with pygraf environment
-        uses: mamba-org/setup-micromamba@v1
+      - name: Install Miniforge with pygraf environment
+        uses: conda-incubator/setup-miniconda@v3
         with:
           environment-file: environment.yml
+          miniforge-version: latest
           cache-downloads: true
           cache-environment: true
       - name: Install dev pkgs
         run: make devenv
-        shell: bash -leo pipefail {0}
       - name: Lint code
         run: make lint
       - name: Test code
