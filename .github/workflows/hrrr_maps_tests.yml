@@ -47,6 +47,8 @@ jobs:
           environment-file: environment.yml
           cache-downloads: true
           cache-env: true
+      - name: Install dev pkgs
+        run: make devenv
       - name: Test code
         run: |
           export GITHUB_WORKSPACE=$(pwd)

@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        shell: bash -l {0}
+        shell: bash -el {0}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
@@ -24,9 +24,9 @@ jobs:
           environment-file: environment.yml
           cache-downloads: true
           cache-environment: true
+      - name: Install dev pkgs
+        run: make devenv
       - name: Lint code
         run: make lint
-        shell: bash -el {0}
       - name: Test code
         run: make test
-        shell: bash -el {0}
