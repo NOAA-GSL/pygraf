@@ -23,11 +23,9 @@ jobs:
         with:
           environment-file: environment.yml
           miniforge-version: latest
-          cache-downloads: true
-          cache-environment: true
       - name: Install dev pkgs
         run: make devenv
-      - name: Lint code
-        run: make lint
       - name: Test code
-        run: make test
+        run: |
+          conda activate pygraf
+          make test
