@@ -146,6 +146,9 @@ class MapFields:
 
     @property
     def shaded(self):
+        """
+        The main field to be shaded on the map.
+        """
         args = {
             "fhr": self.fhr,
             "level": self.level,
@@ -479,7 +482,6 @@ class DataMap:
         # Create a pop-up to display the figure, if show=True
         if show:
             plt.tight_layout()
-            # plt.show()
 
         self.add_logo(self.map.ax)
 
@@ -744,7 +746,7 @@ class DataMap:
                     contoured.append(f"{user_title}")
                     contoured_units.append(f"{cf.units}")
 
-        title = "\n".join(contoured)  # Make 'contoured' a multioline string
+        title = "\n".join(contoured)  # Make 'contoured' a multiline string
         if contoured_units:
             title = f"{title} ({', '.join(contoured_units)}, contoured)"
 
@@ -846,9 +848,6 @@ class DataMap:
         """Helper function to create mesh for various plot."""
 
         lat, lon = field.latlons()
-        # if self.map.model == "obs":
-        #    lat, lon = np.meshgrid(lat, lon, sparse=False, indexing="ij")
-
         adjust = 360 if np.any(lon < 0) else 0
         return self.map.m(adjust + lon, lat)
 
@@ -968,7 +967,6 @@ class MultiPanelDataMap(DataMap):
         # Create a pop-up to display the figure, if show=True
         if show:
             plt.tight_layout()
-            # plt.show()
 
         return cf
 

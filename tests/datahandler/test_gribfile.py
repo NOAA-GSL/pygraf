@@ -6,19 +6,6 @@ from xarray import Dataset
 from adb_graphics.datahandler import gribfile
 
 
-def test_gribfile(prsfile):
-    gf = gribfile.GribFile(
-        filename=Path(prsfile),
-        cfgrib_config={
-            "shortName": "sp",
-            "typeOfLevel": "surface",
-        },
-    )
-    assert isinstance(gf.contents, Dataset)
-    assert len(gf.contents.data_vars) == 1
-    assert len(gf.contents.data_vars["sp"].shape) == 2
-
-
 @mark.skip(reason="This test requires test data that is not yet available.")
 def test_gribfiles():
     paths = [

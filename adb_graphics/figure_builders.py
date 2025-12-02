@@ -112,7 +112,8 @@ def parallel_maps(  # noqa: PLR0915, PLR0912
             if index in (top_left, lower_left):
                 current_ax.axis("off")
 
-            # Shenanigans to match ensemble member to panel index
+            # Shenanigans to match ensemble member to panel index. Here's where the ensemble members
+            # should go:
             # ----------------
             # |   | 1 | 2 | 3 |
             # ----------------

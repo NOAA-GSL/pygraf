@@ -395,7 +395,7 @@ def test_fielddata_fire_weather_index(prs_ds, spec):
         ds=prs_ds,
         level="sfc",
         model="hrrr",
-        short_name="firewxtransform",
+        short_name="firewx-pygraf",
         spec=spec,
     )
 

@@ -50,5 +50,5 @@ jobs:
       - name: Test code
         run: |
           export GITHUB_WORKSPACE=$(pwd)
-          python -m pytest tests/test_hrrr_maps.py
-        shell: bash -el {0}  
+          pytest tests/test_hrrr_maps.py
+        shell: bash -el {0}

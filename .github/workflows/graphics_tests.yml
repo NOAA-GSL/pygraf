@@ -25,8 +25,8 @@ jobs:
           cache-downloads: true
           cache-environment: true
       - name: Lint code
-        run: find . -type f -name "*.py" | xargs pylint
+        run: make lint
         shell: bash -el {0}
       - name: Test code
-        run: python -m pytest --nat-file tests/data/wrfnat_hrconus_07.grib2 --prs-file tests/data/wrfprs_hrconus_07.grib2 --ignore=tests/test_hrrr_maps.py
+        run: make test
         shell: bash -el {0}

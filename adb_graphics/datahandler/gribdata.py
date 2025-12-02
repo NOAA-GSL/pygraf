@@ -50,7 +50,7 @@ class UPPData(specs.VarSpec):
             self.vertical_coord = cf["typeOfLevel"]
         except KeyError:
             msg = f"typOfLevel is not a key for {short_name} at {level}. cf: {cf}"
-            raise KeyError(msg)
+            raise KeyError(msg) from None
         self.ds = ds
 
     @property

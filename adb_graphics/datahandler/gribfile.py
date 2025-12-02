@@ -1,5 +1,3 @@
-# pylint: disable=invalid-name,too-few-public-methods,too-many-locals,too-many-branches,too-many-statements
-
 """
 Classes that load grib files.
 """
@@ -8,35 +6,6 @@ from pathlib import Path
 
 import cfgrib
 import xarray as xr
-
-
-class GribFile:
-    """Wrappers and helper functions for interfacing with cfgrib."""
-
-    def __init__(self, filename: Path | str, cfgrib_config: dict):
-        # pylint: disable=unused-argument
-
-        self.filename = filename
-        self.cfgrib_config = cfgrib_config
-        self.contents = self._load()
-
-    def _load(self) -> xr.Dataset:
-        """
-        Internal method that opens the grib file. Returns a grib message
-        iterator.
-        """
-
-        return xr.open_dataset(
-            self.filename,
-            engine="cfgrib",
-            lock=False,
-            backend_kwargs=(
-                {
-                    "filter_by_keys": self.cfgrib_config,
-                    "read_keys": ["orientationOfTheGridInDegrees"],
-                }
-            ),
-        )
 
 
 class GribFiles:
@@ -88,6 +57,11 @@ class GribFiles:
 
 
 class WholeGribFile:
+    """
+    Class for loading a whole gribfile into a dictionary for different categories of data, mostly
+    separated by vertical coordinate and bucket type (avg, max, etc.).
+    """
+
     def __init__(
         self,
         filename: Path,
@@ -103,8 +77,6 @@ class WholeGribFile:
         all_fields: dict = {}
         for ds in datasets:
             for var in ds.data_vars:
-                # var_name = var if var != "unknown" else ds[var].attrs.get("GRIB_cfName",
-                # ds[var].attrs.get("GRIB_shortName"))
                 var_id = _var_id(ds, str(var))
                 if all_fields.get(var_id) is None:
                     all_fields[var_id] = ds

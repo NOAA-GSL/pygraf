@@ -116,8 +116,8 @@ class SkewTDiagram(gribdata.ProfileData):
             },
         }
 
-        pres = self.atmo_profiles.get("pres").get("data")
-        temp = self.atmo_profiles.get("temp").get("data")
+        pres = self.atmo_profiles["pres"]["data"]
+        temp = self.atmo_profiles["temp"]["data"]
         handles = []
         gravity = 9.81  # m/s^2
 
@@ -312,7 +312,6 @@ class SkewTDiagram(gribdata.ProfileData):
 
         skew, hydro_subplot = self._setup_diagram()
         self._title()
-        # breakpoint()
         self._plot_profile(skew)
         self._plot_wind_barbs(skew)
         self._plot_labels(skew)
@@ -337,12 +336,12 @@ class SkewTDiagram(gribdata.ProfileData):
         # Where the values above 10 km are unchanged, and there are three levels
         # in each of the 3 layers of interest.
         #
-        data_copy: units = np.copy(self.atmo_profiles.get("gh", {}).get("data"))
+        data_copy: units = np.copy(self.atmo_profiles["gh"]["data"])
         agl = data_copy.to("km")
 
         # Retrieve the wind data profiles
-        u_wind = self.atmo_profiles.get("u", {}).get("data")
-        v_wind = self.atmo_profiles.get("v", {}).get("data")
+        u_wind = self.atmo_profiles["u"]["data"]
+        v_wind = self.atmo_profiles["v"]["data"]
 
         # Create an inset axes object that is 28% width and height of the
         # figure and put it in the upper left hand corner.
@@ -389,11 +388,11 @@ class SkewTDiagram(gribdata.ProfileData):
 
     def _write_profile(self, csv_path: str | Path):
         profiles = self.atmo_profiles  # dictionary
-        pres = profiles.get("pres").get("data")
-        u = profiles.get("u").get("data")
-        v = profiles.get("v").get("data")
-        temp = profiles.get("temp").get("data").to("degC")
-        sphum = profiles.get("sphum").get("data")
+        pres = profiles["pres"]["data"]
+        u = profiles["u"]["data"]
+        v = profiles["v"]["data"]
+        temp = profiles["temp"]["data"].to("degC")
+        sphum = profiles["sphum"]["data"]
 
         dewpt = mpcalc.dewpoint_from_specific_humidity(pressure=pres, specific_humidity=sphum).to(
             "degC"
@@ -442,9 +441,9 @@ class SkewTDiagram(gribdata.ProfileData):
     def _plot_wind_barbs(self, skew: SkewT):
         # Pressure vs wind
         skew.plot_barbs(
-            self.atmo_profiles.get("pres", {}).get("data"),
-            self.atmo_profiles.get("u", {}).get("data"),
-            self.atmo_profiles.get("v", {}).get("data"),
+            self.atmo_profiles["pres"]["data"],
+            self.atmo_profiles["u"]["data"],
+            self.atmo_profiles["v"]["data"],
             color="blue",
             linewidth=0.2,
             y_clip_radius=0,

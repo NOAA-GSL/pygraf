@@ -876,7 +876,7 @@ ctop: # Cloud top height
     title: Cloud Top Height
     transform: conversions.m_to_kft
     unit: kft asl
-dewp: # Dew point temperaeure
+dewp: # Dew point temperature
   2m:
     cfgrib:
       shortName: 2d

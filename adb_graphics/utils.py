@@ -23,6 +23,9 @@ from uwtools.config.support import uw_yaml_loader
 
 
 def cfgrib_spec(config: dict, model: str) -> dict:
+    """
+    Given a cfgrib block and a model, return the appropriate sub-block, if it exists.
+    """
     spec: dict = config.get(model, {})
     if spec and isinstance(spec, dict):
         return spec
@@ -238,6 +241,9 @@ def path_exists(path: Path | str):
 
 
 def set_level(level: str, model: str, spec: dict):
+    """
+    Given the default_specs level string, extract and set a numeric level in the cfgrib block.
+    """
     nlevel, _ = numeric_level(level=level)
     level_info = any(
         key

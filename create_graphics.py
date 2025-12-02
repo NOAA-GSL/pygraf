@@ -68,11 +68,7 @@ def create_skewt(cla: Namespace, fhr: int, grib_path: Path, workdir: Path):
     """
     ds = gribfile.WholeGribFile(grib_path).contents
     args = [(cla, fhr, ds, site, workdir) for site in cla.sites]
-    # Load global variable here with the full dataset? Process pool only. Try passing pickled object
-    # as preferred method.
-    # Concurrent futures library -- map a function over a pool and wait for it.
     print(f"Queueing {len(args)} Skew Ts")
-    # parallel_skewt(*args[0])
     with Pool(processes=cla.nprocs) as pool:
         pool.starmap(parallel_skewt, args)
 
@@ -123,7 +119,6 @@ def create_maps(
                     )
                 )
 
-        #        parallel_maps(*args[-1])
         print(f"Queueing {len(args)} maps")
         with Pool(processes=cla.nprocs) as pool:
             pool.starmap(parallel_maps, args)
