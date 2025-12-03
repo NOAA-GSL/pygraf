@@ -14,6 +14,8 @@ def maps_args(tmp_path) -> list:
     """Builds HRRR 12-hour accumulated maps."""
     return [
         "maps",
+        "-a",
+        "1",
         "-d",
         DATA_LOC,
         "-f",
@@ -22,8 +24,6 @@ def maps_args(tmp_path) -> list:
         "1",
         "-o",
         str(tmp_path / "output"),
-        "-n",
-        "3",
         "-s",
         "2023031500",
         "--file_tmpl",
