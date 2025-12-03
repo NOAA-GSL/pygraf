@@ -1,7 +1,5 @@
 # ADB Graphics Creation for UPP Model Output
 
-> Note: This repository is under heavy development. Use at your own risk!
-
 This repository houses a Python-based implementation of the graphics package
 that is responsible for generating maps for the RAP/HRRR/FV3/RRFS data. It has
 replaced NCL as the real-time graphics creation package at NOAA GSL for maps and
@@ -44,6 +42,26 @@ module load miniconda3/25.11.0
 conda activate pygraf
 ```
 
+This environment contains the necessary develepment packages.
+
+## Installing with conda
+
+Pygraf comes with an environment.yml file for use with any conda installation. Ensure the conda base
+environment is activated, and run the following command to create a `pygraf` envirionment suitable
+for creating graphics:
+
+```
+cd pygraf
+make env
+```
+
+For developers who want to run the test suite before contributing new changes to the repository,
+additional development packages are required. To install those, run:
+
+```
+cd pygraf
+make devenv
+```
 
 ## Stage data
 
@@ -143,7 +161,7 @@ python create_graphics.py \
          --tiles full,ATL,CA-NV,CentralCA
 
 ```
-NOTE: The graphics already run as a workflow step in the RRFS Retros! They may be
+> NOTE: The graphics already run as a workflow step in the RRFS Retros! They may be
 zipped by default, so you can unzip those files to see your images on disk.
 
 ### Creating Skew-T Diagrams
@@ -274,15 +292,57 @@ guidelines:
 - All code must pass tests, and tests must be updated to accommodate new code.
 - Style beyond linting:
   - Alphabetize lists (anywhere another order is not more obvious to everyone)
-  - A single white space line before and after comments.
-  - A single white space after each method/function. Two after classes.
-  - Lists are maintained with each item on a single line followed by a comma,
-  even the last item.
 
 This repository is using a minor variation on GitLab flow, requiring new work be
 contributed via Pull Request from a branch with reviewers (required). Releases
 will be handled with tags (as opposed to branches, in the original GitLab flow),
 and will be marked as versions with v[major].[minor].[update].
+
+
+# Running Tests
+
+GitHub Actions is configured to run several code quality checks, including linting, formatting, and
+sorting with `ruff`, type checking with `mypy`, and unit tests with `pytest`. To perform the same
+checks locally, developers can run:
+
+```
+(pygraf) $ make format && make test
+```
+
+# Working with ecCodes for grib2
+
+Two command line utilities are available in the conda environment that will help navigate the
+ecCodes interpretation of a grib2 file. `grib_ls` gives a single-line record listing of the entire file by
+default, while `grib_dump` provides all the metadata for each record.
+
+Documentation is available from ECMWF:
+*  https://confluence.ecmwf.int/display/ECC/grib_ls
+*  https://confluence.ecmwf.int/display/ECC/grib_dump
+
+
+There are many examples in the documentation, but here are a couple that could help with pygraf
+specifically.
+
+Show the common `pygraf` parameters for the 6th record:
+```
+$ grib_ls -p shortName,parameterNumber,typeOfLevel,stepType,level -w count=6 hrrr.t05z.wrfnatf08.grib2
+hrrr.t05z.wrfnatf08.grib2
+shortName        parameterNumber  typeOfLevel      stepType         level
+grle             32               hybrid           instant          1
+```
+
+The `count` parameter is nice to use in conjunction with `wgrib2` output where that tool may show
+the information needed to identify a variable where the `shortName` from ecCodes may be "unknown".
+
+To see all available information from that record:
+
+```
+grib_dump -w count=6 hrrr.t05z.wrfnatf08.grib2
+```
+
+> NOTE: When using the `-w` flag with items other than `count`, multiple records may be included in
+the output.
+
 
 # Contact
 

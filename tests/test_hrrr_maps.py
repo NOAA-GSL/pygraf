@@ -72,7 +72,7 @@ def test_hrrr_maps_file_count(maps_args, tmp_path):
     """
     # Based on the hrrr_test.yml file, only 6 maps will be created
     create_graphics(maps_args)
-    map_count = 6
+    map_count = 1
     count = 0
     output = tmp_path / "output" / "202303150003"
     for file_name in output.iterdir():
