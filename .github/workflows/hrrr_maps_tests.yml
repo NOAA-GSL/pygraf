@@ -46,5 +46,5 @@ jobs:
         run: |
           export GITHUB_WORKSPACE=$(pwd)
           conda activate pygraf
-          pytest tests/test_hrrr_maps.py
+          pytest -vv tests/test_hrrr_maps.py
         shell: bash -el {0}
