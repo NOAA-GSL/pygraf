@@ -22,7 +22,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           environment-file: environment.yml
-          miniforge-version: latest
+          miniforge-version: 25.11.0-0
       - name: Install dev pkgs
         run: make devenv
       - name: Test code
