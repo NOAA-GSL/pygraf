@@ -52,8 +52,7 @@ class GribFiles:
             backend_kwargs=(
                 {
                     "filter_by_keys": self.cfgrib_config,
-                    "indexpath": "",  # create a temp file here or pyfakefs to hold it in mem. check
-                    # unittests in wxvx
+                    "indexpath": "",
                     "read_keys": ["orientationOfTheGridInDegrees"],
                 }
             ),

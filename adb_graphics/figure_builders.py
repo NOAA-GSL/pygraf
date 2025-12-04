@@ -16,7 +16,7 @@ from adb_graphics.datahandler import gribfile
 from adb_graphics.figures import skewt
 from adb_graphics.figures.maps import DataMap, DiffMap, Map, MapFields, MultiPanelDataMap
 
-AIRPORTS = Path("static/Airports_locs.txt")
+AIRPORTS = Path(__file__).resolve().parent.parent / "static" / "Airports_locs.txt"
 
 
 def add_obs_panel(

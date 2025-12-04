@@ -1,10 +1,6 @@
 """Errors specific to the ADB Graphics package."""
 
 
-class ArgumentError(ValueError):
-    """The right arguments are not provided."""
-
-
 class FieldNotUniqueError(Exception):
     """Exception raised when multiple Grib fields are found with input parameters."""
 
