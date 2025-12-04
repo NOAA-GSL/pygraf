@@ -46,18 +46,19 @@ class UPPData(specs.VarSpec):
         cf = deepcopy(self.vspec)
         utils.set_level(level=str(level), model=self.model, spec=cf)
         cf = utils.cfgrib_spec(cf["cfgrib"], self.model)
+        key = "typeOfLevel"
         try:
-            self.vertical_coord = cf["typeOfLevel"]
+            self.vertical_coord = cf[key]
         except KeyError:
-            msg = f"typOfLevel is not a key for {short_name} at {level}. cf: {cf}"
+            msg = f"{key} is not a key for {short_name} at {level}. cf: {cf}"
             raise KeyError(msg) from None
         self.ds = ds
 
     @property
     def anl_dt(self) -> datetime:
         """
-        Returns the initial time of the grib file as a datetime object from
-        the grib file.
+        Returns the initial time of the GRIB file as a datetime object from
+        the GRIB file.
         """
         ret: datetime = to_datetime(self.field.time.values)
         return ret
@@ -361,7 +362,7 @@ class FieldData(UPPData):
     def corners(self) -> list:
         """
 
-        Returns lat and lon of lower left (ll) and upper right(ur) corners.
+        Returns lat and lon of lower left (ll) and upper right (ur) corners.
 
         Order:
                ll_lat, ur_lat, ll_lon, ur_lon

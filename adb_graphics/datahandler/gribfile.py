@@ -40,7 +40,7 @@ class GribFiles:
         self.contents = self._load()
 
     def _load(self, filenames: list[Path] | None = None):
-        """Load the set of files into a single XArray structure."""
+        """Load the set of files into a single Xarray structure."""
         filenames = self.filenames if filenames is None else filenames
         ds = xr.open_mfdataset(
             filenames,
