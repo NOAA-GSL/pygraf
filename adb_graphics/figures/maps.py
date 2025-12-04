@@ -401,7 +401,7 @@ class DataMap:
 
     """
 
-    def __init__(self, map_fields: MapFields, map_: Map, model_name: str | None = None, **kwargs):  # noqa: ARG002
+    def __init__(self, map_fields: MapFields, map_: Map, model_name: str | None = None, **_kwargs):
         self.field = map_fields.shaded
         self.contour_fields = map_fields.contours
         self.hatch_fields = map_fields.hatches

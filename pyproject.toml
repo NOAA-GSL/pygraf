@@ -80,9 +80,6 @@ ignore = [
   "PT013",   # pytest-incorrect-pytest-import
   "SLF001",  # private-member-access
 ]
-"adb_graphics/conversions.py" = [
-  "ARG001",  # unused-function-argument
-]
 "adb_graphics/datahandler/gribdata.py" = [
   "PLR2004", # magic-value-comparison
 ]

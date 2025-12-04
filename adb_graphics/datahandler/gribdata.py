@@ -219,7 +219,7 @@ class UPPData(specs.VarSpec):
         return [lat, lon]
 
     @staticmethod
-    def opposite(values: DataArray, **kwargs) -> DataArray:  # noqa: ARG004
+    def opposite(values: DataArray, **_kwargs) -> DataArray:
         """Returns the opposite of input values."""
 
         return -values
@@ -244,7 +244,7 @@ class UPPData(specs.VarSpec):
         self,
         field1: DataArray,
         field2_id: str,
-        **kwargs,  # noqa: ARG002
+        **_kwargs,
     ):
         """
         Returns the vector magnitude of two component vector fields.
@@ -311,7 +311,7 @@ class FieldData(UPPData):
         self.contour_kwargs = {} if contour_kwargs is None else contour_kwargs
         self.mem = member
 
-    def aviation_flight_rules(self, values: DataArray, **kwargs):  # noqa: ARG002
+    def aviation_flight_rules(self, values: DataArray, **_kwargs):
         """
         Generates a field of Aviation Flight Rules from Ceil and Vis.
         """
@@ -388,7 +388,7 @@ class FieldData(UPPData):
     def data(self, value: DataArray):
         self._data = value
 
-    def field_column_max(self, values: DataArray, **kwargs):  # noqa: ARG002
+    def field_column_max(self, values: DataArray, **_kwargs):
         """Returns the column max of the values."""
 
         return values.max(dim=self.vertical_coord)
@@ -427,7 +427,7 @@ class FieldData(UPPData):
 
         return sum2
 
-    def fire_weather_index(self, values: DataArray, **kwargs):  # noqa: ARG002
+    def fire_weather_index(self, values: DataArray, **_kwargs):
         """
         Generates a field of Fire Weather Index.
 
@@ -546,30 +546,30 @@ class FieldData(UPPData):
         return grid_info
 
     @staticmethod
-    def icing_adjust_trace(values: DataArray, **kwargs):  # noqa: ARG004
+    def icing_adjust_trace(values: DataArray, **_kwargs):
         """Changes the value of ICSEV trace from 4.0 to 0.5, to maintain ascending order."""
 
         return where(values == 4.0, 0.5, values)
 
     @staticmethod
-    def run_max(values: DataArray, **kwargs):  # noqa: ARG004
+    def run_max(values: DataArray, **_kwargs):
         """Finds the max hourly value over all the forecast lead times available."""
 
         return values.max(dim="time")  # pragma: no cover
 
     @staticmethod
-    def run_min(values: DataArray, **kwargs):  # noqa: ARG004
+    def run_min(values: DataArray, **_kwargs):
         """Finds the min hourly value over all the forecast lead times available."""
 
         return values.min(dim="time")  # pragma: no cover
 
     @staticmethod
-    def run_total(values: DataArray, **kwargs):  # noqa: ARG004
+    def run_total(values: DataArray, **_kwargs):
         """Sums over all the forecast lead times available."""
 
         return values.sum(dim="time")  # pragma: no cover
 
-    def supercooled_liquid_water(self, **kwargs):  # noqa: ARG002
+    def supercooled_liquid_water(self, **_kwargs):
         """
         Generates a field of Supercooled Liquid Water.
 
