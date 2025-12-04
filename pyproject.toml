@@ -24,9 +24,7 @@ ignore = [
   "ANN202",  # missing-return-type-private-function
   "ANN204",  # missing-return-type-special-method
   "ANN205",  # missing-return-type-static-method
-  "ANN206",  # missing-return-type-class-method
   "ANN401",  # any-type
-  "B010",    # set-attr-with-constant
   "C408",    # unnecessary-collection-call
   "C901",    # complex-structure
   "COM812",  # missing-trailing-comma
@@ -42,7 +40,6 @@ ignore = [
   "D203",    # incorrect-blank-line-before-class
   "D205",    # missing-blank-line-after-summary
   "D212",    # multi-line-summary-first-line
-  "D400",    # missing-trailing-period
   "D401",    # non-imperative-mood
   "D404",    # docstring-starts-with-this
   "DTZ001",  # call-datetime-without-tzinfo
@@ -50,32 +47,21 @@ ignore = [
   "DTZ006",  # call-datetime-fromtimestamp
   "DTZ007",  # call-datetime-strptime-without-zone
   "E731",    # lambda-assignment
-  "ERA001",  # commented-out-code
   "FBT001",  # boolean-type-hint-positional-argument
   "FBT002",  # boolean-default-value-positional-argument
-  "FBT003",  # boolean-positional-value-in-call
-  "FLY002",  # static-join-to-f-string
-  "N813",    # camelcase-imported-as-lowercase
   "PLR0913", # too-many-arguments
-  "PT019",   # pytest-fixture-param-without-value
   "PTH207",  # glob
   "RUF015",  # unnecessary-iterable-allocation-for-first-element
   "S101",    # assert
-  "S103",    # bad-file-permissions
   "S311",    # suspicious-non-cryptographic-random-usage
   "S506",    # unsafe-yaml-load
   "S602",    # subprocess-popen-with-shell-equals-true
-  "S701",    # jinja2-autoescape-false
   "T201",    # print
-  "TC006",   # runtime-cast-value
-  "UP031",   # printf-string-formatting
-  "UP032",   # f-string
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "conftest.py" = [
   "ANN001",  # missing-type-function-argument
-  "N802",    # invalid-function-name
   "PLR2004", # magic-value-comparison
   "PT013",   # pytest-incorrect-pytest-import
   "SLF001",  # private-member-access
@@ -85,7 +71,6 @@ ignore = [
 ]
 "tests/*" = [
   "ANN001",  # missing-type-function-argument
-  "N802",    # invalid-function-name
   "PLR2004", # magic-value-comparison
   "PT013",   # pytest-incorrect-pytest-import
   "SLF001",  # private-member-access
