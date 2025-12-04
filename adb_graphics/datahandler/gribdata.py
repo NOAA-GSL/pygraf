@@ -35,12 +35,12 @@ class UPPData(specs.VarSpec):
         model: str,
         short_name: str,
         spec: dict | YAMLConfig,
-        level: str | None = "ua",
+        level: str | None = None,
     ):
         self.model = model
         self.spec = spec
         self.short_name = short_name
-        self.level = level
+        self.level = level or "ua"
 
         self.fhr = fhr
         cf = deepcopy(self.vspec)
@@ -694,12 +694,12 @@ class ProfileData(UPPData):
         loc: str,
         short_name: str,
         spec: dict | YAMLConfig,
-        level: str | None = "ua",
+        level: str | None = None,
     ):
         super().__init__(
             fhr=fhr,
             ds=ds,
-            level=level,
+            level=level or "ua",
             model=model,
             short_name=short_name,
             spec=spec,

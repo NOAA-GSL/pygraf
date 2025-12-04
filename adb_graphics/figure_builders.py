@@ -41,6 +41,7 @@ def add_obs_panel(
         level="obs",
         model="obs",
         name=short_name,
+        map_type="maps",
     )
     m = Map(
         airport_fn=AIRPORTS,

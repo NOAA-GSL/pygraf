@@ -67,7 +67,7 @@ class SkewTDiagram(gribdata.ProfileData):
         model: str,
         spec: dict | YAMLConfig,
         max_plev: int | None = 0,
-        model_name: str | None = "Analysis",
+        model_name: str | None = None,
     ):
         # Initialize on the temperature field since we need to gather
         # field-specific data from this object, e.g. dates, lat, lon, etc.
@@ -75,7 +75,7 @@ class SkewTDiagram(gribdata.ProfileData):
         super().__init__(fhr=fhr, ds=ds, loc=loc, model=model, short_name="temp", spec=spec)
 
         self.max_plev = max_plev
-        self.model_name = model_name
+        self.model_name = model_name or "Analysis"
 
     def _add_hydrometeors(self, hydro_subplot: Axes):
         mixing_ratios: dict[str, HydroPlotSettings] = {

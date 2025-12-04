@@ -118,28 +118,30 @@ class MapFields:
 
     def __init__(
         self,
+        ds: dict[str, Dataset],
         fhr: int,
         fields_spec: dict,
-        ds: dict[str, Dataset],
         level: str,
+        map_type: str,
         name: str,
-        map_type: str | None = None,
-        **kwargs,
+        ds2: Path | str | None = None,
+        model: str | None = None,
+        tile: str | None = None,
     ):
         self.fhr = fhr
         self.fields_spec = deepcopy(fields_spec)
         self.ds = ds
         self.level = level
         self.map_type = map_type
-        self.model = kwargs.get("model", "")
+        self.model = "" if model is None else model
         self.name = name
-        self.tile = kwargs.get("tile", "full")
+        self.tile = tile or "full"
 
         self.map_spec = deepcopy(self.fields_spec[self.name][self.level])
         set_level(self.level, self.model, self.map_spec)
         # Required if map_type is "diff"
         if map_type == "diff":
-            self.ds2: Path | str = kwargs.get("ds2", "")
+            self.ds2 = ds2
             if not self.ds2:
                 msg = "Diff map requires a second grib path. Provide ds2 argument!"
                 raise ValueError(msg)
@@ -157,10 +159,10 @@ class MapFields:
             "spec": self.fields_spec,
             "ds": self.ds,
         }
-        field = gribdata.FieldData(**args)
+        field = gribdata.FieldData(**args)  # type: ignore[arg-type]
         if self.map_type == "diff":
             args["ds"] = self.ds2
-            field2 = gribdata.FieldData(**args)
+            field2 = gribdata.FieldData(**args)  # type: ignore[arg-type]
             field.data = field.data - field2.data
 
         return field
@@ -193,6 +195,7 @@ class MapFields:
         for var in ("u", "v"):
             wind_spec = self.fields_spec[var][lev]
             set_level(lev, self.model, wind_spec)
+
             args = {
                 "fhr": self.fhr,
                 "level": lev,
@@ -201,7 +204,7 @@ class MapFields:
                 "spec": self.fields_spec,
                 "ds": self.ds,
             }
-            winds.append(gribdata.FieldData(**args))
+            winds.append(gribdata.FieldData(**args))  # type: ignore[arg-type]
         return winds
 
     def _overlay_fields(self, spec_sect: str) -> list:
@@ -538,13 +541,12 @@ class DataMap:
     def _draw_contours(self, ax: Axes, not_labeled: list[str]):
         """Draw the contour fields requested."""
 
-        model_name = self.model_name
         main_field = self.field.short_name
 
         for contour_field in self.contour_fields:
             levels = contour_field.contour_kwargs.pop("levels", contour_field.clevs)
 
-            if model_name in ["RAP-NCEP", "RRFS-NCEP", "RRFS NA 3km"] and (
+            if self.model_name in ["RAP-NCEP", "RRFS-NCEP", "RRFS NA 3km"] and (
                 main_field == "totp"
                 and contour_field.short_name == "pres"
                 and self.map.tile == "full"
