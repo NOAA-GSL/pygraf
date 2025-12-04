@@ -2,10 +2,13 @@
 Classes that load grib files.
 """
 
+import warnings
 from pathlib import Path
 
 import cfgrib
 import xarray as xr
+
+warnings.filterwarnings("ignore", category=FutureWarning, module="cfgrib")
 
 
 class GribFiles:
@@ -44,6 +47,8 @@ class GribFiles:
             engine="cfgrib",
             concat_dim="time",
             combine="nested",
+            compat="override",
+            coords="minimal",
             backend_kwargs=(
                 {
                     "filter_by_keys": self.cfgrib_config,
@@ -71,7 +76,8 @@ class WholeGribFile:
 
     def _load(self, filename: Path):
         datasets = cfgrib.open_datasets(
-            str(filename), read_keys=["orientationOfTheGridInDegrees", "parameterNumber"]
+            str(filename),
+            read_keys=["orientationOfTheGridInDegrees", "parameterNumber"],
         )
 
         all_fields: dict = {}
