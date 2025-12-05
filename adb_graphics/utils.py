@@ -4,6 +4,7 @@ A set of generic utilities available to all the adb_graphics components.
 
 import functools
 import glob
+import re
 import subprocess
 import sys
 import time
@@ -13,7 +14,6 @@ from importlib import import_module
 from importlib.util import find_spec
 from multiprocessing import Process
 from pathlib import Path
-from string import ascii_letters, digits
 from typing import Any
 
 import numpy as np
@@ -158,12 +158,8 @@ def load_yaml(config: Path | str) -> YAMLConfig:
 
 
 def load_sites(arg: str | Path) -> list[str]:
-    """Check that the sites file exists, and return its contents."""
-
-    # Check that the file exists
+    """Return the contents of the sites file, if it exists."""
     path = Path(arg)
-    path.exists()
-
     with path.open() as sites_file:
         sites: list[str] = sites_file.readlines()
     return sites
@@ -191,20 +187,16 @@ def numeric_level(level: str | None = None) -> tuple[float | int | str, str]:
     """
 
     level = level if level is not None else ""
-
-    # Gather all the numbers in the string
-    numbers = "".join([c for c in level if (c in digits or c == ".")])
-
-    # Convert the numbers to a list, and make integers or floats
-    if numbers:
-        lev_val = float(numbers) if "." in numbers else int(numbers)
-    else:
-        return "", ""
-
-    # Gather all the letters
-    lev_unit = "".join([c for c in level if c in ascii_letters])
-
-    return lev_val, lev_unit
+    if m := re.match(r"^([0-9.]+)?([a-z]+)?([0-9.]+)?$", level):
+        groups = m.groups()
+        units = groups[1]
+        value = groups[0] or groups[2]
+        for convert in (int, float):
+            try:
+                return convert(value), units
+            except (TypeError, ValueError):  # noqa: PERF203
+                pass
+    return "", ""
 
 
 def old_enough(age: int, file_path: Path | str):

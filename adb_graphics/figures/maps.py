@@ -770,14 +770,13 @@ class DataMap:
             loc="left",
         )
 
-        level, lev_unit = numeric_level(f.level)
         units = f"({f.units}, shaded)" if f.vspec.get("print_units", True) else ""
 
         # Title or Atmospheric level and unit in the high center
         if f.vspec.get("title"):
             title = f"{f.vspec.get('title')} {units}"
         else:
-            level = level if not isinstance(level, list) else level[0]
+            level, lev_unit = numeric_level(f.level)
             title = f"{level} {lev_unit} {f.field.long_name} {units}"
         plt.title(f"{title}", loc="center", y=1.10, fontsize=18)
 
@@ -921,14 +920,13 @@ class DiffMap(DataMap):
             loc="left",
         )
 
-        level, lev_unit = f.numeric_level()
         units = f"({f.units}, shaded)" if f.vspec.get("print_units", True) else ""
 
         # Title or Atmospheric level and unit in the high center
         if f.vspec.get("title"):
             title = f"Diff: {f.vspec.get('title')} {units}"
         else:
-            level = level if not isinstance(level, list) else level[0]
+            level, lev_unit = numeric_level(f.level)
             title = f"Diff: {level} {lev_unit} {f.field.long_name} {units}"
         plt.title(f"{title}", position=(0.5, 1.08), fontsize=18)
 
@@ -1007,14 +1005,13 @@ class MultiPanelDataMap(DataMap):
             transform=ax.transAxes,
         )
 
-        level, lev_unit = f.numeric_level()
         units = f"({f.units}, shaded)" if f.vspec.get("print_units", True) else ""
 
         # Title or Atmospheric level and unit in the high center
         if f.vspec.get("title"):
             title = f"{f.vspec.get('title')} {units}"
         else:
-            level = level if not isinstance(level, list) else level[0]
+            level, lev_unit = numeric_level(f.level)
             title = f"{level} {lev_unit} {f.field.long_name} {units}"
         ax.text(
             0,
