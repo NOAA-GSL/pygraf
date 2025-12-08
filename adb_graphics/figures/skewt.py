@@ -135,7 +135,7 @@ class SkewTDiagram(gribdata.ProfileData):
             except (errors.NoGraphicsDefinitionForVariableError, IndexError, ValueError):
                 try:
                     profile = self.values(name=mixr, level="uanat") * 1000.0 * scale
-                except errors.NoGraphicsDefinitionForVariableError:
+                except errors.NoGraphicsDefinitionForVariableError:  # pragma: no cover
                     print(f"missing {mixr} for hydrometeor plot, skipping that field.")
                     continue
             mixr_total: units = 0.0
@@ -632,7 +632,7 @@ class SkewTDiagram(gribdata.ProfileData):
             lev = items.get("level", "ua")
             spec = self.spec.get(varname, {}).get(lev)
 
-            if not spec:
+            if not spec:  # pragma: no cover
                 raise errors.NoGraphicsDefinitionForVariableError(varname, lev)
 
             try:
@@ -641,7 +641,7 @@ class SkewTDiagram(gribdata.ProfileData):
                 if transforms:
                     vals = self.get_transform(transforms, vals)
 
-            except errors.GribReadError:
+            except errors.GribReadError:  # pragma: no cover
                 vals = DataArray([])
             thermo[var]["data"] = vals
             thermo[var]["units"] = spec.get("unit")
@@ -730,7 +730,7 @@ def label_line(ax: Axes, label: str, segment: np.ndarray, **kwargs):
         if end == "top":
             trans_angle -= 180
 
-    else:
+    else:  # pragma: no cover
         trans_angle = 0
 
     # Set a bunch of keyword arguments

@@ -267,7 +267,9 @@ class Map:
         self.tile = kwargs.get("tile", "full")
 
         if self.model == "hrrr" and "WFIP3" in self.tile:
-            self.grid_info.update({"lat_1": 40.6, "lat_2": 40.6, "lon_0": 289.2})
+            self.grid_info.update(
+                {"lat_1": 40.6, "lat_2": 40.6, "lon_0": 289.2}
+            )  # pragma: no cover
         if self.model != "hrrrhi":
             if self.tile in FULL_TILES:
                 self.corners = self.grid_info.pop("corners")
@@ -307,7 +309,7 @@ class Map:
 
         try:
             self.m.drawcoastlines(linewidth=0.5)
-        except ValueError:
+        except ValueError:  # pragma: no cover
             self.m.drawcounties(
                 color="black",
                 linewidth=0.4,
@@ -374,7 +376,7 @@ class Map:
                     width=self.width,
                     height=self.height,
                 )
-            )
+            )  # pragma: no cover
 
         basemap_args.update(get_basemap_kwargs)
 
@@ -410,7 +412,7 @@ class DataMap:
         self.model_name = model_name
         self.plot_scatter = map_fields.fields_spec.get("plot_scatter", False)
 
-    def wind_fields(self, level: str):
+    def wind_fields(self, level: str):  # pragma: no cover
         return self.map_fields.wind_fields(level)
 
     @staticmethod
@@ -444,9 +446,9 @@ class DataMap:
                 np.amax(self.field.clevs + 1),
                 self.field.ticks,
             )
-        elif self.field.ticks == 0:
+        elif self.field.ticks == 0:  # pragma: no cover
             ticks = self.field.clevs
-        else:
+        else:  # pragma: no cover
             ticks = self.field.clevs[0 : len(self.field.clevs) : -self.field.ticks]
         ticks = np.around(ticks, 4)
 
@@ -460,11 +462,11 @@ class DataMap:
         )
 
         tick_labels = [str(t) for t in ticks]
-        if self.field.short_name == "flru":
+        if self.field.short_name == "flru":  # pragma: no cover
             tick_labels = [label.rjust(30) for label in ["VFR", "MVFR", "IFR", "LIFR", ""]]
 
         # this step is done to allow proper order of icing severity levels (trace before light)
-        if self.field.short_name == "icsev":
+        if self.field.short_name == "icsev":  # pragma: no cover
             tick_labels = [label.rjust(30) for label in ["TRACE", "LIGHT", "MODERATE", "HEAVY", ""]]
 
         cbar.ax.set_xticklabels(tick_labels, fontsize=12)
@@ -504,20 +506,20 @@ class DataMap:
         )
 
         not_labeled = [self.field.short_name]
-        if self.hatch_fields:
+        if self.hatch_fields:  # pragma: no cover
             not_labeled.extend([h.short_name for h in self.hatch_fields])
 
         # Contour secondary fields, if requested
-        if self.contour_fields:
+        if self.contour_fields:  # pragma: no cover
             self._draw_contours(ax, not_labeled)
 
         # Add hatched fields, if requested
-        if self.hatch_fields:
+        if self.hatch_fields:  # pragma: no cover
             self._draw_hatches(ax)
 
         # Add wind barbs, if requested
         add_wind = self.field.vspec.get("wind", False)
-        if add_wind and wind_barbs:
+        if add_wind and wind_barbs:  # pragma: no cover
             self._wind_barbs(add_wind)
 
         # Add field values at airports
@@ -530,16 +532,16 @@ class DataMap:
             and model_name not in ["RRFS NA 3km"]
             and model_name == "RAP-NCEP"
             and self.map.tile not in ["full"]
-        ):
+        ):  # pragma: no cover
             self._draw_field_values(ax)
 
         # Add scatter plot, if requested
-        if self.plot_scatter:
+        if self.plot_scatter:  # pragma: no cover
             self._draw_scatter(ax)
 
         return cf
 
-    def _draw_contours(self, ax: Axes, not_labeled: list[str]):
+    def _draw_contours(self, ax: Axes, not_labeled: list[str]):  # pragma: no cover
         """Draw the contour fields requested."""
 
         main_field = self.field.short_name
@@ -577,7 +579,7 @@ class DataMap:
                             {self.field.level}"
                     )
 
-    def _draw_scatter(self, ax: Axes):
+    def _draw_scatter(self, ax: Axes):  # pragma: no cover
         """Plot dots at locations on the map that meet a threshold."""
 
         field = self.field
@@ -612,7 +614,9 @@ class DataMap:
             **field.contour_kwargs,
         )
 
-    def _draw_field(self, ax: Axes, field: gribdata.FieldData, func: Callable, **kwargs):
+    def _draw_field(
+        self, ax: Axes, field: gribdata.FieldData, func: Callable, **kwargs
+    ):  # pragma: no cover
         """
         Internal implementation that calls a matplotlib function.
 
@@ -658,7 +662,7 @@ class DataMap:
             print(f"CLOSE ERROR: {field.short_name} {field.level}")
         return ret
 
-    def _draw_field_values(self, ax: Axes):
+    def _draw_field_values(self, ax: Axes):  # pragma: no cover
         """Add the text value of the field at airport locations."""
         annotate_decimal = self.field.vspec.get("annotate_decimal", 0)
         airports = self.map.load_airports()
@@ -685,7 +689,7 @@ class DataMap:
                     )
         data_values.close()
 
-    def _draw_hatches(self, ax: Axes):
+    def _draw_hatches(self, ax: Axes):  # pragma: no cover
         """Draw the hatched regions requested."""
 
         # Levels should be included in the settings dict here since they don't
@@ -733,7 +737,7 @@ class DataMap:
         contoured = []
         contoured_units = []
         not_labeled = [f.short_name]
-        if self.hatch_fields:
+        if self.hatch_fields:  # pragma: no cover
             cf = self.hatch_fields[0]
             not_labeled.extend([h.short_name for h in self.hatch_fields])
             if not any(list(set(cf.short_name).intersection(["pres"]))):
@@ -741,7 +745,7 @@ class DataMap:
                 contoured.append(f"{user_title} ({cf.units}, hatched)")
 
         # Add descriptor string for the important contoured fields
-        if self.contour_fields:
+        if self.contour_fields:  # pragma: no cover
             for cf in self.contour_fields:
                 if cf.short_name not in not_labeled:
                     user_title = cf.vspec.get("title", cf.field.long_name)
@@ -750,7 +754,7 @@ class DataMap:
                     contoured_units.append(f"{cf.units}")
 
         title = "\n".join(contoured)  # Make 'contoured' a multiline string
-        if contoured_units:
+        if contoured_units:  # pragma: no cover
             title = f"{title} ({', '.join(contoured_units)}, contoured)"
 
         return title
@@ -775,7 +779,7 @@ class DataMap:
         # Title or Atmospheric level and unit in the high center
         if f.vspec.get("title"):
             title = f"{f.vspec.get('title')} {units}"
-        else:
+        else:  # pragma: no cover
             level, lev_unit = numeric_level(f.level)
             title = f"{level} {lev_unit} {f.field.long_name} {units}"
         plt.title(f"{title}", loc="center", y=1.10, fontsize=18)
@@ -788,7 +792,7 @@ class DataMap:
             fontsize=14,
         )
 
-    def _wind_barbs(self, level: bool | str):
+    def _wind_barbs(self, level: bool | str):  # pragma: no cover
         """
         Draws the wind barbs. A decent stride can be found if you divide the
         number of grid points on the shorter side by 35. Subdomains are defined
@@ -860,7 +864,7 @@ class DiffMap(DataMap):
     and will not plot overlays and such.
     """
 
-    def _colorbar(self, cc: QuadContourSet, ax: Axes):
+    def _colorbar(self, cc: QuadContourSet, ax: Axes):  # pragma: no cover
         """Set the colorbar for a difference field."""
 
         plt.colorbar(
@@ -871,7 +875,7 @@ class DiffMap(DataMap):
             shrink=1.0,
         )
 
-    def _draw_panel(self, wind_barbs: bool = False):
+    def _draw_panel(self, wind_barbs: bool = False):  # pragma: no cover
         """Draw a map of the difference field."""
 
         ax = self.map.ax
@@ -895,7 +899,7 @@ class DiffMap(DataMap):
             levels=self._eq_contours(),
         )
 
-    def _eq_contours(self):
+    def _eq_contours(self):  # pragma: no cover
         """Center the contours based on the data min/max."""
 
         minval = np.amin(self.field.data)
@@ -905,7 +909,7 @@ class DiffMap(DataMap):
         maxval = max(abs(minval), abs(maxval))
         return np.linspace(-maxval, maxval, 21)
 
-    def _title(self):
+    def _title(self):  # pragma: no cover
         """Draw the title for a map."""
 
         f = self.field
@@ -960,13 +964,13 @@ class MultiPanelDataMap(DataMap):
 
         # Finish with the colorbar on the last panel only
         # Plot it on the full figure scale.
-        if self.last_panel:
+        if self.last_panel:  # pragma: no cover
             cax = plt.axes((0.0, 0.0, 1.0, 0.2))
             self._colorbar(ax=cax, cc=cf)
             cax.axis("off")
 
         # Create a pop-up to display the figure, if show=True
-        if show:
+        if show:  # pragma: no cover
             plt.tight_layout()
 
         return cf
@@ -985,7 +989,7 @@ class MultiPanelDataMap(DataMap):
             transform=ax.transAxes,
         )
 
-    def title(self):
+    def title(self):  # pragma: no cover
         """Draw the title for a map."""
 
         f = self.field

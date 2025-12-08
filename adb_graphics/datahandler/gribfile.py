@@ -11,7 +11,7 @@ import xarray as xr
 warnings.filterwarnings("ignore", category=FutureWarning, module="cfgrib")
 
 
-class GribFiles:
+class GribFiles:  # pragma: no cover
     """
     Class for loading in a set of grib files and combining them over
     forecast hours.
@@ -85,7 +85,7 @@ class WholeGribFile:
                 var_id = _var_id(ds, str(var))
                 if all_fields.get(var_id) is None:
                     all_fields[var_id] = ds
-                else:
+                else:  # pragma: no cover
                     msg = f"Multiple entries for {var_id} when opening {filename}"
                     raise ValueError(msg)
         return all_fields

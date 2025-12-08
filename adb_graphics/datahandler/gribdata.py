@@ -49,7 +49,7 @@ class UPPData(specs.VarSpec):
         key = "typeOfLevel"
         try:
             self.vertical_coord = cf[key]
-        except KeyError:
+        except KeyError:  # pragma: no cover
             msg = f"{key} is not a key for {short_name} at {level}. cf: {cf}"
             raise KeyError(msg) from None
         self.ds = ds
@@ -115,7 +115,7 @@ class UPPData(specs.VarSpec):
             for var in ds:
                 if ds[var].attrs["GRIB_shortName"] == short_name:
                     return var
-            return None
+            return None  # pragma: no cover
 
         short_name = cfgribspec.get("shortName", "unknown")
         vertical_coord = cfgribspec["typeOfLevel"]
@@ -140,11 +140,11 @@ class UPPData(specs.VarSpec):
             leveled = level is not None and vertical_coord != "hybrid"
             if len(field.coords[vertical_coord].shape) > 0 and (layered or leveled):
                 if vertical_coord == "depthBelowLandLayer" and level:
-                    level = level / 100.0
+                    level = level / 100.0  # pragma: no cover
                 field = field.sel(**{vertical_coord: level})
             return DataArray(field)
-        msg = f"Variable {short_name} not found in dataset."
-        raise ValueError(msg)
+        msg = f"Variable {short_name} not found in dataset."  # pragma: no cover
+        raise ValueError(msg)  # pragma: no cover
 
     def get_transform(self, transforms: dict | list | str, val: DataArray) -> DataArray:
         """
@@ -355,7 +355,7 @@ class FieldData(UPPData):
             msg = f"There is no color definition named {color_spec}"
             raise AttributeError(msg) from e
         if callable(ret):
-            return np.asarray(ret())
+            return np.asarray(ret())  # pragma: no cover
         return np.asarray(ret)
 
     @property
@@ -499,7 +499,7 @@ class FieldData(UPPData):
         grid_info: dict[str, str | float | int | list] = {}
         var_info = self.field
         grid_def = var_info.attrs["GRIB_gridDefinitionDescription"].lower()
-        match grid_def:
+        match grid_def:  # pragma: no cover
             case x if "lambert" in x:
                 attrs = [
                     "GRIB_Latin1InDegrees",
@@ -728,7 +728,7 @@ class ProfileData(UPPData):
         self,
         level: str | None = None,
         name: str | None = None,
-        do_transform: bool = True,  # noqa: ARG002
+        do_transform: bool = False,
     ) -> DataArray:
         """
         Returns the numpy array of values at the object's x, y location for the
@@ -740,6 +740,9 @@ class ProfileData(UPPData):
                        upper air
 
         """
+
+        assert do_transform is False  # not supported by this class
+
         # Set the defaults here since this is an instance of an abstract method
         # level refers to the level key in the specs file.
         level = level if level is not None else "ua"

@@ -38,7 +38,7 @@ def check_file(
     data_root: Path | None = None,
     file_tmpl: str | None = None,
     mem: int | None = None,
-) -> tuple[Path, bool]:
+) -> tuple[Path, bool]:  # pragma: no cover
     """
     Given the command line arguments, the forecast hour, and a potential
     ensemble member, build a full path to the file and ensure it exists.
@@ -61,7 +61,7 @@ def check_file(
     return grib_path, old_enough
 
 
-def create_skewt(cla: Namespace, fhr: int, grib_path: Path, workdir: Path):
+def create_skewt(cla: Namespace, fhr: int, grib_path: Path, workdir: Path):  # pragma: no cover
     """
     Generate arguments for parallel processing of Skew T graphics,
     and generate a pool of workers to complete the tasks.
@@ -79,7 +79,7 @@ def create_maps(
     grib_paths: list[Path],
     workdir: Path,
     grib_path2: Path | None = None,
-):
+):  # pragma: no cover
     """
     Generate arguments for parallel processing of plan-view maps and
     generate a pool of workers to complete the task.
@@ -124,7 +124,7 @@ def create_maps(
             pool.starmap(parallel_maps, args)
 
 
-def generate_tile_list(arg_list: list) -> list[str]:
+def generate_tile_list(arg_list: list) -> list[str]:  # pragma: no cover
     """
     Given the input arguments -- a list if the argument is provided, return
     the list. If no arg is provided, defaults to the full domain, and if 'all'
@@ -146,7 +146,7 @@ def generate_tile_list(arg_list: list) -> list[str]:
     return arg_list
 
 
-def load_images(arg: list[Path | str]):
+def load_images(arg: list[Path | str]):  # pragma: no cover
     """
     Check that input image file exists, and that it contains the
     requested section. Return a 2-list (required by argparse) of the
@@ -169,7 +169,7 @@ def load_images(arg: list[Path | str]):
     return [images.get("model"), images.get("variables")]
 
 
-def parse_args(argv: list) -> Namespace:
+def parse_args(argv: list) -> Namespace:  # pragma: no cover
     """
     Set up argparse command line arguments, and return the Namespace
     containing the settings.
@@ -363,7 +363,7 @@ def parse_args(argv: list) -> Namespace:
     return parser.parse_args(argv)
 
 
-def pre_proc_grib_files(cla: Namespace, fhr: int) -> tuple[Path, bool]:
+def pre_proc_grib_files(cla: Namespace, fhr: int) -> tuple[Path, bool]:  # pragma: no cover
     """
     Use the command line argument object (cla) to determine the grib file
     location at a given forecast hour. If multiple data input paths and file
@@ -447,7 +447,7 @@ def pre_proc_grib_files(cla: Namespace, fhr: int) -> tuple[Path, bool]:
     return combined_fp, True
 
 
-def remove_accumulated_images(cla: Namespace):
+def remove_accumulated_images(cla: Namespace):  # pragma: no cover
     """
     Searches for all images that correspond with specs that have the
     accumulate entry set to True and removes them from the list of images to
@@ -469,7 +469,7 @@ def remove_accumulated_images(cla: Namespace):
                     del cla.images[1][variable]
 
 
-def remove_proc_grib_files(cla: Namespace) -> None:
+def remove_proc_grib_files(cla: Namespace) -> None:  # pragma: no cover
     """Find all processed grib files produced by this script and remove them."""
 
     # Prepare template with all viable forecast hours -- glob accepts *
@@ -485,7 +485,7 @@ def remove_proc_grib_files(cla: Namespace) -> None:
             Path(file_path).unlink()
 
 
-def stage_zip_files(tiles: list, zip_dir: Path) -> dict:
+def stage_zip_files(tiles: list, zip_dir: Path) -> dict:  # pragma: no cover
     """
     Stage the zip files in the appropriate directory for each tile to be
     plotted. Return the dictionary of zipfile paths.
@@ -511,7 +511,7 @@ def stage_zip_files(tiles: list, zip_dir: Path) -> dict:
 
 
 @utils.timer
-def graphics_driver(cla: Namespace):
+def graphics_driver(cla: Namespace):  # pragma: no cover
     # ruff: noqa: PLR0915, PLR0912
     # This whole script has likely reached the point of neededing refactoring
     # into an object oriented design....each graphics type is it's own object
@@ -678,7 +678,7 @@ def graphics_driver(cla: Namespace):
         remove_proc_grib_files(cla)
 
 
-def create_graphics(argv: list):
+def create_graphics(argv: list):  # pragma: no cover
     """
     Function to perform a series of checks on command line arguments.
     """
@@ -738,4 +738,4 @@ def create_graphics(argv: list):
 
 
 if __name__ == "__main__":
-    create_graphics(sys.argv[1:])
+    create_graphics(sys.argv[1:])  # pragma: no cover

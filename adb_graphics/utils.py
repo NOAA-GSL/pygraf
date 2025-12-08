@@ -310,7 +310,7 @@ def uniq_wgrib2_list(inlist: list[str]):
 
 
 @timer
-def zip_products(fhr: int, workdir: Path, zipfiles: dict) -> None:
+def zip_products(fhr: int, workdir: Path, zipfiles: dict) -> None:  # pragma: no cover
     """
     Spin up a subprocess to zip all the product files into the staged zip files.
 

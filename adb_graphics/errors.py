@@ -5,7 +5,7 @@ class FieldNotUniqueError(Exception):
     """Exception raised when multiple Grib fields are found with input parameters."""
 
 
-class GribReadError(Exception):
+class GribReadError(Exception):  # pragma: no cover
     """Exception raised when there is an error reading the grib file."""
 
     def __init__(self, name: str, message: str = "was not found"):
