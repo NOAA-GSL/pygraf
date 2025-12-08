@@ -603,8 +603,7 @@ def graphics_driver(cla: Namespace):  # pragma: no cover
                         break
                 # It's safe to continue on processing the next forecast hour
                 print(
-                    "Cannot find specified file(s), continuing to check on \
-                    next forecast hour."
+                    "Cannot find specified file(s), continuing to check on next forecast hour."
                 )
                 continue
 

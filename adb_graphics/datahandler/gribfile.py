@@ -39,11 +39,10 @@ class GribFiles:  # pragma: no cover
         self.cfgrib_config = cfgrib_config
         self.contents = self._load()
 
-    def _load(self, filenames: list[Path] | None = None):
+    def _load(self):
         """Load the set of files into a single Xarray structure."""
-        filenames = self.filenames if filenames is None else filenames
         ds = xr.open_mfdataset(
-            filenames,
+            self.filenames,
             engine="cfgrib",
             concat_dim="time",
             combine="nested",
@@ -71,11 +70,11 @@ class WholeGribFile:
         filename: Path,
     ):
         self.filename = filename
-        self.contents = self._load(filename)
+        self.contents = self._load()
 
-    def _load(self, filename: Path):
+    def _load(self):
         datasets = cfgrib.open_datasets(
-            str(filename),
+            str(self.filename),
             read_keys=["orientationOfTheGridInDegrees", "parameterNumber"],
         )
 
