@@ -418,7 +418,7 @@ class FieldData(UPPData):
         return values.sel(isobaricInhPa=levs).mean("isobaricInhPa")
 
     def field_sum(self, values: DataArray, variable2: str, level2: str, **kwargs):
-        """Return the sum of the values."""
+        """Returns the sum of the values."""
 
         value2 = self.values(
             name=variable2, level=level2, do_transform=kwargs.get("do_transform", True)
@@ -583,7 +583,7 @@ class FieldData(UPPData):
         columns, and (3) uses the layer depth to find the pressure at the
         next sigma level.
 
-        The process is iterative to the topof the atmosphere.
+        The process is iterative to the top of the atmosphere.
         """
         pres_sfc = self.values(name="pres", level="sfc") * 100.0  # convert back to Pa
         pres_nat_lev = self.values(name="pres", level="ua")
@@ -707,10 +707,10 @@ class ProfileData(UPPData):
         )
 
         self.loc = loc
-        # The first 31 columns are space delimted
+        # The first 31 columns are space-delimited
         self.site_code, _, self.site_num, lat, lon = loc[:31].split()
 
-        # The variable lenght site name is included past column 37
+        # The variable length site name is included past column 37
         self.site_name = loc[37:].rstrip()
 
         # Convert the string to a number. Longitude should be positive for all

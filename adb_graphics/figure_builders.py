@@ -1,6 +1,6 @@
 """
 This module is where pieces of the figures are put together. Data is
-compbined with maps and skewts to provide the final product.
+combined with maps and skewts to provide the final product.
 """
 
 import gc

@@ -39,20 +39,20 @@ def pytest_addoption(parser):
 
 @fixture(scope="session")
 def natfile():
-    """Interface to  pass a grib file to pytest."""
+    """Interface to pass a grib file to pytest."""
 
     return Path("tests", "data", "wrfnat_hrconus_16.grib2")
 
 
 @fixture(scope="session")
 def prsfile():
-    """Interface to  pass a grib file to pytest."""
+    """Interface to pass a grib file to pytest."""
     return Path("tests", "data", "wrfprs_hrconus_16.grib2")
 
 
 @fixture(scope="session")
 def spec_file():
-    """Interface to  pass a grib file to pytest."""
+    """Interface to pass a grib file to pytest."""
     return Path("adb_graphics", "default_specs.yml")
 
 

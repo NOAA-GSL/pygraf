@@ -110,7 +110,7 @@ TILE_DEFS: dict = {
 
 class MapFields:
     """
-    Class that packages all the field objects need for producing
+    Class that packages all the field objects needed for producing
     desired map content, i.e. an object that contains all filled
     contours, hatched spaces, and overlayed contours needed for a full
     product.

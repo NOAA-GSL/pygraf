@@ -153,7 +153,7 @@ def load_images(arg: list[Path | str]):
     file path and dictionary of images to be created.
     """
 
-    # Agument is expected to be a 2-list of file name and internal
+    # Argument is expected to be a 2-list of file name and internal
     # section name.
 
     image_file = Path(arg[0])
@@ -175,10 +175,7 @@ def parse_args(argv: list) -> Namespace:
     containing the settings.
     """
 
-    parser = ArgumentParser(
-        description="Script to drive the \
-                                     creation of graphices files."
-    )
+    parser = ArgumentParser(description="Script to drive the creation of graphics files.")
 
     # Positional argument
     parser.add_argument(
@@ -230,7 +227,7 @@ def parse_args(argv: list) -> Namespace:
         "-m",
         default="Unnamed Experiment",
         dest="model_name",
-        help="string to use in title of graphic.",
+        help="String to use in title of graphic.",
         type=str,
     )
     parser.add_argument(
@@ -514,7 +511,7 @@ def stage_zip_files(tiles: list, zip_dir: Path) -> dict:
 def graphics_driver(cla: Namespace):
     # ruff: noqa: PLR0915, PLR0912
     # This whole script has likely reached the point of neededing refactoring
-    # into an object oriented design....each graphics type is it's own object
+    # into an object oriented design....each graphics type is its own object
     # sharing a base class.
     """
     Function that interprets the command line arguments to locate the input grib
@@ -606,7 +603,7 @@ def graphics_driver(cla: Namespace):
                         break
                 # It's safe to continue on processing the next forecast hour
                 print(
-                    "Cannot find specified file(s), continuing to check on \n \
+                    "Cannot find specified file(s), continuing to check on \
                     next forecast hour."
                 )
                 continue
