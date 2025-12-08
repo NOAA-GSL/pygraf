@@ -2,9 +2,11 @@ import signal
 import time
 from contextlib import contextmanager
 from copy import deepcopy
-from datetime import datetime
+from datetime import datetime, timedelta
+from os import utime
 from pathlib import Path
 from unittest.mock import MagicMock, patch
+from zipfile import ZipFile
 
 import numpy as np
 import yaml
@@ -44,8 +46,67 @@ def test_create_zip(tmp_path):
     afile.touch()
     bfile.touch()
     zipf = tmp_path / "file.zip"
-    utils.create_zip([str(f) for f in [afile, bfile]], zipf)
-    assert zipf.is_file()
+    utils.create_zip([afile, bfile], zipf)
+    with ZipFile(zipf, "r") as zf:
+        assert zf.namelist() == ["a.txt", "b.txt"]
+    assert not afile.is_file()
+    assert not bfile.is_file()
+
+def test_create_zip_existing_empty(tmp_path):
+    afile = tmp_path / "a.txt"
+    bfile = tmp_path / "b.txt"
+    afile.write_text("foo")
+    bfile.write_text("bar")
+    zipf = tmp_path / "file.zip"
+    zipf.touch()
+    assert zipf.stat().st_size == 0
+    utils.create_zip([afile, bfile], zipf)
+    assert zipf.stat().st_size > 0
+    with ZipFile(zipf, "r") as zf:
+        assert zf.namelist() == ["a.txt", "b.txt"]
+    assert not afile.is_file()
+    assert not bfile.is_file()
+
+def test_create_zip_existing_nonempty(tmp_path):
+    afile = tmp_path / "a.txt"
+    bfile = tmp_path / "b.txt"
+    afile.write_text("foo")
+    a_mod_time = datetime(2025, 1, 1, 1, 0, 0).timestamp()
+    utime(afile, (a_mod_time, a_mod_time))
+    bfile.write_text("bar")
+    zipf = tmp_path / "file.zip"
+    with ZipFile(zipf, "w") as zf:
+        zf.write(afile, arcname=afile.name)
+    utils.create_zip([afile, bfile], zipf)
+    with ZipFile(zipf, "r") as zf:
+        assert zf.namelist() == ["a.txt", "b.txt"]
+        # Make sure the file has the older modify time.
+        assert datetime(*zf.getinfo("a.txt").date_time) == datetime.fromtimestamp(a_mod_time)
+    assert not afile.is_file()
+    assert not bfile.is_file()
+    # Call again and make sure that the "overwrite" branch is not executed.
+    with patch.object(utils, "ZipFile") as zf:
+        utils.create_zip([afile, bfile], zipf)
+    zf.assert_called_once_with(zipf, "a")
+
+
+
+def test_create_zip_existing_nonempty_overwrite(tmp_path):
+    afile = tmp_path / "a.txt"
+    bfile = tmp_path / "b.txt"
+    afile.write_text("foo")
+    bfile.write_text("bar")
+    zipf = tmp_path / "file.zip"
+    with ZipFile(zipf, "w") as zf:
+        zf.write(afile, arcname=afile.name)
+    # A newer archive file (mod time > previously archived file) will overwrite an older one.
+    a_mod_time = (datetime.now().replace(second=0, microsecond=0) + timedelta(minutes=5)).timestamp()
+    utime(afile, (a_mod_time, a_mod_time))
+    utils.create_zip([afile, bfile], zipf)
+    with ZipFile(zipf, "r") as zf:
+        assert zf.namelist() == ["a.txt", "b.txt"]
+        # Make sure the archived file has the newer time.
+        assert datetime(*zf.getinfo("a.txt").date_time) == datetime.fromtimestamp(a_mod_time)
     assert not afile.is_file()
     assert not bfile.is_file()
 
@@ -55,10 +116,10 @@ def test_create_zip_error(tmp_path):
     # Using a different error here (not Exception or RuntimeError) to make sure anything gets
     # caught in code under test.
     with (
-        patch.object(utils.subprocess, "run", side_effect=ValueError) as run,
-        raises(RuntimeError, match="Error on writing zip file!"),
+        patch.object(utils.ZipFile, "write", side_effect=ValueError) as run,
+        raises(RuntimeError, match="Error writing zip file!"),
     ):
-        utils.create_zip(["afile", "bfile"], zipf)
+        utils.create_zip([Path(f) for f in ("afile", "bfile")], zipf)
     assert run.call_count == 2
 
 
@@ -345,35 +406,3 @@ def test_uniq_wgrib2_list():
     assert len(uniq_list) < len(fields_list)
     assert len(uniq_list) == 1711
 
-
-def test_zip_products(capsys, tmp_path):
-    (tmp_path / "1_full_XXXX.12.png").touch()
-    (tmp_path / "2.skewt.XXXX_f012.csv").touch()
-    mock_proc = MagicMock()
-    mock_proc.start = MagicMock()
-    mock_proc.join = MagicMock()
-
-    with (
-        patch.object(utils, "Process", return_value=mock_proc) as proc,
-        patch("time.perf_counter", side_effect=[1.0, 2.0]),
-    ):
-        utils.zip_products(
-            12, tmp_path, {"full": tmp_path / "full.zip", "skewt_csv": tmp_path / "skewt_csv.zip"}
-        )
-        captured = capsys.readouterr()
-    assert proc.call_count == 2
-    assert mock_proc.start.call_count == 2
-    assert mock_proc.join.call_count == 2
-    assert "zip_products Elapsed time: 1.0000 seconds" in captured.out
-
-
-def test_zip_products_skips_when_no_files_found():
-    with (
-        patch("glob.glob", return_value=[]) as mock_glob,
-        patch("multiprocessing.Process") as mock_process,
-    ):
-        workdir = Path("/fake/path")
-        utils.zip_products(5, workdir, {"tile1": "zip1.zip"})
-
-    mock_glob.assert_called_once()
-    mock_process.assert_not_called()

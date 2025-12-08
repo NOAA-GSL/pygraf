@@ -15,6 +15,7 @@ from importlib.util import find_spec
 from multiprocessing import Process
 from pathlib import Path
 from typing import Any
+from zipfile import ZipFile
 
 import numpy as np
 import yaml
@@ -32,7 +33,7 @@ def cfgrib_spec(config: dict, model: str) -> dict:
     return config
 
 
-def create_zip(files_to_zip: list[str], zipf: Path | str):
+def create_zip(files_to_zip: list[Path], zipf: Path | str):
     """Create a zip file. Use a locking mechanism -- write a lock file to disk."""
 
     lock_file = Path(f"{zipf}._lock")
@@ -42,29 +43,43 @@ def create_zip(files_to_zip: list[str], zipf: Path | str):
         if not lock_file.exists():
             # Create the lock
             lock_file.touch()
-            print(f"Writing to zip file {zipf} for files like: {files_to_zip[0][-10:]}")
-
-            cmd = f"zip -uj {zipf} {' '.join(files_to_zip)}"
-            print(f"Running command: {cmd}")
+            print(f"Writing to zip file {zipf} for files like: {files_to_zip[0].name}")
+            overwrite = {}
             try:
-                subprocess.run(
-                    cmd,
-                    check=True,
-                    shell=True,
-                )
+                with ZipFile(zipf, "a") as zf:
+                    arcfiles = zf.namelist()
+                    for file in files_to_zip:
+                        if file.name in arcfiles:
+                            arcinfo = zf.getinfo(file.name)
+                            arc_mod_time = datetime(*arcinfo.date_time)
+                            file_mod_time = datetime.fromtimestamp(file.stat().st_mtime)
+                            if file_mod_time > arc_mod_time:
+                                overwrite[file.name] = file
+                        else:
+                            zf.write(file, arcname=Path(file).name)
+                    if overwrite:
+                         tmp_path = Path(f"{zipf}.tmp")
+                         with ZipFile(tmp_path, "w") as tmp:
+                             for item in zf.namelist():
+                                 if not (file := zf.getinfo(item).filename) in overwrite:
+                                     tmp.write(file, zf.read(item))
+                             for arcname, file in overwrite.items():
+                                 tmp.write(file, arcname=arcname)
+
+                         tmp_path.rename(zipf)
             except Exception as e:
                 count += 1
                 if count >= retry:
-                    msg = "Error on writing zip file!"
+                    msg = "Error writing zip file!"
                     raise RuntimeError(msg) from e
             else:
                 # Zipping was successful. Remove files that were zipped
                 for file_to_zip in files_to_zip:
-                    Path(file_to_zip).unlink(missing_ok=True)
+                    file_to_zip.unlink(missing_ok=True)
                 break
             finally:
-                # Remove the lock
                 lock_file.unlink(missing_ok=True)
+
         # Wait before trying to obtain the lock on the file
         time.sleep(1)
 
@@ -313,12 +328,6 @@ def zip_products(fhr: int, workdir: Path, zipfiles: dict) -> None:
             file_tmpl = f"*.skewt.*_f{fhr:03d}.csv"
         else:
             file_tmpl = f"*_{tile}_*{fhr:02d}.png"
-        product_files = glob.glob(str(workdir / file_tmpl))
+        product_files = [Path(f) for f in glob.glob(str(workdir / file_tmpl))]
         if product_files:
-            zip_proc = Process(
-                group=None,
-                target=create_zip,
-                args=(product_files, zipf),
-            )
-            zip_proc.start()
-            zip_proc.join()
+            create_zip(product_files, zipf)
