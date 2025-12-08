@@ -236,7 +236,7 @@ class UPPData(specs.VarSpec):
         return self.anl_dt + fh
 
     @abc.abstractmethod
-    def values(
+    def get_values(
         self, level: str | None = None, name: str | None = None, do_transform: bool = True
     ) -> DataArray:
         """Returns the values of a given variable."""
@@ -255,7 +255,7 @@ class UPPData(specs.VarSpec):
 
         """
         var, lev = field2_id.split("_") if "_" in field2_id else (field2_id, self.level)
-        field2 = self.values(level=lev, name=var, do_transform=False)
+        field2 = self.get_values(level=lev, name=var, do_transform=False)
         mag = conversions.magnitude(field1, field2)
         field1.close()
         field2.close()
@@ -318,7 +318,7 @@ class FieldData(UPPData):
         """
 
         ceil = values
-        vis = self.values(name="vis", level="sfc")
+        vis = self.get_values(name="vis", level="sfc")
 
         flru = where((ceil > 1.0) & (ceil < 3.0), 1.01, 0.0)
         flru = where((vis > 3.0) & (vis < 5.0), 1.01, flru)
@@ -382,7 +382,7 @@ class FieldData(UPPData):
         the values associated with a given object -- helpful for differences.
         """
         if not hasattr(self, "_data"):
-            self._data = self.values()
+            self._data = self.get_values()
         return self._data
 
     @data.setter
@@ -397,7 +397,7 @@ class FieldData(UPPData):
     def field_diff(self, values: DataArray, variable2: str, level2: str, **kwargs):
         """Subtracts the values from variable2 from self.field."""
 
-        value2 = self.values(
+        value2 = self.get_values(
             name=variable2, level=level2, do_transform=kwargs.get("do_transform", True)
         )
         diff = values - value2
@@ -420,7 +420,7 @@ class FieldData(UPPData):
     def field_sum(self, values: DataArray, variable2: str, level2: str, **kwargs):
         """Returns the sum of the values."""
 
-        value2 = self.values(
+        value2 = self.get_values(
             name=variable2, level=level2, do_transform=kwargs.get("do_transform", True)
         )
         sum2 = values + value2
@@ -440,11 +440,11 @@ class FieldData(UPPData):
         # Gather fields from the input
         veg = values
 
-        temp = self.values(level="2m", name="temp", do_transform=False)
-        dewpt = self.values(level="2m", name="dewp", do_transform=False)
-        weasd = self.values(level="sfc", name="weasd", do_transform=False)
-        gust = self.values(level="10m", name="gust", do_transform=False)
-        soilm = self.values(level="sfc", name="soilm", do_transform=False)
+        temp = self.get_values(level="2m", name="temp", do_transform=False)
+        dewpt = self.get_values(level="2m", name="dewp", do_transform=False)
+        weasd = self.get_values(level="sfc", name="weasd", do_transform=False)
+        gust = self.get_values(level="10m", name="gust", do_transform=False)
+        soilm = self.get_values(level="sfc", name="soilm", do_transform=False)
 
         # A few derived fields
         dewpt_depression = temp - dewpt
@@ -585,11 +585,11 @@ class FieldData(UPPData):
 
         The process is iterative to the top of the atmosphere.
         """
-        pres_sfc = self.values(name="pres", level="sfc") * 100.0  # convert back to Pa
-        pres_nat_lev = self.values(name="pres", level="ua")
-        temp = self.values(name="temp", level="ua")
-        cloud_mixing_ratio = self.values(name="clwmr", level="ua")
-        rain_mixing_ratio = self.values(name="rwmr", level="ua")
+        pres_sfc = self.get_values(name="pres", level="sfc") * 100.0  # convert back to Pa
+        pres_nat_lev = self.get_values(name="pres", level="ua")
+        temp = self.get_values(name="temp", level="ua")
+        cloud_mixing_ratio = self.get_values(name="clwmr", level="ua")
+        rain_mixing_ratio = self.get_values(name="rwmr", level="ua")
 
         gravity = 9.81
         slw = pres_sfc * 0.0  # start with array of zero values
@@ -635,7 +635,7 @@ class FieldData(UPPData):
 
         return str(self.vspec.get("unit", self.field.units))
 
-    def values(
+    def get_values(
         self, level: str | None = None, name: str | None = None, do_transform: bool = True
     ) -> DataArray:
         """
@@ -724,7 +724,7 @@ class ProfileData(UPPData):
         if self.site_lon < 0:
             self.site_lon = self.site_lon + 360.0
 
-    def values(
+    def get_values(
         self,
         level: str | None = None,
         name: str | None = None,

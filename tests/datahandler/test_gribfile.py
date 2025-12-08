@@ -20,8 +20,8 @@ def test_gribfiles():
             "typeOfLevel": "surface",
         },
     )
-    assert isinstance(gf.contents, dict)
-    assert isinstance(gf.contents["sp_surface_instant"], Dataset)
-    assert len(gf.contents) == 1
-    assert len(gf.contents["sp_surface_instant"].data_vars) == 1
-    assert len(gf.contents["sp_surface_instant"].data_vars["sp"].shape) == 3
+    assert isinstance(gf.datasets, dict)
+    assert isinstance(gf.datasets["sp_surface_instant"], Dataset)
+    assert len(gf.datasets) == 1
+    assert len(gf.datasets["sp_surface_instant"].data_vars) == 1
+    assert len(gf.datasets["sp_surface_instant"].data_vars["sp"].shape) == 3

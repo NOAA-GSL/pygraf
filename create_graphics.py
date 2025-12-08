@@ -66,7 +66,7 @@ def create_skewt(cla: Namespace, fhr: int, grib_path: Path, workdir: Path):  # p
     Generate arguments for parallel processing of Skew T graphics,
     and generate a pool of workers to complete the tasks.
     """
-    ds = gribfile.WholeGribFile(grib_path).contents
+    ds = gribfile.WholeGribFile(grib_path).datasets
     args = [(cla, fhr, ds, site, workdir) for site in cla.sites]
     print(f"Queueing {len(args)} Skew Ts")
     with Pool(processes=cla.nprocs) as pool:
@@ -85,7 +85,7 @@ def create_maps(
     generate a pool of workers to complete the task.
     """
 
-    ds = gribfile.WholeGribFile(grib_paths[-1]).contents
+    ds = gribfile.WholeGribFile(grib_paths[-1]).datasets
     for tile in cla.tiles:
         args = []
         for variable, levels in cla.images[1].items():
@@ -104,7 +104,7 @@ def create_maps(
                 if (accumulate or grib_acc) and fhr == 0:
                     continue
                 if accumulate:
-                    ads = gribfile.GribFiles(grib_paths, vspec).contents
+                    ads = gribfile.GribFiles(grib_paths, vspec).datasets
 
                 args.append(
                     (
@@ -602,9 +602,7 @@ def graphics_driver(cla: Namespace):  # pragma: no cover
                         print(f"Waiting for {grib_path} to be available.")
                         break
                 # It's safe to continue on processing the next forecast hour
-                print(
-                    "Cannot find specified file(s), continuing to check on next forecast hour."
-                )
+                print("Cannot find specified file(s), continuing to check on next forecast hour.")
                 continue
 
             # Create the working directory

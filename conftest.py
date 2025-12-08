@@ -58,9 +58,9 @@ def spec_file():
 
 @fixture(scope="session")
 def prs_ds(prsfile):
-    return gribfile.WholeGribFile(prsfile).contents
+    return gribfile.WholeGribFile(prsfile).datasets
 
 
 @fixture(scope="session")
 def nat_ds(natfile):
-    return gribfile.WholeGribFile(natfile).contents
+    return gribfile.WholeGribFile(natfile).datasets

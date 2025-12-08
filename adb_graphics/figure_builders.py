@@ -172,7 +172,7 @@ def parallel_maps(  # noqa: PLR0915, PLR0912
                 if spec.get("include_obs", False) and cla.obs_file_path:
                     # Add observation panel to lower left. Currently only
                     # supported for composite reflectivity.
-                    obs_ds = gribfile.WholeGribFile(cla.obs_file_path).contents
+                    obs_ds = gribfile.WholeGribFile(cla.obs_file_path).datasets
                     add_obs_panel(
                         ax=axes[8],
                         model_name=cla.model_name,

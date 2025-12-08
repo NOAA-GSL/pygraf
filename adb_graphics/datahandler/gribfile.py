@@ -3,6 +3,7 @@ Classes that load grib files.
 """
 
 import warnings
+from functools import cached_property
 from pathlib import Path
 
 import cfgrib
@@ -37,9 +38,9 @@ class GribFiles:  # pragma: no cover
 
         self.filenames = filenames
         self.cfgrib_config = cfgrib_config
-        self.contents = self._load()
 
-    def _load(self):
+    @cached_property
+    def datasets(self):
         """Load the set of files into a single Xarray structure."""
         ds = xr.open_mfdataset(
             self.filenames,
@@ -70,9 +71,9 @@ class WholeGribFile:
         filename: Path,
     ):
         self.filename = filename
-        self.contents = self._load()
 
-    def _load(self):
+    @cached_property
+    def datasets(self):
         datasets = cfgrib.open_datasets(
             str(self.filename),
             read_keys=["orientationOfTheGridInDegrees", "parameterNumber"],
@@ -85,7 +86,7 @@ class WholeGribFile:
                 if all_fields.get(var_id) is None:
                     all_fields[var_id] = ds
                 else:  # pragma: no cover
-                    msg = f"Multiple entries for {var_id} when opening {filename}"
+                    msg = f"Multiple entries for {var_id} when opening {self.filename}"
                     raise ValueError(msg)
         return all_fields
 

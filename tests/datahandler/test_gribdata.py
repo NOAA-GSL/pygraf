@@ -11,7 +11,7 @@ from adb_graphics.datahandler import gribdata
 
 
 class ConcreteUPPData(gribdata.UPPData):
-    def values(
+    def get_values(
         self,
         level: str | None = None,  # noqa: ARG002
         name: str | None = None,  # noqa: ARG002
@@ -383,7 +383,7 @@ def test_fielddata_corners_single_dim(fielddata_obj):
 
 
 def test_fielddata_data_getter_and_setter(fielddata_obj):
-    assert np.array_equal(fielddata_obj.data, fielddata_obj.values())
+    assert np.array_equal(fielddata_obj.data, fielddata_obj.get_values())
     new_data = ones_like(fielddata_obj.field)
     fielddata_obj.data = new_data
     assert np.array_equal(fielddata_obj.data, new_data)
@@ -473,52 +473,52 @@ def test_fielddata_units_in_vspec(fielddata_obj):
 def test_fielddata_values_args_no_transform(fielddata_obj, lev, var):
     fielddata_obj.vspec["transform"] = None
     fielddata_obj.model = "hrrr"
-    assert not np.array_equal(fielddata_obj.values(level=lev, name=var), fielddata_obj.field)
+    assert not np.array_equal(fielddata_obj.get_values(level=lev, name=var), fielddata_obj.field)
 
 
 def test_fielddata_values_args_transform(fielddata_obj):
     fielddata_obj.vspec["transform"] = "opposite"
     fielddata_obj.model = "hrrr"
-    assert np.array_equal(fielddata_obj.values(level="sfc", name="temp"), -fielddata_obj.field)
+    assert np.array_equal(fielddata_obj.get_values(level="sfc", name="temp"), -fielddata_obj.field)
 
 
 def test_fielddata_values_no_args_no_transform(fielddata_obj):
     field = ones_like(fielddata_obj.ds["t_surface_instant"])
     fielddata_obj.ds = {"t_surface_instant": field}
     fielddata_obj.vspec["transform"] = None
-    assert np.array_equal(fielddata_obj.values(), field.t)
+    assert np.array_equal(fielddata_obj.get_values(), field.t)
 
 
 def test_fielddata_values_no_args_transform(fielddata_obj):
     field = ones_like(fielddata_obj.ds["t_surface_instant"])
     fielddata_obj.ds = {"t_surface_instant": field}
     fielddata_obj.vspec["transform"] = "opposite"
-    assert np.array_equal(fielddata_obj.values(), -field.t.squeeze())
+    assert np.array_equal(fielddata_obj.get_values(), -field.t.squeeze())
 
 
 def test_fielddata_values_bad_name_level(fielddata_obj_ro):
     with raises(errors.NoGraphicsDefinitionForVariableError):
-        fielddata_obj_ro.values(level="foo", name="temp")
+        fielddata_obj_ro.get_values(level="foo", name="temp")
     with raises(errors.NoGraphicsDefinitionForVariableError):
-        fielddata_obj_ro.values(level="sfc", name="foo")
+        fielddata_obj_ro.get_values(level="sfc", name="foo")
     with raises(errors.NoGraphicsDefinitionForVariableError):
-        fielddata_obj_ro.values(level="bar", name="foo")
+        fielddata_obj_ro.get_values(level="bar", name="foo")
 
 
 def test_profiledata_values(profiledata_obj):
-    assert profiledata_obj.values().shape == (50,)
+    assert profiledata_obj.get_values().shape == (50,)
 
 
 def test_profiledata_values_bad_name_level(profiledata_obj):
     with raises(errors.NoGraphicsDefinitionForVariableError):
-        profiledata_obj.values(level="foo", name="temp")
+        profiledata_obj.get_values(level="foo", name="temp")
     with raises(errors.NoGraphicsDefinitionForVariableError):
-        profiledata_obj.values(level="sfc", name="foo")
+        profiledata_obj.get_values(level="sfc", name="foo")
     with raises(errors.NoGraphicsDefinitionForVariableError):
-        profiledata_obj.values(level="bar", name="foo")
+        profiledata_obj.get_values(level="bar", name="foo")
 
 
 def test_profiledata_values_one_level(profiledata_obj):
-    value = profiledata_obj.values(name="hlcy", level="sr01")
+    value = profiledata_obj.get_values(name="hlcy", level="sr01")
     assert value.shape == ()  # A single number
     assert value == 47.7

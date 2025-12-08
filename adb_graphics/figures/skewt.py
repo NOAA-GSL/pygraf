@@ -131,10 +131,10 @@ class SkewTDiagram(gribdata.ProfileData):
             # Get the profile values
             scale = settings.get("scale", 1.0)
             try:
-                profile = self.values(name=mixr) * 1000.0 * scale
+                profile = self.get_values(name=mixr) * 1000.0 * scale
             except (errors.NoGraphicsDefinitionForVariableError, IndexError, ValueError):
                 try:
-                    profile = self.values(name=mixr, level="uanat") * 1000.0 * scale
+                    profile = self.get_values(name=mixr, level="uanat") * 1000.0 * scale
                 except errors.NoGraphicsDefinitionForVariableError:  # pragma: no cover
                     print(f"missing {mixr} for hydrometeor plot, skipping that field.")
                     continue
@@ -296,7 +296,7 @@ class SkewTDiagram(gribdata.ProfileData):
 
         for var, items in atmo_vars.items():
             # Get the profile values and attach MetPy units
-            vals = self.values(name=var).to_numpy() * items["units"]
+            vals = self.get_values(name=var).to_numpy() * items["units"]
 
             # Apply any needed transformations
             transform = items.get("transform")
@@ -636,7 +636,7 @@ class SkewTDiagram(gribdata.ProfileData):
                 raise errors.NoGraphicsDefinitionForVariableError(varname, lev)
 
             try:
-                vals = self.values(level=lev, name=varname)
+                vals = self.get_values(level=lev, name=varname)
                 transforms = spec.get("transform")
                 if transforms:
                     vals = self.get_transform(transforms, vals)
