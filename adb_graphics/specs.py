@@ -155,28 +155,20 @@ class VarSpec(abc.ABC):
         return np.concatenate((grays, ncar))
 
     @property
-    def heat_flux_colors(self) -> np.ndarray:
-        """Default color map for Latent/Sensible Heat Flux."""
-
-        grays = get_cmap("Greys", 8)([6, 5, 4, 3, 2])
-        ctable = ctables.colortables.get_colortable(self.vspec.get("cmap"))(range(0, 33, 2))
-        return np.concatenate((grays, ctable))
-
-    @property
     def heat_flux_colors_g(self) -> np.ndarray:
-        """Default color map for Latent/Sensible Heat Flux."""
+        """Default color map for ground heat flux."""
 
         return get_cmap(self.vspec.get("cmap"), 128)(range(15, 112, 8))
 
     @property
     def heat_flux_colors_l(self) -> np.ndarray:
-        """Default color map for Latent/Sensible Heat Flux."""
+        """Default color map for net latent heat flux."""
 
         return get_cmap(self.vspec.get("cmap"), 128)(range(32, 129, 6))
 
     @property
     def heat_flux_colors_s(self) -> np.ndarray:
-        """Default color map for Latent/Sensible Heat Flux."""
+        """Default color map for sensible heat flux."""
 
         return get_cmap(self.vspec.get("cmap"), 128)(range(32, 129, 6))
 
@@ -264,7 +256,7 @@ class VarSpec(abc.ABC):
 
     @property
     def pmsl_colors(self) -> np.ndarray:
-        """Default color map for Surface Pressure."""
+        """Default color map for mean sea level pressure."""
 
         ncolors = len(self.vspec.get("clevs", self.clevs))
         incr = 128 // ncolors
@@ -273,7 +265,7 @@ class VarSpec(abc.ABC):
 
     @property
     def ps_colors(self) -> np.ndarray:
-        """Default color map for Surface Pressure."""
+        """Default color map for surface pressure."""
 
         grays = get_cmap("Greys", 13)(range(13))
         segments = [[16, 53], [86, 105], [110, 151, 2], [172, 202, 2]]

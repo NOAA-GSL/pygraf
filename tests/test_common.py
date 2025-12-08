@@ -1,5 +1,3 @@
-# pylint: disable=invalid-name
-
 """
 Pytests for the common utilities included in this package.
 
@@ -202,7 +200,6 @@ class TestDefaultSpecs:
 
         return True
 
-    # pylint: disable=inconsistent-return-statements
     def get_callable(self, func):
         """Return the callable function given a function name."""
 
@@ -213,7 +210,6 @@ class TestDefaultSpecs:
         if len(func.split(".")) == 1:
             # Check all the classes in the gribdata module
             for attr in dir(gribdata):
-                # pylint: disable=no-member
                 # Check the methods in each class
                 if func in dir(gribdata.__getattribute__(attr)):
                     method = gribdata.__getattribute__(attr).__dict__.get(func)
@@ -345,55 +341,57 @@ class TestDefaultSpecs:
 
         """
 
+        # fmt: off
         allowed_levels = [
-            "agl",  # above ground level
-            "best",  # Best
+            "agl",      # above ground level
+            "best",     # Best
             "bndylay",  # boundary layer cld cover
-            "esbl",  # ???
-            "esblmn",  # ???
-            "high",  # high clouds
-            "int",  # vertical integral
-            "low",  # low clouds
-            "max",  # maximum in column
-            "maxsfc",  # max surface value
-            "mdn",  # maximum downward
-            "mid",  # mid-level clouds
-            "mnsfc",  # min surface value
-            "msl",  # mean sea level
-            "mu",  # most unstable
-            "mul",  # most unstable layer
-            "mup",  # maximum upward
-            "mu",  # most unstable
-            "obs",  # observations
-            "pw",  # wrt precipitable water
-            "sat",  # satellite
-            "sfc",  # surface
-            "sfclt",  # surface (less than)
-            "top",  # nominal top of atmosphere
-            "total",  # total clouds
-            "ua",  # upper air
-            "uanat",  # upper air native file
+            "esbl",     # ???
+            "esblmn",   # ensemble mean
+            "high",     # high clouds
+            "int",      # vertical integral
+            "low",      # low clouds
+            "max",      # maximum in column
+            "maxsfc",   # max surface value
+            "mdn",      # maximum downward
+            "mid",      # mid-level clouds
+            "mnsfc",    # min surface value
+            "msl",      # mean sea level
+            "mu",       # most unstable
+            "mul",      # most unstable layer
+            "mup",      # maximum upward
+            "mu",       # most unstable
+            "obs",      # observations
+            "pw",       # wrt precipitable water
+            "sat",      # satellite
+            "sfc",      # surface
+            "sfclt",    # surface (less than)
+            "top",      # nominal top of atmosphere
+            "total",    # total clouds
+            "ua",       # upper air
+            "uanat",    # upper air native file
         ]
 
         allowed_lev_type = [
-            "cm",  # centimeters
-            "ds",  # difference
-            "ft",  # feet
-            "km",  # kilometers
-            "m",  # meters
-            "mm",  # millimeters
-            "mb",  # milibars
-            "sr",  # storm relative
+            "cm",   # centimeters
+            "ds",   # difference
+            "ft",   # feet
+            "km",   # kilometers
+            "m",    # meters
+            "mm",   # millimeters
+            "mb",   # milibars
+            "sr",   # storm relative
         ]
 
         allowed_stat = [
-            "in",  # ???
+            "in",   # ???
             "ens",  # ensemble
-            "m",  # ???
-            "maxm",  # ???
-            "mn",  # minimum
-            "mx",  # maximum
+            "m",    # ???
+            "maxm", # ???
+            "mn",   # minimum
+            "mx",   # maximum
         ]
+        # fmt: on
 
         # Easy check first -- it is in the allowed_levels list
         if key in allowed_levels:

@@ -52,7 +52,6 @@ def test_centered_diff(levels, expected, spec):
         ("goes_colors", 151),
         ("graupel_colors", 19),
         ("hail_colors", 10),
-        ("heat_flux_colors", 22),
         ("heat_flux_colors_g", 13),
         ("heat_flux_colors_l", 17),
         ("heat_flux_colors_s", 17),

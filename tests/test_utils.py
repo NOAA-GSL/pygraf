@@ -5,7 +5,7 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 from os import utime
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 from zipfile import ZipFile
 
 import numpy as np
@@ -52,6 +52,7 @@ def test_create_zip(tmp_path):
     assert not afile.is_file()
     assert not bfile.is_file()
 
+
 def test_create_zip_existing_empty(tmp_path):
     afile = tmp_path / "a.txt"
     bfile = tmp_path / "b.txt"
@@ -66,6 +67,7 @@ def test_create_zip_existing_empty(tmp_path):
         assert zf.namelist() == ["a.txt", "b.txt"]
     assert not afile.is_file()
     assert not bfile.is_file()
+
 
 def test_create_zip_existing_nonempty(tmp_path):
     afile = tmp_path / "a.txt"
@@ -90,7 +92,6 @@ def test_create_zip_existing_nonempty(tmp_path):
     zf.assert_called_once_with(zipf, "a")
 
 
-
 def test_create_zip_existing_nonempty_overwrite(tmp_path):
     afile = tmp_path / "a.txt"
     bfile = tmp_path / "b.txt"
@@ -100,7 +101,9 @@ def test_create_zip_existing_nonempty_overwrite(tmp_path):
     with ZipFile(zipf, "w") as zf:
         zf.write(afile, arcname=afile.name)
     # A newer archive file (mod time > previously archived file) will overwrite an older one.
-    a_mod_time = (datetime.now().replace(second=0, microsecond=0) + timedelta(minutes=5)).timestamp()
+    a_mod_time = (
+        datetime.now().replace(second=0, microsecond=0) + timedelta(minutes=5)
+    ).timestamp()
     utime(afile, (a_mod_time, a_mod_time))
     utils.create_zip([afile, bfile], zipf)
     with ZipFile(zipf, "r") as zf:
@@ -132,7 +135,7 @@ def test_create_zip_locked(tmp_path):
     zipf_lock = tmp_path / "file.zip._lock"
     zipf_lock.touch()
     with raises(TimeoutError), timeout(2):
-        utils.create_zip([str(f) for f in [afile, bfile]], zipf)
+        utils.create_zip([afile, bfile], zipf)
     assert not zipf.is_file()
     assert afile.is_file()
     assert bfile.is_file()
@@ -405,4 +408,3 @@ def test_uniq_wgrib2_list():
     uniq_list = utils.uniq_wgrib2_list(fields_list)
     assert len(uniq_list) < len(fields_list)
     assert len(uniq_list) == 1711
-

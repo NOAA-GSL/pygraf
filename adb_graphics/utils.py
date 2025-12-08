@@ -5,14 +5,12 @@ A set of generic utilities available to all the adb_graphics components.
 import functools
 import glob
 import re
-import subprocess
 import sys
 import time
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from importlib import import_module
 from importlib.util import find_spec
-from multiprocessing import Process
 from pathlib import Path
 from typing import Any
 from zipfile import ZipFile
@@ -33,6 +31,33 @@ def cfgrib_spec(config: dict, model: str) -> dict:
     return config
 
 
+def _write_zip(files_to_zip: list[Path], zipf: Path | str):
+    """Write the zip file, overwriting existing files that have a newer modification timestamp."""
+    print(f"Writing to zip file {zipf} for files like: {files_to_zip[0].name}")
+    overwrite = {}
+    with ZipFile(zipf, "a") as zf:
+        arcfiles = zf.namelist()
+        for file in files_to_zip:
+            if file.name in arcfiles:
+                arcinfo = zf.getinfo(file.name)
+                arc_mod_time = datetime(*arcinfo.date_time)
+                file_mod_time = datetime.fromtimestamp(file.stat().st_mtime)
+                if file_mod_time > arc_mod_time:
+                    overwrite[file.name] = file
+            else:
+                zf.write(file, arcname=Path(file).name)
+        if overwrite:
+            tmp_path = Path(f"{zipf}.tmp")
+            with ZipFile(tmp_path, "w") as tmp:
+                for item in zf.namelist():
+                    if (arcfile := zf.getinfo(item).filename) not in overwrite:
+                        tmp.write(arcfile, str(zf.read(item)))
+                for arcname, file in overwrite.items():
+                    tmp.write(file, arcname=arcname)
+
+            tmp_path.rename(zipf)
+
+
 def create_zip(files_to_zip: list[Path], zipf: Path | str):
     """Create a zip file. Use a locking mechanism -- write a lock file to disk."""
 
@@ -43,30 +68,8 @@ def create_zip(files_to_zip: list[Path], zipf: Path | str):
         if not lock_file.exists():
             # Create the lock
             lock_file.touch()
-            print(f"Writing to zip file {zipf} for files like: {files_to_zip[0].name}")
-            overwrite = {}
             try:
-                with ZipFile(zipf, "a") as zf:
-                    arcfiles = zf.namelist()
-                    for file in files_to_zip:
-                        if file.name in arcfiles:
-                            arcinfo = zf.getinfo(file.name)
-                            arc_mod_time = datetime(*arcinfo.date_time)
-                            file_mod_time = datetime.fromtimestamp(file.stat().st_mtime)
-                            if file_mod_time > arc_mod_time:
-                                overwrite[file.name] = file
-                        else:
-                            zf.write(file, arcname=Path(file).name)
-                    if overwrite:
-                         tmp_path = Path(f"{zipf}.tmp")
-                         with ZipFile(tmp_path, "w") as tmp:
-                             for item in zf.namelist():
-                                 if not (file := zf.getinfo(item).filename) in overwrite:
-                                     tmp.write(file, zf.read(item))
-                             for arcname, file in overwrite.items():
-                                 tmp.write(file, arcname=arcname)
-
-                         tmp_path.rename(zipf)
+                _write_zip(files_to_zip, zipf)
             except Exception as e:
                 count += 1
                 if count >= retry:
@@ -97,8 +100,6 @@ def fhr_list(args: list[int]) -> list[int]:
       Length > 3:   List as is
 
     argparse should provide a list of at least one item (nargs='+').
-
-    Must ensure that the list contains integers.
     """
 
     args = args if isinstance(args, list) else [args]
