@@ -16,7 +16,7 @@ def k_to_c(field: ndarray, **_kwargs):
 
 
 def k_to_f(field: ndarray, **_kwargs):
-    """Conversion from Kelvin to Farenheit."""
+    """Conversion from Kelvin to Fahrenheit."""
     return (field - 273.15) * 9 / 5 + 32
 
 

@@ -139,7 +139,7 @@ def get_func(val: str):
     return getattr(module, fun_name)
 
 
-def join_ranges(loader: yaml.SafeLoader, node: yaml.Node) -> Any:  # noqa: ARG001
+def join_ranges(_loader: yaml.SafeLoader, node: yaml.Node) -> Any:
     """
     Merge two or more different ranges into a single array for color bar clevs.
 
@@ -163,7 +163,7 @@ def join_ranges(loader: yaml.SafeLoader, node: yaml.Node) -> Any:  # noqa: ARG00
     return np.concatenate(list_, axis=0)
 
 
-def arange_constructor(loader: yaml.SafeLoader, node: yaml.Node) -> Any:  # noqa: ARG001
+def arange_constructor(_loader: yaml.SafeLoader, node: yaml.Node) -> Any:
     return np.arange(*[float(n.value) for n in node.value])
 
 
@@ -282,14 +282,14 @@ def timer(func: Callable):
 
 
 def to_datetime(string: str):
-    """Return a datetime object give a string like YYYYMMDDHH."""
+    """Return a datetime object given a string like YYYYMMDDHH."""
 
     return datetime.strptime(string, "%Y%m%d%H")
 
 
 def uniq_wgrib2_list(inlist: list[str]):
     """
-    Given a list of wgrib2 output fields, returns a uniq list of fields for
+    Given a list of wgrib2 output fields, returns a unique list of fields for
     simplifying a grib2 dataset. Uniqueness is defined by the wgrib output from
     field 3 (colon delimted) onward, although the original full grib record must
     be included in the wgrib2 command below.

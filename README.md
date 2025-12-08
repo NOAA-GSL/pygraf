@@ -42,12 +42,12 @@ module load miniconda3/25.11.0
 conda activate pygraf
 ```
 
-This environment contains the necessary develepment packages.
+This environment contains the necessary development packages.
 
 ## Installing with conda
 
-Pygraf comes with an environment.yml file for use with any conda installation. Ensure the conda base
-environment is activated, and run the following command to create a `pygraf` envirionment suitable
+Pygraf comes with an `environment.yml` file for use with any conda installation. Ensure the conda base
+environment is activated, and run the following command to create a `pygraf` environment suitable
 for creating graphics:
 
 ```
@@ -320,7 +320,7 @@ Documentation is available from ECMWF:
 *  https://confluence.ecmwf.int/display/ECC/grib_dump
 
 
-There are many examples in the documentation, but here are a couple that could help with pygraf
+There are many examples in the documentation, but here are a couple that could help with `pygraf`
 specifically.
 
 Show the common `pygraf` parameters for the 6th record:

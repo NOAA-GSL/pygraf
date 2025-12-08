@@ -257,7 +257,7 @@ class SkewTDiagram(gribdata.ProfileData):
         Return a dictionary of atmospheric data profiles for each variable
         needed by the skewT.
 
-        Each of these variables must be have units set appropriately for use
+        Each of these variables must have units set appropriately for use
         with MetPy SkewT. Handle those units and conversions here since it
         differs from the requirements of other graphics units/transforms.
         """
@@ -466,18 +466,18 @@ class SkewTDiagram(gribdata.ProfileData):
         # Fahrenheit tick labels that will display
         labels_f = list(range(-20, 125, 20)) * units.degF
 
-        # Celcius VALUES for those tick marks. These put the ticks in the right
+        # Celsius VALUES for those tick marks. These put the ticks in the right
         # spot.
         labels = labels_f.to("degC").magnitude
 
-        # Set the MINOR tick values to the CELCIUS values.
+        # Set the MINOR tick values to the CELSIUS values.
         skew.ax.xaxis.set_minor_locator(FixedLocator(labels))
 
         # Set the MINOR tick labels to the FAHRENHEIT values.
         skew.ax.set_xticklabels(labels_f.magnitude, minor=True)
         skew.ax.tick_params(which="minor", length=8)
 
-        # Turn off the MAJOR (celcius) tick marks, label the grid lines inside
+        # Turn off the MAJOR (celsius) tick marks, label the grid lines inside
         # the axes.
         skew.ax.tick_params(
             axis="x",
