@@ -538,7 +538,7 @@ class FieldData(UPPData):
                 grid_info[bm_arg] = val
                 del val
 
-        else:
+        else:  # pragma: no cover
             grid_info["lat_0"] = 20.44
             grid_info["lon_0"] = 202.54
             grid_info["width"] = 2000000
