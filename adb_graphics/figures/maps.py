@@ -276,7 +276,7 @@ class Map:
             else:  # pragma: no cover
                 self.corners = TILE_DEFS[self.tile]["corners"]
                 self.grid_info.pop("corners")
-        else:
+        else:  # pragma: no cover
             self.corners = None
             if self.tile in FULL_TILES:
                 self.width = self.grid_info.pop("width")
