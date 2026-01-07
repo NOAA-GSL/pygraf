@@ -77,6 +77,12 @@ class WholeGribFile:
         datasets = cfgrib.open_datasets(
             str(self.filename),
             read_keys=["orientationOfTheGridInDegrees", "parameterNumber"],
+            backend_kwargs=(
+                {
+                    "indexpath": "",
+                    "read_keys": ["orientationOfTheGridInDegrees"],
+                }
+            ),
         )
 
         all_fields: dict = {}
