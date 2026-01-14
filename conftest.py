@@ -8,10 +8,11 @@ function defined.
 import glob
 from pathlib import Path
 
+import pytest
+
 from pytest import fixture
 
 from adb_graphics.datahandler import gribfile
-
 
 @fixture(scope="session", autouse=True)
 def cleanup_data_idx():
@@ -36,17 +37,29 @@ def pytest_addoption(parser):
         help="Path to prs-file.",
     )
 
+    parser.addoption(
+        "--image-file",
+        action="store",
+        help="Path to image list file.",
+        type=Path,
+    )
+
+def pytest_configure(config):
+    pytest.image_file = config.getoption("--image-file")
 
 @fixture(scope="session")
-def natfile():
+def natfile(pytestconfig):
     """Interface to pass a grib file to pytest."""
-
+    if path := pytestconfig.getoption("--nat-file"):
+        return Path(path)
     return Path("tests", "data", "wrfnat_hrconus_16.grib2")
 
 
 @fixture(scope="session")
-def prsfile():
+def prsfile(pytestconfig):
     """Interface to pass a grib file to pytest."""
+    if path := pytestconfig.getoption("--prs-file"):
+        return Path(path)
     return Path("tests", "data", "wrfprs_hrconus_16.grib2")
 
 
@@ -59,6 +72,7 @@ def spec_file():
 @fixture(scope="session")
 def prs_ds(prsfile):
     return gribfile.WholeGribFile(prsfile).datasets
+
 
 
 @fixture(scope="session")

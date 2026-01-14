@@ -98,7 +98,7 @@ class WholeGribFile:
 
 
 def _var_id(ds: xr.Dataset, var: str):
-    vertical_dim = ds[list(ds.data_vars)[0]].attrs.get("GRIB_typeOfLevel")
+    vertical_dim = ds[list(ds.data_vars)[0]].attrs.get("GRIB_typeOfLevel", "unknown")
     var_name = ds[var].attrs.get("GRIB_shortName")
     step_type = ds[var].attrs.get("GRIB_stepType", "nostepType")
     return f"{var_name}_{vertical_dim}_{step_type}"

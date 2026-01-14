@@ -121,6 +121,7 @@ class UPPData(specs.VarSpec):
         vertical_coord = cfgribspec["typeOfLevel"]
         step_type = cfgribspec.get("stepType", "instant")
         var_id = f"{short_name}_{vertical_coord}_{step_type}"
+        vertical_coord = "level" if vertical_coord == "unknown" else vertical_coord
         ds: Dataset | dict = self.ds.get(var_id, {})
         if ds == {}:
             msg = f"{var_id} is not a valid key for the dataset"
@@ -128,14 +129,17 @@ class UPPData(specs.VarSpec):
         var = _find_var()
         if var is not None:
             field = ds[var]
-            top = cfgribspec.get("topLevel", cfgribspec.get("scaledValueOfFirstFixedSurface"))
-            bottom = cfgribspec.get(
-                "bottomLevel", cfgribspec.get("scaledValueOfSecondFixedSurface")
-            )
-            layered = top is not None or bottom is not None
-            level = top if top in field.coords[vertical_coord] else bottom
+            level = cfgribspec.get("level")
+            layered = False
             if level is None:
-                level = cfgribspec.get("level", utils.numeric_level(self.level)[0])
+                top = cfgribspec.get("topLevel", cfgribspec.get("scaledValueOfFirstFixedSurface"))
+                bottom = cfgribspec.get(
+                    "bottomLevel", cfgribspec.get("scaledValueOfSecondFixedSurface")
+                )
+                layered = top is not None or bottom is not None
+                level = top if top in field.coords[vertical_coord] else bottom
+            if level is None:
+                level = utils.numeric_level(self.level)[0]
             level = None if level == "" else level
             leveled = level is not None and vertical_coord != "hybrid"
             if len(field.coords[vertical_coord].shape) > 0 and (layered or leveled):
