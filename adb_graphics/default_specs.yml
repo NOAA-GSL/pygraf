@@ -119,9 +119,13 @@
       hrrrcar:
         <<: *hrrr_1ref
         shortName: unknown
+        parameterCategory: 16
         parameterNumber: 195
       hrrrhi:
         <<: *hrrr_1ref
+        shortName: unknown
+        parameterCategory: 16
+        parameterNumber: 195
       global:
         shortName: refd
         typeOfLevel: heightAboveGround
@@ -179,12 +183,14 @@ acpcp: # Accumulated run total precipitation
         typeOfLevel: surface
         stepRange: '{{ "%d-%d" % (0, fhr) }}'
         stepType: accum
-      hrrrcar:
+      hrrrcar: &unnamed_acctp
         <<: *named_acctp
         shortName: unknown
         parameterCategory: 1
         parameterNumber: 8
       hrrrhi:
+        <<: *unnamed_acctp
+      global:
         <<: *named_acctp
       rrfs:
         <<: *named_acctp
@@ -306,17 +312,19 @@ acsnod: # Accumulated snow
 acsnw: # Run Total Accumulated Snow Using 10:1 Ratio
   sfc:
     cfgrib:
-      hrrr:
+      hrrr: &named_weasd
         shortName: sdwe
         level: 0
         typeOfLevel: surface
         stepType: accum
         stepRange: '{{ "%d-%d" % (0, fhr) }}'
+      hrrrhi: &unnamed_weasd
+        <<: *named_weasd
+        shortName: unknown
+        parameterCategory: 1
+        parameterNumber: 13
       rrfs:
-        parameterNumber: 50
-        level: 0
-        typeOfLevel: surface
-        stepRange: '{{ "%d-%d" % (0, fhr) }}'
+        <<: *unnamed_weasd
     clevs: [0.01, 0.1, 1, 2, 3, 4, 6, 8, 10, 12, 18, 24]
     cmap: gist_ncar
     colors: snow_colors
@@ -446,12 +454,14 @@ cape:
         shortName: cape
         topLevel: 25500
         typeOfLevel: pressureFromGroundLayer
-      hrrrcar:
+      hrrrcar: &unnamed_cape
         <<: *named_cape
         shortName: unknown
         parameterCategory: 7
         parameterNumber: 6
       hrrrhi:
+        <<: *unnamed_cape
+      global:
         <<: *named_cape
       rrfs:
         <<: *named_cape
@@ -491,6 +501,8 @@ cape:
         parameterNumber: 6
       hrrrhi:
         <<: *named_mulcape
+      global:
+        <<: *named_mulcape
       rrfs:
         <<: *named_mulcape
     contours:
@@ -524,6 +536,8 @@ cape:
         parameterNumber: 6
       hrrrhi:
         <<: *named_mixcape
+      global:
+        <<: *named_mixcape
       rrfs:
         <<: *named_mixcape
     contours:
@@ -550,12 +564,14 @@ cape:
         shortName: cape
         level: 0
         typeOfLevel: surface
-      hrrrcar:
+      hrrrcar: &unnamed_sfccape
         <<: *named_sfccape
         shortName: unknown
         parameterCategory: 7
         parameterNumber: 6
       hrrrhi:
+        <<: *unnamed_sfccape
+      global:
         <<: *named_sfccape
       rrfs:
         <<: *named_sfccape
@@ -592,9 +608,17 @@ cellv:
 ceil: # Ceiling
   ua: &ceil
     cfgrib:
-      shortName: gh
-      typeOfLevel: cloudCeiling
-      level: 0
+      hrrr: &named_ceil
+        shortName: gh
+        typeOfLevel: cloudCeiling
+        level: 0
+      hrrrhi:
+        <<: *named_ceil
+        typeOfLevel: cloudBase
+      global:
+        <<: *named_ceil
+      rrfs:
+        <<: *named_ceil
     clevs: [0, 0.1, 0.3, 0.5, 1, 2, 3, 5, 10, 15, 20, 30, 52]
     cmap: gist_ncar
     colors: ceil_colors
@@ -650,16 +674,34 @@ cloudbase: # Cloud-base height
 cfrzr: # Categorical Freezing Rain
   sfc:
     cfgrib:
-      shortName: cfrzr
-      typeOfLevel: surface
+      hrrr: &named_cfrzr
+        shortName: cfrzr
+        typeOfLevel: surface
+      hrrrcar: &unnamed_cfrzr
+        parameterCategory: 1
+        parameterNumber: 193
+        typeOfLevel: unknown
+      hrrrhi:
+        <<: *unnamed_cfrzr
+      rrfs:
+        <<: *named_cfrzr
     ncl_name: CFRZR_P0_L1_{grid}
 cicep: # Categorical Ice Pellets
   sfc:
     cfgrib:
-      shortName: cicep
-      typeOfLevel: surface
-      level: 0
-      stepType: instant
+      hrrr: &named_cicep
+        shortName: cicep
+        typeOfLevel: surface
+        level: 0
+        stepType: instant
+      hrrrcar: &unnamed_cicep
+        parameterCategory: 1
+        parameterNumber: 193
+        typeOfLevel: unknown
+      hrrrhi:
+        <<: *unnamed_cicep
+      rrfs:
+        <<: *named_cicep
     ncl_name: CICEP_P0_L1_{grid}
 cin: # Surface Convective Inhibition
   mu:
@@ -668,12 +710,14 @@ cin: # Surface Convective Inhibition
         shortName: cin
         level: 25500
         typeOfLevel: pressureFromGroundLayer
-      hrrrcar:
+      hrrrcar: &unnamed_cin
         <<: *named_cin
         shortName: unknown
         parameterCategory: 7
         parameterNumber: 7
       hrrrhi:
+        <<: *unnamed_cin
+      global:
         <<: *named_cin
       rrfs:
         <<: *named_cin
@@ -696,6 +740,8 @@ cin: # Surface Convective Inhibition
         parameterNumber: 7
       hrrrhi:
         <<: *named_mixcin
+      global:
+        <<: *named_mixcin
       rrfs:
         <<: *named_mixcin
     clevs: [-300, -200, -150, -100, -75, -50, -40, -30, -20, -10, -1]
@@ -708,12 +754,14 @@ cin: # Surface Convective Inhibition
         shortName: cin
         level: 0
         typeOfLevel: surface
-      hrrrcar:
+      hrrrcar: &unnamed_sfccin
         <<: *named_sfccin
         shortName: unknown
         parameterCategory: 7
         parameterNumber: 7
       hrrrhi:
+        <<: *unnamed_sfccin
+      global:
         <<: *named_sfccin
       rrfs:
         <<: *named_sfccin
@@ -753,9 +801,11 @@ cloudcover:
         typeOfLevel: unknown
       hrrrhi:
         <<: *high_cld_cover
+        typeOfLevel: unknown
+      global:
+        <<: *high_cld_cover
       rrfs:
         <<: *high_cld_cover
-
     clevs: [2, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95]
     cmap: gist_ncar
     colors: cldcov_colors
@@ -775,6 +825,9 @@ cloudcover:
         typeOfLevel: unknown
       hrrrhi:
         <<: *low_cld_cover
+        typeOfLevel: unknown
+      global:
+        <<: *low_cld_cover
       rrfs:
         <<: *low_cld_cover
     ncl_name: LCDC_P0_L214_{grid}
@@ -790,6 +843,9 @@ cloudcover:
         <<: *mid_cld_cover
         typeOfLevel: unknown
       hrrrhi:
+        <<: *mid_cld_cover
+        typeOfLevel: unknown
+      global:
         <<: *mid_cld_cover
       rrfs:
         <<: *mid_cld_cover
@@ -950,12 +1006,12 @@ crain: # Categorical Rain
       hrrr: &named_crain
         shortName: crain
         typeOfLevel: surface
-      hrrrcar:
+      hrrrcar: &unnamed_crain
         parameterCategory: 1
         parameterName: 192
         typeOfLevel: surface
       hrrrhi:
-        <<: *named_crain
+        <<: *unnamed_crain
       rrfs:
         <<: *named_crain
     ncl_name: CRAIN_P0_L1_{grid}
@@ -1067,6 +1123,7 @@ dlwrfavg: # Downward Longwave Radiation Flux Average
     cfgrib:
       shortName: sdlwrf
       typeOfLevel: surface
+      stepType: avg
     clevs: !arange [200, 501, 12]
     cmap: gist_ncar
     colors: radiation_colors
@@ -1099,6 +1156,7 @@ dswrfavg: # Downward Shortwave Radiation Flux Average
     cfgrib:
       shortName: sdswrf
       typeOfLevel: surface
+      stepType: avg
     clevs: [0, 50, 100, 150, 200, 250, 300, 400, 500, 600, 700, 800, 900, 1000]
     colors: rainbow12_colors
     ncl_name: DSWRF_P8_L1_{grid}_avg6h
@@ -1222,9 +1280,17 @@ firewx-pygraf:
   sfc:
     <<: *firewx
     cfgrib:
-      shortName: vgtyp
-      typeOfLevel: surface
-      level: 0
+      hrrr: &named_vgtyp
+        shortName: vgtyp
+        typeOfLevel: surface
+        level: 0
+      hrrrhi:
+        <<: *named_vgtyp
+        shortName: gppbfas
+        parameterCategory: 0
+        parameterNumber: 198
+      rrfs:
+        <<: *named_vgtyp
     ncl_name: VGTYP_P0_L1_{grid}
     transform: fire_weather_index
 flru: # Aviation Flight Rules
@@ -1239,6 +1305,7 @@ flru: # Aviation Flight Rules
         typeOfLevel: cloudBase
       hrrrhi:
         <<: *cloud_base
+        typeOfLevel: cloudBase
       rrfs:
         <<: *cloud_base
 
@@ -1684,7 +1751,7 @@ hpbl: # Height of Planetary Boundary Layer
         parameterCategory: 3
         typeOfLevel: surface
       hrrrhi:
-        <<: *hpbl
+        <<: *unnamed_blh
       global:
         <<: *unnamed_blh
       rrfs:
@@ -1863,11 +1930,15 @@ lpl: # Lifted parcel level
         shortName: plpl
         typeOfLevel: pressureFromGroundLayer
         level: 25500
-      hrrrcar:
+      hrrrcar: &unnamed_plpl
         <<: *named_plpl
         shortName: unknown
         parameterCategory: 3
         parameterNumber: 200
+      hrrrhi:
+        <<: *unnamed_plpl
+      global:
+        <<: *named_plpl
       rrfs:
         <<: *named_plpl
     ncl_name: PLPL_P0_2L108_{grid}
@@ -2045,26 +2116,23 @@ pres:
     unit: hPa
   msl:
     cfgrib:
-      hrrr: &hrrr_mslp
+      hrrr: &named_mslp
         shortName: mslma
         typeOfLevel: meanSea
         level: 0
-      hrrrcar:
-        <<: *hrrr_mslp
+      hrrrcar: &unnamed_mslp
+        <<: *named_mslp
         shortName: unknown
         parameterCategory: 3
         parameterNumber: 198
       hrrrhi:
-        <<: *hrrr_mslp
+        <<: *unnamed_mslp
       global:
+        <<: *named_mslp
         shortName: prmsl
-        typeOfLevel: meanSea
-        level: 0
       rrfs:
+        <<: *named_mslp
         shortName: mslet
-        typeOfLevel: meanSea
-        level: 0
-      parameterNumber: 192
     clevs: !arange [976, 1051, 4]
     cmap: Spectral_r
     colors: pmsl_colors
@@ -2148,13 +2216,13 @@ ptyp: # Hourly total precipitation
         level: 0
         stepRange: '{{ "%d-%d" % (fhr-1, fhr) }}'
         stepType: accum
-      hrrrcar:
+      hrrrcar: &unnamed_tp
         <<: *named_tp
         shortName: unknown
         parameterCategory: 1
         parameterNumber: 8
       hrrrhi:
-        <<: *named_tp
+        <<: *unnamed_tp
       rrfs:
         <<: *named_tp
     clevs: [0.002, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 1.0, 2.0]
@@ -2221,6 +2289,9 @@ pwtr: # Precipitable water
         <<: *pwat
         typeOfLevel: unknown
       hrrrhi:
+        <<: *pwat
+        typeOfLevel: unknown
+      global:
         <<: *pwat
       rrfs:
         <<: *pwat
@@ -2556,8 +2627,18 @@ snod: # Snow Depth
 soilm: # Soil Moisture Availability
   sfc:
     cfgrib:
-      shortName: mstav
-      typeOfLevel: depthBelowLand
+      hrrr: &named_mstav
+        shortName: mstav
+        typeOfLevel: depthBelowLand
+      hrrrcar:
+        <<: *named_mstav
+      hrrrhi:
+        <<: *named_mstav
+        shortName: unknown
+        parameterNumber: 194
+        parameterCategory: 0
+      rrfs:
+        <<: *named_mstav
     level: 0
     clevs: [0, 5, 15, 25, 35, 45, 55, 65, 75, 85, 95]
     cmap: Spectral
@@ -2875,6 +2956,8 @@ solar: # Incoming Solar Radiation
       hrrrcar:
         <<: *sdswrf
       hrrrhi:
+        <<: *sdswrf
+      global:
         <<: *sdswrf
       rrfs:
         <<: *sdswrf
@@ -3410,6 +3493,9 @@ vig: # Vertically-integrated graupel
       hrrrcar:
         <<: *hrrr_vig
         typeOfLevel: unknown
+      hrrrhi:
+        <<: *hrrr_vig
+        typeOfLevel: unknown
       rrfs:
         <<: *hrrr_vig
     clevs: !arange [5, 91, 5]
@@ -3685,6 +3771,8 @@ wspeed: # Wind Speed
         bottomLevel: 100000
         stepType: max
       hrrrcar:
+        <<: *wspeed_mup
+      hrrrhi:
         <<: *wspeed_mup
       rrfs:
         <<: *wspeed_mup
