@@ -144,7 +144,7 @@ class UPPData(specs.VarSpec):
             leveled = level is not None and vertical_coord != "hybrid"
             if len(field.coords[vertical_coord].shape) > 0 and (layered or leveled):
                 if vertical_coord == "depthBelowLandLayer" and level:
-                    level = level / 100.0  # pragma: no cover
+                    level = float(level) / 100.0  # pragma: no cover
                 field = field.sel(**{vertical_coord: level})
             return DataArray(field)
         msg = f"Variable {short_name} not found in dataset."  # pragma: no cover
