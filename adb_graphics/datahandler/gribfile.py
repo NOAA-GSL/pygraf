@@ -26,14 +26,10 @@ class GribFiles:  # pragma: no cover
         """
         Initialize GribFiles object.
 
-          coord_dims  dict containing the name of the dimension to
-                      concat (key), and a list of its values (value).
-                        Ex: {'fhr': [2, 3, 4]}
-          filenames   dict containing list of files names for the 0h and 1h
-                      forecast lead times ('01fcst'), and all the free forecast
-                      hours after that ('free_fcst').
-          filetype    key to use for dict when setting variable_names
-          model       string describing the model type
+          filenames      dict containing list of files names for the 0h and 1h
+                         forecast lead times ('01fcst'), and all the free forecast
+                         hours after that ('free_fcst').
+          cfgrib_config  config for the variable to load.
         """
 
         self.filenames = filenames
@@ -45,9 +41,9 @@ class GribFiles:  # pragma: no cover
         ds = xr.open_mfdataset(
             self.filenames,
             engine="cfgrib",
-            concat_dim="time",
             combine="nested",
             compat="override",
+            concat_dim="time",
             coords="minimal",
             backend_kwargs=(
                 {

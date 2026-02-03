@@ -85,7 +85,7 @@ def create_maps(
     generate a pool of workers to complete the task.
     """
 
-    ds = gribfile.WholeGribFile(grib_paths[-1]).datasets
+    ds = None
     for tile in cla.tiles:
         args = []
         for variable, levels in cla.images[1].items():
@@ -99,12 +99,17 @@ def create_maps(
                 accumulate = spec.get("accumulate", False)
                 vspec = utils.cfgrib_spec(spec["cfgrib"], cla.images[0])
                 grib_acc = (
-                    vspec.get("stepRange", "").startswith("-1") or vspec.get("stepRange") == "0-0"
+                    vspec.get("stepRange", "").startswith("-1") or
+                    vspec.get("stepRange") == "0-0" or
+                    vspec.get("stepType") in ["max", "min", "accum"],
                 )
                 if (accumulate or grib_acc) and fhr == 0:
+                    print(f"Skipping accumulated {variable} at {level} at fhr=0")
                     continue
                 if accumulate:
-                    ads = gribfile.GribFiles(grib_paths, vspec).datasets
+                    ads = gribfile.GribFiles(grib_paths[1:], vspec).datasets
+                elif ds is None:
+                    ds = gribfile.WholeGribFile(grib_paths[-1]).datasets
 
                 args.append(
                     (
@@ -118,7 +123,6 @@ def create_maps(
                         grib_path2,
                     )
                 )
-
         print(f"Queueing {len(args)} maps")
         with Pool(processes=cla.nprocs) as pool:
             pool.starmap(parallel_maps, args)
