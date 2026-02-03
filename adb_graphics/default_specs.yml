@@ -1062,28 +1062,25 @@ cref: # Composite reflectivity
   sfc:
     <<: *refl
     cfgrib:
-      hrrr:
+      hrrr: &named_refc
         shortName: refc
         typeOfLevel: atmosphere
         level: 0
-      hrrrcar: &refc_noname
+      hrrrcar: &unnamed_refc
         parameterCategory: 16
         parameterNumber: 196
         level: 0
         typeOfLevel: atmosphere
       hrrrhi:
-        <<: *refc_noname
+        <<: *unnamed_refc
       global:
-        shortName: refc
-        typeOfLevel: atmosphereSingleLayer
-        level: 0
+        <<: *named_refc
       mpas:
-        <<: *refc_noname
+        <<: *unnamed_refc
       rrfs:
+        <<: *unnamed_refc
         parameterNumber: 5
-        parameterCategory: 16
         typeOfLevel: atmosphereSingleLayer
-        level: 0
     ncl_name: REFC_P0_L{level_type}_{grid}
     title: Composite Reflectivity
     include_obs: True
