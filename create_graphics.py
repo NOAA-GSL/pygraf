@@ -99,9 +99,9 @@ def create_maps(
                 accumulate = spec.get("accumulate", False)
                 vspec = utils.cfgrib_spec(spec["cfgrib"], cla.images[0])
                 grib_acc = (
-                    vspec.get("stepRange", "").startswith("-1") or
-                    vspec.get("stepRange") == "0-0" or
-                    vspec.get("stepType") in ["max", "min", "accum"],
+                    vspec.get("stepRange", "").startswith("-1")
+                    or vspec.get("stepRange") == "0-0"
+                    or vspec.get("stepType") in ["max", "min", "accum"],
                 )
                 if (accumulate or grib_acc) and fhr == 0:
                     print(f"Skipping accumulated {variable} at {level} at fhr=0")

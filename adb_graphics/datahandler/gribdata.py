@@ -124,7 +124,7 @@ class UPPData(specs.VarSpec):
         vertical_coord = "level" if vertical_coord == "unknown" else vertical_coord
         ds: Dataset | dict = self.ds.get(var_id, {})
         if ds == {}:
-            msg = f"{var_id} is not a valid key for dataset while plotting {self.short_name} at {self.level}"
+            msg = f"{var_id} is not a key for dataset plotting {self.short_name} at {self.level}"
             raise ValueError(msg)
         var = _find_var()
         if var is not None:
