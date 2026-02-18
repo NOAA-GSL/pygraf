@@ -101,7 +101,7 @@ def create_maps(
                 grib_acc = (
                     vspec.get("stepRange", "").startswith("-1")
                     or vspec.get("stepRange") == "0-0"
-                    or vspec.get("stepType") in ["max", "min", "accum"],
+                    or vspec.get("stepType") in ["max", "min", "accum"]
                 )
                 if (accumulate or grib_acc) and fhr == 0:
                     print(f"Skipping accumulated {variable} at {level} at fhr=0")

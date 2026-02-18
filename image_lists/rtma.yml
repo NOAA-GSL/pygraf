@@ -1,33 +1,20 @@
 hourly:
   model: hrrr
   variables:
-#    1hsm:
-#      - sfc
     1ref:
       - 1000m
-#    3hsm:
-#      - sfc
     cape:
       - mu
       - mul
       - mx90mb
       - sfc
-    ceil:
-      - ua
-    ceilexp:
-      - ua
-    ceilexp2:
-      - ua
     cin:
       - sfc
     cloudcover:
       - high
       - low
       - mid
-      - total
     cpofp:
-      - sfc
-    cref:
       - sfc
     ctop:
       - ua
@@ -45,13 +32,6 @@ hourly:
       - sat
     G124bt:
       - sat
-    gust:
-      - 10m
-    hlcy:
-      - in16
-      - in25
-      - sr01
-      - sr03
     hpbl:
       - sfc
     lcl:
@@ -61,19 +41,12 @@ hourly:
     li:
       - best
       - sfc
-    ltg3:
-      - sfc
-#    mnvv:
-#      - sfc
     mref:
       - sfc
     pres:
-      - msl
       - sfc
     ptmp:
       - 2m
-#    ptyp:
-#      - sfc
     pwtr:
       - sfc
     ref:
@@ -82,17 +55,12 @@ hourly:
       - 2m
       - 850mb
       - mean
-      - pw
-    rvil:
-      - sfc
     shear:
       - 01km
       - 06km
     shtfl:
       - sfc
     snod:
-      - sfc
-    soilm:
       - sfc
     solar:
       - sfc
@@ -113,8 +81,6 @@ hourly:
     vbdsf:
       - sfc
     vddsf:
-      - sfc
-    vil:
       - sfc
     vis:
       - sfc
