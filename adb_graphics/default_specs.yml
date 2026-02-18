@@ -1075,6 +1075,7 @@ cref: # Composite reflectivity
         <<: *unnamed_refc
       global:
         <<: *named_refc
+        typeOfLevel: atmosphereSingleLayer
       mpas:
         <<: *unnamed_refc
       rrfs:
