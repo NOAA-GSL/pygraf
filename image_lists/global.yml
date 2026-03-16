@@ -24,8 +24,6 @@ hourly:
       - sfc
     dewp:
       - 2m
-    dlwrfavg:
-      - sfc
     dswrfavg:
       - sfc
     gh:
