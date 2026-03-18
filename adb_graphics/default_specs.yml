@@ -3280,6 +3280,11 @@ trc1:
     unit: $mg/m^2$
   1000ft: &tracer1 
     # requires nat data
+    cfgrib: &trc1_cfgrib
+      parameterCategory: 20
+      parameterNumber: 0
+      typeOfLevel: hybrid
+      level: 5
     clevs: [1, 2, 4, 6, 8, 12, 16, 20, 25, 30, 40, 60, 100, 200]
     colors: smoke_colors
     ncl_name: MASSDEN_P0_L105_{grid}
@@ -3293,6 +3298,9 @@ trc1:
   6000ft:
     # requires nat data
     <<: *tracer1
+    cfgrib:
+      <<: *trc1_cfgrib
+      level: 12
     title: 6000ft AGL Smoke
     vertical_index: 11
   sfc:
@@ -3356,11 +3364,19 @@ u:
   850mb: *ua_uwind
   925mb: *ua_uwind
   1000ft: &nat_uwind
+    cfgrib:
+      shortName: u
+      typeOfLevel: hybrid
+      level: 5
     ncl_name: UGRD_P0_L105_{grid}
     transform: conversions.ms_to_kt
     vertical_index: 4
   6000ft:
     <<: *nat_uwind
+    cfgrib:
+      shortName: u
+      typeOfLevel: hybrid
+      level: 12
     vertical_index: 11
   max:
     cfgrib:
@@ -3522,11 +3538,19 @@ v:
   850mb: *ua_vwind
   925mb: *ua_vwind
   1000ft: &nat_vwind
+    cfgrib:
+      shortName: v
+      typeOfLevel: hybrid
+      level: 5
     ncl_name: VGRD_P0_L105_{grid}
     transform: conversions.ms_to_kt
     vertical_index: 4
   6000ft:
     <<: *nat_vwind
+    cfgrib:
+      shortName: v
+      typeOfLevel: hybrid
+      level: 12
     vertical_index: 11
   max:
     cfgrib:

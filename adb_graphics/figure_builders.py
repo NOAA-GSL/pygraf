@@ -168,6 +168,7 @@ def parallel_maps(  # noqa: PLR0915, PLR0912
             if index == 0:
                 dm.title()
                 dm.add_logo(current_ax)
+                continue
             elif index == lower_left:
                 if spec.get("include_obs", False) and cla.obs_file_path:
                     # Add observation panel to lower left. Currently only
@@ -182,10 +183,12 @@ def parallel_maps(  # noqa: PLR0915, PLR0912
                         spec=cla.specs,
                         tile=tile,
                     )
-            else:
-                dm.draw(show=True)
-        else:
+                continue
+        try:
             dm.draw(show=True)
+        except:
+            print(f"Error occurred while creating map for {variable} at {level}.")
+            raise
 
     # Build the output path
     png_file = f"{variable}_{tile}_{level}_f{fhr:03d}.png"

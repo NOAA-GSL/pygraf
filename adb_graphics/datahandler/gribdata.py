@@ -141,9 +141,9 @@ class UPPData(specs.VarSpec):
             if level is None:
                 level = utils.numeric_level(self.level)[0]
             level = None if level == "" else level
-            leveled = level is not None and vertical_coord != "hybrid"
+            leveled = level is not None
             if len(field.coords[vertical_coord].shape) > 0 and (layered or leveled):
-                if vertical_coord == "depthBelowLandLayer" and level:
+                if vertical_coord == "depthBelowLandLayer" and leveled:
                     level = float(level) / 100.0  # pragma: no cover
                 field = field.sel(**{vertical_coord: level})
             return DataArray(field)
@@ -574,7 +574,7 @@ class FieldData(UPPData):
 
         return values.sum(dim="time")  # pragma: no cover
 
-    def supercooled_liquid_water(self, **_kwargs):
+    def supercooled_liquid_water(self, val, **_kwargs):
         """
         Generates a field of Supercooled Liquid Water.
 

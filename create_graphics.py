@@ -97,7 +97,11 @@ def create_maps(
                     msg = f"graphics: {variable} {level}"
                     raise errors.NoGraphicsDefinitionForVariableError(msg)
                 accumulate = spec.get("accumulate", False)
-                vspec = utils.cfgrib_spec(spec["cfgrib"], cla.images[0])
+                try:
+                    vspec = utils.cfgrib_spec(spec["cfgrib"], cla.images[0])
+                except KeyError:
+                    print(f"ERROR: {variable} at {level} has no cfgrib entry")
+                    raise
                 grib_acc = (
                     vspec.get("stepRange", "").startswith("-1")
                     or vspec.get("stepRange") == "0-0"
