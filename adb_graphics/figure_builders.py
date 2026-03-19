@@ -169,7 +169,7 @@ def parallel_maps(  # noqa: PLR0915, PLR0912
                 dm.title()
                 dm.add_logo(current_ax)
                 continue
-            elif index == lower_left:
+            if index == lower_left:
                 if spec.get("include_obs", False) and cla.obs_file_path:
                     # Add observation panel to lower left. Currently only
                     # supported for composite reflectivity.
@@ -186,7 +186,7 @@ def parallel_maps(  # noqa: PLR0915, PLR0912
                 continue
         try:
             dm.draw(show=True)
-        except:
+        except:  # pragma: no cover
             print(f"Error occurred while creating map for {variable} at {level}.")
             raise
 

@@ -443,7 +443,7 @@ def test_fielddata_supercooled_liquid_water(nat_ds, spec):
         short_name="slw",
         spec=spec,
     )
-    slw = fd.supercooled_liquid_water()
+    slw = fd.supercooled_liquid_water(fd.field)
     assert not np.array_equal(slw, fd.field)
 
 

@@ -5,7 +5,7 @@ from datetime import datetime
 from unittest.mock import call, patch
 
 import numpy as np
-from pytest import fixture
+from pytest import fixture, raises
 from uwtools.api.config import get_yaml_config
 
 from adb_graphics import figure_builders, utils
@@ -106,6 +106,16 @@ def test_add_obs_panel(fielddata_obj, nat_ds, spec):
 def test_parallel_maps(parallel_maps_args, tmp_path):
     figure_builders.parallel_maps(**parallel_maps_args)
     assert (tmp_path / "temp_full_sfc_f016.png").is_file()
+
+
+def test_parallel_maps_bad_draw(capsys, parallel_maps_args):
+    with (
+        patch.object(figure_builders.DataMap, "draw", side_effect=ValueError("foo")),
+        raises(ValueError, match="foo"),
+    ):
+        figure_builders.parallel_maps(**parallel_maps_args)
+    captured = capsys.readouterr()
+    assert "temp at sfc" in captured.out
 
 
 def test_parallel_maps_enspanel(parallel_maps_args, prsfile, tmp_path):
