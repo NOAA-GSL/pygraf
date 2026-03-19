@@ -110,7 +110,10 @@ def create_maps(
                 if (accumulate or grib_acc) and fhr == 0:
                     print(f"Skipping accumulated {variable} at {level} at fhr=0")
                     continue
-                if accumulate:
+                if accumulate and not cla.all_leads:
+                    print(f"Skipping accumulated {variable} at {level}. Not enough data.")
+                    continue
+                if accumulate and cla.all_leads:
                     ads = gribfile.GribFiles(grib_paths[1:], vspec).datasets
                 elif ds is None:
                     ds = gribfile.WholeGribFile(grib_paths[-1]).datasets
@@ -119,7 +122,7 @@ def create_maps(
                     (
                         cla,
                         fhr,
-                        ads if accumulate else ds,
+                        ads if accumulate and cla.all_leads else ds,
                         level,
                         variable,
                         workdir,
