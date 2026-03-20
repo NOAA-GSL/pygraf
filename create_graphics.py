@@ -113,8 +113,13 @@ def create_maps(
                 if accumulate and not cla.all_leads:
                     print(f"Skipping accumulated {variable} at {level}. Not enough data.")
                     continue
-                if accumulate and cla.all_leads:
-                    ads = gribfile.GribFiles(grib_paths[1:], vspec).datasets
+                if accumulate and cla.all_leads:  # pragma: no cover
+                    try:
+                        vspec = {k: v for k, v in vspec.items() if k != "stepRange"}
+                        ads = gribfile.GribFiles(grib_paths[1:], vspec).datasets
+                    except ValueError:
+                        print(f"Error loading all times for {variable} at {level}.")
+                        raise
                 elif ds is None:
                     ds = gribfile.WholeGribFile(grib_paths[-1]).datasets
 
