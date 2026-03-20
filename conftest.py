@@ -1,37 +1,69 @@
-'''
+"""
 Add command line options to the pytest suite.
 
 Each CLA needs to be defined in pytest_addoption and to have a pytest.fixture
 function defined.
-'''
+"""
 
-import pytest
+import glob
+from pathlib import Path
+
+from pytest import fixture
+
+from adb_graphics.datahandler import gribfile
+
+
+@fixture(scope="session", autouse=True)
+def cleanup_data_idx():
+    yield  # Nothing to be done before tests
+    print("Removing idx files from test data")
+    for path in glob.glob("tests/data/*.idx"):
+        Path(path).unlink()
 
 
 def pytest_addoption(parser):
+    """Define command line arguments to be parsed."""
 
-    ''' Define command line arguments to be parsed. '''
+    parser.addoption(
+        "--nat-file",
+        action="store",
+        help="Path to nat-file.",
+    )
 
-    parser.addoption('--nat-file',
-                     action='store',
-                     help='Path to nat-file.',
-                     )
+    parser.addoption(
+        "--prs-file",
+        action="store",
+        help="Path to prs-file.",
+    )
 
-    parser.addoption('--prs-file',
-                     action='store',
-                     help='Path to prs-file.',
-                     )
 
-@pytest.fixture
-def natfile(request):
+@fixture(scope="session")
+def natfile(pytestconfig):
+    """Interface to pass a grib file to pytest."""
+    if path := pytestconfig.getoption("--nat-file"):
+        return Path(path)
+    return Path("tests", "data", "wrfnat_hrconus_16.grib2")
 
-    ''' Interface to  pass a grib file to pytest'''
 
-    return request.config.getoption('--nat-file')
+@fixture(scope="session")
+def prsfile(pytestconfig):
+    """Interface to pass a grib file to pytest."""
+    if path := pytestconfig.getoption("--prs-file"):
+        return Path(path)
+    return Path("tests", "data", "wrfprs_hrconus_16.grib2")
 
-@pytest.fixture
-def prsfile(request):
 
-    ''' Interface to  pass a grib file to pytest'''
+@fixture(scope="session")
+def spec_file():
+    """Interface to pass a grib file to pytest."""
+    return Path("adb_graphics", "default_specs.yml")
 
-    return request.config.getoption('--prs-file')
+
+@fixture(scope="session")
+def prs_ds(prsfile):
+    return gribfile.WholeGribFile(prsfile).datasets
+
+
+@fixture(scope="session")
+def nat_ds(natfile):
+    return gribfile.WholeGribFile(natfile).datasets

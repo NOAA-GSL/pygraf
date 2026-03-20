@@ -1,5 +1,5 @@
 hourly:
-  model: regional_mpas
+  model: mpas
   variables:
     1ref:
       - 1000m
@@ -56,11 +56,8 @@ hourly:
       - sat
     gust:
       - 10m
-    1hachail:
-      - sfc
     hail:
       - max
-      - maxsfc
     hlcy:
       - in25
       - mn02
@@ -86,8 +83,6 @@ hourly:
       - sfc
     li:
       - best
-      - sfc
-    ltg3:
       - sfc
     mfrp:
       - sfc
@@ -118,8 +113,6 @@ hourly:
     shtfl:
       - sfc
     snod:
-      - sfc
-    soilm:
       - sfc
     soilt: &soilt_levs
       - 0cm

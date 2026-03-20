@@ -1,0 +1,77 @@
+[tool.coverage.report]
+exclude_also = ["if TYPE_CHECKING:"]
+fail_under = 100
+show_missing = true
+skip_covered = true
+omit = ["conftest.py", "tests/*"]
+
+
+[tool.mypy]
+check_untyped_defs = true
+follow_untyped_imports = true # needed for mpl_toolkits.basemap
+pretty = true
+warn_return_any = true
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+  "ANN002",  # missing-type-args
+  "ANN003",  # missing-type-kwargs
+  "ANN201",  # missing-return-type-class-method
+  "ANN202",  # missing-return-type-private-function
+  "ANN204",  # missing-return-type-special-method
+  "ANN205",  # missing-return-type-static-method
+  "ANN401",  # any-type
+  "C408",    # unnecessary-collection-call
+  "C901",    # complex-structure
+  "COM812",  # missing-trailing-comma
+  "D100",    # undocumented-public-module
+  "D101",    # undocumented-public-class
+  "D102",    # undocumented-public-method
+  "D103",    # undocumented-public-function
+  "D104",    # undocumented-public-package
+  "D105",    # undocumented-magic-method
+  "D107",    # undocumented-public-init
+  "D200",    # unnecessary-multiline-docstring
+  "D202",    # blank-line-after-function
+  "D203",    # incorrect-blank-line-before-class
+  "D205",    # missing-blank-line-after-summary
+  "D212",    # multi-line-summary-first-line
+  "D401",    # non-imperative-mood
+  "D404",    # docstring-starts-with-this
+  "DTZ001",  # call-datetime-without-tzinfo
+  "DTZ005",  # call-datetime-now-without-tzinfo
+  "DTZ006",  # call-datetime-fromtimestamp
+  "DTZ007",  # call-datetime-strptime-without-zone
+  "E731",    # lambda-assignment
+  "FBT001",  # boolean-type-hint-positional-argument
+  "FBT002",  # boolean-default-value-positional-argument
+  "PLR0913", # too-many-arguments
+  "PTH207",  # glob
+  "RUF015",  # unnecessary-iterable-allocation-for-first-element
+  "S101",    # assert
+  "S311",    # suspicious-non-cryptographic-random-usage
+  "S506",    # unsafe-yaml-load
+  "S602",    # subprocess-popen-with-shell-equals-true
+  "T201",    # print
+]
+
+[tool.ruff.lint.per-file-ignores]
+"conftest.py" = [
+  "ANN001",  # missing-type-function-argument
+  "PLR2004", # magic-value-comparison
+  "PT013",   # pytest-incorrect-pytest-import
+  "SLF001",  # private-member-access
+]
+"adb_graphics/datahandler/gribdata.py" = [
+  "PLR2004", # magic-value-comparison
+]
+"tests/*" = [
+  "ANN001",  # missing-type-function-argument
+  "PLR2004", # magic-value-comparison
+  "PT013",   # pytest-incorrect-pytest-import
+  "SLF001",  # private-member-access
+]

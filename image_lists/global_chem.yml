@@ -7,8 +7,6 @@ hourly:
       - sfc
     aodfd:
       - sfc
-    aodhg:
-      - sfc
     aodoc:
       - sfc
     aodss:
@@ -23,20 +21,6 @@ hourly:
       - sfc
     bc2:
       - sfc
-    cape:
-      - mu
-      - mul
-      - mx90mb
-      - sfc
-    ceil:
-      - ua
-    cin:
-      - sfc
-    cloudcover:
-      - high
-      - low
-      - mid
-      - total
     colbc:
       - sfc
     colfd:
@@ -51,28 +35,9 @@ hourly:
       - sfc
     colsu:
       - sfc
-    colto:
-      - sfc
-    cpofp:
-      - sfc
     cref:
       - sfc
-    ctop:
-      - ua
-    dewp:
-      - 2m
     fd:
-      - sfc
-    flru:
-      - sfc
-    gust:
-      - 10m
-    hlcy:
-      - sr01
-      - sr03
-    hpbl:
-      - sfc
-    lhtfl:
       - sfc
     oc:
       - sfc
@@ -86,52 +51,19 @@ hourly:
       - sfc
     pres:
       - msl
-    ptyp:
-      - sfc
-    pwtr:
-      - sfc
     rh:
       - 850mb
     seasalt:
       - sfc
-    shtfl:
-      - sfc
-    snod:
-      - sfc
-    soilt: &soilt_levs
-      - 10cm
-      - 1m
-    soilw: *soilt_levs
     sulf:
       - sfc
     temp:
-      - 2ds
-      - 2m
-      - 500mb
       - 700mb
       - 850mb
       - 925mb
       - sfc
     totp6h:
       - sfc
-    totp:
-      - sfc
-    ulwrf:
-      - sfc
-      - top
-    uswrf:
-      - sfc
-      - top
-    vis:
-      - sfc
-    vort:
-      - 500mb
-    vvel:
-      - 700mb
-    weasd:
-      - sfc
     wspeed:
       - 10m
-      - 80m
-      - 250mb
       - 850mb

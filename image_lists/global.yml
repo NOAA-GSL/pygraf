@@ -18,19 +18,12 @@ hourly:
       - high
       - low
       - mid
-      - total
     cpofp:
       - sfc
     cref:
       - sfc
     dewp:
       - 2m
-    dlwrf:
-      - sfc
-    dlwrfavg:
-      - sfc
-    dswrf:
-      - sfc
     dswrfavg:
       - sfc
     gh:
@@ -42,21 +35,7 @@ hourly:
       - sr03
     hpbl:
       - sfc
-    lhtfl:
-      - sfc
-    lhtflavg:
-      - sfc
-    pres:
-      - msl
     pwtr:
-      - sfc
-    rh:
-      - 2m
-      - 850mb
-      - mean
-    shtfl:
-      - sfc
-    shtflavg:
       - sfc
     snod:
       - sfc
@@ -64,26 +43,6 @@ hourly:
       - 10cm
       - 1m
     soilw: *soilt_levs
-    temp:
-      - 2ds
-      - 2m
-      - 500mb
-      - 700mb
-      - 850mb
-      - 925mb
-      - sfc
-    totp6h:
-      - sfc
-    ulwrf:
-      - sfc
-    ulwrfavg:
-      - sfc
-      - top
-    uswrf:
-      - sfc
-    uswrfavg:
-      - sfc
-      - top
     vis:
       - sfc
     vort:
@@ -92,11 +51,3 @@ hourly:
       - 700mb
     weasd:
       - sfc
-    wspeed:
-      - 10m
-      - 10mb
-      - 20mb
-      - 250mb
-      - 5mb
-      - 80m
-      - 850mb

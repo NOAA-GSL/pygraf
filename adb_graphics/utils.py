@@ -1,66 +1,94 @@
-# pylint: disable=invalid-name
-'''
+"""
 A set of generic utilities available to all the adb_graphics components.
-'''
+"""
 
-import argparse
-import datetime as dt
 import functools
 import glob
-import importlib as il
-from math import atan2, degrees
-from multiprocessing import Process
-import os
-import subprocess
+import re
 import sys
 import time
+from collections.abc import Callable
+from datetime import datetime, timedelta
+from importlib import import_module
+from importlib.util import find_spec
+from pathlib import Path
+from typing import Any
+from zipfile import ZipFile
 
 import numpy as np
 import yaml
+from uwtools.api.config import YAMLConfig
+from uwtools.config.support import uw_yaml_loader
 
 
-def create_zip(files_to_zip, zipf):
+def cfgrib_spec(config: dict, model: str) -> dict:
+    """
+    Given a cfgrib block and a model, return the appropriate sub-block, if it exists.
+    """
+    spec: dict = config.get(model, {})
+    if spec and isinstance(spec, dict):
+        return spec
+    return config
 
-    ''' Create a zip file. Use a locking mechanism -- write a lock file to disk. '''
 
-    lock_file = f'{zipf}._lock'
+def _write_zip(files_to_zip: list[Path], zipf: Path | str):
+    """Write the zip file, overwriting existing files that have a newer modification timestamp."""
+    print(f"Writing to zip file {zipf} for files like: {files_to_zip[0].name}")
+    overwrite = {}
+    with ZipFile(zipf, "a") as zf:
+        arcfiles = zf.namelist()
+        for file in files_to_zip:
+            if file.name in arcfiles:
+                arcinfo = zf.getinfo(file.name)
+                arc_mod_time = datetime(*arcinfo.date_time)
+                file_mod_time = datetime.fromtimestamp(file.stat().st_mtime)
+                if file_mod_time > arc_mod_time:
+                    overwrite[file.name] = file
+            else:
+                zf.write(file, arcname=Path(file).name)
+        if overwrite:
+            tmp_path = Path(f"{zipf}.tmp")
+            with ZipFile(tmp_path, "w") as tmp:
+                for item in zf.namelist():
+                    if (arcfile := zf.getinfo(item).filename) not in overwrite:
+                        tmp.write(arcfile, str(zf.read(item)))
+                for arcname, file in overwrite.items():
+                    tmp.write(file, arcname=arcname)
+
+            tmp_path.rename(zipf)
+
+
+def create_zip(files_to_zip: list[Path], zipf: Path | str):
+    """Create a zip file. Use a locking mechanism -- write a lock file to disk."""
+
+    lock_file = Path(f"{zipf}._lock")
     retry = 2
     count = 0
     while True:
-        if not os.path.exists(lock_file):
+        if not lock_file.exists():
             # Create the lock
-            fd = open(lock_file, 'w')
-            print(f'Writing to zip file {zipf} for files like: {files_to_zip[0][-10:]}')
-
-            cmd = f'zip -uj {zipf} {" ".join(files_to_zip)}'
-            print(f'Running command: {cmd}')
+            lock_file.touch()
             try:
-                subprocess.run(cmd,
-                               check=True,
-                               shell=True,
-                               )
-            except: # pylint: disable=bare-except
-                print(f'Error on writing zip file! {sys.exc_info()[0]}')
+                _write_zip(files_to_zip, zipf)
+            except Exception as e:
                 count += 1
                 if count >= retry:
-                    raise
+                    msg = "Error writing zip file!"
+                    raise RuntimeError(msg) from e
             else:
                 # Zipping was successful. Remove files that were zipped
                 for file_to_zip in files_to_zip:
-                    if os.path.exists(file_to_zip):
-                        os.remove(file_to_zip)
+                    file_to_zip.unlink(missing_ok=True)
+                break
             finally:
-                # Remove the lock
-                fd.close()
-                if os.path.exists(lock_file):
-                    os.remove(lock_file)
-            break
+                lock_file.unlink(missing_ok=True)
+
         # Wait before trying to obtain the lock on the file
-        time.sleep(5)
+        time.sleep(1)
 
-def fhr_list(args):
 
-    '''
+def fhr_list(args: list[int]) -> list[int]:
+    """
     Given an argparse list argument, return the sequence of forecast hours to
     process.
 
@@ -72,9 +100,7 @@ def fhr_list(args):
       Length > 3:   List as is
 
     argparse should provide a list of at least one item (nargs='+').
-
-    Must ensure that the list contains integers.
-    '''
+    """
 
     args = args if isinstance(args, list) else [args]
     arg_len = len(args)
@@ -84,41 +110,37 @@ def fhr_list(args):
 
     return args
 
-def from_datetime(date):
-    ''' Return a string like YYYYMMDDHH given a datetime object. '''
-    return dt.datetime.strftime(date, '%Y%m%d%H')
+
+def from_datetime(date: datetime) -> str:
+    """Return a string like YYYYMMDDHH given a datetime object."""
+    return datetime.strftime(date, "%Y%m%d%H")
+
 
 def get_func(val: str):
+    """
+    Gets a callable function.
 
-    '''
     Given an input string, val, returns the corresponding callable function.
     This function is borrowed from stackoverflow.com response to "Python: YAML
     dictionary of functions: how to load without converting to strings."
-    '''
+    """
 
-    if '.' in val:
-        module_name, fun_name = val.rsplit('.', 1)
-    else:
-        module_name = '__main__'
-        fun_name = val
+    module_name, fun_name = val.rsplit(".", 1)
 
-    mod_spec = il.util.find_spec(module_name, package='adb_graphics')
+    mod_spec = find_spec(module_name, package="adb_graphics")
     if mod_spec is None:
-        mod_spec = il.util.find_spec('.' + module_name, package='adb_graphics')
+        mod_spec = find_spec("." + module_name, package="adb_graphics")
+    if mod_spec is None:
+        msg = "Could not find {module_name} in current environment."
+        raise ValueError(msg)
 
-    try:
-        __import__(mod_spec.name)
-    except ImportError as exc:
-        print(f'Could not load {module_name} while trying to locate function in get_func')
-        raise exc
+    import_module(mod_spec.name)
     module = sys.modules[mod_spec.name]
-    fun = getattr(module, fun_name)
-    return fun
+    return getattr(module, fun_name)
 
-# pylint: disable=unused-argument
-def join_ranges(loader, node):
 
-    '''
+def join_ranges(_loader: yaml.SafeLoader, node: yaml.Node) -> Any:
+    """
     Merge two or more different ranges into a single array for color bar clevs.
 
     e.g.: in default_specs.yml, clevs for visibility can be assigned as
@@ -130,170 +152,71 @@ def join_ranges(loader, node):
     resolution than the rest, while keeping the colorbar from looking squished.
 
     Note that a "yaml.add_constructor" is required, as shown after the method.
-    '''
+    """
 
     list_ = []
     for seq_node in node.value:
-        range_args = []
-        for scalar_node in seq_node.value:
-            range_args.append(float(scalar_node.value))
+        range_args = [float(scalar_node.value) for scalar_node in seq_node.value]
 
         list_.append(np.arange(*range_args))
 
     return np.concatenate(list_, axis=0)
 
-# SafeLoader doesn't seem compatible with our numpy contructors, using Loader here
-yaml.add_constructor("!join_ranges", join_ranges, Loader=yaml.Loader)
 
-# pylint: disable=invalid-name, too-many-locals
-def label_line(ax, label, segment, **kwargs):
+def arange_constructor(_loader: yaml.SafeLoader, node: yaml.Node) -> Any:
+    return np.arange(*[float(n.value) for n in node.value])
 
-    '''
-    Label a single line with line2D label data.
 
-    Input:
+def load_yaml(config: Path | str) -> YAMLConfig:
+    yaml.add_constructor("!join_ranges", join_ranges, Loader=uw_yaml_loader())
+    yaml.add_constructor("!arange", arange_constructor, Loader=uw_yaml_loader())
+    return YAMLConfig(config)
 
-      ax        the SkewT object axis
-      label     label to be used for the current line
-      segment   a list (array) of values for the current line
 
-    Key Word Arguments
-
-      align     optional bool to enable the rotation of the label to line angle
-      end       the end of the line at which to put the label. 'bottom' or 'top'
-      offset    index to use for the "end" of the array
-
-      Any kwargs accepted by matplotlib's text box.
-    '''
-
-    # Strip non-text-box key word arguments and set default if they don't exist
-    align = kwargs.pop('align', True)
-    end = kwargs.pop('end', 'bottom')
-    offset = kwargs.pop('offset', 0)
-
-    # Label location
-    if end == 'bottom':
-        x, y = segment[0 + offset, :]
-        ip = 1 + offset
-    elif end == 'top':
-        x, y = segment[-1 - offset, :]
-        ip = -1 - offset
-
-    if align:
-        #Compute the slope
-        dx = segment[ip, 0] - segment[ip-1, 0]
-        dy = segment[ip, 1] - segment[ip-1, 1]
-        ang = degrees(atan2(dy, dx))
-
-        #Transform to screen co-ordinates
-        pt = np.array([x, y]).reshape((1, 2))
-        trans_angle = ax.transData.transform_angles(np.array((ang, )), pt)[0]
-
-        if end == 'top':
-            trans_angle -= 180
-
-    else:
-        trans_angle = 0
-
-    #Set a bunch of keyword arguments
-    if ('horizontalalignment' not in kwargs) and ('ha' not in kwargs):
-        kwargs['ha'] = 'center'
-
-    if ('verticalalignment' not in kwargs) and ('va' not in kwargs):
-        kwargs['va'] = 'center'
-
-    if 'backgroundcolor' not in kwargs:
-        kwargs['backgroundcolor'] = ax.get_facecolor()
-
-    if 'clip_on' not in kwargs:
-        kwargs['clip_on'] = True
-
-    if 'fontsize' not in kwargs:
-        kwargs['fontsize'] = 'larger'
-
-    if 'fontweight' not in kwargs:
-        kwargs['fontweight'] = 'bold'
-
-    # Larger value (e.g., 2.0) to move box in front of other diagram elements
-    if 'zorder' not in kwargs:
-        kwargs['zorder'] = 1.50
-
-    # Place the text box label on the line.
-    ax.text(x, y, label, rotation=trans_angle, **kwargs)
-
-def label_lines(ax, lines, labels, offset=0, **kwargs):
-
-    '''
-    Plots labels on a set of lines from SkewT.
-
-    Input:
-
-      ax      the SkewT object axis
-      lines   the SkewT object special lines
-      labels  list of labels to be used
-      offset  index to use for the "end" of the array
-
-    Key Word Arguments
-
-      color   line color
-
-      Along with any other kwargs accepted by matplotlib's text box.
-    '''
-
-    if 'color' not in kwargs:
-        kwargs['color'] = lines.get_color()[0]
-
-    for i, line in enumerate(lines.get_segments()):
-        label = int(labels[i])
-        label_line(ax, label, line, align=True, offset=offset, **kwargs)
-
-def load_sites(arg):
-
-    ''' Check that the sites file exists, and return its contents. '''
-
-    # Check that the file exists
-    path = path_exists(arg)
-
-    with open(path, 'r') as sites_file:
-        sites = sites_file.readlines()
+def load_sites(arg: str | Path) -> list[str]:
+    """Return the contents of the sites file, if it exists."""
+    path = Path(arg)
+    with path.open() as sites_file:
+        sites: list[str] = sites_file.readlines()
     return sites
 
-def uniq_wgrib2_list(inlist):
-    ''' Given a list of wgrib2 output fields, returns a uniq list of fields for
-    simplifying a grib2 dataset. Uniqueness is defined by the wgrib output from
-    field 3 (colon delimted) onward, although the original full grib record must
-    be included in the wgrib2 command below.
-    '''
 
-    uniq_field_set = set()
-    uniq_list = []
-    for infield in inlist:
-        infield_info = infield.split(':')
-        if len(infield_info) <= 3:
-            continue
-        infield_str = ':'.join(infield_info[3:])
-        if infield_str not in uniq_field_set:
-            uniq_list.append(infield)
-        uniq_field_set.add(infield_str)
+def load_specs(arg: str | Path) -> YAMLConfig:
+    """Check to make sure arg file exists. Return its contents."""
 
-    return uniq_list
-
-def load_specs(arg):
-
-    ''' Check to make sure arg file exists. Return its contents. '''
-
-    spec_file = path_exists(arg)
-
-    with open(spec_file, 'r') as fn:
-        specs = yaml.load(fn, Loader=yaml.Loader)
-
-    specs['file'] = spec_file
+    spec_file = Path(arg)
+    if not spec_file.exists():
+        msg = f"The spec file {spec_file} does not exist."
+        raise FileNotFoundError(msg)
+    specs = load_yaml(spec_file)
+    specs["file"] = spec_file
 
     return specs
 
-def old_enough(age, file_path):
 
-    '''
+def numeric_level(level: str | None = None) -> tuple[float | int | str, str]:
+    """
+    Split the numeric level and unit associated with the level key.
+
+    A blank string is returned for lev_val for levels that do not contain a
+    numeric, e.g., 'sfc' or 'ua'.
+    """
+
+    level = level if level is not None else ""
+    if m := re.match(r"^([0-9.]+)?([a-z]+)?([0-9.]+)?$", level):
+        groups = m.groups()
+        units = groups[1]
+        value = groups[0] or groups[2]
+        for convert in (int, float):
+            try:
+                return convert(value), units
+            except (TypeError, ValueError):  # noqa: PERF203
+                pass
+    return "", ""
+
+
+def old_enough(age: int, file_path: Path | str):
+    """
     Helper function to test the age of a file.
 
     Input:
@@ -304,26 +227,47 @@ def old_enough(age, file_path):
     Output:
 
       bool    whether the file is at least age minutes old
-    '''
+    """
 
-    file_time = dt.datetime.fromtimestamp(os.path.getctime(file_path))
-    max_age = dt.datetime.now() - dt.timedelta(minutes=age)
+    file_path = Path(file_path) if isinstance(file_path, str) else file_path
+
+    file_time = datetime.fromtimestamp(file_path.stat().st_ctime)
+    max_age = datetime.now() - timedelta(minutes=age)
 
     return file_time < max_age
 
-def path_exists(path: str):
 
-    ''' Checks whether a file exists, and returns the path if it does. '''
+def path_exists(path: Path | str):
+    """Checks whether a file exists, and returns the path if it does."""
 
-    if not os.path.exists(path):
-        msg = f'{path} does not exist!'
-        raise argparse.ArgumentTypeError(msg)
+    ret_path = Path(path)
+    if not ret_path.exists():
+        msg = f"{path} does not exist!"
+        raise FileNotFoundError(msg)
 
-    return path
+    return ret_path
 
-def timer(func):
 
-    ''' Decorator function that provides an elapsed time for a method. '''
+def set_level(level: str, model: str, spec: dict):
+    """
+    Given the default_specs level string, extract and set a numeric level in the cfgrib block.
+    """
+    nlevel, _ = numeric_level(level=level)
+    level_info = any(
+        key
+        for keys in cfgrib_spec(spec["cfgrib"], model)
+        for key in ("level", "top", "bottom", "Surface")
+        if key in keys
+    )
+    if nlevel and not level_info:
+        if spec["cfgrib"].get(model) is not None:
+            spec["cfgrib"][model]["level"] = nlevel
+        else:
+            spec["cfgrib"]["level"] = nlevel
+
+
+def timer(func: Callable):
+    """Decorator function that provides an elapsed time for a method."""
 
     @functools.wraps(func)
     def wrapper_timer(*args, **kwargs):
@@ -333,17 +277,42 @@ def timer(func):
         elapsed_time = toc - tic
         print(f"{func.__name__} Elapsed time: {elapsed_time:0.4f} seconds")
         return value
+
     return wrapper_timer
 
-def to_datetime(string):
-    ''' Return a datetime object give a string like YYYYMMDDHH. '''
 
-    return dt.datetime.strptime(string, '%Y%m%d%H')
+def to_datetime(string: str):
+    """Return a datetime object given a string like YYYYMMDDHH."""
+
+    return datetime.strptime(string, "%Y%m%d%H")
+
+
+def uniq_wgrib2_list(inlist: list[str]):
+    """
+    Given a list of wgrib2 output fields, returns a unique list of fields for
+    simplifying a grib2 dataset. Uniqueness is defined by the wgrib output from
+    field 3 (colon delimted) onward, although the original full grib record must
+    be included in the wgrib2 command below.
+    """
+
+    uniq_field_set = set()
+    uniq_list = []
+    for infield in inlist:
+        infield_info = infield.split(":")
+        if len(infield_info) <= 3:  # noqa: PLR2004
+            continue
+        infield_str = ":".join(infield_info[3:])
+        if infield_str not in uniq_field_set:
+            uniq_list.append(infield)
+        uniq_field_set.add(infield_str)
+
+    return uniq_list
+
 
 @timer
-def zip_products(fhr, workdir, zipfiles):
-
-    ''' Spin up a subprocess to zip all the product files into the staged zip files.
+def zip_products(fhr: int, workdir: Path, zipfiles: dict) -> None:  # pragma: no cover
+    """
+    Spin up a subprocess to zip all the product files into the staged zip files.
 
     Input:
 
@@ -353,18 +322,13 @@ def zip_products(fhr, workdir, zipfiles):
 
     Output:
         None
-    '''
+    """
 
     for tile, zipf in zipfiles.items():
-        if tile == 'skewt_csv':
-            file_tmpl = f'*.skewt.*_f{fhr:03d}.csv'
+        if tile == "skewt_csv":
+            file_tmpl = f"*.skewt.*_f{fhr:03d}.csv"
         else:
-            file_tmpl = f'*_{tile}_*{fhr:02d}.png'
-        product_files = glob.glob(os.path.join(workdir, file_tmpl))
+            file_tmpl = f"*_{tile}_*{fhr:02d}.png"
+        product_files = [Path(f) for f in glob.glob(str(workdir / file_tmpl))]
         if product_files:
-            zip_proc = Process(group=None,
-                               target=create_zip,
-                               args=(product_files, zipf),
-                               )
-            zip_proc.start()
-            zip_proc.join()
+            create_zip(product_files, zipf)

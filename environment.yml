@@ -1,16 +1,18 @@
 name: pygraf
 channels:
   - conda-forge
-  - defaults
+  - ufs-community
+  - nodefaults
 dependencies:
-  - python=3.7*
-  - basemap=1.2*
-  - basemap-data-hires=1.2*
-  - pynio=1.5.5
-  - matplotlib=3.2*
-  - metpy=0.12.1
-  - pylint=2.4*
-  - pytest=6.1*
-  - pyyaml=5.3*
-  - xarray=0.15*
-  - dask
+  - python=3.13.*
+  - basemap=2.0.*
+  - basemap-data-hires=2.0.*
+  - cfgrib=0.9.*
+  - dask=2025.11.*
+  - matplotlib=3.10.*
+  - metpy=1.7.*
+  - notebook=7.5.*
+  - numpy=2.3.*
+  - pint=0.25.*
+  - uwtools=2.12.*
+  - xarray=2025.11.*

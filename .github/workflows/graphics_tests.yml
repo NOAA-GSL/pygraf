@@ -12,21 +12,20 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        shell: bash -l {0}
+        shell: bash -el {0}
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v6
         with:
           lfs: true
-      - name: Install Micromamba with pygraf environment
-        uses: mamba-org/setup-micromamba@v1
+      - name: Install Miniforge with pygraf environment
+        uses: conda-incubator/setup-miniconda@v3
         with:
           environment-file: environment.yml
-          cache-downloads: true
-          cache-environment: true
-      - name: Lint code
-        run: find . -type f -name "*.py" | xargs pylint
-        shell: bash -el {0}
+          miniforge-version: 25.11.0-0
+      - name: Install dev pkgs
+        run: make devenv
       - name: Test code
-        run: python -m pytest --nat-file tests/data/wrfnat_hrconus_07.grib2 --prs-file tests/data/wrfprs_hrconus_07.grib2 --ignore=tests/test_hrrr_maps.py
-        shell: bash -el {0}
+        run: |
+          conda activate pygraf
+          make test

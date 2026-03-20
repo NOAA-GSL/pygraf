@@ -36,8 +36,6 @@ hourly:
       - low
       - mid
       - total
-    coarsedust:
-      - sfc
     cpofp:
       - sfc
     cref:
@@ -48,24 +46,10 @@ hourly:
       - 2m
     echotop:
       - sfc
-    emissions:
-      - sfc
-    finedust:
-      - sfc
     firewx:
       - sfc
     flru:
       - sfc
-    fullintdust:
-      - int
-    G113bt:
-      - sat
-    G114bt:
-      - sat
-    G123bt:
-      - sat
-    G124bt:
-      - sat
     ghtfl:
       - sfc
     gust:
@@ -93,27 +77,23 @@ hourly:
       - sfc
     li:
       - best
-      - sfc
-    ltg3:
-      - sfc
     ltng:
       - sfc
     lwtp:
       - sfc
     mref:
       - sfc
+    ptmp:
+      - 2m
     pres:
       - msl
       - sfc
-    ptmp:
-      - 2m
     ptyp:
       - sfc
     pwtr:
       - sfc
     ref:
       - m10
-      - maxm10
     rh:
       - 2m
       - 850mb
@@ -153,10 +133,8 @@ hourly:
       - 850mb
       - 925mb
       - sfc
+
     totp:
-      - sfc
-    trc1:
-      - int
       - sfc
     ulwrf:
       - sfc
@@ -168,17 +146,12 @@ hourly:
       - sfc
     vddsf:
       - sfc
-    vig:
-      - sfc
     vis:
-      - sfc
-    visbsn:
       - sfc
     vort:
       - 500mb
     vvel:
       - 700mb
-      - mean
     vvort:
       - mx01
       - mx02
