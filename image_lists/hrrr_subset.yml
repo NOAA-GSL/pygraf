@@ -24,8 +24,6 @@ hourly:
       - sfc
     ceil:
       - ua
-    ceilexp:
-      - ua
     ceilexp2:
       - ua
     cin:
