@@ -359,10 +359,9 @@ class UPPData(specs.VarSpec):
                 name = name.get(self.filetype)
 
         if name is None:
-            import logging
-            logging.info(f"Cannot find ncl_name for: ")
+            print(f"Cannot find ncl_name for: ")
             for key, value in spec.items():
-                logging.info(f'{key}: {value}')
+                print(f'{key}: {value}')
             raise KeyError
 
         # The level_type for the entire atmosphere could be L10 or L200. Thanks
