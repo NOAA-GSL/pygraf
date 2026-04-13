@@ -410,13 +410,12 @@ ceil: # Ceiling
 ceilexp: # Ceiling - experimental
   ua:
     <<: *ceil
-    ncl_name: 
-      regional_mpas: CEIL_P0_L215_{grid}
+    ncl_name: CEIL_P0_L215_{grid}
     title: Ceiling (exp)
 ceilexp2: # Ceiling - experimental no.2
   ua:
     <<: *ceil
-    ncl_name: 
+    ncl_name:
       # Note that the "HGT_P0_L2_{grid}" ncl_names in RAPv5/HRRRv4 (below)
       # seemingly correspond to cloud-base height.  This is intentional; i.e.,
       # the exp2 ceiling field was indeed implemented into operations by being 
