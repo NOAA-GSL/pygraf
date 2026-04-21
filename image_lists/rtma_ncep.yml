@@ -11,4 +11,3 @@ hourly:
       - sfc
     wspeed:
       - 10m
-      - 80m
