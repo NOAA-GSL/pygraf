@@ -93,6 +93,20 @@ hourly:
       - sfc
     mref:
       - sfc
+    nifa:
+      - 250mb
+      - 500mb
+      - 700mb
+      - 850mb
+      - 975mb
+      - 1000mb
+    nwfa:
+      - 250mb
+      - 500mb
+      - 700mb
+      - 850mb
+      - 975mb
+      - 1000mb
     pres:
       - msl
       - sfc
@@ -178,5 +192,6 @@ hourly:
       - 80m
       - 250mb
       - 850mb
+      - max
       - mdn
       - mup

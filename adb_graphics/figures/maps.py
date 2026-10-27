@@ -329,6 +329,12 @@ class DataMap():
         if self.field.short_name == 'flru':
             ticks = [label.rjust(30) for label in ['VFR', 'MVFR', 'IFR', 'LIFR']]
 
+        if self.field.short_name == 'nwfa':
+            ticks = [label.rjust(5) for label in ['1e+07', '1e+08', '2e+08', '3e+08', '4e+08', '7e+08', '1e+09', '2e+09', '3e+09', '4e+09', '7e+09', '1e+10']]
+
+        if self.field.short_name == 'nifa':
+            ticks = [label.rjust(5) for label in ['1e+04', '1e+05', '2e+05', '3e+05', '4e+05', '7e+05', '1e+06', '2e+06', '3e+06', '4e+06', '7e+06', '1e+07']]
+
         # this step is done to allow proper order of icing severity levels (trace before light)
         if self.field.short_name == 'icsev':
             ticks = [label.rjust(30) for label in ['TRACE', 'LIGHT', 'MODERATE', 'HEAVY']]

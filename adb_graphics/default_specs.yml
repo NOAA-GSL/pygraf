@@ -1211,7 +1211,7 @@ mfrp: # Fire radiative power
   sfc:
     clevs: [0, 10, 25, 50, 100, 250]
     colors: fire_power_colors
-    ncl_name: CFNSF_P0_L1_{grid}
+    ncl_name: VAR_2_4_36_P0_L1_{grid}
     plot_airports: False
     plot_scatter: True
     ticks: 0
@@ -1222,6 +1222,150 @@ mref: # Maximum reflectivity for past hour at 1 km AGL
     <<: *refl
     ncl_name: MAXREF_P8_L103_{grid}_max1h
     title: Max 1km agl Reflectivity (over prev hr)
+nifa: # Ice-friendly aerosol number concentration
+  250mb: &nifa
+    clevs: [1.0e+04, 1.0e+05, 1.6e+05, 2.6e+05, 4.1e+05, 6.6e+05, 1.0e+06, 1.6e+06, 2.6e+06, 4.1e+06, 6.6e+06, 1.0e+07]
+    cmap: gist_ncar
+    colors: vort_colors
+    ncl_name: PMTC_P0_L100_{grid}
+    title: 250mb Ice-friendly Aerosol Num Conc
+    ticks: 0
+    unit: $nb/kg$
+  500mb:
+    <<: *nifa
+    title: 500mb Ice-friendly Aerosol Num Conc
+  700mb:
+    <<: *nifa
+    title: 700mb Ice-friendly Aerosol Num Conc
+    contours:
+      pres_sfc:
+        colors: 'k'
+        levels: [0, 700]
+        linewidths: 0.6
+    hatches:
+      pres_sfc:
+        hatches: ['', '...']
+        levels: [0, 700]
+  850mb:
+    <<: *nifa
+    title: 850mb Ice-friendly Aerosol Num Conc
+    contours:
+      pres_sfc:
+        colors: 'k'
+        levels: [0, 850]
+        linewidths: 0.6
+    hatches:
+      pres_sfc:
+        hatches: ['', '...']
+        levels: [0, 850]
+  925mb:
+    <<: *nifa
+    title: 925mb Ice-friendly Aerosol Num Conc
+    contours:
+      pres_sfc:
+        colors: 'k'
+        levels: [0, 925]
+        linewidths: 0.6
+    hatches:
+      pres_sfc:
+        hatches: ['', '...']
+        levels: [0, 925]
+  975mb:
+    <<: *nifa
+    title: 975mb Ice-friendly Aerosol Num Conc
+    contours:
+      pres_sfc:
+        colors: 'k'
+        levels: [0, 975]
+        linewidths: 0.6
+    hatches:
+      pres_sfc:
+        hatches: ['', '...']
+        levels: [0, 975]
+  1000mb:
+    <<: *nifa
+    title: 1000mb Ice-friendly Aerosol Num Conc
+    contours:
+      pres_sfc:
+        colors: 'k'
+        levels: [0, 1000]
+        linewidths: 0.6
+    hatches:
+      pres_sfc:
+        hatches: ['', '...']
+        levels: [0, 1000]
+nwfa: # Water-friendly aerosol number concentration
+  250mb: &nwfa
+    clevs: [1.0e+07, 1.0e+08, 1.6e+08, 2.6e+08, 4.1e+08, 6.6e+08, 1.0e+09, 1.6e+09, 2.6e+09, 4.1e+09, 6.6e+09, 1.0e+10]
+    cmap: gist_ncar
+    colors: vort_colors
+    ncl_name: PMTF_P0_L100_{grid}
+    title: 250mb Water-friendly Aerosol Num Conc
+    ticks: 0
+    unit: $nb/kg$
+  500mb:
+    <<: *nwfa
+    title: 500mb Water-friendly Aerosol Num Conc
+  700mb:
+    <<: *nwfa
+    title: 700mb Water-friendly Aerosol Num Conc
+    contours:
+      pres_sfc:
+        colors: 'k'
+        levels: [0, 700]
+        linewidths: 0.6
+    hatches:
+      pres_sfc:
+        hatches: ['', '...']
+        levels: [0, 700]
+  850mb:
+    <<: *nwfa
+    title: 850mb Water-friendly Aerosol Num Conc
+    contours:
+      pres_sfc:
+        colors: 'k'
+        levels: [0, 850]
+        linewidths: 0.6
+    hatches:
+      pres_sfc:
+        hatches: ['', '...']
+        levels: [0, 850]
+  925mb:
+    <<: *nwfa
+    title: 925mb Water-friendly Aerosol Num Conc
+    contours:
+      pres_sfc:
+        colors: 'k'
+        levels: [0, 925]
+        linewidths: 0.6
+    hatches:
+      pres_sfc:
+        hatches: ['', '...']
+        levels: [0, 925]
+  975mb:
+    <<: *nwfa
+    title: 975mb Water-friendly Aerosol Num Conc
+    contours:
+      pres_sfc:
+        colors: 'k'
+        levels: [0, 975]
+        linewidths: 0.6
+    hatches:
+      pres_sfc:
+        hatches: ['', '...']
+        levels: [0, 975]
+  1000mb:
+    <<: *nwfa
+    title: 1000mb Water-friendly Aerosol Num Conc
+    contours:
+      pres_sfc:
+        colors: 'k'
+        levels: [0, 1000]
+        linewidths: 0.6
+    hatches:
+      pres_sfc:
+        hatches: ['', '...']
+        levels: [0, 1000]
 oc: # Organic Carbon
   sfc: &ocsfc
     clevs: [0.05, 0.1, 0.5, 1, 2, 3, 5, 7, 10, 15, 20, 30, 50, 100]
@@ -1870,7 +2014,7 @@ trc1:
       hrrrcar: COLMD_P0_L200_{grid}
       rap: COLMD_P0_L200_{grid}
       rrfs: COLMD_P48_L200_{grid}_A62010
-      regional_mpas: COLMD_P0_L200_{grid}
+      regional_mpas: COLMD_P48_L200_{grid}_A62010
     plot_airports: False
     ticks: 0
     title: Vertically Integrated Smoke
@@ -1899,7 +2043,7 @@ trc1:
       hrrrcar: MASSDEN_P0_L103_{grid}
       rap: MASSDEN_P0_L103_{grid}
       rrfs: MASSDEN_P48_L103_{grid}_A62010
-      regional_mpas: MASSDEN_P0_L103_{grid}
+      regional_mpas: MASSDEN_P48_L103_{grid}_A62010
     plot_airports: False
     title: Near-Surface Smoke
     transform: conversions.to_micrograms_per_m3
